@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.shared.form.common.script.adapter.repository.mybatis.smartform.mapper.TranscriptionScriptMapper">
+  <select id="getTranscriptionScript" resultType="string">
+    SELECT script_sbst
+    FROM MSF_TRANSCRIPTION_SCRIPT
+    WHERE use_yn = 'Y'
+    AND to_char(now(), 'yyyymmddhh24miss') BETWEEN use_start_date AND use_end_date
+    AND (
+    (#{mnp3TgtYn} = 'Y' AND mnp3_tgt_yn = 'Y')
+    OR (#{nac3TgtYn} = 'Y' AND nac3_tgt_yn = 'Y')
+    OR (#{hdn3TgtYn} = 'Y' AND hdn3_tgt_yn = 'Y')
+    OR (#{icn3TgtYn} = 'Y' AND icn3_tgt_yn = 'Y')
+    )
+    AND (
+    req_buy_type_cd IS NULL
+    OR req_buy_type_cd = ''
+    OR (
+    (#{reqBuyTypeCd} = 'MM' AND req_buy_type_cd LIKE '%MM%')
+    OR (#{reqBuyTypeCd} = 'UU' AND req_buy_type_cd LIKE '%UU%')
+    )
+    )
+    AND (
+    form_tgt_dtl IS NULL
+    OR form_tgt_dtl = ''
+    OR (
+    (#{cstmrSelf} = 'Y' AND form_tgt_dtl LIKE '%CSTMR_SELF%')
+    OR (#{cstmrAgent} = 'Y' AND form_tgt_dtl LIKE '%CSTMR_AGENT%')
+    OR (#{enggN} = 'Y' AND form_tgt_dtl LIKE '%ENGG_N%')
+    OR (#{enggY} = 'Y' AND form_tgt_dtl LIKE '%ENGG_Y%')
+    OR (#{enggKd} = 'Y' AND form_tgt_dtl LIKE '%ENGG_KD%')
+    OR (#{enggPm} = 'Y' AND form_tgt_dtl LIKE '%ENGG_PM%')
+    OR (#{rmndY} = 'Y' AND form_tgt_dtl LIKE '%RMND_Y%')
+    OR (#{rateY} = 'Y' AND form_tgt_dtl LIKE '%RATE_Y%')
+    OR (#{insrY} = 'Y' AND form_tgt_dtl LIKE '%INSR_Y%')
+    OR (#{addY} = 'Y' AND form_tgt_dtl LIKE '%ADD_Y%')
+    )
+    )
+    ORDER BY sort_odrg
+  </select>
+
+  <select id="getNewChangeVariable" resultType="com.ktmmobile.msf.domains.shared.form.common.script.application.dto.TranscriptionScriptVariable">
+    SELECT
+        REQ.SHOP_NM AS cntpntCdNm,
+        USR.USER_NM AS userNm,
+        CST.CSTMR_NM AS nflCustNm,
+        SAL.SOC_NM AS mobilePriceNm,
+        CAST(SAL.SOC_BASE_CHRG_AMT AS VARCHAR) AS mobileMntcntAmtFee,
+        REQ.REQ_MODEL_NM AS mdlNm,
+        CAST(SAL.MODEL_PRICE AS VARCHAR) AS handsetThecpl,
+        REQ.REQ_MODEL_NM AS mobileMdlNm,
+        CAST(SAL.MODEL_PRICE AS VARCHAR) AS mobileHandsetThecpl,
+        CASE
+            WHEN UPPER(SAL.SPRT_TYPE_CD) = 'PM' THEN '요금할인'
+            WHEN UPPER(SAL.SPRT_TYPE_CD) = 'KD' THEN '단말할인'
+            WHEN UPPER(SAL.SPRT_TYPE_CD) = 'SM' THEN '심플할인'
+            ELSE SAL.SPRT_TYPE_CD
+        END AS dscnOptnCdNm,
+        CAST(SAL.MODEL_SPRT AS VARCHAR) AS mobileTotSupotAmnt,
+        '0' AS mobileStorSupotAmnt,
+        CAST(SAL.MODEL_INSTAMT AS VARCHAR) AS mobileInstAmnt,
+        CAST(
+          CAST(
+            TRUNC(
+              TRUNC(
+                COALESCE(
+                  ((CAST(SAL.MODEL_INSTAMT AS NUMERIC) * 0.059 / 12) * POWER((0.059 / 12) + 1, CAST(SAL.MODEL_MONTHLY AS NUMERIC)))
+                  / NULLIF((POWER((0.059 / 12) + 1, CAST(SAL.MODEL_MONTHLY AS NUMERIC)) - 1), 0)
+                , 0)
+              , 0) * CAST(SAL.MODEL_MONTHLY AS NUMERIC) - CAST(SAL.MODEL_INSTAMT AS NUMERIC)
+            , 0)
+          AS INTEGER)
+        AS VARCHAR) AS mobileInstInt,
+        CAST(SAL.ENGG_MNTH_CNT AS VARCHAR) AS mobileEnggPrd,
+        CAST(SAL.MODEL_MONTHLY AS VARCHAR) AS mobileInstPrd,
+        CAST(SAL.ENGG_MNTH_CNT AS VARCHAR) AS enggPrd,
+        CAST(SAL.DC_AMT AS VARCHAR) AS mmFeeDscn,
+        CAST(SAL.MODEL_SPRT AS VARCHAR) AS totSupotAmnt,
+        '0' AS storSupotAmnt,
+        REQ.REQ_ADDITION_LIST_NM AS mobileVasNm,
+        CAST(REQ.REQ_ADDITION_PRICE AS VARCHAR) AS mobileVasTotalPrice,
+        (SELECT prod_nm FROM MSF_RATE_ADSVC_CTG_PROD_REL WHERE prod_id = REQ.INSR_PROD_CD LIMIT 1) AS shphcrNm
+    FROM MSF_REQUEST_TEMP REQ
+    INNER JOIN MSF_REQUEST_CSTMR_TEMP CST ON REQ.REQUEST_KEY = CST.REQUEST_KEY
+    INNER JOIN MSF_REQUEST_SALE_TEMP SAL ON REQ.REQUEST_KEY = SAL.REQUEST_KEY
+    LEFT OUTER JOIN MSF_USER_INFO USR ON REQ.CRET_ID = USR.USER_ID
+    WHERE REQ.REQUEST_KEY = #{requestKey}
+  </select>
+</mapper>

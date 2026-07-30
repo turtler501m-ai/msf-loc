@@ -1,9 +1,19 @@
 <template>
   <div class="date-range-root">
     <div class="range-container">
-      <MsfDateInput v-model="startDate" :max-date="endDate" placeholder="시작일" />
+      <MsfDateInput
+        ref="startDateRef"
+        v-model="startDate"
+        :max-date="startDateMax || endDate"
+        placeholder="시작일(YYYYMMDD)"
+      />
       <span class="range-separator">~</span>
-      <MsfDateInput v-model="endDate" :min-date="startDate" placeholder="종료일" />
+      <MsfDateInput
+        ref="endDateRef"
+        v-model="endDate"
+        :min-date="startDate"
+        placeholder="종료일(YYYYMMDD)"
+      />
     </div>
     <div v-if="props.showQuickButtons" class="range-btns">
       <MsfChip v-model="quickActive" :data="quickButtons" name="period-select" columns="auto" />
@@ -19,12 +29,17 @@ import { formatDate } from '@/libs/utils/date.utils'
 const startDate = defineModel('from', { default: '' })
 const endDate = defineModel('to', { default: '' })
 
+let startDateMax = defineModel('fromMaxDate', { default: null })
+
 const props = defineProps({
   showQuickButtons: {
     type: Boolean,
     default: false,
   },
 })
+
+const startDateRef = ref(null)
+const endDateRef = ref(null)
 
 // 내부 상태 관리용 변수 (props에서 초기값을 객체 키로 가져옴)
 const quickActive = ref('')
@@ -122,6 +137,13 @@ onBeforeMount(() => {
   if (sameStartDate && sameEndDate) {
     setQuickActive(startDate.value, endDate.value)
   }
+})
+
+defineExpose({
+  focus: () => {
+    if (!startDate.value) startDateRef.value?.focus()
+    else endDateRef.value?.focus()
+  },
 })
 </script>
 

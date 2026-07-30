@@ -10,4 +10,5 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-http-client")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.core:jackson-databind")
+    api("jakarta.xml.bind:jakarta.xml.bind-api")
 }

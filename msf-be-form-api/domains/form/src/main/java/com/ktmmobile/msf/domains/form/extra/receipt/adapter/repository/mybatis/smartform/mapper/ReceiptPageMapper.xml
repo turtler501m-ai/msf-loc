@@ -19,6 +19,7 @@
     <result property="shopNm" column="shop_nm" />
     <result property="cretId" column="cret_id" />
     <result property="cretNm" column="cret_nm" />
+    <result property="scanId" column="requestScanId" />
   </resultMap>
 
   <select id="count" resultType="int">
@@ -30,7 +31,25 @@
   <select id="selectList" resultMap="FormRequestResultMap">
     <choose>
       <when test="formTypeCd != null and formTypeCd.size() > 0">
-        SELECT * FROM (
+        SELECT
+          T.request_key,
+          T.cret_dt,
+          T.form_type_cd,
+          T.req_buy_type_cd,
+          T.oper_type_cd,
+          T.proc_cd,
+          T.cstmr_nm,
+          T.cstmr_native_birth,
+          T.cstmr_type_cd,
+          T.identity_cert_type_cd,
+          T.agent_cd,
+          T.agent_nm,
+          T.shop_cd,
+          T.shop_nm,
+          T.cret_id,
+          T.cret_nm,
+          T.requestScanId
+        FROM (
         <include refid="unionQuery" />
         ) T
         ORDER BY T.cret_dt DESC
@@ -65,10 +84,12 @@
           MR.shop_cd,
           MR.shop_nm,
           MR.cret_id,
+          MR.scan_id AS requestScanId,
           (select user_nm from msf_user_info where user_id = MR.cret_id) as cret_nm
         FROM MSF_REQUEST MR
         LEFT JOIN MSF_REQUEST_CSTMR MRC ON MR.request_key = MRC.request_key
         <where>
+          <if test="true">AND coalesce(MR.volume_rep_mobile_no,'') = ''</if>
           <include refid="formRequestWhere" />
         </where>
       </if>
@@ -91,8 +112,23 @@
           MR.shop_cd,
           MR.shop_nm,
           MR.cret_id,
+          <!--CASE-->
+          <!--  WHEN MR.scan_id IS NOT NULL AND d.dtl_scan_ids IS NOT NULL-->
+          <!--    THEN CONCAT(MR.scan_id, ', ', d.dtl_scan_ids)-->
+          <!--  WHEN MR.scan_id IS NOT NULL-->
+          <!--    THEN MR.scan_id-->
+          <!--  ELSE d.dtl_scan_ids-->
+          <!--END AS requestScanId,-->
+          d.dtl_scan_ids AS requestScanId,
           (select user_nm from msf_user_info where user_id = MR.cret_id) as cret_nm
         FROM MSF_REQUEST_SVC_CHG MR
+        LEFT JOIN (
+        SELECT request_key,
+        STRING_AGG(scan_id, ', ' ORDER BY scan_id) AS dtl_scan_ids
+        FROM smartform.msf_request_svc_chg_dtl
+        WHERE scan_id IS NOT NULL
+        GROUP BY request_key
+        ) d ON MR.request_key = d.request_key
         LEFT JOIN MSF_REQUEST_CSTMR MRC ON MR.request_key = MRC.request_key
         <where>
           <include refid="formRequestWhere" />
@@ -117,6 +153,7 @@
           MR.shop_cd,
           MR.shop_nm,
           MR.cret_id,
+          MR.scan_id AS requestScanId,
           (select user_nm from msf_user_info where user_id = MR.cret_id) as cret_nm
         FROM MSF_REQUEST_NAME_CHG MR
         LEFT JOIN MSF_REQUEST_CSTMR MRC ON MR.request_key = MRC.request_key
@@ -143,6 +180,7 @@
           MR.shop_cd,
           MR.shop_nm,
           MR.cret_id,
+          MR.scan_id AS requestScanId,
           (select user_nm from msf_user_info where user_id = MR.cret_id) as cret_nm
         FROM MSF_REQUEST_CANCEL MR
         LEFT JOIN MSF_REQUEST_CSTMR MRC ON MR.request_key = MRC.request_key
@@ -157,13 +195,12 @@
     <if test="startDt != null">AND MR.cret_dt <![CDATA[>=]]> #{startDt}</if>
     <if test="endDt != null">AND MR.cret_dt <![CDATA[<]]> (#{endDt} + INTERVAL '1 day')</if>
     <if test="requestKey != null and requestKey > 0"> AND MR.request_key = #{requestKey} </if>
-    <if test="@org.springframework.util.StringUtils@hasText(cstmrNm)"> AND MRC.cstmr_nm LIKE CONCAT(#{cstmrNm}, '%') </if>
-    <if test="@org.springframework.util.StringUtils@hasText(cstmrNativeBirth)"> AND MRC.cstmr_native_birth LIKE CONCAT(#{cstmrNativeBirth}, '%') </if>
     <if test="@org.springframework.util.StringUtils@hasText(shopCd)"> AND MR.shop_cd = #{shopCd} </if>
-    <if test="@org.springframework.util.StringUtils@hasText(shopNm)"> AND MR.shop_nm LIKE CONCAT(#{shopNm}, '%') </if>
+    <if test="@org.springframework.util.StringUtils@hasText(shopNm)"> AND UPPER(MR.shop_nm) LIKE CONCAT('%' , UPPER(#{shopNm}), '%') </if>
     <if test="@org.springframework.util.StringUtils@hasText(authAgentCd)"> AND MR.agent_cd = #{authAgentCd} </if>
     <if test="@org.springframework.util.StringUtils@hasText(authShopCd)"> AND MR.shop_cd = #{authShopCd} </if>
     <if test="@org.springframework.util.StringUtils@hasText(authCretId)"> AND MR.cret_id = #{authCretId} </if>
+    <if test="@org.springframework.util.StringUtils@hasText(searchWord)"> AND UPPER(MRC.cstmr_nm) LIKE '%' || UPPER(#{searchWord}) || '%' </if>
     <choose>
       <when test="procCd != null and procCd.size() == 0">
         AND 1 = 0

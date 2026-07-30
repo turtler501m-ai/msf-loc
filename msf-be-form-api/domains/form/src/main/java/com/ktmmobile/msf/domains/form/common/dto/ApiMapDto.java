@@ -1,5 +1,6 @@
 package com.ktmmobile.msf.domains.form.common.dto;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 import lombok.Getter;
@@ -9,9 +10,10 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
+@SuppressWarnings("PMD.FieldNamingConventions")
 public class ApiMapDto implements Serializable {
 
-    private static final long serialVersionUID = -4417006022458054488L;
+    @Serial private static final long serialVersionUID = -4417006022458054488L;
 
     private String SMS_SEQ;
     private String I_SUBJECT;          // kakao LMS SMS

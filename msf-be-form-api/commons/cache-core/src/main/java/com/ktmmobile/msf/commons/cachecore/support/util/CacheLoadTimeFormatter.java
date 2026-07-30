@@ -37,7 +37,7 @@ public class CacheLoadTimeFormatter {
         }
         try {
             return Optional.of(parseRedisLoadTime(loadTime));
-        } catch (DateTimeParseException ex) {
+        } catch (DateTimeParseException _) {
             return Optional.of(parseIsoLoadTime(loadTime));
         }
     }
@@ -49,7 +49,7 @@ public class CacheLoadTimeFormatter {
     private LocalDateTime parseIsoLoadTime(String loadTime) {
         try {
             return toLocalDateTime(Instant.parse(loadTime));
-        } catch (DateTimeParseException ex) {
+        } catch (DateTimeParseException _) {
             return LocalDateTime.parse(loadTime, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
         }
     }

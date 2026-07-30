@@ -1,5 +1,6 @@
 package com.ktmmobile.msf.domains.form.common.dto;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 import lombok.Getter;
@@ -10,8 +11,10 @@ import org.apache.commons.lang3.StringUtils;
 @Getter
 @Setter
 @NoArgsConstructor
+@SuppressWarnings("PMD.FieldNamingConventions")
 public class NiceResDto implements Serializable {
-    private static final long serialVersionUID = 1L;
+
+    @Serial private static final long serialVersionUID = 1L;
 
     private String EncodeData;
     private String param_r1;
@@ -43,36 +46,52 @@ public class NiceResDto implements Serializable {
 
     // s/sV 접두사 필드들 비표준 getter/setter 유지
     public String getsMobileNo() { return sMobileNo; }
+
     public void setsMobileNo(String sMobileNo) { this.sMobileNo = sMobileNo; }
 
     public String getsMobileCo() { return sMobileCo; }
+
     public void setsMobileCo(String sMobileCo) { this.sMobileCo = sMobileCo; }
 
     public String getsVNumber() { return sVNumber; }
+
     public void setsVNumber(String sVNumber) { this.sVNumber = sVNumber; }
 
     // null/blank-check 포함 getter 유지
     public String getParam_r1() { return param_r1 == null ? "" : param_r1; }
+
     public String getParam_r2() { return param_r2 == null ? "" : param_r2; }
+
     public String getParam_r3() { return param_r3 == null ? "" : param_r3; }
 
     public String getAuthType() {
-        if (StringUtils.isBlank(authType)) return "";
+        if (StringUtils.isBlank(authType)) {
+            return "";
+        }
         return authType;
     }
 
     public String getName() {
-        if (StringUtils.isBlank(name)) return "";
+        if (StringUtils.isBlank(name)) {
+            return "";
+        }
         return name.toUpperCase();
     }
 
     public String getDupInfo()   { return StringUtils.isBlank(dupInfo)   ? "" : dupInfo; }
+
     public String getConnInfo()  { return StringUtils.isBlank(connInfo)  ? "" : connInfo; }
+
     public String getService()   { return StringUtils.isBlank(service)   ? "" : service; }
+
     public String getResId()     { return StringUtils.isBlank(resId)     ? "" : resId; }
+
     public String getBankCode()  { return StringUtils.isBlank(bankCode)  ? "" : bankCode; }
+
     public String getAccountNo() { return StringUtils.isBlank(accountNo) ? "" : accountNo; }
+
     public String getSvcGbn()    { return StringUtils.isBlank(svcGbn)    ? "" : svcGbn; }
+
     public String getSvcCls()    { return StringUtils.isBlank(svcCls)    ? "" : svcCls; }
 
 }

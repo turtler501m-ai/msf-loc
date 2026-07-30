@@ -14,9 +14,9 @@ import com.ktmmobile.msf.domains.form.main.domain.entity.Qna;
 
 public interface FormMainRepository {
 
-    List<ChartCountResponse> getCountFormStatus();
+    List<ChartCountResponse> getCountFormStatus(String userId);
 
-    List<ChartCountResponse> getCountFormService();
+    List<ChartCountResponse> getCountFormService(String userId);
 
     Page<Board> getListNotice(NoticeCondition condition);
 

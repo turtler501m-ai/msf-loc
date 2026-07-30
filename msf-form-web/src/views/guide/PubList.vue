@@ -49,6 +49,9 @@ const getCompletionRate = (nav) => {
   return `${weightedSum}/${pages.length} (${((weightedSum / pages.length) * 100).toFixed(1)}%)`
 }
 
+// 비고란은 데이터에 넣은 <br> 또는 줄바꿈을 화면 줄바꿈으로 표시
+const getMemoLines = (value) => String(value || '').split(/<br\s*\/?>|\r?\n/gi)
+
 // 이벤트: 탭 변경 및 URL 동기화
 const handleTabChange = (nav) => {
   selectedNav.value = nav
@@ -114,9 +117,59 @@ watch(
       <div class="guideInner">
         <div class="guideContent">
           <div class="guideNotice">
-            <p class="ut-color-point">
-              - [2026-05-07] 서비스해지 - 동의 : '고객 안내 사항' 문구 수정
+            <p class="ut-weight-bold">
+              - [2026-07-24] '구비서류' 팝업 - [필수], [선택] 표시 스타일 추가 (필요시 사용)
+              <router-link to="/pub/PopList" target="_blank" class="link-txt ut-color-point"
+                >예시화면 링크 ('구비서류' 팝업)
+              </router-link>
             </p>
+            <p class="ut-weight-bold">
+              - [2026-07-14] '유효성 검증' 버튼 스타일 반영 (MsfButton variant="validation")
+            </p>
+            <p class="">- [2026-07-14] 앱 다운로드 - '계정확인' 팝업 - 버튼스타일 구조 수정</p>
+            <p class="ut-weight-bold">
+              - [2026-07-14] 비밀번호변경 - 비밀번호 필드 reveal 속성 추가
+            </p>
+            <p class="ut-color-point ut-weight-bold">
+              - [2026-07-13] 신규/변경 - 고객(실사용자) 정보 - '개통회선수' 입력항목, 가입조건 조회
+              케이스 추가
+            </p>
+            <p class="ut-weight-bold">
+              - [2026-06-30] 명의변경 - (법인/공공) '신분증 스캔' 삭제, 사업자등록번호 '교부일자'
+              추가, 실사용자 '성별' 삭제 / 국가유공자증 '유공자번호' 추가
+            </p>
+            <p class="ut-weight-bold">
+              - [2026-06-30] 신규변경 - (법인/공공) '신분증 스캔' 삭제, 사업자등록번호 '교부일자'
+              추가, 실사용자 '성별' 삭제 / 국가유공자증 '유공자번호' 추가
+            </p>
+            <p>- [2026-06-22] 신규변경 - '신청서 열람 비밀번호 입력' 팝업 안내문구 추가</p>
+            <p class="ut-weight-bold">
+              - [2026-06-22] '계정 확인' 팝업 추가
+              <router-link to="/pub/S106010101" target="_blank" class="link-txt ut-color-point"
+                >스마트 신청서 App 설치 페이지
+              </router-link>
+            </p>
+            <p class="">
+              - [2026-06-10] 컨텐츠 로딩 형태 샘플추가
+              <router-link to="/pub/PopList" target="_blank" class="link-txt ut-color-point"
+                >예시화면 링크 ('신규번호 검색' 팝업)
+              </router-link>
+            </p>
+            <p class="ut-weight-bold">
+              - [2026-06-01] 퍼블리싱 maxLength 누락 추가, 공통 컴퍼넌트 적용
+            </p>
+            <p class="">
+              - [2026-05-27] '비밀번호 입력' 팝업 안내 문구, '생년월일(YYYYMMDD) 8자리'로 수정
+            </p>
+            <p class="ut-weight-bold ut-color-point">
+              - [2026-05-20] 신규/변경, 서비스변경, 명의변경, 서비스해지 - '대리점 선택' 위치
+              고객유형 영역으로 이동
+            </p>
+            <p class="ut-weight-bold ut-color-point">
+              - [2026-05-20] 서비스해지 - '가입유형 선택' -> '해지 휴대폰 정보' 타이틀 변경
+            </p>
+            <p class="ut-weight-bold">- [2026-05-19] '안면인증' 팝업 설계 수정반영</p>
+            <p class="">- [2026-05-07] 서비스해지 - 동의 : '고객 안내 사항' 문구 수정</p>
             <p class="ut-weight-bold ut-color-point">
               - [2026-05-06] 서비스변경 - 상품 : 부가서비스 신청/변경 - 설계수정 반영 (체크박스
               형태로 변경)
@@ -182,6 +235,13 @@ watch(
                     >
                       {{ page[column] }}
                     </a>
+                  </template>
+
+                  <template v-else-if="column === '비고'">
+                    <template v-for="(line, lineIdx) in getMemoLines(page[column])" :key="lineIdx">
+                      <br v-if="lineIdx > 0" />
+                      {{ line }}
+                    </template>
                   </template>
 
                   <template v-else>{{ page[column] || '' }}</template>

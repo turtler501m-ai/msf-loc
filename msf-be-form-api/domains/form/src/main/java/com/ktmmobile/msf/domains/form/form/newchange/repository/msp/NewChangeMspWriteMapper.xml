@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.form.form.newchange.repository.msp.NewChangeMspWriteMapper">
+
+  <!-- 평생할인 프로모션 기적용 테이블 INSERT -->
+  <insert id="insertDisPrmtApd" parameterType="com.ktmmobile.msf.domains.form.common.dto.AppformReqDto">
+    <selectKey keyProperty="apdSeq" resultType="java.lang.String" order="BEFORE">
+      SELECT ('AD' || TO_CHAR(SYSDATE,'YYYYMMDD') || TRIM(TO_CHAR(SQ_DIS_AD.NEXTVAL, '000000'))) AS APD_SEQ  FROM DUAL
+    </selectKey>
+    /* NewChangeMspWriteMapper.insertDisPrmtApd */
+      INSERT INTO MSP_DIS_APD (
+      APD_SEQ
+      ,REGST_DT
+      ,PROC_YN
+      ,RES_NO
+      <if test = "requestKey != 0">
+        ,REQUEST_KEY
+      </if>
+      <if test = "contractNum != null and contractNum != ''">
+        ,CONTRACT_NUM
+      </if>
+      <if test = "prmtId != null and prmtId != ''">
+        ,PRMT_ID
+      </if>
+      ,CHNL_CD
+      ,EVNT_CD
+      ,ENGG_MNTH_CNT
+      ,OPEN_AGNT_CD
+      ,PRMT_AGNT_CD
+      ,RATE_CD
+      ,ON_OFF_TYPE
+      ,OPER_TYPE
+      ,REQ_BUY_TYPE
+      ,REGST_ID
+      ,REGST_DTTM
+    ) VALUES(
+      #{apdSeq}
+      ,TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+      ,'N'
+      ,#{resNo}
+      <if test = "requestKey != 0">
+        ,#{requestKey}
+      </if>
+      <if test = "contractNum != null and contractNum != ''">
+        ,#{contractNum}
+      </if>
+      <if test = "prmtId != null and prmtId != ''">
+        ,#{prmtId}
+      </if>
+      ,'01'
+      ,#{evntCd}
+      ,'00'
+      ,#{cntpntShopId}
+      ,#{prmtAgntCd}
+      ,#{socCode}
+      ,#{onOffType}
+      ,#{operType}
+      ,#{reqBuyType}
+      <choose>
+        <when test="cretId != null and cretId != ''">
+            ,#{cretId}
+        </when>
+        <otherwise>
+            ,'MCP'
+        </otherwise>
+      </choose>
+      ,SYSDATE
+    )
+  </insert>
+
+</mapper>

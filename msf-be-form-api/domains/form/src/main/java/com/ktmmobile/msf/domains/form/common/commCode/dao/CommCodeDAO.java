@@ -9,19 +9,19 @@ import java.util.List;
 
 public interface CommCodeDAO {
 
-    public void commCodeInsertFst(CommCodeInstDTO commCodeInstDTO);
+    void commCodeInsertFst(CommCodeInstDTO commCodeInstDTO);
 
-    public CommCodeInstDTO getFstCodeTble(String idx);
+    CommCodeInstDTO getFstCodeTble(String idx);
 
-    public List<CommCodeInstDTO> getSndCodeList(String idx);
+    List<CommCodeInstDTO> getSndCodeList(String idx);
 
-    public void commCodeInsertSnd(HashMap<String, Object> map);
+    void commCodeInsertSnd(HashMap<String, Object> map);
 
-    public void modifyFstTable(CommCodeInstDTO commCodeInstDTO);
+    void modifyFstTable(CommCodeInstDTO commCodeInstDTO);
 
-    public int commCodeIdDupCheckAjax(String cdGroupId);
+    int commCodeIdDupCheckAjax(String cdGroupId);
 
-    public void updateBySndTable(HashMap<String, Object> map);
+    void updateBySndTable(HashMap<String, Object> map);
 
     /**
      * <pre>
@@ -31,7 +31,7 @@ public interface CommCodeDAO {
      * @return: NmcpLinkInfoDto
      * </pre>
      */
-    public NmcpLinkInfoDto getLinkInfo(NmcpLinkInfoDto nmcpLinkInfoDto);
+    NmcpLinkInfoDto getLinkInfo(NmcpLinkInfoDto nmcpLinkInfoDto);
 
     /**
      * <pre>
@@ -41,10 +41,10 @@ public interface CommCodeDAO {
      * @return: int
      * </pre>
      */
-    public int updateLinkInfo(NmcpLinkInfoDto nmcpLinkInfoDto);
+    int updateLinkInfo(NmcpLinkInfoDto nmcpLinkInfoDto);
 
-    public void updateMnpCmpnListInit() ;
+    void updateMnpCmpnListInit() ;
 
-    public void updateMnpCmpn(NmcpCdDtlDto cdDtlDto) ;
+    void updateMnpCmpn(NmcpCdDtlDto cdDtlDto) ;
 
 }

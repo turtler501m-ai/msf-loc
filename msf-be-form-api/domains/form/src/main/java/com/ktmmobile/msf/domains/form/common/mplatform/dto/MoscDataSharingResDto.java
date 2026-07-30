@@ -8,7 +8,6 @@ import java.util.List;
 import org.jdom.Element;
 
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.CommonXmlNoSelfServiceException;
-import com.ktmmobile.msf.domains.form.common.util.StringMakerUtil;
 import com.ktmmobile.msf.domains.form.common.util.XmlParse;
 
 /**
@@ -42,7 +41,7 @@ public class MoscDataSharingResDto extends CommonXmlNoSelfServiceException {
 
 	     for(Element item : itemList){
 	    	 OutDataSharingDto outDataSharingDto = new OutDataSharingDto();
-	    	 outDataSharingDto.setSvcNo(StringMakerUtil.getPhoneNum(XmlParse.getChildValue(item, "svcNo")));
+             outDataSharingDto.setSvcNo(XmlParse.getChildValue(item, "svcNo"));
 	    	 outDataSharingDto.setEfctStDt(XmlParse.getChildValue(item, "efctStDt"));
 	    	 outDataSharingDto.setRsltInd(XmlParse.getChildValue(item, "rsltInd"));
 	    	 outDataSharingDto.setRsltMsg(XmlParse.getChildValue(item, "rsltMsg"));

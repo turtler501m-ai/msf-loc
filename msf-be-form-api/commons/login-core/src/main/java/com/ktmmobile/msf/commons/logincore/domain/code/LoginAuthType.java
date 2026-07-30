@@ -8,6 +8,12 @@ public enum LoginAuthType {
     PASSWORD,
     BIOPASS;
 
+    /**
+     * 문자열 기준 로그인 인증 유형 변환
+     *
+     * @param value 인증 유형 문자열
+     * @return 로그인 인증 유형
+     */
     public static LoginAuthType valueOfNullable(String value) {
         if (!StringUtils.hasText(value)) {
             return PASSWORD;

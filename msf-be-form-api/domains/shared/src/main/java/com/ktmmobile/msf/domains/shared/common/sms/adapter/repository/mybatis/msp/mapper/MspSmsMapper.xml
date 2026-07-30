@@ -40,4 +40,45 @@
       #{reserved03}
     )
   </insert>
+
+  <insert id="insertKakaoData" parameterType="com.ktmmobile.msf.domains.shared.common.sms.domain.entity.MspSmsData">
+    <selectKey keyProperty="msgId" resultType="long" order="BEFORE">
+      SELECT AM2X_SUBMIT_SEQ.NEXTVAL FROM DUAL
+    </selectKey>
+    INSERT INTO AM2X_SUBMIT (
+      MSG_ID,
+      SUBJECT,
+      MSG_TYPE,
+      MSG_TYPE_SECOND,
+      SCHEDULE_TIME,
+      SUBMIT_TIME,
+      MESSAGE,
+      CALLBACK_NUM,
+      RCPT_DATA,
+      RESERVED01,
+      RESERVED02,
+      RESERVED03,
+      K_TMPLCODE,
+      K_SENDERKEY,
+      K_MESSAGE,
+      FAIL_SEND
+    ) VALUES (
+      #{msgId},
+      #{subject},
+      #{msgType},
+      #{msgTypeSecond},
+      TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'),
+      TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'),
+      #{message},
+      #{callbackNum},
+      #{rcptData},
+      #{reserved01},
+      #{reserved02},
+      #{reserved03},
+      #{kTmplcode},
+      #{kSenderkey},
+      #{kMessage},
+      #{failSend}
+    )
+  </insert>
 </mapper>

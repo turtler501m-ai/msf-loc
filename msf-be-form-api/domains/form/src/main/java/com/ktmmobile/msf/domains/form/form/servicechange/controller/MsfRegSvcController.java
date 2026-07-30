@@ -95,4 +95,16 @@ public class MsfRegSvcController {
         return ResponseUtils.ok(regSvcService.getMtProdHstSeq(req));
     }
 
+    /**
+     * 로밍 상품 가입 확인 시 서브 전화번호 계약 정보 확인
+     *
+     * 서브 전화번호 (:) 연결자로 가져와서 cntrListNoLogin을 통해 계약정보를 확인
+     *
+     * @param req ncn(신청자 계약번호)/joinPhone(서브 전화번호 010xxxxx:010xxxxx)
+     * @return
+     */
+    @PostMapping("/api/form/servicechange/roaming/checkMobileJoin")
+    public CommonResponse<FormResponse<AdditionApplyResVO>> checkMobileJoin(@RequestBody AdditionApplyReqDto req) {
+        return ResponseUtils.ok(regSvcService.checkMobileJoin(req));
+    }
 }

@@ -22,13 +22,13 @@ public class NameMaskingProcessor implements MaskingProcessor {
 
         int codePointCount = value.codePointCount(0, value.length());
         if (codePointCount == 1) {
-            return String.valueOf(MaskingTextUtils.MASK);
+            return String.valueOf(MaskingProcessorUtils.MASK);
         }
         if (codePointCount == 2) {
-            return MaskingTextUtils.firstCodePoint(value) + MaskingTextUtils.MASK;
+            return MaskingProcessorUtils.firstCodePoint(value) + MaskingProcessorUtils.MASK;
         }
-        return MaskingTextUtils.firstCodePoint(value)
-            + String.valueOf(MaskingTextUtils.MASK).repeat(codePointCount - 2)
-            + MaskingTextUtils.lastCodePoint(value);
+        return MaskingProcessorUtils.firstCodePoint(value)
+            + String.valueOf(MaskingProcessorUtils.MASK).repeat(codePointCount - 2)
+            + MaskingProcessorUtils.lastCodePoint(value);
     }
 }

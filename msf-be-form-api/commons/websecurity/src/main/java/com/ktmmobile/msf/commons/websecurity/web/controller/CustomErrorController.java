@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ktmmobile.msf.commons.websecurity.web.dto.response.CommonResponse;
+import com.ktmmobile.msf.commons.websecurity.web.dto.response.CommonResponseType;
 import com.ktmmobile.msf.commons.websecurity.web.util.response.ResponseUtils;
 
 @RequestMapping("${server.error.path:${error.path:/error}}")
@@ -28,7 +29,10 @@ public class CustomErrorController extends AbstractErrorController {
     public ResponseEntity<CommonResponse<Map<String, Object>>> error(HttpServletRequest request) {
         HttpStatus status = getStatus(request);
         Map<String, Object> body = getErrorAttributes(request, ErrorAttributeOptions.defaults());
-        // String body1 = String.format("%s %s", body.get("path"), body.get("error"))
+        CommonResponseType responseType = CommonResponseType.valueOfHttpStatus(status);
+        if (responseType != null) {
+            return ResponseUtils.responseOf(responseType, body);
+        }
         return ResponseUtils.unknownError(body, status);
     }
 }

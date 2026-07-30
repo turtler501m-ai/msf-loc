@@ -30,7 +30,7 @@ const props = defineProps({
     default: 'star', // 기본값: ※(star)
     validator: (value) => ['dot', 'dash', 'star', 'none', 'number'].includes(value),
   },
-  // 타이틀 레벨 (기본: 1) - 폰트사이즈 14px(1), 16px(2)
+  // 타이틀 레벨 (기본: 2) - 폰트사이즈 14px(1), 16px(2)
   level: {
     type: String,
     default: '2',
@@ -86,9 +86,6 @@ const rootClasses = computed(() => [
     color: var(--text-list-color);
     font-size: var(--text-list-font-size);
     line-height: var(--line-height-heading);
-    & > span {
-      display: block;
-    }
     // 공통 불렛 스타일 (가상 요소)
     &::before {
       position: absolute;

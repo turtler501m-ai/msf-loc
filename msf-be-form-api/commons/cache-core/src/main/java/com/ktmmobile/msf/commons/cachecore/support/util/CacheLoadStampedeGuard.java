@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 import lombok.RequiredArgsConstructor;
@@ -25,7 +26,7 @@ public class CacheLoadStampedeGuard {
     private final ConcurrentMap<String, ReentrantLock> locks = new ConcurrentHashMap<>();
 
     /** 캐시 전체 적재 중복 실행 방지 */
-    public CacheLoadResult execute(String cacheName, Supplier<Boolean> loaded, Supplier<CacheLoadResult> loader) {
+    public CacheLoadResult execute(String cacheName, BooleanSupplier loaded, Supplier<CacheLoadResult> loader) {
         ReentrantLock lock = getLock(cacheName);
         if (tryLock(lock)) {
             return loadWithLock(lock, loader);
@@ -36,7 +37,7 @@ public class CacheLoadStampedeGuard {
     }
 
     /** 캐시 단일 값 적재 중복 실행 방지 */
-    public <V> Optional<V> executeValue(String key, Supplier<Boolean> loaded, Supplier<Optional<V>> loader) {
+    public <V> Optional<V> executeValue(String key, BooleanSupplier loaded, Supplier<Optional<V>> loader) {
         ReentrantLock lock = getLock(key);
         if (tryLock(lock)) {
             return loadValueWithLock(lock, loader);
@@ -70,10 +71,10 @@ public class CacheLoadStampedeGuard {
         }
     }
 
-    private void waitForCurrentLoad(String cacheName, ReentrantLock lock, Supplier<Boolean> loaded) {
+    private void waitForCurrentLoad(String cacheName, ReentrantLock lock, BooleanSupplier loaded) {
         Instant deadline = Instant.now().plus(cacheProperties.stampede().waitTimeout());
         while (Instant.now().isBefore(deadline)) {
-            if (Boolean.TRUE.equals(loaded.get()) || !lock.isLocked()) {
+            if (loaded.getAsBoolean() || !lock.isLocked()) {
                 return;
             }
             sleep();

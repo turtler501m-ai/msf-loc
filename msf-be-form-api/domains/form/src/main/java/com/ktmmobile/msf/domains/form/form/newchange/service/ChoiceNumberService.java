@@ -1,40 +1,62 @@
 package com.ktmmobile.msf.domains.form.form.newchange.service;
 
-import java.net.SocketTimeoutException;
-import java.util.HashMap;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
+import com.ktmmobile.msf.domains.cache.agency.application.port.in.AgencyCacheReader;
+import com.ktmmobile.msf.domains.externalclient.mspprx.application.dto.MspPrxSoapResponse;
+import com.ktmmobile.msf.domains.externalclient.mspprx.application.port.out.MspPrxClient;
+import com.ktmmobile.msf.domains.externalclient.mspprx.support.util.XmlConvertUtils;
 import com.ktmmobile.msf.domains.form.common.code.ResponseMessage;
 import com.ktmmobile.msf.domains.form.common.constants.Constants;
-import com.ktmmobile.msf.domains.form.common.dto.McpRequestOsstDto;
 import com.ktmmobile.msf.domains.form.common.dto.response.FormResponse;
-import com.ktmmobile.msf.domains.form.common.exception.McpMplatFormException;
-import com.ktmmobile.msf.domains.form.common.exception.SelfServiceException;
-import com.ktmmobile.msf.domains.form.common.mplatform.vo.MPhoneNoListXmlVO;
-import com.ktmmobile.msf.domains.form.common.mplatform.vo.MSimpleOsstXmlVO;
+import com.ktmmobile.msf.domains.form.common.mplatform.MsfMcpOsstPrxService;
 import com.ktmmobile.msf.domains.form.form.common.dto.McpRequestOsstRequest;
 import com.ktmmobile.msf.domains.form.form.common.service.FormCommService;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoRequest;
+import com.ktmmobile.msf.domains.form.form.common.vo.McpRequestOsstVo;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestOsstVo;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeNUInfoRequest;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeNUInfoResponse;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.SearchNumberRequest;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.SearchNumberResponse;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.mplatform.InqrSvcNoInfoInDTO;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.mplatform.MplatFormNU1Request;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.mplatform.MplatFormNU1Response;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.mplatform.MplatFormNU2Request;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.mplatform.ResvTlphNoInDTO;
 import com.ktmmobile.msf.domains.form.form.newchange.repository.msp.FormCommWriteMapper;
+import com.ktmmobile.msf.domains.form.form.newchange.repository.msp.McpRequestOsstWriteMapper;
+import com.ktmmobile.msf.domains.form.form.newchange.repository.smartform.MsfRequestOsstWriteMapper;
+import com.ktmmobile.msf.domains.form.form.newchange.repository.smartform.NewChangeMpReadMapper;
 import com.ktmmobile.msf.domains.form.form.newchange.repository.smartform.NewChangeReadMapper;
+import com.ktmmobile.msf.domains.form.form.newchange.repository.smartform.NewChangeWriteMapper;
+
+import static com.ktmmobile.msf.domains.externalclient.mspprx.domain.code.MplatformOsstServiceType.CHOICE_NUMBER_CANCEL;
+import static com.ktmmobile.msf.domains.externalclient.mspprx.domain.code.MplatformOsstServiceType.CHOICE_NUMBER_RESERVE;
+import static com.ktmmobile.msf.domains.externalclient.mspprx.domain.code.MplatformOsstServiceType.CHOICE_NUMBER_SEARCH;
+import static com.ktmmobile.msf.domains.form.common.constants.Constants.EVENT_CODE_NUMBER_REG;
+import static com.ktmmobile.msf.domains.form.common.constants.Constants.OSST_SUCCESS;
+import static com.ktmmobile.msf.domains.form.common.constants.Constants.WORK_CODE_RES;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class ChoiceNumberService {
 
+    private final MspPrxClient mspPrxClient;
     private final FormCommService formCommService;
     private final NewChangeReadMapper newChangeReadMapper;
+    private final NewChangeWriteMapper newChangeWriteMapper;
     private final FormCommWriteMapper formCommWriteMapper;
-    //private final MsfMplatFormOsstServerAdapter mplatFormOsstServerAdapter;
-
-    //신규가입 희망번호 조회는 개통사전체크요청이 필수
+    private final MsfMcpOsstPrxService msfMcpOsstPrxService;
+    private final NewChangeMpReadMapper newChangeMpReadMapper;
+    private final McpRequestOsstWriteMapper mcpRequestOsstWriteMapper;
+    private final MsfRequestOsstWriteMapper msfRequestOsstWriteMapper;
+    private final AgencyCacheReader agencyCacheReader;
 
     /**
      * 신규가입 희망번호 조회
@@ -49,315 +71,329 @@ public class ChoiceNumberService {
      * MCP_REQUEST_OSST 는 호출전 REQUEST INSERT, 호출후 RESPONSE INSERT
      * 고객포탈은 희망번호 저장 : MCP_REQUEST.REQ_WANT_NUMBER >> 스마트에서 직접 PRX 호출한다면 MSF_REQUEST 테이블에 저장하려면 컬럼 추가 필요.
      **/
-    //public Map<String, Object> searchNumber(McpRequestDto mcpRequestDto) {
-    //public FormResponse<SearchNumberResponse> getSearchNumber(SearchNumberRequest request) {
-    public FormResponse<SearchNumberResponse> getSearchNumber(SearchNumberRequest request) {
+    @SuppressWarnings({"PMD.EmptyControlStatement", "PMD.MisplacedNullCheck"})
+    public FormResponse<List<MplatFormNU1Response.OutDto.SvcNoList>> getSearchNumber(SearchNumberRequest request) {
         log.debug("★ 신규가입 희망번호 조회 ★ reqWantNumber: {}", request.getReqWantNumber());
 
-        //Parameter 정보 : requestKey, reqWantNumber
-
         //0. 입력 데이타 검증
+        Long requestKey = request.getRequestKey();
         String reqWantNumber = request.getReqWantNumber();
         if (reqWantNumber.length() != 4) {
-            return FormResponse.of(ResponseMessage.VALID_SEARCH_NUMBER_NOT_CORRECT); //희망번호 입력값 4자리 검증
+            return FormResponse.of(ResponseMessage.VALID_SEARCH_NUMBER_NOT_CORRECT); //희망번호 입력 값 4자리를 입력해 주세요.
         }
 
-        //@@추후 삭제필요!!@!!!!
-        if ("9999".equals(request.getReqWantNumber())) {
-            return FormResponse.of(ResponseMessage.VALID_SEARCH_NUMBER_FAIL); //희망번호 조회 실패?를 여기에?? 일단~~
-        }
-
-        HashMap<String, Object> rtnMap = new HashMap<String, Object>();
-        SearchNumberResponse searchNumberResponse = new SearchNumberResponse(); //Return DTO 설정
+        //1. MCP_REQUEST_OSST 에서 MVNO_ORD_NO 추출 ( REQUEST_KEY )
         McpRequestOsstRequest mcpRequestOsstRequest = new McpRequestOsstRequest();
+        mcpRequestOsstRequest.setRequestKey(requestKey);
+        mcpRequestOsstRequest.setPrgrStatCd(Constants.EVENT_CODE_PRE_CHECK); //PC0
+        //mcpRequestOsstRequest.setRsltCd(Constants.OSST_SUCCESS); //OSST 연동 성공 - PC2 에만 옴
+        String resNo = formCommService.getMvnoOrdNo(mcpRequestOsstRequest);
 
-        //1. 개통전 사전체크 진행여부 확인을 위해 신청서번호(request_key) 로 예약번호 (res_no) 값을 조회한다.
-        //    개통전 사전체크가 완료되면 MCP_REQUEST_OSST 테이블에도 저장하고 스마트 MSF_REQUEST_TEMP 테이블에는 스마트 프로세스에서 업데이트 처리하기 때문이다.
-        //    스마트에서 조회된 RES_NO 값으로 MCP_REQUEST_OSST 테이블에서 개통전 사전체크(PC0) 로 저장 여부를 조회한다.
-        String resNo = "955336"; //@@삭제필수@@
-        /*String resNo = newChangeReadMapper.getMsfResNo(request.getRequestKey());
-        if (resNo == null) {
-            return FormResponse.of(ResponseMessage.NO_DATA); //개통전 사전체크를 진행해야 함. 흠.......
-        } else {
-            mcpRequestOsstRequest.setMvnoOrdNo(resNo);
-            mcpRequestOsstRequest.setPrgrStatCd(Constants.EVENT_CODE_PRE_CHECK);
-        }*/
-
-        //골드번호 여부 체크@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-        //2. 개통전 사전체크 호출 여부 확인
-        int osstCount = formCommService.getOsstCount(mcpRequestOsstRequest);
-        osstCount = 1; //@@삭제필요@@ : prx 호출 전이므로 강제처리
-        if (osstCount == 0) {
-            return FormResponse.of(ResponseMessage.NO_DATA); //개통전 사전체크를 진행해야 함. 흠.......
-        }
-        //3. OSST_ORD_NO 조회 >> NU1 호출 시 MCP-API 에서 호출해서 가져가서 필요없는 항목
-        /*mcpRequestOsstRequest = new McpRequestOsstRequest();
-        mcpRequestOsstRequest.setMvnoOrdNo(resNo); //개통전 사전체크가 정상적인 경우 위에서 호출해서 처리함.
-        String osstNo = formCommService.getOsstOrdNo(mcpRequestOsstRequest);*/
-
-        //4. MCP_REQUEST_OSST 호출 이력확인 (RES_NO , PRGR_STAT_CD) - 신규가입 희망번호 조회가능횟수 조회
-        // >> prx 의 SimpleOpenServiceCall 호출 후 호출결과를 MCP_REQUEST_OSST 테이블에 INSERT 처리하므로 해당 결과여부 확인.
-        // >> resNo가 없다고 오류가 나진 않음. 최초에는 없고 호출 후 세션에 저장하고 언제 세션에서 날리지?
-        // >> 세션에 저장하기 보다는 requestKey 로 조회해야하나? 흠...
+        //1.   MCP_REQUEST_OSST 에서 OSST_ORD_NO 추출 ( MVNO_ORD_NO )
+        //1-1. 개통전 사전체크 확인 (MCP_REQUEST_OSST.PRGR_STAT_CD : PC2 의 RSLT_CD : 0000 일 경우 정상으로 처리
         mcpRequestOsstRequest = new McpRequestOsstRequest();
-        mcpRequestOsstRequest.setMvnoOrdNo(resNo); //개통전 사전체크가 정상적인 경우 위에서 호출해서 처리함.
-        mcpRequestOsstRequest.setPrgrStatCd(Constants.EVENT_CODE_SEARCH_NUMBER);
-        int tryCount = formCommService.getMcpRequestOsstCount(mcpRequestOsstRequest);
-        searchNumberResponse.setTryCount(tryCount);
-        if (tryCount > 24) { //24건보다 많으면 안됨.
-            //throw new McpCommonJsonException("0004", OVER_LIMIT_EXCEPTION);
-            return FormResponse.of(ResponseMessage.VALID_SEARCH_NUMBER_OVER_LIMIT, searchNumberResponse);
+        mcpRequestOsstRequest.setPrgrStatCd(Constants.EVENT_CODE_PC_RESULT); //PC2
+        mcpRequestOsstRequest.setRsltCd(Constants.OSST_SUCCESS); //OSST 연동 성공 - PC2 에만 옴
+        mcpRequestOsstRequest.setMvnoOrdNo(resNo);
+        int osstCount = formCommService.getOsstCount(mcpRequestOsstRequest);
+        if (osstCount == 0) {
+            return FormResponse.of(ResponseMessage.VALID_SEARCH_NUMBER_NEED_PRECHECK); //개통전 사전체크를 진행해주세요.
         }
+        //1.2   OSST_ORD_NO 추출
+        //String osstOrdNo = formCommService.getOsstOrdNo(mcpRequestOsstRequest);
 
-        //5. MCP_REQUEST 테이블에 희망번호 정보 저장 @@처리필요@@
-        //@@ PRX 되면 처리해야하는데... 그건 사전체크 시 데이타 정상 저장되도록해야함.
-        //AGENT_CODE , OPER_TYPE , REQUEST_KEY 와 희망번호가 저장되어야 함. - 실제 서비스 호출 시 확인필요
-        /*McpRequestDto mcpRequestDto = new McpRequestDto();
-        mcpRequestDto.setRequestKey(request.getRequestKey());
-        mcpRequestDto.setReqWantNumber(request.getReqWantNumber());
-        if (!formCommWriteMapper.updateMcpRequest(mcpRequestDto)) {
-            return FormResponse.of(ResponseMessage.VALID_SEARCH_NUMBER_OVER_LIMIT, searchNumberResponse);
-        }*/
+        //2 신규가입 희망번호 조회용 항목 조회 쿼리 실행 ( RES_NO == MVNO_ORD_NO )
+        NewChangeNUInfoResponse newChangeNUInfoResponse = formCommService.getXmlMessageNU1(resNo);
 
-        //6. MP호출
-        //appformSvc.getPhoneNoList(sessAppformReqDto.getResNo(), EVENT_CODE_SEARCH_NUMBER);
-        MPhoneNoListXmlVO mPhoneNoListXmlVO = null;
+        //2-1 신규가입 희망번호 MP 호출 DATA SET
+        MplatFormNU1Request mplatFormNU1Request = new MplatFormNU1Request();
+        mplatFormNU1Request.setOsstOrdNo(newChangeNUInfoResponse.getOsstOrdNo());
+        InqrSvcNoInfoInDTO inqrSvcNoInfoInDTO = new InqrSvcNoInfoInDTO();
+        inqrSvcNoInfoInDTO.setAsgnAgncId(newChangeNUInfoResponse.getAsgnAgncId()); //AA00364
+        inqrSvcNoInfoInDTO.setAsgnAgncYn(newChangeNUInfoResponse.getAsgnAgncYn());
+        inqrSvcNoInfoInDTO.setCntryCd(newChangeNUInfoResponse.getCntryCd());
+        inqrSvcNoInfoInDTO.setCustNo(newChangeNUInfoResponse.getCustNo());
+        inqrSvcNoInfoInDTO.setInqrBase(newChangeNUInfoResponse.getInqrBase());
+        inqrSvcNoInfoInDTO.setInqrCascnt(newChangeNUInfoResponse.getInqrCascnt());
+        inqrSvcNoInfoInDTO.setNowSvcIndCd(newChangeNUInfoResponse.getNowSvcIndCd());
+        inqrSvcNoInfoInDTO.setSearchGubun(newChangeNUInfoResponse.getSearchGubun());
+        inqrSvcNoInfoInDTO.setArPrGubun(newChangeNUInfoResponse.getArPrGubun());
+        inqrSvcNoInfoInDTO.setTlphNoChrcCd(newChangeNUInfoResponse.getTlphNoChrcCd());
+        inqrSvcNoInfoInDTO.setTlphNoIndCd(newChangeNUInfoResponse.getTlphNoIndCd());
+        inqrSvcNoInfoInDTO.setTlphNoPtrn("010____" + request.getReqWantNumber());
+        inqrSvcNoInfoInDTO.setTlphNoUseCd(newChangeNUInfoResponse.getTlphNoUseCd());
+        inqrSvcNoInfoInDTO.setTlphNoUseMntCd(newChangeNUInfoResponse.getTlphNoUseMntCd());
+        mplatFormNU1Request.setInqrSvcNoInfoInDTO(inqrSvcNoInfoInDTO);
+
+        //2-2 신규가입 희망번호 MP 호출 - NU1
+        MspPrxSoapResponse mspPrxSoapResponse = msfMcpOsstPrxService.callXmlOsstService(List.of(mplatFormNU1Request),
+            CHOICE_NUMBER_SEARCH.getEventCd(), resNo);
+
+        //2-3 신규가입 희망번호 MP 호출 결과 DATA SET
+        List<MplatFormNU1Response.OutDto.SvcNoList> phoneNumberList = null;
         try {
-            mPhoneNoListXmlVO = formCommService.getPhoneNoList(resNo, Constants.EVENT_CODE_SEARCH_NUMBER);
-            if (mPhoneNoListXmlVO.isSuccess()) {
-                if (mPhoneNoListXmlVO.getList() != null && !mPhoneNoListXmlVO.getList().isEmpty()) {
-                    //SessionUtils.saveCntSession(++searchCnt); //-----> 스마트신청서 : 세션을 프레임웍에 맞춰서 교체해야함
-                    //rtnMap.put("SEARCH_CNT", searchCnt);
-                    //rtnMap.put("RESULT_CODE", Constants.AJAX_SUCCESS);
-                    //rtnMap.put("RESULT_OBJ_LIST", mPhoneNoListXmlVO.getList());
-
-                    //searchNumberResponse.setMPhoneNoList(mPhoneNoListXmlVO.getList());
-                } else {
-                    rtnMap.put("RESULT_CODE", "0001");
-                }
+            MplatFormNU1Response mplatFormNU1Response = XmlConvertUtils.xmlReturnParser(mspPrxSoapResponse.rawXml(), MplatFormNU1Response.class);
+            if (mplatFormNU1Response.getCommHeader().isSuccess()) {
+                phoneNumberList = mplatFormNU1Response.getOutDto().getSvcNoListAll();
             } else {
-                rtnMap.put("RESULT_CODE", "0002");
-                rtnMap.put("RESULT_XML", mPhoneNoListXmlVO.getResponseXml());
-                rtnMap.put("ERROR_MSG", mPhoneNoListXmlVO.getResultCode());
+                return FormResponse.of(ResponseMessage.NO_DATA);
             }
-        } catch (McpMplatFormException e) {
-            rtnMap.put("RESULT_CODE", "9997");
-            rtnMap.put("ERROR_MSG", "response massage is null.");
-        } catch (SocketTimeoutException e) {
-            rtnMap.put("RESULT_CODE", "9999");
-            rtnMap.put("ERROR_MSG", "SocketTimeoutException.");
-        } catch (SelfServiceException e) {
-            rtnMap.put("RESULT_CODE", "9998");
-            rtnMap.put("ERROR_MSG", e.getMessage());
+        } catch (Exception _) {
+            return FormResponse.of(ResponseMessage.VALID_SEARCH_NUMBER_EXCEPTION);
         }
 
-        //7. 서비스호출이 정상이라면 스마트 테이블에 저장?
-        //  MSF_REQUEST_OSST ? , MSF_REQUEST ? , MSF_REQUEST_TEMP ? 에 저장
-        //  MSF_REQUEST_OSST 는 안해도 되겠지?
-        if (rtnMap.get("RESULT_CODE").equals(Constants.AJAX_SUCCESS)) {
-            //MCP_REQUEST 조회해와서 MSF_REQUEST_TEMP 에는 업데이트?? 또는 호출 전 MSF_REQUEST_TEMP 테이블에 희망번호만 업데이트?
-            //MCP_REQUEST_OSST 조회해와서 MSF_REQUEST_OSST 에 추가
-        }
-
-        //@@ prx 오픈전까지 강제 성공처리 @@삭제필요!!!!
-        rtnMap.put("RESULT_CODE", Constants.AJAX_SUCCESS);
-
-        List<MarketInfo> marketList = List.of(
-            new MarketInfo("KTF", "01025679878", "010-2567-9878", "kGBQFD/q0YBTCuaJvb6rgw=="),
-            new MarketInfo("KTF", "01097839878", "010-9783-9878", "H9tDkJ36z9JTCuaJvb6rgw=="),
-            new MarketInfo("KTF", "01027069878", "010-2706-9878", "seZbgXBQKS9TCuaJvb6rgw=="),
-            new MarketInfo("KTF", "01029149878", "010-2914-9878", "i6LgwCy3xeVTCuaJvb6rgw=="),
-            new MarketInfo("KTF", "01029699878", "010-2969-9878", "DAjv7I6wyc5TCuaJvb6rgw=="),
-            new MarketInfo("KTF", "01033949878", "010-3394-9878", "+W1l/smHQ4hTCuaJvb6rgw=="),
-            new MarketInfo("KTF", "01042099878", "010-4209-9878", "3JG5FtGdDQFTCuaJvb6rgw=="),
-            new MarketInfo("KTF", "01042679878", "010-4267-9878", "QwV/WGoneHRTCuaJvb6rgw=="),
-            new MarketInfo("KTF", "01042699878", "010-4269-9878", "MVO48rc6Qm5TCuaJvb6rgw=="),
-            new MarketInfo("KTF", "01043759878", "010-4375-9878", "VAhJwziDq71TCuaJvb6rgw=="),
-            new MarketInfo("KTF", "01051479878", "010-5147-9878", "/AJOp4tu75ZTCuaJvb6rgw=="),
-            new MarketInfo("KTF", "01065039878", "010-6503-9878", "PXO0EzqBeB9TCuaJvb6rgw=="),
-            new MarketInfo("KTF", "01066819878", "010-6681-9878", "dIXUuSLYre9TCuaJvb6rgw=="),
-            new MarketInfo("KTF", "01074669878", "010-7466-9878", "Bpu2TFJP0SpTCuaJvb6rgw=="),
-            new MarketInfo("KTF", "01026139878", "010-2613-9878", "jcps9Xo34jFTCuaJvb6rgw==")
-        );
-
-        //rtnMap.put("RESULT_OBJ_LIST", marketList);
-        //rtnMap.put("RESULT_OBJ_LIST", mPhoneNoListXmlVO.getList());
-        //return rtnMap;
-
-        searchNumberResponse.setMarketList(marketList);
-        return FormResponse.of(ResponseMessage.VALID_SEARCH_NUMBER_SUCCESS, searchNumberResponse);
+        return FormResponse.of(ResponseMessage.VALID_SEARCH_NUMBER_SUCCESS, phoneNumberList);
     }
-
 
     /**
      * 신규가입 희망번호 예약
      * MCP_REQUEST_OSST 테이블에 선택한
      * 전화번호, 암호화된 전화번호, 할당대리점ID, 전화번호상태코드, 번호소유통신사사업자코드, 개통서비스구분코드 등을 저장 후 MP호출
      **/
-    //public Map<String, Object> setNumber(McpRequestOsstDto request) {
+    //2-1 골드번호 입력 확인 (저장할때 골드번호를 체크함. 흠.. 번호가 세자리 다 들어가야함. 공통코드 확인해봐야함)
+    //    if (OPER_TYPE_NEW.equals("NAC3")) { //if (OPER_TYPE_NEW.equals(request.getOperTypeCd())) {
+    //    //appformSvc.containsGoldNumbers(Arrays.asList(request.getReqWantNumber(),
+    //    //    request.getReqWantNumber2(),
+    //    //    request.getReqWantNumber3()));
+    //}
+    //GoldNumberList - NMCP_CD_DTL
+    //CommCodeMapper.getCodeList
+    @SuppressWarnings("PMD.EmptyControlStatement")
     public FormResponse<SearchNumberResponse> setChoiseNumber(SearchNumberRequest request) {
-        //log.debug("★ 신규가입 희망번호 예약 ★ tlphNo: {}, custNo: {}, custTypeCd: {}", request.getTlpNo(), request.getCustNo(), request.getCustTypeCd());
-        log.debug("★ 신규가입 희망번호 예약 ★ tlphNo: {}", request.getTlpNo());
+        //log.debug("★ 신규가입 희망번호 예약 ★ tlphNo: {}, encdTlphNo: {}", request.getTlpNo(), request.getEncdTlphNo());
+        log.debug("★ 신규가입 희망번호 예약 ★ requestKey: {}, tlphNoOwnCmpnCd: {}, tlphNo: {}, encdTlphNo: {}",
+            request.getRequestKey(),
+            request.getTlphNoOwnCmpnCd(),
+            request.getTlpNo(),
+            request.getEncdTlphNo());
 
-        HashMap<String, Object> rtnMap = new HashMap<String, Object>();
-        SearchNumberResponse searchNumberResponse = new SearchNumberResponse(); //Return DTO 설정
+        //0. 입력 데이타 검증
+        Long requestKey = request.getRequestKey();
+        String tlpNo = request.getTlpNo();
+        String encdTlphNo = request.getEncdTlphNo();
+        String tlphNoOwnCmpnCd = request.getTlphNoOwnCmpnCd();
+        if (!StringUtils.hasText(tlpNo) || !StringUtils.hasText(encdTlphNo)) {
+            return FormResponse.of(ResponseMessage.VALID_RESERVE_NUMBER_FAIL); //희망번호 예약을 위한 번호를 선택해 주세요.
+        }
+
+        //2. MP호출을 위한 데이타 추출
+        //2.1 MCP_REQUEST_OSST 테이블에서 정보 추출 : 만약에 넘어온 값에 있다면 그걸 사용하면 되긴하는데, 일단 추출
         McpRequestOsstRequest mcpRequestOsstRequest = new McpRequestOsstRequest();
+        mcpRequestOsstRequest.setRequestKey(requestKey);
+        mcpRequestOsstRequest.setPrgrStatCd(Constants.EVENT_CODE_PC_RESULT); //PC2
+        mcpRequestOsstRequest.setRsltCd("0000");
+        String resNo = formCommService.getMvnoOrdNo(mcpRequestOsstRequest);
 
-        //1. 개통전 사전체크 진행여부 확인을 위해 신청서번호(request_key) 로 예약번호 (res_no) 값을 조회한다.
-        //    개통전 사전체크가 완료되면 MCP_REQUEST_OSST 테이블에도 저장하고 스마트 MSF_REQUEST_TEMP 테이블에는 스마트 프로세스에서 업데이트 처리하기 때문이다.
-        //    스마트에서 조회된 RES_NO 값으로 MCP_REQUEST_OSST 테이블에서 개통전 사전체크(PC0) 로 저장 여부를 조회한다.
-        String resNo = newChangeReadMapper.getMsfResNo(request.getRequestKey());
+        //1. 개통전 사전체크 확인 (MCP_REQUEST_OSST.PRGR_STAT_CD : PC2 의 RSLT_CD : 0000 일 경우 정상으로 처리
+        mcpRequestOsstRequest = new McpRequestOsstRequest();
+        mcpRequestOsstRequest.setPrgrStatCd(Constants.EVENT_CODE_PC_RESULT); //PC2
         mcpRequestOsstRequest.setMvnoOrdNo(resNo);
-        mcpRequestOsstRequest.setPrgrStatCd(Constants.EVENT_CODE_PRE_CHECK);
-        resNo = "955336"; //@@삭제필수@@
-
-        //2. 개통전 사전체크 호출 여부 확인
+        mcpRequestOsstRequest.setRsltCd("0000");
         int osstCount = formCommService.getOsstCount(mcpRequestOsstRequest);
-        osstCount = 1; //@@삭제필요@@ : prx 호출 전이므로 강제처리
         if (osstCount == 0) {
-            return null; //개통전 사전체크를 진행해야 함. 흠.......
+            return FormResponse.of(ResponseMessage.VALID_SEARCH_NUMBER_NEED_PRECHECK); //개통전 사전체크를 진행해주세요.
         }
-        //3. OSST_ORD_NO 조회 >> NU1 호출 시 MCP-API 에서 호출해서 가져가서 필요없는 항목
-        /*mcpRequestOsstRequest = new McpRequestOsstRequest();
-        mcpRequestOsstRequest.setMvnoOrdNo(resNo); //개통전 사전체크가 정상적인 경우 위에서 호출해서 처리함.
-        String osstNo = formCommService.getOsstOrdNo(mcpRequestOsstReqvuest);*/
-        String osstNo = "955336"; //@@삭제필수@@
-        String agentCode = "";
+        String osstOrdNo = formCommService.getOsstOrdNo(mcpRequestOsstRequest);
 
-        //MCP_REQUEST_OSST 테이블에 저장하기 위해
-        McpRequestOsstDto mcpRequestOsstDto = new McpRequestOsstDto();
-        mcpRequestOsstDto.setMvnoOrdNo(resNo);
-        mcpRequestOsstDto.setOsstOrdNo(osstNo);
-        mcpRequestOsstDto.setPrgrStatCd(Constants.EVENT_CODE_NUMBER_REG);
-        mcpRequestOsstDto.setAsgnAgncId(agentCode);
-        mcpRequestOsstDto.setOpenSvcIndCd("03"); //03 고정
-        mcpRequestOsstDto.setTlphNoStatCd("AR"); //"tlphNoStatChngRsnCd = RSV의 경우 AR , tlphNoStatChngRsnCd = RRS의 경우 AA"
-        mcpRequestOsstDto.setTlphNoOwnCmpnCd(request.getTlphNoOwnCmpnCd());
-        mcpRequestOsstDto.setEncdTlphNo(request.getEncdTlphNo());
-        mcpRequestOsstDto.setTlphNo(request.getTlpNo());
-        mcpRequestOsstDto.setOpenSvcIndCd("");
-        mcpRequestOsstDto.setNstepGlobalId("");
-        mcpRequestOsstDto.setIfType(Constants.WORK_CODE_RES);
-        mcpRequestOsstDto.setRsltCd(Constants.OSST_SUCCESS);
+        //1. 개통전 사전체크 확인 (MCP_REQUEST_OSST.PRGR_STAT_CD : PC2 의 RSLT_CD : 0000 일 경우 정상으로 처리
+        //McpRequestOsstRequest mcpRequestOsstRequest = new McpRequestOsstRequest();
+        //mcpRequestOsstRequest.setRequestKey(requestKey);
+        //mcpRequestOsstRequest.setPrgrStatCd(Constants.EVENT_CODE_PC_RESULT); //PC2
+        //mcpRequestOsstRequest.setRsltCd("0000");
+        //int osstCount = formCommService.getMcpRequestOsstCount(mcpRequestOsstRequest);
+        //if (osstCount == 0) {
+        //    //return FormResponse.of(ResponseMessage.VALID_SEARCH_NUMBER_NEED_PRECHECK); //개통전 사전체크를 진행해주세요.
+        //}
 
-        //3. MP 호출
-        if (formCommService.setMcpRequestOsst(mcpRequestOsstDto)) {
-            MSimpleOsstXmlVO simpleOsstXmlVO = null;
-            //번호예약(NU2)
-            try {
-                Thread.sleep(3000);
-                simpleOsstXmlVO = formCommService.sendOsstService(resNo, Constants.EVENT_CODE_NUMBER_REG, Constants.WORK_CODE_RES);
-                if (simpleOsstXmlVO.isSuccess()) {
-                    rtnMap.put("RESULT_CODE", Constants.AJAX_SUCCESS);
-                } else {
-                    rtnMap.put("RESULT_CODE", "0001");
-                    rtnMap.put("RESULT_XML", simpleOsstXmlVO.getResponseXml());
-                    rtnMap.put("ERROR_MSG", simpleOsstXmlVO.getResultCode());
+        //2. MP호출을 위한 데이타 추출
+        //2.1 MCP_REQUEST_OSST 테이블에서 정보 추출 : 만약에 넘어온 값에 있다면 그걸 사용하면 되긴하는데, 일단 추출
+        //String resNo = formCommService.getMvnoOrdNo(mcpRequestOsstRequest);
+
+        //2.2 MCP_REQUEST_OSST 테이블에서 OSST_ORD_NO 추출
+        //mcpRequestOsstRequest = new McpRequestOsstRequest();
+        //mcpRequestOsstRequest.setRsltCd("0000");
+        //mcpRequestOsstRequest.setPrgrStatCd(Constants.EVENT_CODE_PC_RESULT); //PC2
+        //mcpRequestOsstRequest.setMvnoOrdNo(resNo);
+        //String osstOrdNo = formCommService.getOsstOrdNo(mcpRequestOsstRequest);
+
+        //MCP_REQUEST_OSST 테이블에 저장 - NU2 예약정보 미리저장 (고객포탈 내용 적용)
+        McpRequestOsstVo mcpRequestOsstVo = new McpRequestOsstVo();
+        mcpRequestOsstVo.setMvnoOrdNo(resNo);
+        mcpRequestOsstVo.setPrgrStatCd(EVENT_CODE_NUMBER_REG);
+        mcpRequestOsstVo.setOsstOrdNo(osstOrdNo);
+        mcpRequestOsstVo.setOpenSvcIndCd("03");
+        mcpRequestOsstVo.setIfType(WORK_CODE_RES);
+        mcpRequestOsstVo.setRsltCd(OSST_SUCCESS);
+        mcpRequestOsstVo.setTlphNoOwnCmpnCd(tlphNoOwnCmpnCd);
+        mcpRequestOsstVo.setTlphNo(tlpNo);
+        mcpRequestOsstVo.setEncdTlphNo(encdTlphNo);
+        mcpRequestOsstWriteMapper.insertMcpRequestOsst(mcpRequestOsstVo);
+
+        //MSF_REQUEST_OSST 테이블에 저장 - NU2 예약정보 미리저장 (고객포탈 내용 적용)
+        MsfRequestOsstVo msfRequestOsstVo = new MsfRequestOsstVo();
+        msfRequestOsstVo.setMvnoOrdNo(resNo);
+        msfRequestOsstVo.setPrgrStatCd(EVENT_CODE_NUMBER_REG);
+        msfRequestOsstVo.setOsstOrdNo(osstOrdNo);
+        msfRequestOsstVo.setOpenSvcIndCd("03");
+        msfRequestOsstVo.setIfTypeCd(WORK_CODE_RES);
+        msfRequestOsstVo.setRsltCd(OSST_SUCCESS);
+        msfRequestOsstVo.setTlphNoOwnCmpnCd(tlphNoOwnCmpnCd);
+        msfRequestOsstVo.setTlphNo(tlpNo);
+        msfRequestOsstVo.setEncdTlphNo(encdTlphNo);
+        msfRequestOsstWriteMapper.insertMsfRequestOsst(msfRequestOsstVo);
+
+        //2.2 신규가입 희망번호 예약용 항목 조회 쿼리 실행
+        NewChangeNUInfoRequest newChangeNUInfoRequest = new NewChangeNUInfoRequest();
+        newChangeNUInfoRequest.setResNo(resNo);
+        newChangeNUInfoRequest.setGubun("RSV");
+        NewChangeNUInfoResponse newChangeNUInfoResponse = formCommService.getXmlMessageNU2(newChangeNUInfoRequest);
+
+        //2.3 신규가입 희망번호 예약 MP 호출 DATA SET
+        if (newChangeNUInfoResponse != null) { //임시.. 왜 데이타가 없냐고요 - 정상되면 주석 풀어야함.
+            MplatFormNU2Request mplatFormNU2Request = new MplatFormNU2Request();
+            mplatFormNU2Request.setOsstOrdNo(newChangeNUInfoResponse.getOsstOrdNo());
+            ResvTlphNoInDTO resvTlphNoInDTO = new ResvTlphNoInDTO();
+            resvTlphNoInDTO.setGubun(newChangeNUInfoResponse.getGubun());
+            resvTlphNoInDTO.setTlphNo(newChangeNUInfoResponse.getTlphNo());
+            resvTlphNoInDTO.setCustNo(newChangeNUInfoResponse.getCustNo());
+            resvTlphNoInDTO.setTlphNoStatChngRsnCd(newChangeNUInfoResponse.getTlphNoStatChngRsnCd());
+            resvTlphNoInDTO.setTlphNoStatCd(newChangeNUInfoResponse.getTlphNoStatCd());
+            resvTlphNoInDTO.setCustTypeCd(newChangeNUInfoResponse.getCustTypeCd());
+            resvTlphNoInDTO.setNowSvcIndCd(newChangeNUInfoResponse.getNowSvcIndCd());
+            resvTlphNoInDTO.setEncdTlphNo(newChangeNUInfoResponse.getEncdTlphNo());
+            resvTlphNoInDTO.setMpngTlphNoYn(newChangeNUInfoResponse.getMpngTlphNoYn());
+            //resvTlphNoInDTO.setAsgnAgncId(newChangeNUInfoResponse.getAsgnAgncId());
+            mplatFormNU2Request.setResvTlphNoInDTO(resvTlphNoInDTO);
+
+            //2.4 신규가입 번호예약 MP 호출 - NU2
+            MspPrxSoapResponse mspPrxSoapResponse = msfMcpOsstPrxService.callXmlOsstService(List.of(mplatFormNU2Request),
+                CHOICE_NUMBER_RESERVE.getEventCd(), resNo);
+
+            //2.5 신규가입 번호예약 MP 호출 결과 DATA SET
+            String globalNo = "";
+            String responseType = "";
+            String responseCode = "";
+            String responseBasic = "";
+
+            if (mspPrxSoapResponse == null) { //연동결과 실패.
+                return FormResponse.of(ResponseMessage.NO_DATA);
+            } else { //연동결과 성공
+                globalNo = mspPrxSoapResponse.globalNo();
+                responseType = mspPrxSoapResponse.responseType();
+                responseCode = mspPrxSoapResponse.responseCode(); //responseType 값이 E 일 경우 responseCode 값이 넘어오는 것으로 확인됨.
+                responseBasic = mspPrxSoapResponse.responseBasic();
+
+                log.debug("★ 연동결과 >> responseType: {}, responseCode: {}, responseBasic: {}, globalNo: {}",
+                    responseType,
+                    responseCode,
+                    responseBasic,
+                    globalNo);
+
+                if (!"N".equals(responseType)) {
+                    return FormResponse.of(ResponseMessage.VALID_RESERVE_NUMBER_FAIL); //실패
                 }
-            } catch (McpMplatFormException e) {
-                rtnMap.put("RESULT_CODE", "9997");
-                rtnMap.put("ERROR_MSG", "response massage is null.");
-            } catch (SocketTimeoutException e) {
-                rtnMap.put("RESULT_CODE", "9999");
-                //return rtnMap;
-
-            } catch (SelfServiceException e) {
-                rtnMap.put("RESULT_CODE", "9998");
-                rtnMap.put("ERROR_MSG", e.getMessage());
-                //return rtnMap;
-            } catch (InterruptedException e) {
-                //logger.error("Exception e : {}", e.getMessage());
             }
-
-        } else {
-            //throw new McpCommonJsonException("9997", DB_EXCEPTION);
         }
 
-        //4. 서비스호출이 정상이라면 스마트 테이블에 저장?
-        //  MSF_REQUEST_OSST ? , MSF_REQUEST ? , MSF_REQUEST_TEMP ? 에 저장
-        //  MSF_REQUEST_OSST 는 안해도 되겠지?
-        if (rtnMap.get("RESULT_CODE").equals(Constants.AJAX_SUCCESS)) {
-            //MCP_REQUEST 조회해와서 MSF_REQUEST_TEMP 에는 업데이트?? 또는 호출 전 MSF_REQUEST_TEMP 테이블에 희망번호만 업데이트?
-            //MCP_REQUEST_OSST 조회해와서(?) MSF_REQUEST_OSST 에 추가
-        }
-
-        //rtnMap.put("RESULT_CODE", Constants.AJAX_SUCCESS);
-        //return rtnMap;
-
-        return FormResponse.of(ResponseMessage.VALID_RESERVE_NUMBER_SUCCESS, null);
+        return FormResponse.of(ResponseMessage.VALID_RESERVE_NUMBER_SUCCESS); //성공
     }
+
 
     /**
      * 신규가입 희망번호 취소
      */
     //public Map<String, Object> cancelNumberAjax(AppformReqDto appformReqDto) {
-    public FormResponse<SearchNumberResponse> cancelChoiseNumber(NewChangeInfoRequest request) {
-        //log.debug("★ 신규가입 희망번호 취소 ★ tlphNo: {}", request.getTlpNo());
-        HashMap<String, Object> rtnMap = new HashMap<String, Object>();
-        SearchNumberResponse searchNumberResponse = new SearchNumberResponse(); //Return DTO 설정
+    @SuppressWarnings("PMD.EmptyControlStatement")
+    public FormResponse<SearchNumberResponse> cancelChoiseNumber(SearchNumberRequest request) {
+        log.debug("★ 신규가입 희망번호 취소 ★ requestKey: {}, tlphNoOwnCmpnCd: {}, tlphNo: {}, encdTlphNo: {}",
+            request.getRequestKey(),
+            request.getTlphNoOwnCmpnCd(),
+            request.getTlpNo(),
+            request.getEncdTlphNo());
+
+        //0. 입력 데이타 검증
+        Long requestKey = request.getRequestKey();
+        if (!StringUtils.hasText(requestKey.toString())) {
+            return FormResponse.of(ResponseMessage.VALID_CANCEL_NUMBER_FAIL); //희망번호 취소 실패
+        }
+
+        //1. 개통전 사전체크 확인 (MCP_REQUEST_OSST.PRGR_STAT_CD : PC2 의 RSLT_CD : 0000 일 경우 정상으로 처리
         McpRequestOsstRequest mcpRequestOsstRequest = new McpRequestOsstRequest();
-
-        //1. 개통전 사전체크 진행여부 확인을 위해 신청서번호(request_key) 로 예약번호 (res_no) 값을 조회한다.
-        //    개통전 사전체크가 완료되면 MCP_REQUEST_OSST 테이블에도 저장하고 스마트 MSF_REQUEST_TEMP 테이블에는 스마트 프로세스에서 업데이트 처리하기 때문이다.
-        //    스마트에서 조회된 RES_NO 값으로 MCP_REQUEST_OSST 테이블에서 개통전 사전체크(PC0) 로 저장 여부를 조회한다.
-        String resNo = newChangeReadMapper.getMsfResNo(request.getRequestKey());
-        mcpRequestOsstRequest.setMvnoOrdNo(resNo);
-        mcpRequestOsstRequest.setPrgrStatCd(Constants.EVENT_CODE_PRE_CHECK);
-        resNo = "955336"; //@@삭제필수@@
-
-        //2. 개통전 사전체크 호출 여부 확인
+        mcpRequestOsstRequest.setRequestKey(requestKey);
+        mcpRequestOsstRequest.setPrgrStatCd(Constants.EVENT_CODE_PC_RESULT); //PC2
+        mcpRequestOsstRequest.setRsltCd("0000");
         int osstCount = formCommService.getOsstCount(mcpRequestOsstRequest);
-        osstCount = 1; //@@삭제필요@@ : prx 호출 전이므로 강제처리
         if (osstCount == 0) {
-            return null; //개통전 사전체크를 진행해야 함. 흠.......
+            //return FormResponse.of(ResponseMessage.VALID_SEARCH_NUMBER_NEED_PRECHECK); //개통전 사전체크를 진행해주세요.
         }
-        //3. OSST_ORD_NO 조회 >> NU1 호출 시 MCP-API 에서 호출해서 가져가서 필요없는 항목
-        /*mcpRequestOsstRequest = new McpRequestOsstRequest();
-        mcpRequestOsstRequest.setMvnoOrdNo(resNo); //개통전 사전체크가 정상적인 경우 위에서 호출해서 처리함.
-        String osstNo = formCommService.getOsstOrdNo(mcpRequestOsstReqvuest);*/
-        String osstNo = "955336"; //@@삭제필수@@
-        String agentCode = "";
 
-        //4. MP 호출
-        MSimpleOsstXmlVO simpleOsstXmlVO = null;
+        //2. MP호출을 위한 데이타 추출
+        //2.1 MCP_REQUEST_OSST 테이블에서 정보 추출 : 만약에 넘어온 값에 있다면 그걸 사용하면 되긴하는데, 일단 추출
+        String resNo = formCommService.getMvnoOrdNo(mcpRequestOsstRequest);
 
-        //번호예약(NU2) 취소
-        try {
-            simpleOsstXmlVO = formCommService.sendOsstService(resNo, Constants.EVENT_CODE_NUMBER_REG, Constants.WORK_CODE_RES_CANCEL);
-            if (simpleOsstXmlVO.isSuccess()) {
-                rtnMap.put("RESULT_CODE", Constants.AJAX_SUCCESS);
-            } else {
-                rtnMap.put("RESULT_CODE", "0001");
-                rtnMap.put("RESULT_XML", simpleOsstXmlVO.getResponseXml());
-                rtnMap.put("ERROR_MSG", simpleOsstXmlVO.getResultCode());
+        //2.2 MCP_REQUEST_OSST 테이블에서 OSST_ORD_NO 추출
+        //mcpRequestOsstRequest = new McpRequestOsstRequest();
+        //mcpRequestOsstRequest.setRsltCd("0000");
+        //mcpRequestOsstRequest.setPrgrStatCd(Constants.EVENT_CODE_PC_RESULT); //PC2
+        //mcpRequestOsstRequest.setMvnoOrdNo(resNo);
+        //String osstOrdNo = formCommService.getOsstOrdNo(mcpRequestOsstRequest);
+
+        //String osstOrdNo = formCommService.getOsstOrdNo(mcpRequestOsstRequest);
+
+        //2.2 신규가입 희망번호 취소 항목 조회 쿼리 실행
+        NewChangeNUInfoRequest newChangeNUInfoRequest = new NewChangeNUInfoRequest();
+        newChangeNUInfoRequest.setResNo(resNo);
+        newChangeNUInfoRequest.setGubun("RRS");
+        NewChangeNUInfoResponse newChangeNUInfoResponse = formCommService.getXmlMessageNU2(newChangeNUInfoRequest);
+
+        //2.3 신규가입 희망번호 취소 MP 호출 DATA SET
+        if (newChangeNUInfoResponse != null) { //임시.. 왜 데이타가 없냐고요 - 정상되면 주석 풀어야함.
+            MplatFormNU2Request mplatFormNU2Request = new MplatFormNU2Request();
+            mplatFormNU2Request.setOsstOrdNo(newChangeNUInfoResponse.getOsstOrdNo());
+            ResvTlphNoInDTO resvTlphNoInDTO = new ResvTlphNoInDTO();
+            resvTlphNoInDTO.setGubun(newChangeNUInfoResponse.getGubun());
+            resvTlphNoInDTO.setTlphNo(newChangeNUInfoResponse.getTlphNo());
+            resvTlphNoInDTO.setCustNo(newChangeNUInfoResponse.getCustNo());
+            resvTlphNoInDTO.setTlphNoStatChngRsnCd(newChangeNUInfoResponse.getTlphNoStatChngRsnCd());
+            resvTlphNoInDTO.setTlphNoStatCd(newChangeNUInfoResponse.getTlphNoStatCd());
+            resvTlphNoInDTO.setCustTypeCd(newChangeNUInfoResponse.getCustTypeCd());
+            resvTlphNoInDTO.setNowSvcIndCd(newChangeNUInfoResponse.getNowSvcIndCd());
+            resvTlphNoInDTO.setEncdTlphNo(newChangeNUInfoResponse.getEncdTlphNo());
+            resvTlphNoInDTO.setMpngTlphNoYn(newChangeNUInfoResponse.getMpngTlphNoYn());
+            //resvTlphNoInDTO.setAsgnAgncId(newChangeNUInfoResponse.getAsgnAgncId());
+            mplatFormNU2Request.setResvTlphNoInDTO(resvTlphNoInDTO);
+
+            //2.4 신규가입 번호취소 MP 호출 - NU2
+            MspPrxSoapResponse mspPrxSoapResponse = msfMcpOsstPrxService.callXmlOsstService(List.of(mplatFormNU2Request),
+                CHOICE_NUMBER_CANCEL.getEventCd(), resNo);
+
+            //2.5 신규가입 번호취소 MP 호출 결과 DATA SET
+            String globalNo = "";
+            String responseType = "";
+            String responseCode = "";
+            String responseBasic = "";
+
+            if (mspPrxSoapResponse == null) { //연동결과 실패.
+                return FormResponse.of(ResponseMessage.NO_DATA);
+            } else { //연동결과 성공
+                globalNo = mspPrxSoapResponse.globalNo();
+                responseType = mspPrxSoapResponse.responseType();
+                responseCode = mspPrxSoapResponse.responseCode(); //responseType 값이 E 일 경우 responseCode 값이 넘어오는 것으로 확인됨.
+                responseBasic = mspPrxSoapResponse.responseBasic();
+
+                log.debug("★ 연동결과 >> responseType: {}, responseCode: {}, responseBasic: {}, globalNo: {}",
+                    responseType,
+                    responseCode,
+                    responseBasic,
+                    globalNo);
+
+                if (!"N".equals(responseType)) {
+                    return FormResponse.of(ResponseMessage.VALID_CANCEL_NUMBER_FAIL); //실패
+                }
             }
-        } catch (McpMplatFormException e) {
-            rtnMap.put("RESULT_CODE", "9997");
-            rtnMap.put("ERROR_MSG", "response massage is null.");
-        } catch (SocketTimeoutException e) {
-            rtnMap.put("RESULT_CODE", "9999");
-            // return rtnMap;
-
-        } catch (SelfServiceException e) {
-            rtnMap.put("RESULT_CODE", "9998");
-            rtnMap.put("ERROR_MSG", e.getMessage());
-            //return rtnMap;
         }
 
-        //4. 서비스호출이 정상이라면 스마트 테이블에 저장?
-        //  MSF_REQUEST_OSST ? , MSF_REQUEST ? , MSF_REQUEST_TEMP ? 에 저장
-        //  MSF_REQUEST_OSST 는 안해도 되겠지?
-        if (rtnMap.get("RESULT_CODE").equals(Constants.AJAX_SUCCESS)) {
-            //MCP_REQUEST 조회해와서 MSF_REQUEST_TEMP 에는 업데이트?? 또는 호출 전 MSF_REQUEST_TEMP 테이블에 희망번호만 업데이트?
-            //MCP_REQUEST_OSST 조회해와서(?) MSF_REQUEST_OSST 에 추가
-        }
-
-        //rtnMap.put("RESULT_CODE", Constants.AJAX_SUCCESS);
-        //return rtnMap;
-
-        return FormResponse.of(ResponseMessage.VALID_CANCEL_NUMBER_SUCCESS, null);
+        return FormResponse.of(ResponseMessage.VALID_CANCEL_NUMBER_SUCCESS); //강제성공
     }
-
 
 }

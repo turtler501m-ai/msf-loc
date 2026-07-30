@@ -2,9 +2,26 @@
   <div class="agreement-group">
     <div class="all-check-wrapper" @click="onClickAllCheckWrapper">
       <div class="checkbox-area" @click.stop>
-        <MsfCheckbox v-model="isAllChecked" :label="checkboxLabel" class="all-check-custom">
-          <template #label-prepend>
+        <MsfCheckbox
+          ref="isAllCheckedRef"
+          v-model="isAllChecked"
+          :label="checkboxLabel"
+          class="all-check-custom"
+          :disabled="props.disabled"
+        >
+          <!-- <template #label-prepend>
             <em v-if="props.required" class="required-mark" aria-label="필수 항목">[필수]</em>
+          </template> -->
+          <template #label>
+            <!-- checkboxLabel 설정한 경우 -->
+            <template v-if="checkboxLabel">
+              {{ checkboxLabel }}
+            </template>
+            <!-- 별도 설정이 없으면 기본 문구 -->
+            <template v-else>
+              이용약관, 개인정보 수집/이용 및
+              <em class="required-mark">선택동의</em> 항목에 모두 동의합니다.
+            </template>
           </template>
           <template #label-append>
             <p v-if="description" class="desc-msg">
@@ -32,6 +49,7 @@
             v-bind="item"
             :spec-terms="props.specTerms?.find((v) => v.code === item.code)"
             :only-required="onlyRequired"
+            :disabled="props.disabled"
           />
         </div>
       </div>
@@ -54,20 +72,23 @@ const props = defineProps({
   required: Boolean, // 필수 동의 여부 (true: 필수 / false: 선택)
   checkboxLabel: {
     type: String, // 체크박스 레이블 설정 필요시 사용
-    default: '이용약관, 개인정보 수집/이용 및 선택동의 항목에 모두 동의합니다.',
+    default: '', // 기본 문구는 슬롯 HTML에서 설정, props로도 문구 지정 가능
   },
   description: {
     type: String, // 안내 문구 설정 필요시 사용
-    default: '※ 고객님의 편의를 위한 모든 약관(선택약관 포함)에 일괄동의 하시겠습니까?',
+    default: '', // '※ 고객님의 편의를 위한 모든 약관(선택약관 포함)에 일괄동의 하시겠습니까?' 기본 문구 제거
   },
   specTerms: {
     type: Array,
     default: () => [], // 약관 코드별로 별도의 설명 문구를 전달받는 경우 { [code]: '설명 문구' }
   },
+  disabled: { type: Boolean, required: false }, // 비활성화 처리필요시 사용
 })
 
 const model = defineModel({ type: Boolean })
 const emit = defineEmits(['checked'])
+
+const isAllCheckedRef = ref(null)
 
 const isAllExpanded = ref(false)
 const internalTerms = ref([])
@@ -78,6 +99,19 @@ const hasSpecTerms = (item) => {
 
 // pocliy 에서 불러올 약관들(컴퍼넌트 내부에 지정)
 const loadTermsData = async () => {
+  // 기존 체크 상태 백업
+  const checkedMap = new Map()
+  const backupCheckedStatus = (items) => {
+    if (!items || !Array.isArray(items)) return
+    items.forEach((item) => {
+      checkedMap.set(item.code, item.checked)
+      if (item.children && item.children.length > 0) {
+        backupCheckedStatus(item.children)
+      }
+    })
+  }
+  backupCheckedStatus(internalTerms.value)
+
   const result = await post('/api/shared/form/common/terms/list', {
     groupCode: props.policy,
     specTermsList: props.specTerms,
@@ -92,7 +126,8 @@ const loadTermsData = async () => {
     if (item.commonStatus && !hasSpecTerms(item)) {
       continue
     }
-    tree.push({ ...item, children: [], checked: false })
+    const previousChecked = checkedMap.has(item.code) ? checkedMap.get(item.code) : false
+    tree.push({ ...item, children: [], checked: previousChecked })
   }
   for (const item of codes) {
     if (isEmpty(item.parentCode)) {
@@ -102,7 +137,8 @@ const loadTermsData = async () => {
       continue
     }
     const parent = tree.find((v) => v.code === item.parentCode)
-    parent?.children?.push({ ...item, checked: false })
+    const previousChecked = checkedMap.has(item.code) ? checkedMap.get(item.code) : false
+    parent?.children?.push({ ...item, checked: previousChecked })
   }
 
   internalTerms.value = tree
@@ -125,7 +161,11 @@ const generateResult = (data) => {
     }
     if (item.children?.length > 0) {
       for (const sub of item.children) {
-        result.push({ code: sub.code, required: item.required, checked: sub.checked })
+        result.push({
+          code: sub.code,
+          required: sub.required !== undefined ? sub.required : item.required,
+          checked: sub.checked,
+        })
       }
     }
   }
@@ -176,9 +216,10 @@ const isAllChecked = computed({
     // targetItems: 전체동의 체크박스가 감시할 대상 항목들
     // props.onlyRequired가 true이면 필수 항목들만 다 체크되었을 때 '전체동의'로 표시함
     // 하지만 사용자의 명시적 요청(전체 항목 동의)이 있는 경우 모든 항목을 감시해야 함
-    const targetItems = props.onlyRequired
-      ? internalTerms.value.filter((item) => item.required === 'Y' || item.required === '2')
-      : internalTerms.value
+    // const targetItems = props.onlyRequired
+    //   ? internalTerms.value.filter((item) => item.required === 'Y' || item.required === '2')
+    //   : internalTerms.value
+    const targetItems = internalTerms.value // 선택항목도 전체 체크여부에 포함시킴
 
     // 세부 항목 중 하나라도 해제되면 false 반환
     if (targetItems.length === 0) return false
@@ -214,6 +255,9 @@ const isAllChecked = computed({
 watch(
   () => model.value,
   (newVal) => {
+    // onlyRequired 완료 상태가 전체동의 체크로 역전파되지 않도록 방지_20260723
+    if (props.onlyRequired && newVal === true) return
+
     if (newVal !== isAllChecked.value) {
       isAllChecked.value = newVal
     }
@@ -226,6 +270,12 @@ const onClickAllCheckWrapper = (e) => {
   if (e.target.closest('.checkbox-area')) return
   isAllExpanded.value = !isAllExpanded.value
 }
+
+defineExpose({
+  focus: () => {
+    isAllCheckedRef.value?.focus()
+  },
+})
 </script>
 
 <style lang="scss" scoped>
@@ -242,7 +292,7 @@ const onClickAllCheckWrapper = (e) => {
   }
 
   .all-check-wrapper {
-    @include flex($h: space-between, $v: baseline);
+    @include flex($h: space-between, $v: center);
     cursor: pointer;
     .all-check-custom {
       :deep(.checkbox-label-text) {
@@ -261,6 +311,12 @@ const onClickAllCheckWrapper = (e) => {
       transition: transform var(--transition-base);
       &.is-rotated {
         transform: rotate(180deg);
+      }
+    }
+    // '전체체크' 영역에 description이 없는 경우 여백설정
+    &:not(:has(.desc-msg)) {
+      & + .agreement-list-container {
+        margin-top: rem(8px);
       }
     }
   }

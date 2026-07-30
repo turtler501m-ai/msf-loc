@@ -15,6 +15,7 @@
   <MsfNumberInput
     ref="input2"
     v-model="bizNo2"
+    :id="bizNo2Id"
     :error="error"
     :readonly="readonly"
     :disabled="disabled"
@@ -26,7 +27,9 @@
   <span class="unit-sep">-</span>
   <MsfNumberInput
     ref="input3"
+    type="password"
     v-model="bizNo3"
+    :id="bizNo3Id"
     :error="error"
     :readonly="readonly"
     :disabled="disabled"
@@ -37,7 +40,13 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, useId, computed } from 'vue'
+import { validateBizRegNo } from '@/libs/utils/string.utils'
+
+// 컴포넌트 내부에서 유니크 ID 생성
+const uniqueId = useId()
+const bizNo2Id = computed(() => `inp-bizNo2-${uniqueId}`)
+const bizNo3Id = computed(() => `inp-bizNo3-${uniqueId}`)
 
 // v-model 선언
 const bizNo1 = defineModel('bizNo1')
@@ -56,5 +65,17 @@ const props = defineProps({
   error: { type: Boolean, default: false },
   readonly: { type: Boolean, default: false },
   disabled: { type: Boolean, default: false },
+})
+
+defineExpose({
+  focus: () => {
+    if (!bizNo1.value) input1.value?.focus()
+    else if (!bizNo2.value) input2.value?.focus()
+    else input3.value?.focus()
+  },
+  isValid: computed(() => {
+    const fullBizNo = `${bizNo1.value}-${bizNo2.value}-${bizNo3.value}`
+    return validateBizRegNo(fullBizNo)
+  }),
 })
 </script>

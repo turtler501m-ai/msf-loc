@@ -1,7 +1,0 @@
-## 외부 서비스
-external-service:
-  services:
-    prx: ## PRX
-      base-url: http://prd-none  # TODO: 도메인 확인 후 반영
-    juso: ## 주소 검색
-      base-url: https://business.juso.go.kr

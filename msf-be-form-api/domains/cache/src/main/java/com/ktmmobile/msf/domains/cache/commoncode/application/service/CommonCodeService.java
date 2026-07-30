@@ -20,6 +20,9 @@ import com.ktmmobile.msf.domains.cache.commoncode.domain.dto.CommonCodeData;
 import com.ktmmobile.msf.domains.cache.commoncode.domain.dto.CommonCodeGroups;
 import com.ktmmobile.msf.domains.cache.commoncode.domain.entity.CommonCode;
 
+/**
+ * 외부 도메인 공통코드 캐시 조회 기능 제공
+ */
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 @Service
@@ -27,6 +30,7 @@ public class CommonCodeService implements CommonCodeReader {
 
     private final CacheReader cacheReader;
 
+    /** 요청 조건 기준 공통코드 그룹 목록 조회 */
     @Override
     public CommonCodeGroups getCommonCodes(CommonCodesRequest request) {
         Map<String, List<CommonCodeData>> commonCodeGroups = new LinkedHashMap<>();
@@ -64,7 +68,7 @@ public class CommonCodeService implements CommonCodeReader {
         return Collections.unmodifiableMap(filteredCommonCodes);
     }
 
-    /** 데이터소스 그룹별 물리 캐시를 조회하고, 응답은 groupId 기준으로 통합해서 제공한다. */
+    /** 데이터소스 그룹별 물리 캐시 조회와 groupId 기준 응답 통합 */
     @SuppressWarnings("unchecked")
     private Map<String, List<CommonCode>> getCommonCodes(List<String> groupIds) {
         Map<String, List<CommonCode>> commonCodesByGroupId = new LinkedHashMap<>();
@@ -72,7 +76,7 @@ public class CommonCodeService implements CommonCodeReader {
             commonCodesByGroupId.put(groupId, new ArrayList<>());
         }
 
-        // source group별 HMGET으로 Redis 왕복을 groupId 개수와 무관하게 3회로 제한한다.
+        // source group별 HMGET으로 Redis 왕복을 groupId 개수와 무관하게 3회로 제한
         for (CommonCodeSourceGroup sourceGroup: CommonCodeSourceGroup.values()) {
             Map<String, List> cachedCommonCodesByGroupId = cacheReader.getAll(
                 sourceGroup.cacheName(),
@@ -81,7 +85,7 @@ public class CommonCodeService implements CommonCodeReader {
             );
             cachedCommonCodesByGroupId.forEach((groupId, commonCodes) ->
                 commonCodesByGroupId.computeIfAbsent(groupId, _ -> new ArrayList<>())
-                    .addAll((List<CommonCode>) commonCodes)
+                    .addAll(commonCodes)
             );
         }
 

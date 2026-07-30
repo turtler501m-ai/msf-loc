@@ -2,6 +2,7 @@
   <MsfFormGroup :label="props.label" required>
     <MsfStack type="field">
       <MsfMobileInput
+        ref="mobileRef"
         v-model:number1="phone.phone1"
         v-model:number2="phone.phone2"
         v-model:number3="phone.phone3"
@@ -23,6 +24,7 @@
     </MsfStack>
     <MsfStack type="field" class="mt-2" v-if="status === 'sent'">
       <MsfNumberInput
+        ref="authNumberRef"
         v-model="authNumber"
         id="inp-repPhoneAuth"
         maxlength="6"
@@ -63,9 +65,13 @@ const props = defineProps({
     // validator: (v) => ['F-1-VDP', 'F-2-VDP', 'F-3-VDP', 'F-4-VDP'].includes(v),
   },
   label: { type: String, default: '연락처(휴대폰)' },
+  beforeSend: { type: Function, default: null },
 })
 
 const emit = defineEmits(['complete'])
+
+const mobileRef = ref(null)
+const authNumberRef = ref(null)
 
 const loginKey = ref(props.loginKey)
 const phone = ref({
@@ -107,27 +113,69 @@ const { remaining, start, stop, reset } = useCountdown(countdown, {
   },
 })
 
+const validateSendingMobile = () => {
+  if (isEmpty(phone.value.phone1) || isEmpty(phone.value.phone2) || isEmpty(phone.value.phone3)) {
+    showAlert('휴대폰 번호를 입력해주세요.')
+    return false
+  }
+  if (isEmpty(nameModel.value)) {
+    showAlert('이름을 입력해주세요.')
+    return false
+  }
+  return true
+}
+const validateVerifyMobile = () => {
+  if (authNumber.value.length !== 6) {
+    showAlert('인증번호는 6자리 숫자로 입력해 주세요.')
+    return false
+  }
+  return true
+}
+
 const onClickSendAuthNumber = async () => {
-  const result = await post('/api/shared/common/sms/otp/send', {
-    name: import.meta.env.MODE === 'loc' ? nameModel.value || '홍길동' : nameModel.value,
-    phone: phone.value.phone1 + phone.value.phone2 + phone.value.phone3,
-    type: props.formType,
-    path: route.path,
-  })
+  if (props.beforeSend && !(await props.beforeSend())) {
+    return false
+  }
+
+  if (!validateSendingMobile()) {
+    return false
+  }
+  const result = await post(
+    '/api/shared/common/auth/sms/otp/send',
+    {
+      name: nameModel.value,
+      phone: phone.value.phone1 + phone.value.phone2 + phone.value.phone3,
+      type: props.formType,
+      path: route.path,
+    },
+    { skipAlert: true },
+  )
   if (result?.code !== '0000') {
     showAlert('[인증번호 발송] 버튼을 클릭하시면,\n인증번호가 등록된 휴대폰으로 발송됩니다.')
     return false
   }
   showAlert('인증번호가 발송되었습니다.')
   sendedKey.value = result.data.sendedKey
+  authNumber.value = ''
+  // authNumber.value = ['loc', 'dev'].includes(import.meta.env.MODE)
+  //   ? result.data.authNumber || ''
+  //   : ''
+  // if (import.meta.env.MODE !== 'prd') {
+  //   console.log('authNumber:', result.data.authNumber)
+  // }
+  // FIXME: 실제 운영하기 위해서 제거 필요
   authNumber.value = result.data.authNumber || ''
+
   status.value = 'sent'
   reset(countTime)
   start()
 }
 
 const onClickVerifyAuthNumber = async () => {
-  const result = await post('/api/shared/common/sms/otp/verify', {
+  if (!validateVerifyMobile()) {
+    return false
+  }
+  const result = await post('/api/shared/common/auth/sms/otp/verify', {
     value: authNumber.value,
     type: props.formType,
     path: route.path,
@@ -209,6 +257,13 @@ onBeforeUpdate(() => {
   if (status.value === 'none' && !isEmpty(props.phone)) {
     status.value = 'ready'
   }
+})
+
+defineExpose({
+  focus: () => {
+    if (status.value === 'sent' && !authNumber.value) authNumberRef.value?.focus()
+    else mobileRef.value?.focus()
+  },
 })
 </script>
 

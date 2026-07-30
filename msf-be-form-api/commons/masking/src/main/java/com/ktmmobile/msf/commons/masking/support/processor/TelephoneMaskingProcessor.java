@@ -31,7 +31,7 @@ public class TelephoneMaskingProcessor implements MaskingProcessor {
     }
 
     static String maskPhoneNumber(String value, int minMaskingDigitCount, boolean fixedFormattedMiddleMaskLength) {
-        String digits = MaskingTextUtils.onlyDigits(value);
+        String digits = MaskingProcessorUtils.onlyDigits(value);
         if (digits.length() < minMaskingDigitCount) {
             return value;
         }
@@ -42,7 +42,7 @@ public class TelephoneMaskingProcessor implements MaskingProcessor {
         }
 
         PhoneMaskingRule maskingRule = resolveMaskingRule(value, digits);
-        return MaskingTextUtils.maskDigits(value, maskingRule.prefixLength(), maskingRule.suffixLength());
+        return MaskingProcessorUtils.maskDigits(value, maskingRule.prefixLength(), maskingRule.suffixLength());
     }
 
     /** 구분자가 있는 전화번호는 중간 번호 그룹을 고정 길이로 마스킹 */
@@ -51,7 +51,7 @@ public class TelephoneMaskingProcessor implements MaskingProcessor {
         if (!matcher.matches()) {
             return null;
         }
-        String mask = String.valueOf(MaskingTextUtils.MASK).repeat(maskLength(matcher.group(2), fixedFormattedMiddleMaskLength));
+        String mask = String.valueOf(MaskingProcessorUtils.MASK).repeat(maskLength(matcher.group(2), fixedFormattedMiddleMaskLength));
         return matcher.group(1) + mask + matcher.group(3);
     }
 

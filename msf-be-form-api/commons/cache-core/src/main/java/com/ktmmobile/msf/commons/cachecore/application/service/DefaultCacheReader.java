@@ -69,6 +69,18 @@ class DefaultCacheReader implements CacheReader {
     }
 
     /**
+     * 단일 캐시 값 Optional 조회
+     *
+     * @param cacheName 캐시 이름
+     * @param valueType 값 타입
+     * @return 캐시 값
+     */
+    @Override
+    public <V> Optional<V> get(String cacheName, Class<V> valueType) {
+        return get(cacheName, cacheName, valueType);
+    }
+
+    /**
      * 캐시 값 다건 조회
      * <p>
      * Redis 반영 전 로컬 캐시에 남아있는 값을 먼저 확인한 뒤,
@@ -114,6 +126,19 @@ class DefaultCacheReader implements CacheReader {
     }
 
     /**
+     * 단일 캐시 값 필수 조회
+     *
+     * @param cacheName 캐시 이름
+     * @param valueType 값 타입
+     * @return 캐시 값
+     */
+    @Override
+    public <V> V getRequired(String cacheName, Class<V> valueType) {
+        return get(cacheName, valueType)
+            .orElseThrow(() -> new CacheException("Cache value not found. cacheName=" + cacheName));
+    }
+
+    /**
      * 캐시 키 존재 여부 확인
      *
      * @param cacheName 캐시 이름
@@ -130,7 +155,7 @@ class DefaultCacheReader implements CacheReader {
             if (cacheLoader.storeType() == CacheStoreType.HASH) {
                 return cacheService.hasKey(cacheStoreKeyGenerator.generate(cacheName), key);
             }
-            return cacheService.hasKey(cacheStoreKeyGenerator.generate(cacheKeyGenerator.generate(cacheName, key)));
+            return cacheService.hasKey(cacheStoreKeyGenerator.generate(valueStoreKey(cacheLoader, key)));
         } catch (RuntimeException ex) {
             throw CacheException.wrap("Cache key check failed. cacheName=" + cacheName + ", key=" + key, ex);
         }
@@ -253,8 +278,7 @@ class DefaultCacheReader implements CacheReader {
         if (cacheLoader.storeType() == CacheStoreType.HASH) {
             return cacheService.getValue(cacheStoreKeyGenerator.generate(cacheLoader.cacheName()), key);
         }
-        return cacheService.getValue(cacheStoreKeyGenerator.generate(
-            cacheKeyGenerator.generate(cacheLoader.cacheName(), key)));
+        return cacheService.getValue(cacheStoreKeyGenerator.generate(valueStoreKey(cacheLoader, key)));
     }
 
     /** 로컬 캐시를 우선 사용하고, 로컬에 없는 키만 실제 저장소에서 조회한다. */
@@ -291,17 +315,23 @@ class DefaultCacheReader implements CacheReader {
         return getValueStoreValues(cacheLoader, keys);
     }
 
-    /** VALUE 저장 방식은 저장소 레벨 batch 조회가 없으므로 키별로 조회한다. */
+    /** KEY_VALUE 저장 방식은 저장소 레벨 batch 조회가 없으므로 키별로 조회한다. */
     private Map<String, Object> getValueStoreValues(CacheLoader<?> cacheLoader, List<String> keys) {
         Map<String, Object> values = new LinkedHashMap<>();
         for (String key: keys) {
-            Object value = cacheService.getValue(cacheStoreKeyGenerator.generate(
-                cacheKeyGenerator.generate(cacheLoader.cacheName(), key)));
+            Object value = cacheService.getValue(cacheStoreKeyGenerator.generate(valueStoreKey(cacheLoader, key)));
             if (value != null) {
                 values.put(key, value);
             }
         }
         return values;
+    }
+
+    private String valueStoreKey(CacheLoader<?> cacheLoader, String key) {
+        if (cacheLoader.storeType() == CacheStoreType.SINGLE_VALUE) {
+            return cacheLoader.cacheName();
+        }
+        return cacheKeyGenerator.generate(cacheLoader.cacheName(), key);
     }
 
     /** 다건 조회에서 누락된 키는 캐시 로더의 미스 정책에 따라 처리한다. */

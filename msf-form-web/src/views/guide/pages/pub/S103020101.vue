@@ -31,12 +31,13 @@
             v-model="formData.simNo"
             placeholder="USIM 번호 19자리"
             ariaLabel="USIM 번호 입력"
+            maxLength="19"
             class="ut-w-300"
           />
           <MsfButton variant="subtle">스캔하기</MsfButton>
-          <MsfButton variant="toggle" disabled>USIM 번호 유효성 체크</MsfButton>
-          <MsfButton variant="toggle">USIM 번호 유효성 체크</MsfButton>
-          <MsfButton variant="toggle" active>USIM 번호 유효성 체크</MsfButton>
+          <MsfButton variant="validation" disabled>USIM 번호 유효성 체크</MsfButton>
+          <MsfButton variant="validation">USIM 번호 유효성 체크</MsfButton>
+          <MsfButton variant="validation" active>USIM 번호 유효성 체크</MsfButton>
         </MsfStack>
       </MsfFormGroup>
       <MsfFormGroup label="USIM 구매 방식" tag="div" required>
@@ -137,8 +138,8 @@
             placeholder="계좌번호 입력"
             class="ut-w-200"
           />
-          <MsfButton variant="toggle">계좌번호 유효성 체크</MsfButton>
-          <MsfButton variant="toggle" active>계좌번호 유효성 체크 완료</MsfButton>
+          <MsfButton variant="validation">계좌번호 유효성 체크</MsfButton>
+          <MsfButton variant="validation" active>계좌번호 유효성 체크 완료</MsfButton>
         </MsfStack>
         <MsfStack type="field">
           <MsfInput
@@ -193,14 +194,14 @@
             placeholder="카드사 선택"
             class="ut-w-300"
           />
-          <MsfInput
+          <MsfNumberInput
             v-model="formData.cardNo"
             id="inp-cardNo"
             placeholder="카드번호 입력"
             class="ut-w-200"
           />
-          <MsfButton variant="toggle">신용카드 유효성 체크</MsfButton>
-          <MsfButton variant="toggle" active>신용카드 유효성 체크 완료</MsfButton>
+          <MsfButton variant="validation">신용카드 유효성 체크</MsfButton>
+          <MsfButton variant="validation" active>신용카드 유효성 체크 완료</MsfButton>
         </MsfStack>
         <MsfStack type="field">
           <MsfSelect
@@ -254,8 +255,8 @@
             placeholder="청구계정ID 입력"
             class="ut-w-300"
           />
-          <MsfButton variant="toggle">청구계정 체크</MsfButton>
-          <MsfButton variant="toggle" active>청구계정 체크 완료</MsfButton>
+          <MsfButton variant="validation">청구계정 체크</MsfButton>
+          <MsfButton variant="validation" active>청구계정 체크 완료</MsfButton>
         </MsfStack>
         <MsfCheckbox
           v-model="formData.combAgree"

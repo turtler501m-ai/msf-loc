@@ -3,8 +3,12 @@
   <MsfNumberInput
     ref="input1"
     v-model="telNo1"
+    id="inp-telNo1"
     placeholder="지역번호"
     :ariaLabel="`${cleanLabel} 지역번호`"
+    :error="error"
+    :readonly="readonly"
+    :disabled="disabled"
     maxlength="3"
     @maxlength="input2?.focus()"
   />
@@ -13,8 +17,11 @@
     ref="input2"
     v-model="telNo2"
     id="inp-telNo2"
-    placeholder="가운데 3 또는 4자리"
-    :ariaLabel="`${cleanLabel} 가운데 3 또는 4자리`"
+    placeholder="가운데 4자리"
+    :ariaLabel="`${cleanLabel} 가운데 4자리`"
+    :error="error"
+    :readonly="readonly"
+    :disabled="disabled"
     maxlength="4"
     @maxlength="input3?.focus()"
   />
@@ -26,6 +33,9 @@
     :type="secure ? 'password' : 'text'"
     placeholder="뒤 4자리"
     :ariaLabel="`${cleanLabel} 뒤 4자리`"
+    :error="error"
+    :readonly="readonly"
+    :disabled="disabled"
     maxlength="4"
   />
 </template>
@@ -55,6 +65,9 @@ const emit = defineEmits(['verify'])
 const props = defineProps({
   secure: { type: Boolean, default: false },
   label: { type: String, default: '전화번호' },
+  error: { type: Boolean, default: false },
+  readonly: { type: Boolean, default: false },
+  disabled: { type: Boolean, default: false },
 })
 
 // 모든 종류의 줄바꿈과 <br>, <br/> 태그를 빈 문자열로 교체
@@ -81,4 +94,15 @@ watch(
     emit('verify', validateTel(telNo1.value + '-' + telNo2.value + '-' + newVal))
   },
 )
+
+defineExpose({
+  focus: () => {
+    if (!telNo1.value) input1.value?.focus()
+    else if (!telNo2.value) input2.value?.focus()
+    else input3.value?.focus()
+  },
+  isValid: computed(() => {
+    return validateTel(telNo1.value + '-' + telNo2.value + '-' + telNo3.value)
+  }),
+})
 </script>

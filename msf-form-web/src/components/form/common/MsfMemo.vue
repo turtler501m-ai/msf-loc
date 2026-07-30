@@ -1,8 +1,13 @@
 <script setup>
-import { reactive, computed, defineModel } from 'vue'
+import { ref, reactive, computed, defineModel } from 'vue'
 
 // 외부에서 v-model 전달 시 해당 모델 우선 사용
 const model = defineModel({ type: Object, required: false, default: null })
+const props = defineProps({
+  preventFocusScroll: { type: Boolean, default: false },
+})
+
+const memoValueRef = ref(null)
 
 // 기존 공통컴포넌트 내부 상태 유지
 const formData = reactive({
@@ -88,11 +93,22 @@ const memoValue = computed({
     formData.memo = v
   },
 })
+
+const checkValidation = () => {
+  return true
+}
+
+defineExpose({ checkValidation })
 </script>
 
 <template>
   <MsfTitleArea title="메모" />
   <MsfFormGroup label="메모" tag="div">
-    <MsfTextarea v-model="memoValue" placeholder="메모 입력" />
+    <MsfTextarea
+      ref="memoValueRef"
+      v-model="memoValue"
+      placeholder="메모 입력"
+      :data-focus-scope-exclude="props.preventFocusScroll ? '' : null"
+    />
   </MsfFormGroup>
 </template>

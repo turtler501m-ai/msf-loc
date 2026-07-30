@@ -8,6 +8,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * 약관 항목 캐시 원천 데이터
+ */
 @Data
 @Builder
 @NoArgsConstructor

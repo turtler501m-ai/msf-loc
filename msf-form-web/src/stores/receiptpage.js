@@ -25,6 +25,9 @@ export const storeReceiptPage = defineStore('receiptpage', {
   }),
   getters: {},
   actions: {
+    setFormData(data) {
+      this.formData = { ...this.formData, ...data }
+    },
     resetScriptPopup() {
       this.popup.selectedScriptSeq = null
       this.popup.selectedScriptData = null

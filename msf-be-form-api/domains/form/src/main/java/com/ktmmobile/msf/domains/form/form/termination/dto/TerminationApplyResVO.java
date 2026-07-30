@@ -9,11 +9,11 @@ import lombok.Setter;
 @NoArgsConstructor
 public class TerminationApplyResVO {
 
-    private String applicationNo;
+    private String requestKey;
 
-    public static TerminationApplyResVO ok(String applicationNo) {
+    public static TerminationApplyResVO ok(String requestKey) {
         TerminationApplyResVO vo = new TerminationApplyResVO();
-        vo.applicationNo = applicationNo;
+        vo.requestKey = requestKey;
         return vo;
     }
 }

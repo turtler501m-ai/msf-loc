@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.ktmmobile.msf.commons.websecurity.web.dto.response.CommonResponse;
 import com.ktmmobile.msf.commons.websecurity.web.util.response.ResponseUtils;
+import com.ktmmobile.msf.domains.koiocr.application.dto.document.CaptureDocumentRequest;
+import com.ktmmobile.msf.domains.koiocr.application.dto.document.CaptureDocumentResponse;
 import com.ktmmobile.msf.domains.koiocr.application.dto.document.IdDocumentRequest;
 import com.ktmmobile.msf.domains.koiocr.application.dto.document.IdDocumentResponse;
 import com.ktmmobile.msf.domains.koiocr.application.port.in.DocumentReader;
@@ -25,10 +27,9 @@ public class DocumentController {
         return ResponseUtils.ok(documentReader.scanIdDocument(request));
     }
 
-    /*@PostMapping("/document/capture")
-    public CommonResponse<CaptureDocumentResponse> captureDocument() {
-        return ResponseUtils.ok(documentReader.captureDocument());
-    }*/
-
+    @PostMapping("/document/capture")
+    public CommonResponse<CaptureDocumentResponse> captureDocument(CaptureDocumentRequest request) {
+        return ResponseUtils.ok(documentReader.captureDocument(request));
+    }
 
 }

@@ -1,62 +1,77 @@
 package com.ktmmobile.msf.commons.client.application.service;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.slf4j.MDC;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.util.StringUtils;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 import com.ktmmobile.msf.commons.client.domain.dto.HttpClientLog;
-import com.ktmmobile.msf.commons.client.support.properties.HttpClientLoggingProperties;
-import com.ktmmobile.msf.commons.client.support.properties.HttpClientLoggingProperties.MatchRuleProperties;
+import com.ktmmobile.msf.commons.client.support.properties.HttpClientRecordingProperties;
+import com.ktmmobile.msf.commons.common.logging.http.HttpExchangeLogSanitizer;
+import com.ktmmobile.msf.commons.common.logging.http.HttpLogMatchRule;
+import com.ktmmobile.msf.commons.common.logging.http.HttpLogProperties;
+import com.ktmmobile.msf.commons.common.logging.http.HttpLogRules;
 
+/**
+ * HTTP client 요청/응답 기록 데이터 생성기
+ */
 public class HttpClientLogFactory {
 
-    private static final Pattern SIZE_RULE_PATTERN = Pattern.compile("^(.+)\\[(\\d*)(?::(\\d*))?]$");
-    private static final Pattern CONTENT_DISPOSITION_NAME_PATTERN = Pattern.compile("name=\"([^\"]+)\"");
-    private static final Pattern CONTENT_DISPOSITION_FILENAME_PATTERN = Pattern.compile("filename=\"([^\"]*)\"");
+    private static final String TRACE_ID_MDC_KEY = "traceId";
+    private static final String URI_TEMPLATE_ATTRIBUTE = "org.springframework.web.client.RestClient.uriTemplate";
+    private static final String CONTENT_TYPE_HEADER_NAME = "Content-Type";
+    private static final Map<String, List<String>> FORM_URLENCODED_HEADERS = Map.of(
+        CONTENT_TYPE_HEADER_NAME,
+        List.of("application/x-www-form-urlencoded")
+    );
+    private static final String RESPONSE_BODY_OMITTED = "<response body omitted>";
 
     private final ObjectMapper objectMapper;
-    private final List<HeaderLogRule> loggingHeaderRules;
-    private final Set<String> headerNameExcludes;
-    private final Set<String> bodyMaskedIncludes;
-    private final Set<String> bodyMaskedExcludes;
-    private final List<BodyTruncateRule> bodyTruncatedIncludes;
-    private final Set<String> bodyTruncatedExcludes;
+    private final HttpExchangeLogSanitizer sanitizedBodySanitizer;
+    private final HttpExchangeLogSanitizer retainedBodySanitizer;
+    private final HttpClientRecordingProperties recordingProperties;
 
+    /**
+     * 공통 HTTP 로그 룰과 HTTP client 기록 정책 기반 생성
+     */
     public HttpClientLogFactory(
         ObjectMapper objectMapper,
-        HttpClientLoggingProperties loggingProperties
+        HttpLogProperties httpLogProperties,
+        HttpClientRecordingProperties recordingProperties
     ) {
         this.objectMapper = objectMapper;
-        this.loggingHeaderRules = toHeaderLogRules(loggingProperties.headerNames());
-        this.headerNameExcludes = toNormalizedMatchSet(loggingProperties.headerNames().mergedExclude());
-        this.bodyMaskedIncludes = toNormalizedMatchSet(loggingProperties.bodyMaskedFields().mergedInclude());
-        this.bodyMaskedExcludes = toNormalizedMatchSet(loggingProperties.bodyMaskedFields().mergedExclude());
-        this.bodyTruncatedIncludes = toBodyTruncateRules(loggingProperties.bodyTruncatedFields().mergedInclude(),
-            loggingProperties.bodyTruncatedFields().defaultTruncatedSize());
-        this.bodyTruncatedExcludes = toNormalizedMatchSet(loggingProperties.bodyTruncatedFields().mergedExclude());
+        this.recordingProperties = recordingProperties;
+        HttpLogRules httpLogRules = httpLogProperties.defaultRules().merge(recordingProperties.httpLogRules());
+        this.sanitizedBodySanitizer = new HttpExchangeLogSanitizer(
+            objectMapper,
+            httpLogRules.headerNames(),
+            httpLogRules.bodyMaskedFields(),
+            httpLogRules.bodyTruncatedFields()
+        );
+        this.retainedBodySanitizer = new HttpExchangeLogSanitizer(
+            objectMapper,
+            httpLogRules.headerNames(),
+            httpLogRules.bodyMaskedFields(),
+            HttpLogMatchRule.empty()
+        );
     }
 
+    /**
+     * HTTP 응답을 받은 호출 기록 생성
+     */
     public HttpClientLog createSuccessLog(
         String groupName,
         HttpRequest request,
@@ -68,23 +83,37 @@ public class HttpClientLogFactory {
     ) {
         Integer status = getStatus(response);
         boolean success = isSuccessfulStatus(status);
+        Map<String, List<String>> responseHeaders = copyRawHeaders(response.getHeaders());
+        String sanitizedResponseBody = responseBodyToText(responseHeaders, responseBody);
+        String retainedResponseBody = retainedResponseBodyToText(responseHeaders, responseBody);
         return new HttpClientLog(
+            traceId(),
             groupName,
             request.getMethod().name(),
             request.getURI().toString(),
-            new HttpClientLog.Request(copyHeaders(request.getHeaders()), toText(request.getHeaders(), requestBody)),
+            pathToText(request),
+            queryToText(request.getURI()),
+            new HttpClientLog.Request(
+                copyHeaders(request.getHeaders()),
+                sanitizedBodySanitizer.toText(copyRawHeaders(request.getHeaders()), requestBody),
+                retainedBodySanitizer.toText(copyRawHeaders(request.getHeaders()), requestBody)
+            ),
             new HttpClientLog.Response(
                 status,
                 copyHeaders(response.getHeaders()),
-                toText(response.getHeaders(), responseBody)
+                sanitizedResponseBody,
+                retainedResponseBody
             ),
             durationMs,
             success,
-            success ? null : buildStatusErrorMessage(status),
+            success ? null : errorMessage(sanitizedResponseBody),
             requestedAt
         );
     }
 
+    /**
+     * HTTP 응답을 받지 못한 예외 호출 기록 생성
+     */
     public HttpClientLog createErrorLog(
         String groupName,
         HttpRequest request,
@@ -94,16 +123,100 @@ public class HttpClientLogFactory {
         Exception exception
     ) {
         return new HttpClientLog(
+            traceId(),
             groupName,
             request.getMethod().name(),
             request.getURI().toString(),
-            new HttpClientLog.Request(copyHeaders(request.getHeaders()), toText(request.getHeaders(), requestBody)),
+            pathToText(request),
+            queryToText(request.getURI()),
+            new HttpClientLog.Request(
+                copyHeaders(request.getHeaders()),
+                sanitizedBodySanitizer.toText(copyRawHeaders(request.getHeaders()), requestBody),
+                retainedBodySanitizer.toText(copyRawHeaders(request.getHeaders()), requestBody)
+            ),
             null,
             durationMs,
             false,
             exception.getMessage(),
             requestedAt
         );
+    }
+
+    private String traceId() {
+        return MDC.get(TRACE_ID_MDC_KEY);
+    }
+
+    private String pathToText(HttpRequest request) {
+        Object uriTemplate = request.getAttributes().get(URI_TEMPLATE_ATTRIBUTE);
+        if (!(uriTemplate instanceof String template) || template.isBlank()) {
+            return "{}";
+        }
+
+        try {
+            return objectMapper.writeValueAsString(extractPathVariables(template, request.getURI()));
+        } catch (JacksonException _) {
+            return "{}";
+        }
+    }
+
+    private Map<String, String> extractPathVariables(String uriTemplate, URI uri) {
+        List<String> templateSegments = pathSegments(templatePath(uriTemplate));
+        List<String> actualSegments = pathSegments(uri.getRawPath());
+        Map<String, String> pathVariables = new LinkedHashMap<>();
+
+        // URI template의 path variable 이름과 실제 요청 path segment 값 매핑
+        int segmentCount = Math.min(templateSegments.size(), actualSegments.size());
+        for (int index = 0; index < segmentCount; index++) {
+            String variableName = pathVariableName(templateSegments.get(index));
+            if (variableName != null) {
+                pathVariables.put(variableName, decodePathSegment(actualSegments.get(index)));
+            }
+        }
+        return pathVariables;
+    }
+
+    private String templatePath(String uriTemplate) {
+        int queryIndex = uriTemplate.indexOf('?');
+        String path = queryIndex >= 0 ? uriTemplate.substring(0, queryIndex) : uriTemplate;
+        int schemeIndex = path.indexOf("://");
+        if (schemeIndex < 0) {
+            return path;
+        }
+
+        int pathStartIndex = path.indexOf('/', schemeIndex + 3);
+        return pathStartIndex < 0 ? "" : path.substring(pathStartIndex);
+    }
+
+    private List<String> pathSegments(String path) {
+        if (path == null || path.isBlank()) {
+            return List.of();
+        }
+        return java.util.Arrays.stream(path.split("/"))
+            .filter(segment -> !segment.isBlank())
+            .toList();
+    }
+
+    private String pathVariableName(String templateSegment) {
+        if (!templateSegment.startsWith("{") || !templateSegment.endsWith("}")) {
+            return null;
+        }
+
+        String variableExpression = templateSegment.substring(1, templateSegment.length() - 1);
+        int regexSeparatorIndex = variableExpression.indexOf(':');
+        String variableName = regexSeparatorIndex >= 0 ? variableExpression.substring(0, regexSeparatorIndex) : variableExpression;
+        return variableName.isBlank() ? null : variableName;
+    }
+
+    private String decodePathSegment(String segment) {
+        return URLDecoder.decode(segment, StandardCharsets.UTF_8);
+    }
+
+    private String queryToText(URI uri) {
+        String rawQuery = uri.getRawQuery();
+        if (rawQuery == null || rawQuery.isBlank()) {
+            return "";
+        }
+        return sanitizedBodySanitizer.toText(FORM_URLENCODED_HEADERS, rawQuery.getBytes(StandardCharsets.UTF_8));
     }
 
     private Integer getStatus(ClientHttpResponse response) {
@@ -118,506 +231,110 @@ public class HttpClientLogFactory {
         return status != null && status >= 200 && status < 300;
     }
 
-    private String buildStatusErrorMessage(Integer status) {
-        return status == null ? "HTTP status unavailable" : "HTTP status=" + status;
+    private String errorMessage(String responseBodyText) {
+        return responseBodyText == null || responseBodyText.isBlank() ? "" : null;
+    }
+
+    private String responseBodyToText(Map<String, List<String>> headers, byte[] responseBody) {
+        if (responseBody == null || responseBody.length == 0) {
+            return "";
+        }
+
+        String contentType = firstHeaderValue(headers, CONTENT_TYPE_HEADER_NAME);
+        String normalizedContentType = normalizeContentType(contentType);
+        if (isJson(normalizedContentType)) {
+            // JSON 응답은 공통 sanitizer의 필드 마스킹/축약 룰 적용
+            return sanitizedBodySanitizer.toText(headers, responseBody);
+        }
+
+        if (isText(normalizedContentType)) {
+            // text 응답은 설정된 길이만큼 축약 저장
+            return textResponseBody(responseBody, contentType);
+        }
+
+        return RESPONSE_BODY_OMITTED;
+    }
+
+    private String textResponseBody(byte[] responseBody, String contentType) {
+        String bodyText = new String(responseBody, resolveCharset(contentType));
+        int truncatedSize = recordingProperties.responseBodyTruncatedSize();
+        if (truncatedSize == 0 || bodyText.length() <= truncatedSize) {
+            return bodyText;
+        }
+        return bodyText.substring(0, truncatedSize) + "...<truncated: response-body-truncated-size=" + truncatedSize + ">";
+    }
+
+    private String retainedResponseBodyToText(Map<String, List<String>> headers, byte[] responseBody) {
+        if (responseBody == null || responseBody.length == 0) {
+            return "";
+        }
+
+        String contentType = firstHeaderValue(headers, CONTENT_TYPE_HEADER_NAME);
+        String normalizedContentType = normalizeContentType(contentType);
+        if (isJson(normalizedContentType) || isText(normalizedContentType)) {
+            return retainedBodySanitizer.toText(headers, responseBody);
+        }
+
+        return RESPONSE_BODY_OMITTED;
     }
 
     private Map<String, List<String>> copyHeaders(HttpHeaders headers) {
+        return sanitizedBodySanitizer.copyHeaders(copyRawHeaders(headers));
+    }
+
+    private Map<String, List<String>> copyRawHeaders(HttpHeaders headers) {
         Map<String, List<String>> copied = new LinkedHashMap<>();
-        headers.forEach((name, values) -> {
-            HeaderLogRule headerLogRule = findHeaderLogRule(name);
-            if (headerLogRule != null) {
-                copied.put(name, applyLogRule(values, headerLogRule));
-            }
-        });
+        headers.forEach((name, values) -> copied.put(name, List.copyOf(values)));
         return copied;
     }
 
-    private HeaderLogRule findHeaderLogRule(String headerName) {
-        String normalizedHeaderName = headerName.toLowerCase();
-        if (matchesAny(normalizedHeaderName, headerNameExcludes)) {
-            return null;
-        }
-
-        return loggingHeaderRules.stream()
-            .filter(rule -> normalizedHeaderName.contains(rule.normalizedMatchToken()))
+    private String firstHeaderValue(Map<String, List<String>> headers, String headerName) {
+        return headers.entrySet()
+            .stream()
+            .filter(entry -> entry.getKey().equalsIgnoreCase(headerName))
             .findFirst()
-            .orElse(null);
+            .map(Map.Entry::getValue)
+            .filter(values -> !values.isEmpty())
+            .map(List::getFirst)
+            .orElse("");
     }
 
-    private List<String> applyLogRule(List<String> values, HeaderLogRule headerLogRule) {
-        if (headerLogRule.raw()) {
-            return List.copyOf(values);
-        }
-
-        return values.stream()
-            .map(value -> maskHeaderValue(value, headerLogRule))
-            .toList();
-    }
-
-    private String maskHeaderValue(String value, HeaderLogRule headerLogRule) {
-        if (value == null || value.isEmpty()) {
-            return value;
-        }
-
-        int valueLength = value.length();
-        int prefixLength = Math.min(headerLogRule.prefixLength(), valueLength);
-        int suffixStart = Math.max(prefixLength, valueLength - headerLogRule.suffixLength());
-
-        String prefix = value.substring(0, prefixLength);
-        String suffix = suffixStart >= valueLength ? "" : value.substring(suffixStart);
-        boolean hasMaskedMiddle = suffixStart > prefixLength;
-
-        return prefix
-            + (hasMaskedMiddle ? "..." : "")
-            + suffix
-            + "(length=" + valueLength + ")";
-    }
-
-    private String toText(HttpHeaders headers, byte[] body) {
-        if (body == null || body.length == 0) {
+    private String normalizeContentType(String contentType) {
+        if (contentType == null || contentType.isBlank()) {
             return "";
         }
 
-        // content-type에 charset이 있으면 우선 사용하고, 없으면 UTF-8을 기본값으로 본다.
-        Charset charset = StandardCharsets.UTF_8;
-        MediaType contentType = headers.getContentType();
-        if (contentType != null && contentType.getCharset() != null) {
-            charset = contentType.getCharset();
-        }
-
-        String bodyText = new String(body, charset);
-        if (contentType != null && contentType.isCompatibleWith(MediaType.APPLICATION_JSON)) {
-            return maskJsonBody(bodyText);
-        }
-
-        if (contentType != null && contentType.isCompatibleWith(MediaType.APPLICATION_FORM_URLENCODED)) {
-            return maskFormUrlEncodedBody(bodyText, charset);
-        }
-
-        if (contentType != null && contentType.isCompatibleWith(MediaType.MULTIPART_FORM_DATA)) {
-            return maskMultipartFormDataBody(bodyText, contentType);
-        }
-
-        return bodyText;
+        int separatorIndex = contentType.indexOf(';');
+        String mediaType = separatorIndex >= 0 ? contentType.substring(0, separatorIndex) : contentType;
+        return mediaType.trim().toLowerCase(java.util.Locale.ROOT);
     }
 
-    private String maskJsonBody(String bodyText) {
-        if ((bodyMaskedIncludes.isEmpty() && bodyTruncatedIncludes.isEmpty()) || bodyText.isBlank()) {
-            return bodyText;
-        }
-
-        try {
-            JsonNode rootNode = objectMapper.readTree(bodyText);
-            maskJsonNode(rootNode);
-            return objectMapper.writeValueAsString(rootNode);
-        } catch (JsonProcessingException _) {
-            return bodyText;
-        }
+    private boolean isJson(String contentType) {
+        return contentType.equals(MediaType.APPLICATION_JSON_VALUE)
+            || contentType.endsWith("+json");
     }
 
-    private String maskFormUrlEncodedBody(String bodyText, Charset charset) {
-        if ((bodyMaskedIncludes.isEmpty() && bodyTruncatedIncludes.isEmpty()) || bodyText.isBlank()) {
-            return bodyText;
+    private boolean isText(String contentType) {
+        return contentType.startsWith("text/");
+    }
+
+    private Charset resolveCharset(String contentType) {
+        if (contentType == null || contentType.isBlank()) {
+            return StandardCharsets.UTF_8;
         }
 
-        List<FormField> formFields = parseFormUrlEncodedBody(bodyText, charset);
-        if (formFields.isEmpty()) {
-            return bodyText;
-        }
-
-        return formFields.stream()
-            .map(formField -> formField.key() + "=" + nullSafe(maskFormFieldValue(formField.key(), formField.value())))
-            .collect(java.util.stream.Collectors.joining("&"));
-    }
-
-    private String maskMultipartFormDataBody(String bodyText, MediaType contentType) {
-        String boundary = contentType.getParameter("boundary");
-        if (boundary == null || boundary.isBlank()) {
-            return "<multipart/form-data omitted>";
-        }
-
-        List<MultipartPart> multipartParts = parseMultipartParts(bodyText, boundary);
-        if (multipartParts.isEmpty()) {
-            return "<multipart/form-data omitted>";
-        }
-
-        return multipartParts.stream()
-            .map(this::formatMultipartPart)
-            .collect(java.util.stream.Collectors.joining("&"));
-    }
-
-    private void maskJsonNode(JsonNode node) {
-        if (node == null) {
-            return;
-        }
-
-        if (node.isObject()) {
-            maskObjectNode((ObjectNode) node);
-            return;
-        }
-
-        if (node.isArray()) {
-            maskArrayNode((ArrayNode) node);
-        }
-    }
-
-    private void maskObjectNode(ObjectNode objectNode) {
-        objectNode.fieldNames().forEachRemaining(fieldName -> {
-            JsonNode childNode = objectNode.get(fieldName);
-            if (shouldMaskBodyField(fieldName) && childNode != null && !childNode.isNull()) {
-                objectNode.put(fieldName, maskBodyValue(childNode.asText()));
-                return;
-            }
-
-            BodyTruncateRule bodyTruncateRule = findBodyTruncateRule(fieldName);
-            if (bodyTruncateRule != null && childNode != null && childNode.isTextual()) {
-                objectNode.put(fieldName, truncateBodyValue(childNode.asText(), bodyTruncateRule));
-                return;
-            }
-
-            maskJsonNode(childNode);
-        });
-    }
-
-    private void maskArrayNode(ArrayNode arrayNode) {
-        arrayNode.forEach(this::maskJsonNode);
-    }
-
-    private String maskFormFieldValue(String fieldName, String value) {
-        if (shouldMaskBodyField(fieldName)) {
-            return maskBodyValue(value);
-        }
-
-        BodyTruncateRule bodyTruncateRule = findBodyTruncateRule(fieldName);
-        if (bodyTruncateRule != null) {
-            return truncateBodyValue(value, bodyTruncateRule);
-        }
-
-        return value;
-    }
-
-    private List<MultipartPart> parseMultipartParts(String bodyText, String boundary) {
-        List<MultipartPart> multipartParts = new ArrayList<>();
-        String delimiter = "--" + boundary;
-        String[] rawParts = bodyText.split(Pattern.quote(delimiter));
-        for (String rawPart: rawParts) {
-            if (rawPart == null || rawPart.isBlank()) {
-                continue;
-            }
-
-            String trimmedPart = trimMultipartPart(rawPart);
-            if (trimmedPart.equals("--") || trimmedPart.isBlank()) {
-                continue;
-            }
-
-            int separatorIndex = trimmedPart.indexOf("\r\n\r\n");
-            int separatorLength = 4;
-            if (separatorIndex < 0) {
-                separatorIndex = trimmedPart.indexOf("\n\n");
-                separatorLength = 2;
-            }
-            if (separatorIndex < 0) {
-                continue;
-            }
-
-            String headerText = trimmedPart.substring(0, separatorIndex);
-            String bodyPart = trimmedPart.substring(separatorIndex + separatorLength);
-            HttpHeaders partHeaders = parsePartHeaders(headerText);
-            String fieldName = extractPartName(partHeaders);
-            boolean binaryPart = isBinaryMultipartPart(partHeaders);
-
-            multipartParts.add(new MultipartPart(
-                fieldName == null || fieldName.isBlank() ? "part" : fieldName,
-                trimTrailingLineBreaks(bodyPart),
-                binaryPart
-            ));
-        }
-        return multipartParts;
-    }
-
-    private String formatMultipartPart(MultipartPart multipartPart) {
-        if (multipartPart.binary()) {
-            return multipartPart.name() + "=<multipart binary omitted>";
-        }
-
-        return multipartPart.name() + "=" + nullSafe(maskFormFieldValue(multipartPart.name(), multipartPart.value()));
-    }
-
-    private HttpHeaders parsePartHeaders(String headerText) {
-        HttpHeaders headers = new HttpHeaders();
-        for (String headerLine: headerText.split("\\r?\\n")) {
-            int separatorIndex = headerLine.indexOf(':');
-            if (separatorIndex < 0) {
-                continue;
-            }
-
-            String headerName = headerLine.substring(0, separatorIndex).trim();
-            String headerValue = headerLine.substring(separatorIndex + 1).trim();
-            headers.add(headerName, headerValue);
-        }
-        return headers;
-    }
-
-    private String extractPartName(HttpHeaders partHeaders) {
-        String contentDisposition = partHeaders.getFirst(HttpHeaders.CONTENT_DISPOSITION);
-        if (contentDisposition == null) {
-            return null;
-        }
-
-        Matcher matcher = CONTENT_DISPOSITION_NAME_PATTERN.matcher(contentDisposition);
-        return matcher.find() ? matcher.group(1) : null;
-    }
-
-    private boolean isBinaryMultipartPart(HttpHeaders partHeaders) {
-        String contentDisposition = partHeaders.getFirst(HttpHeaders.CONTENT_DISPOSITION);
-        if (contentDisposition != null) {
-            Matcher filenameMatcher = CONTENT_DISPOSITION_FILENAME_PATTERN.matcher(contentDisposition);
-            if (filenameMatcher.find()) {
-                return true;
-            }
-        }
-
-        MediaType partContentType = partHeaders.getContentType();
-        if (partContentType == null) {
-            return false;
-        }
-
-        String type = partContentType.getType();
-        if ("text".equalsIgnoreCase(type)) {
-            return false;
-        }
-
-        return !partContentType.isCompatibleWith(MediaType.APPLICATION_JSON)
-            && !partContentType.isCompatibleWith(MediaType.APPLICATION_FORM_URLENCODED)
-            && !partContentType.isCompatibleWith(MediaType.APPLICATION_XML);
-    }
-
-    private String trimMultipartPart(String rawPart) {
-        String part = rawPart;
-        if (part.startsWith("\r\n")) {
-            part = part.substring(2);
-        } else if (part.startsWith("\n")) {
-            part = part.substring(1);
-        }
-        return part;
-    }
-
-    private String trimTrailingLineBreaks(String value) {
-        String trimmed = value;
-        while (trimmed.endsWith("\r\n")) {
-            trimmed = trimmed.substring(0, trimmed.length() - 2);
-        }
-        while (trimmed.endsWith("\n")) {
-            trimmed = trimmed.substring(0, trimmed.length() - 1);
-        }
-        return trimmed;
-    }
-
-    private boolean shouldMaskBodyField(String fieldName) {
-        String normalizedFieldName = fieldName.toLowerCase();
-        return matchesAny(normalizedFieldName, bodyMaskedIncludes)
-            && !matchesAny(normalizedFieldName, bodyMaskedExcludes);
-    }
-
-    private BodyTruncateRule findBodyTruncateRule(String fieldName) {
-        String normalizedFieldName = fieldName.toLowerCase();
-        if (matchesAny(normalizedFieldName, bodyTruncatedExcludes)) {
-            return null;
-        }
-
-        return bodyTruncatedIncludes.stream()
-            .filter(rule -> normalizedFieldName.contains(rule.normalizedMatchToken()))
-            .findFirst()
-            .orElse(null);
-    }
-
-    private List<HeaderLogRule> toHeaderLogRules(MatchRuleProperties headerRuleProperties) {
-        List<HeaderLogRule> headerLogRules = new ArrayList<>();
-        headerRuleProperties.mergedInclude().forEach(headerExpression -> headerLogRules.add(HeaderLogRule.parse(headerExpression)));
-        return headerLogRules;
-    }
-
-    private List<BodyTruncateRule> toBodyTruncateRules(List<String> fieldExpressions, int defaultSize) {
-        List<BodyTruncateRule> bodyTruncateRules = new ArrayList<>();
-        fieldExpressions.forEach(fieldExpression -> bodyTruncateRules.add(BodyTruncateRule.parse(fieldExpression, defaultSize)));
-        return bodyTruncateRules;
-    }
-
-    private Set<String> toNormalizedMatchSet(List<String> matchExpressions) {
-        return new HashSet<>(matchExpressions.stream()
-            .map(this::normalizeMatchExpression)
-            .toList());
-    }
-
-    private String normalizeMatchExpression(String expression) {
-        if (expression == null || expression.isBlank()) {
-            return "";
-        }
-
-        String trimmedExpression = expression.trim();
-        Matcher matcher = SIZE_RULE_PATTERN.matcher(trimmedExpression);
-        if (matcher.matches()) {
-            return matcher.group(1).trim().toLowerCase();
-        }
-
-        return trimmedExpression.toLowerCase();
-    }
-
-    private boolean matchesAny(String target, Set<String> matchTokens) {
-        return matchTokens.stream()
-            .filter(token -> !token.isBlank())
-            .anyMatch(target::contains);
-    }
-
-    private String maskBodyValue(String value) {
-        if (value == null || value.isEmpty()) {
-            return value;
-        }
-
-        return "******(length=" + value.length() + ")";
-    }
-
-    private String truncateBodyValue(String value, BodyTruncateRule bodyTruncateRule) {
-        if (value == null || value.isEmpty()) {
-            return value;
-        }
-
-        int prefixLength = bodyTruncateRule.prefixLength();
-        int suffixLength = bodyTruncateRule.suffixLength();
-        if ((prefixLength <= 0 && suffixLength <= 0) || value.length() <= prefixLength + suffixLength) {
-            return value;
-        }
-
-        String prefix = value.substring(0, Math.min(prefixLength, value.length()));
-        String suffix = value.substring(Math.max(prefix.length(), value.length() - suffixLength));
-        return prefix + "..." + suffix + "(length=" + value.length() + ")";
-    }
-
-    private List<FormField> parseFormUrlEncodedBody(String bodyText, Charset charset) {
-        List<FormField> formFields = new ArrayList<>();
-        String[] pairs = bodyText.split("&");
-        for (String pair: pairs) {
-            if (pair == null || pair.isEmpty()) {
-                continue;
-            }
-
-            int separatorIndex = pair.indexOf('=');
-            String encodedKey = separatorIndex >= 0 ? pair.substring(0, separatorIndex) : pair;
-            String encodedValue = separatorIndex >= 0 ? pair.substring(separatorIndex + 1) : "";
-
-            formFields.add(new FormField(
-                decodeFormComponent(encodedKey, charset),
-                decodeFormComponent(encodedValue, charset)
-            ));
-        }
-        return formFields;
-    }
-
-    private String decodeFormComponent(String value, Charset charset) {
-        return URLDecoder.decode(value, charset);
-    }
-
-    private record FormField(
-        String key,
-        String value
-    ) {
-    }
-
-    private record MultipartPart(
-        String name,
-        String value,
-        boolean binary
-    ) {
-    }
-
-    private String nullSafe(String value) {
-        return value == null ? "" : value;
-    }
-
-    private record HeaderLogRule(
-        String normalizedMatchToken,
-        boolean raw,
-        int prefixLength,
-        int suffixLength
-    ) {
-
-        private static HeaderLogRule parse(String expression) {
-            if (expression == null || expression.isBlank()) {
-                throw new IllegalArgumentException(
-                    "http-client.logging.header-names.include 값은 '헤더명', '헤더명[글자수]', '헤더명[앞글자수:뒤글자수]', '헤더명[앞글자수:]' 또는 '헤더명[:뒤글자수]' 형식이어야 합니다.");
-            }
-
-            String trimmedExpression = expression.trim();
-            Matcher matcher = SIZE_RULE_PATTERN.matcher(trimmedExpression);
-            if (matcher.matches()) {
+        String charsetPrefix = "charset=";
+        int charsetPrefixLength = charsetPrefix.length();
+        for (String part: contentType.split(";")) {
+            String trimmedPart = part.trim();
+            if (trimmedPart.regionMatches(true, 0, charsetPrefix, 0, charsetPrefixLength)) {
                 try {
-                    String headerName = matcher.group(1).trim();
-                    int prefixLength = parseRuleSize(matcher.group(2));
-                    int suffixLength = matcher.group(3) == null
-                        ? prefixLength
-                        : parseRuleSize(matcher.group(3));
-                    return new HeaderLogRule(headerName.toLowerCase(), false, prefixLength, suffixLength);
-                } catch (NumberFormatException exception) {
-                    throw new IllegalArgumentException(
-                        "http-client.logging.header-names.include 값은 '헤더명[숫자]', '헤더명[숫자:숫자]', '헤더명[숫자:]' 또는 '헤더명[:숫자]' 형식이어야 합니다. value=" + expression,
-                        exception
-                    );
+                    return Charset.forName(trimmedPart.substring(charsetPrefixLength).trim());
+                } catch (IllegalArgumentException _) {
+                    return StandardCharsets.UTF_8;
                 }
             }
-
-            if (trimmedExpression.contains("[") || trimmedExpression.contains("]")) {
-                throw new IllegalArgumentException(
-                    "http-client.logging.header-names.include 값은 '헤더명', '헤더명[글자수]', '헤더명[앞글자수:뒤글자수]', '헤더명[앞글자수:]' 또는 '헤더명[:뒤글자수]' 형식이어야 합니다. value=" + expression
-                );
-            }
-
-            return new HeaderLogRule(trimmedExpression.toLowerCase(), true, 0, 0);
         }
-    }
-
-    private record BodyTruncateRule(
-        String normalizedMatchToken,
-        int prefixLength,
-        int suffixLength
-    ) {
-
-        private static BodyTruncateRule parse(String expression, int defaultSize) {
-            if (expression == null || expression.isBlank()) {
-                throw new IllegalArgumentException(
-                    "http-client.logging.body-truncated-fields.include 값은 '필드명', '필드명[글자수]', '필드명[앞글자수:뒤글자수]', '필드명[앞글자수:]' 또는 '필드명[:뒤글자수]' 형식이어야 합니다."
-                );
-            }
-
-            String trimmedExpression = expression.trim();
-            Matcher matcher = SIZE_RULE_PATTERN.matcher(trimmedExpression);
-            if (matcher.matches()) {
-                try {
-                    String fieldName = matcher.group(1).trim();
-                    int prefixLength = parseRuleSize(matcher.group(2));
-                    int suffixLength = matcher.group(3) == null
-                        ? prefixLength
-                        : parseRuleSize(matcher.group(3));
-                    return new BodyTruncateRule(fieldName.toLowerCase(), prefixLength, suffixLength);
-                } catch (NumberFormatException exception) {
-                    throw new IllegalArgumentException(
-                        "http-client.logging.body-truncated-fields.include 값은 '필드명[숫자]', '필드명[숫자:숫자]', '필드명[숫자:]' 또는 '필드명[:숫자]' 형식이어야 합니다. value=" + expression,
-                        exception
-                    );
-                }
-            }
-
-            if (trimmedExpression.contains("[") || trimmedExpression.contains("]")) {
-                throw new IllegalArgumentException(
-                    "http-client.logging.body-truncated-fields.include 값은 '필드명', '필드명[글자수]', '필드명[앞글자수:뒤글자수]', '필드명[앞글자수:]' 또는 '필드명[:뒤글자수]' 형식이어야 합니다. value=" + expression
-                );
-            }
-
-            return new BodyTruncateRule(trimmedExpression.toLowerCase(), defaultSize, defaultSize);
-        }
-    }
-
-    private static int parseRuleSize(String value) {
-        return StringUtils.hasText(value) ? Integer.parseInt(value) : 0;
+        return StandardCharsets.UTF_8;
     }
 }

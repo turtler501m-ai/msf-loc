@@ -76,7 +76,7 @@ public class CacheStampedeGuard {
     ) {
         try {
             Thread.sleep(protection.lockRetryInterval().toMillis());
-        } catch (InterruptedException ex) {
+        } catch (InterruptedException _) {
             Thread.currentThread().interrupt();
             throw unavailableExceptionSupplier.get();
         }

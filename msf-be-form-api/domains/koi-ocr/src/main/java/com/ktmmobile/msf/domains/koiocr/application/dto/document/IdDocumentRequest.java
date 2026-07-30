@@ -11,7 +11,9 @@ public record IdDocumentRequest(
     @NotNull
     MultipartFile srcFile,
     @NotNull
-    DocumentType ocrType
+    DocumentType ocrType,
+    @NotNull
+    Boolean returnFile
 
 ) {
 }

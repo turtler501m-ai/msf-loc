@@ -12,9 +12,15 @@ import com.ktmmobile.msf.domains.form.common.dto.NiceTryLogDto;
 @Service
 public class NiceLogSvcImpl implements NiceLogSvc {
 
-    @Override public void insert(HttpServletRequest request, NiceResDto niceDto, NiceLogDto nicelogDto) {}
-    @Override public void insert(HttpServletRequest request, HashMap map) {}
-    @Override public void insert(HttpServletRequest request, HashMap map, String sReserved1) {}
+    @Override public void insert(HttpServletRequest request, NiceResDto niceDto, NiceLogDto nicelogDto) {
+        // No-op legacy implementation.
+    }
+    @Override public void insert(HttpServletRequest request, HashMap map) {
+        // No-op legacy implementation.
+    }
+    @Override public void insert(HttpServletRequest request, HashMap map, String sReserved1) {
+        // No-op legacy implementation.
+    }
     @Override public long insertMcpNiceHist(NiceLogDto niceLogDto) { return 0L; }
     @Override public long saveMcpNiceHist(NiceLogDto niceLogDto) { return 0L; }
     @Override public boolean updateMcpNiceHist(NiceLogDto niceLogDto) { return false; }

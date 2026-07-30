@@ -29,7 +29,12 @@ export const ICON_NAMES = [
   'clear',
   'print',
   'expand',
+  'fold',
   'check',
+  'loading',
+  'eyeOn',
+  'eyeOff',
+  'newWrite',
 ]
 export const ICON_SIZES = ['xsmall', 'small', 'medium', 'large']
 </script>
@@ -55,7 +60,7 @@ const props = defineProps({
 })
 
 const iconClasses = computed(() => [
-  'msf-icon ', // 스타일의 .msf-icon 와 매칭
+  'msf-icon', // 스타일의 .msf-icon 와 매칭
   props.name, // 스타일의 .notice, .cart 등과 매칭
   props.size, // 스타일의 .small, .large 등과 매칭
   props.className,

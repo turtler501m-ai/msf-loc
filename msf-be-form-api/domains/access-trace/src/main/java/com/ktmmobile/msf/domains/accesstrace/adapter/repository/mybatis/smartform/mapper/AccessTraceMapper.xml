@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.accesstrace.adapter.repository.mybatis.smartform.mapper.AccessTraceMapper">
+
+  <insert id="insertAccessTrace">
+    INSERT INTO msf_user_access_trace (
+      trace_seq,
+      user_id,
+      access_dt,
+      prcs_mdl_div_cd,
+      access_ip,
+      prcs_sbst,
+      trtm_rslt_sbst,
+      access_url_adr,
+      parameter,
+      expnsn_str_val1,
+      login_div_cd,
+      login_seq,
+      yy,
+      mm,
+      dd,
+      cprt_cd
+    ) VALUES (
+      NEXTVAL('smartform.sq_user_access_trace'),
+      #{userId},
+      NOW(),
+      LEFT(#{prcsMdlDivCd}, 100),
+      #{accessIp},
+      LEFT(#{prcsSbst}, 6000),
+      LEFT(#{trtmRsltSbst}, 1000),
+      LEFT(#{accessUrlAdr}, 300),
+      LEFT(#{parameter}, 1000),
+      LEFT(#{expnsnStrVal1}, 200),
+      LEFT(#{loginDivCd}, 10),
+      NULL,
+      to_char(NOW(), 'YYYY'),
+      to_char(NOW(), 'MM'),
+      to_char(NOW(), 'DD'),
+      LEFT(#{cprtCd}, 30)
+    )
+  </insert>
+
+</mapper>

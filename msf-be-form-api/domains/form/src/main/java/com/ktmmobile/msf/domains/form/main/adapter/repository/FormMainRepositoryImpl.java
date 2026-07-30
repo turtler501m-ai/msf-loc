@@ -25,16 +25,16 @@ public class FormMainRepositoryImpl implements FormMainRepository {
 
     private final FormMainMapper formMainMapper;
 
-    @Override public List<ChartCountResponse> getCountFormStatus() {
-        List<ChartCount> list = formMainMapper.selectCountFormStatus();
+    @Override public List<ChartCountResponse> getCountFormStatus(String userId) {
+        List<ChartCount> list = formMainMapper.selectCountFormStatus(userId);
         if (list == null) {
             return List.of();
         }
         return list.stream().map((entity) -> ChartCountResponse.of(entity.code(), entity.name(), entity.count())).toList();
     }
 
-    @Override public List<ChartCountResponse> getCountFormService() {
-        List<ChartCount> list = formMainMapper.selectCountFormService();
+    @Override public List<ChartCountResponse> getCountFormService(String userId) {
+        List<ChartCount> list = formMainMapper.selectCountFormService(userId);
         if (list == null) {
             return List.of();
         }

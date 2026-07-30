@@ -1,12 +1,12 @@
 package com.ktmmobile.msf.domains.form.form.common.dto;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.web.multipart.MultipartFile;
-import com.ktmmobile.msf.domains.form.form.common.dto.UsimMspPlcyDto;
-import com.ktmmobile.msf.domains.form.form.common.dto.UsimMspOperTypeDto;
+
 import com.ktmmobile.msf.domains.form.common.dto.UsimMspRateDto;
 
 /**
@@ -18,10 +18,7 @@ import com.ktmmobile.msf.domains.form.common.dto.UsimMspRateDto;
  */
 public class UsimBasDto implements Serializable{
 
-    /**
-     *
-     */
-    private static final long serialVersionUID = 6585519884371461810L;
+    @Serial private static final long serialVersionUID = 6585519884371461810L;
 
     /** 단품정보 */
     List<UsimMspPlcyDto> usimMspPlcyDtoList;
@@ -121,11 +118,12 @@ public class UsimBasDto implements Serializable{
     /** 정렬순서 */
     private String paySort;
 
+    private String reqBuyType;
+
     private String[] arrPaySort;
     private String[] arrRateCd;
     private String[] arrRateNm;
     private String[] arrSalePlcyCd;
-
 
 
     public String[] getArrSalePlcyCd() {
@@ -313,7 +311,8 @@ public class UsimBasDto implements Serializable{
     }
 
     public void setUsimMspOperTypeDtoList(
-            List<UsimMspOperTypeDto> usimMspOperTypeDtoList) {
+        List<UsimMspOperTypeDto> usimMspOperTypeDtoList
+    ) {
         this.usimMspOperTypeDtoList = usimMspOperTypeDtoList;
     }
 
@@ -413,5 +412,11 @@ public class UsimBasDto implements Serializable{
         this.prdtIndCd = prdtIndCd;
     }
 
+    public String getReqBuyType() {
+        return reqBuyType;
+    }
 
+    public void setReqBuyType(String reqBuyType) {
+        this.reqBuyType = reqBuyType;
+    }
 }

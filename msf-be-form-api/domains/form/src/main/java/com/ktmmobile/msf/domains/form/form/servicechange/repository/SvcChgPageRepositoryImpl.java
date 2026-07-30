@@ -1,44 +1,52 @@
 package com.ktmmobile.msf.domains.form.form.servicechange.repository;
 
-import java.util.List;
-import java.util.Map;
-
 import org.mybatis.spring.SqlSessionTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 
+import com.ktmmobile.msf.commons.mybatis.config.MspMyBatisConfig;
+import com.ktmmobile.msf.commons.mybatis.config.SmartFormMyBatisConfig;
+import com.ktmmobile.msf.domains.form.common.dto.McpIpStatisticDto;
+import com.ktmmobile.msf.domains.form.common.dto.McpServiceAlterTraceDto;
 import com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto;
-import com.ktmmobile.msf.domains.form.form.servicechange.dto.MspJuoAddInfoDto;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Repository
 public class SvcChgPageRepositoryImpl {
 
-    @Autowired
-    @Qualifier("mspSqlSession")
-    private SqlSessionTemplate mspSqlSession;
+    private final SqlSessionTemplate mspSqlSession;
+    private final SqlSessionTemplate smartFormSqlSession;
 
-    @Autowired
-    @Qualifier("sqlSessionTemplate")
-    private SqlSessionTemplate smartformSqlSession;
-
-    public MspJuoAddInfoDto selectMspAddInfo(String svcCntrNo) {
-        return mspSqlSession.selectOne("MspMyPageMapper.selectMspAddInfo", svcCntrNo);
-    }
-
-    public List<McpUserCntrMngDto> selectCntrList(Map<String, String> params) {
-        return mspSqlSession.selectList("MspMyPageMapper.selectCntrList", params);
+    public SvcChgPageRepositoryImpl(
+        @Qualifier(MspMyBatisConfig.SQL_SESSION_TEMPLATE) SqlSessionTemplate mspSqlSession,
+        @Qualifier(SmartFormMyBatisConfig.SQL_SESSION_TEMPLATE) SqlSessionTemplate smartFormSqlSession
+    ) {
+        this.mspSqlSession = mspSqlSession;
+        this.smartFormSqlSession = smartFormSqlSession;
     }
 
     public McpUserCntrMngDto selectCntrListNoLogin(McpUserCntrMngDto userCntrMngDto) {
-        return mspSqlSession.selectOne("MspMyPageMapper.selectCntrListNoLogin", userCntrMngDto);
+        return mspSqlSession.selectOne("MspSvcChgPageMapper.selectCntrListNoLogin", userCntrMngDto);
     }
 
-    public Long nextRequestKey() {
-        return smartformSqlSession.selectOne("SvcChgPageMapper.nextRequestKey");
+    public McpUserCntrMngDto selectRprsPrdtInfo(McpUserCntrMngDto userCntrMngDto) {
+        return mspSqlSession.selectOne("MspSvcChgPageMapper.selectRprsPrdtInfo", userCntrMngDto);
     }
 
-    public Long nextSvcChgDtlSeq() {
-        return smartformSqlSession.selectOne("SvcChgPageMapper.nextSvcChgDtlSeq");
+    public void insertRateResChgAccessTrace(McpIpStatisticDto mcpIpStatisticDto) {
+        log.debug("[SvcChgPageRepository][insertRateResChgAccessTrace] query: getEventCode={}", mcpIpStatisticDto.getEventCode());
+        mspSqlSession.insert("MspSvcChgPageMapper.insertRateResChgAccessTrace", mcpIpStatisticDto);
     }
+
+    public boolean insertServiceAlterTrace(McpServiceAlterTraceDto serviceAlterTrace) {
+        int affected = smartFormSqlSession.insert("SvcChgPageMapper.insertServiceAlterTrace", serviceAlterTrace);
+        return 0 < affected;
+    }
+
+    public int checkAllreadPlanchgCount(McpServiceAlterTraceDto serviceAlterTrace) {
+        return smartFormSqlSession.selectOne("SvcChgPageMapper.checkAllreadPlanchgCount", serviceAlterTrace);
+    }
+
 }

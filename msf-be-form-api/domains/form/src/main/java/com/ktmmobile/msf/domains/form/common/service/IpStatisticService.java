@@ -1,17 +1,11 @@
 package com.ktmmobile.msf.domains.form.common.service;
 
-import java.net.InetAddress;
-import java.net.URLDecoder;
-import java.util.List;
 import java.util.Map;
 import jakarta.servlet.http.HttpServletRequest;
 
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.interceptor.TransactionAspectSupport;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -22,60 +16,16 @@ import com.ktmmobile.msf.domains.form.common.dto.UserSessionDto;
 import com.ktmmobile.msf.domains.form.common.dto.WorkNotiDto;
 import com.ktmmobile.msf.domains.form.common.util.NmcpServiceUtils;
 import com.ktmmobile.msf.domains.form.common.util.SessionUtils;
-import com.ktmmobile.msf.domains.form.common.util.StringUtil;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 /**
  *
  */
-
+@Slf4j
 @Service
 public class IpStatisticService {
 
-    private static final Logger logger = LoggerFactory.getLogger(IpStatisticService.class);
     @Autowired
     private FCommonDao fCommonDao;
 
-    /**
-     * <pre>
-     * 설명     :로그인 있을때만 넣기
-     * @param
-     * @return
-     * @return:
-     * </pre>
-     */
-    public void insertIpStat(HttpServletRequest request) {
-        try {
-            if (StringUtils.endsWith(request.getRequestURI(), "jsp")) {
-                return;
-            }
-
-            McpIpStatisticDto mcpIpStatisticDto = new McpIpStatisticDto();
-            mcpIpStatisticDto.setIp(RequestUtils.getClientIp());
-            mcpIpStatisticDto.setUrl(request.getRequestURI());
-            if (request.getQueryString() != null) {
-                mcpIpStatisticDto.setParameter(URLDecoder.decode(request.getQueryString(), UTF_8));
-            }
-
-            UserSessionDto userSession = (UserSessionDto) request.getSession().getAttribute(SessionUtils.USER_SESSION);
-            if (userSession != null) {
-                String strUserId = userSession.getUserId();
-                if (strUserId.length() > 20) {
-                    strUserId = strUserId.substring(0, 20);
-                }
-                mcpIpStatisticDto.setUserid(strUserId);
-                mcpIpStatisticDto.setLoginDivCd(StringUtil.NVL(userSession.getLoginDivCd(), ""));
-            }
-
-            mcpIpStatisticDto.setPrcsMdlInd(InetAddress.getLocalHost().getHostName());
-            mcpIpStatisticDto.setPrcsSbst(getPrcsSbst(request));
-            this.insertAccessTrace(mcpIpStatisticDto);
-            this.increasePageViewCount();
-        } catch (Exception e) {
-            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
-        }
-    }
 
     public boolean insertAccessTrace(McpIpStatisticDto mcpIpStatisticDto) {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
@@ -87,6 +37,7 @@ public class IpStatisticService {
         mcpIpStatisticDto.setUrl(request.getRequestURI());
         mcpIpStatisticDto.setPlatformCd(NmcpServiceUtils.getPlatFormCd());
 
+        // FIXME: SessionUtils 의존성 제거
         WorkNotiDto workNotiDto = SessionUtils.getCurrentMenuUrl();
         if (workNotiDto != null) {
             mcpIpStatisticDto.setMenuSeq(workNotiDto.getMenuSeq());
@@ -95,18 +46,9 @@ public class IpStatisticService {
             //            mcpIpStatisticDto.setMenuSeq("999999999");
             //            mcpIpStatisticDto.setUrlSeq("999999999");
         }
-        logger.debug("getMenuSeq:{},getUrlSeq:{}", mcpIpStatisticDto.getMenuSeq(), mcpIpStatisticDto.getUrlSeq());
+        log.debug("getMenuSeq:{},getUrlSeq:{}", mcpIpStatisticDto.getMenuSeq(), mcpIpStatisticDto.getUrlSeq());
 
         return 0 < fCommonDao.insertIpStat(mcpIpStatisticDto);
-    }
-
-    /**
-     * 요금제 예약변경 이력 저장
-     * @param mcpIpStatisticDto
-     * @return
-     */
-    public boolean insertRateResChgAccessTrace(McpIpStatisticDto mcpIpStatisticDto) {
-        return 0 < fCommonDao.insertRateResChgAccessTrace(mcpIpStatisticDto);
     }
 
     /**
@@ -153,19 +95,6 @@ public class IpStatisticService {
     }
 
     /**
-     * <pre>
-     * 설명     : 이력정보 조회
-     * @param McpIpStatisticDto
-     * @param
-     * @return
-     * @return: McpIpStatisticDto
-     * </pre>
-     */
-    public List<McpIpStatisticDto> getAdminAccessTrace(McpIpStatisticDto mcpIpStatisticDto) {
-        return fCommonDao.getAdminAccessTrace(mcpIpStatisticDto);
-    }
-
-    /**
      * recaptcha 로그 기록
      * @param recaptchaLogMap
      */
@@ -173,30 +102,21 @@ public class IpStatisticService {
         return fCommonDao.insertRecaptchaLog(recaptchaLogMap);
     }
 
-    private static String getPrcsSbst(HttpServletRequest request) {
-        String connect = NmcpServiceUtils.getDeviceType();
-        if (!"APP".equals(connect)) {
-            String url = request.getServletPath();
-            if (url == null || url.isEmpty()) {
-                connect = "NONE";
-            } else {    //url 이있으면 모바일, pc 분기함
-                if ("Y".equals(NmcpServiceUtils.isMobile())) {
-                    connect = "MOBILE";
-                } else {
-                    connect = "PC";
-                }
-            }
-        }
-        return connect;
-    }
+    //private static String getPrcsSbst(HttpServletRequest request) {
+    //    String connect = NmcpServiceUtils.getDeviceType();
+    //    if (!"APP".equals(connect)) {
+    //        String url = request.getServletPath();
+    //        if (url == null || url.isEmpty()) {
+    //            connect = "NONE";
+    //        } else {    //url 이있으면 모바일, pc 분기함
+    //            if ("Y".equals(NmcpServiceUtils.isMobile())) {
+    //                connect = "MOBILE";
+    //            } else {
+    //                connect = "PC";
+    //            }
+    //        }
+    //    }
+    //    return connect;
+    //}
 
-    private void increasePageViewCount() {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-        McpIpStatisticDto mcpIpStatisticDto = new McpIpStatisticDto();
-
-        mcpIpStatisticDto.setUrl(request.getRequestURI());
-        mcpIpStatisticDto.setPlatformCd(NmcpServiceUtils.getPlatFormCd());
-
-        fCommonDao.updatePageViewCount(mcpIpStatisticDto);
-    }
 }

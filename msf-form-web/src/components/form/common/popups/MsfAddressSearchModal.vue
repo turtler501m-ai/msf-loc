@@ -136,6 +136,7 @@
               <MsfInput
                 v-model="detailAddress"
                 placeholder="상세주소(예 1202동 101호 / 종로빌딩 1층)"
+                maxlength="100"
               />
             </div>
           </div>

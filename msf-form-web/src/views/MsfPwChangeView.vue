@@ -19,6 +19,7 @@
                   class="ut-w100p"
                   placeholder="현재 비밀번호 입력"
                   :maxlength="20"
+                  reveal
                 />
               </MsfFormGroup>
               <MsfFormGroup label="<em class='login-label'>비밀번호 변경</em>" vertical>
@@ -29,6 +30,7 @@
                   class="ut-w100p"
                   placeholder="변경 비밀번호 입력"
                   :maxlength="20"
+                  reveal
                 />
               </MsfFormGroup>
               <MsfFormGroup label="<em class='login-label'>비밀번호 확인</em>" vertical>
@@ -39,6 +41,7 @@
                   class="ut-w100p"
                   placeholder="변경 비밀번호 확인"
                   :maxlength="20"
+                  reveal
                 />
               </MsfFormGroup>
               <MsfButton variant="primary" block @click="onClickModelRegist"
@@ -93,7 +96,7 @@ onMounted(async () => {
 const changePwd = async () => {
   const result = await post('/api/n/auth/passwd/modify', formData)
   if (result.code >= '400' || !result.data) {
-    showAlert('비밀번호 변경이 실패하였습니다. 다시 시도해 주세요.')
+    // showAlert('비밀번호 변경이 실패하였습니다. 다시 시도해 주세요.')
     return false
   }
 
@@ -120,7 +123,9 @@ const onClickModelRegist = () => {
   }
   if (!validatePassword(formData.newPassword)) {
     newPwdError.value = true
-    showAlert('비밀번호는 영문, 숫자, 특수문자(!@#$%^*+=-)를 포함한 10~15자로 입력해 주세요.')
+    showAlert(
+      '비밀번호는 영문, 숫자, 특수문자(!@#$%^*+=-)를 포함한 10~15자이며, 연속 숫자 4자리 이상은 사용할 수 없습니다.',
+    )
     return false
   }
   if (cfmPasswordError.value) {

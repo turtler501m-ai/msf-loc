@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=10" />
+
+  <script>
+    var API_DOMAIN
+    var SERVICE_DOMAIN
+    var PARENT_ORIGIN = window.location.origin
+    var COMPANY_ID
+    var USER_ID
+    var USER_NAME
+    var accessToken
+    var refreshToken
+
+    var fileData = []
+    var fileTemplateKeys = []
+    var notificationInfo = []
+
+    var recordAudioDataUrl = null
+    var pendingRecordAudioDataUrl = null
+
+    var RECORDING_COMPONENT_ID = 'recordAudioDataUrl'
+    var UPLOAD_TIMEOUT_MS = 60000
+  </script>
+
+  <script src="/eformsign/embedding/eformsign-sdk-loader.js"></script>
+
+  <style>
+	  html, body {
+		  margin: 0;
+		  padding: 0;
+		  height: 100%;
+		  overflow: hidden;
+	  }
+
+	  #eformsign_iframe {
+		  width: 100%;
+		  height: 100%;
+		  border: 0;
+	  }
+  </style>
+</head>
+
+<body>
+  <iframe id="eformsign_iframe" name="eformsign_iframe"></iframe>
+
+  <script>
+    var multiFileViewer
+    var viewerData
+    var pendingExportData = null
+    var saveRequested = false
+    var isSaving = false
+    var isInitialized = false
+    var isViewerReady = false
+    var uploadAttemptSeq = 0
+    var currentUploadXhr = null
+    var REQUEST_KEY = ''
+    var FORM_TYPE_CODE = ''
+
+    var viewerCallback = {
+      init: function(returnData) {
+        isViewerReady = true
+
+        if (pendingRecordAudioDataUrl || recordAudioDataUrl) {
+          recordAudioDataUrl = pendingRecordAudioDataUrl || recordAudioDataUrl
+          setRecordAudioData()
+        }
+
+        window.parent.postMessage({
+          type: 'EFORMSIGN_VIEWER_READY'
+        }, PARENT_ORIGIN)
+      },
+
+      complete: function(returnData) {},
+
+      send: function() {
+        saveRequested = true
+        pendingExportData = null
+
+        setRecordAudioData()
+        multiFileViewer.exportFile('02')
+      },
+
+      exportFile: function(returnData) {
+        pendingExportData = returnData
+
+        window.parent.postMessage({
+          type: 'EFORMSIGN_EXPORT_READY',
+          payload: {
+            mode: returnData.mode,
+            data: returnData.data
+          }
+        }, PARENT_ORIGIN)
+
+        if (saveRequested) {
+          saveRequested = false
+          saveExportData()
+        }
+      },
+
+      tempSave: function(returnData) {},
+      preview: function(returnData) {},
+      moveReport: function(returnData) {},
+      isChanged: function(returnData) {},
+      dialog_handler: function(message) {},
+      custom_dialog_handler: function(message) {}
+    }
+
+    var TEMPLATE_KEYS = [
+      'newchange',
+      'ownerchange',
+      'termination',
+      'servicechange',
+      'insurance_ios',
+      'insurance_android'
+    ]
+    var TEMPLATE_IDS = {}
+
+    function getMappedParameterKey(templateKey) {
+      if (templateKey === 'insurance_ios') return 'ios'
+      if (templateKey === 'insurance_android') return 'android'
+      return templateKey
+    }
+
+    function getTemplateIds(templateIds) {
+      if (!templateIds || typeof templateIds !== 'object') {
+        return {}
+      }
+
+      return TEMPLATE_KEYS.reduce(function(result, key) {
+        if (templateIds[key]) {
+          result[key] = templateIds[key]
+        }
+
+        return result
+      }, {})
+    }
+
+    function getTemplateId(templateKey) {
+      var templateId = TEMPLATE_IDS[templateKey]
+
+      if (!templateId) {
+        throw new Error('eFormSign templateId 설정이 없습니다. templateKey=' + templateKey)
+      }
+
+      return templateId
+    }
+
+    function getFormParameterArray(initInfo, templateKey) {
+      var formParameters = initInfo.formParameters || initInfo.form_parameters
+
+      if (Array.isArray(formParameters)) return formParameters
+
+      if (!formParameters || typeof formParameters !== 'object') return []
+
+      var mappedKey = getMappedParameterKey(templateKey)
+      var params = formParameters[mappedKey]
+
+      if (!Array.isArray(params)) {
+        return []
+      }
+
+      return params
+    }
+
+    function getOZParams(initInfo, templateKey) {
+      var params = getFormParameterArray(initInfo, templateKey)
+
+      return params
+        .map(function(item) {
+          return {
+            key: item.name || item.key || item.fieldName,
+            value: item.value == null ? '' : item.value
+          }
+        })
+        .filter(function(item) {
+          return !!item.key
+        })
+    }
+
+    function createFileInfo(templateKey, initInfo) {
+      var ozParams = getOZParams(initInfo, templateKey)
+      var titleSuffix = initInfo.documentTitleSuffix || ''
+
+      var customerName = initInfo.cstmrNm || ''
+      var phoneNo = (initInfo.phoneNo || '').replace(/-/g, '')
+      var requestKey = initInfo.requestKey || ''
+
+      var titleMap = {
+        newchange: '후불신청서',
+        ownerchange: '명의변경신청서',
+        servicechange: '서비스변경신청서',
+        insurance_ios: '단말보험신청서_iOS',
+        insurance_android: '단말보험신청서_Android',
+        termination: '서비스해지신청서'
+      }
+
+      var title = titleMap[templateKey]
+
+      if (customerName || phoneNo || requestKey) {
+        title += '_' + customerName + '(' + phoneNo + ')_' + requestKey
+      }
+
+      title += titleSuffix
+
+      return {
+        type: '01',
+        id: getTemplateId(templateKey),
+        current_step: {
+          idx: 1,
+          name: '시작(발송인)'
+        },
+        next_steps: [
+          {
+            idx: 2,
+            type: '02'
+          }
+        ],
+        title: title,
+        OZParams: ozParams,
+        custom_datas: []
+      }
+    }
+
+    function addFileInfo(result, templateKey, initInfo) {
+      var info = createFileInfo(templateKey, initInfo)
+
+      if (!info.OZParams || info.OZParams.length === 0) {
+        return
+      }
+
+      result.push(info)
+      fileTemplateKeys.push(templateKey)
+    }
+
+    function getServiceChangeFileData(initInfo) {
+      var result = []
+
+      addFileInfo(result, 'servicechange', initInfo)
+
+      if (initInfo.useNewChangeTemplate === true) {
+        addFileInfo(result, 'newchange', initInfo)
+      }
+
+      if (initInfo.deviceOs === 'ios') {
+        addFileInfo(result, 'insurance_ios', initInfo)
+      }
+
+      if (initInfo.deviceOs === 'android') {
+        addFileInfo(result, 'insurance_android', initInfo)
+      }
+
+      return result
+    }
+
+    function getFileData(initInfo) {
+      if (Array.isArray(initInfo.fileData) && initInfo.fileData.length > 0) {
+        fileTemplateKeys = initInfo.fileData.map(function(item) { return item.templateKey || '' })
+        return initInfo.fileData
+      }
+
+      var formTypeCode = initInfo.formTypeCode
+
+      if (formTypeCode === 'servicechange') {
+        return getServiceChangeFileData(initInfo)
+      }
+
+      if (TEMPLATE_KEYS.indexOf(formTypeCode) === -1) {
+        return []
+      }
+
+      fileTemplateKeys.push(formTypeCode)
+      return [createFileInfo(formTypeCode, initInfo)]
+    }
+
+    function syncGlobalFileData(nextFileData) {
+      fileData = Array.isArray(nextFileData) ? nextFileData : []
+      window.fileData = fileData
+      window.notificationInfo = notificationInfo
+    }
+
+    function resetEformsignState() {
+      if (currentUploadXhr) {
+        try {
+          currentUploadXhr.abort()
+        } catch (_e) { void _e }
+      }
+
+      multiFileViewer = null
+      viewerData = null
+      pendingExportData = null
+      saveRequested = false
+      isSaving = false
+      isInitialized = false
+      isViewerReady = false
+      uploadAttemptSeq += 1
+      currentUploadXhr = null
+    }
+
+    function setRecordAudioData() {
+      if (!recordAudioDataUrl) return false
+
+      if (!multiFileViewer || !isViewerReady) {
+        pendingRecordAudioDataUrl = recordAudioDataUrl
+        return false
+      }
+
+      multiFileViewer.sendEvent({
+        code: 'setvalues',
+        values: [
+          {
+            id: RECORDING_COMPONENT_ID,
+            value: recordAudioDataUrl
+          }
+        ]
+      })
+
+      pendingRecordAudioDataUrl = null
+      return true
+    }
+
+    function isValidExportData(data) {
+      if (!data) return false
+      if (typeof data !== 'string') return true
+
+      var text = data.trim()
+      if (!text || text === 'load') return false
+
+      return text.charAt(0) === '{' || text.charAt(0) === '['
+    }
+
+    function getUploadContext(elapsedMs, status, response, reason) {
+      return {
+        reason: reason || '',
+        status: status || 0,
+        elapsedMs: elapsedMs || 0,
+        timeoutMs: UPLOAD_TIMEOUT_MS,
+        documentCount: Array.isArray(fileData) ? fileData.length : 0,
+        exportFileCount:
+          pendingExportData && Array.isArray(pendingExportData.data)
+            ? pendingExportData.data.length
+            : 0,
+        requestKey: REQUEST_KEY,
+        formTypeCode: FORM_TYPE_CODE,
+        apiDomain: API_DOMAIN,
+        responseCode: response && response.code ? response.code : '',
+        responseMessage: response && response.message ? response.message : ''
+      }
+    }
+
+    function getResponseMessage(response) {
+      if (!response) return ''
+      if (response.message) return response.message
+      if (response.result && response.result.message) return response.result.message
+      return ''
+    }
+
+    function postUploadFail(message, detail) {
+      window.parent.postMessage({
+        type: 'EFORMSIGN_SAVE_FAIL',
+        payload: {
+          message: message,
+          detail: detail || null
+        }
+      }, PARENT_ORIGIN)
+    }
+
+    function updateUploadedFileData(datas) {
+      if (typeof updateFileData === 'function') {
+        updateFileData(datas)
+        return
+      }
+
+      ;(datas || []).forEach(function(data) {
+        var fileIndex = fileData.findIndex(function(file) {
+          return file.id === data.template_id
+        })
+
+        if (fileIndex !== -1 && fileData[fileIndex].type === '01') {
+          fileData[fileIndex].type = '02'
+          fileData[fileIndex].id = data.document.id
+        }
+      })
+    }
+
+    function uploadEformsignDocuments(mode, exportFiles, attemptId, onSuccess, onFailure) {
+      var body = {
+        input: {
+          mode: mode,
+          document: [],
+          notification: notificationInfo
+        }
+      }
+      var formData = new FormData()
+      var startedAt = Date.now()
+      var xhr = new XMLHttpRequest()
+
+      ;(exportFiles || []).forEach(function(exportFile) {
+        var file = fileData[exportFile.matchingIndex]
+
+        if (!file) {
+          throw new Error('eformsign 업로드 문서 정보를 찾을 수 없습니다.')
+        }
+
+        body.input.document.push({
+          type: file.type,
+          id: file.id,
+          title: exportFile.title,
+          custom_datas: file.custom_datas,
+          next_steps: file.next_steps
+        })
+        formData.append('files', exportFile.file)
+      })
+
+      formData.append('body', new Blob([JSON.stringify(body)], { type: 'application/json; charset=utf-8' }))
+      xhr.open('POST', SERVICE_DOMAIN + '/v2.0/api/mass_multi_documents_with_ozd', true)
+      xhr.setRequestHeader('Authorization', 'Bearer ' + accessToken)
+      xhr.setRequestHeader('r-token', refreshToken)
+      xhr.responseType = 'json'
+      xhr.timeout = UPLOAD_TIMEOUT_MS
+
+      xhr.onload = function() {
+        if (attemptId !== uploadAttemptSeq) return
+
+        var elapsedMs = Date.now() - startedAt
+        var response = xhr.response
+
+        currentUploadXhr = null
+
+        if (xhr.status === 200) {
+          try {
+            if (!response || !response.result || !Array.isArray(response.result.file)) {
+              throw new Error('eformsign 문서 업로드 응답 형식이 올바르지 않습니다.')
+            }
+
+            updateUploadedFileData(response.result.file)
+            onSuccess(response, getUploadContext(elapsedMs, xhr.status, response, 'success'))
+          } catch (e) {
+            onFailure(
+              e && e.message ? e.message : 'eformsign 문서 업로드 응답 처리 중 오류가 발생했습니다.',
+              getUploadContext(elapsedMs, xhr.status, response, 'parse-error')
+            )
+          }
+          return
+        }
+
+        onFailure(
+          getResponseMessage(response) || 'eformsign 문서 업로드에 실패했습니다.',
+          getUploadContext(elapsedMs, xhr.status, response, 'http-error')
+        )
+      }
+
+      xhr.onerror = function() {
+        if (attemptId !== uploadAttemptSeq) return
+
+        currentUploadXhr = null
+        onFailure(
+          'eformsign 문서 업로드 중 네트워크 오류가 발생했습니다.',
+          getUploadContext(Date.now() - startedAt, xhr.status, xhr.response, 'network-error')
+        )
+      }
+
+      xhr.ontimeout = function() {
+        if (attemptId !== uploadAttemptSeq) return
+
+        currentUploadXhr = null
+        onFailure(
+          'eformsign 문서 업로드 응답이 60초 이상 지연되고 있습니다.',
+          getUploadContext(Date.now() - startedAt, xhr.status, xhr.response, 'timeout')
+        )
+      }
+
+      currentUploadXhr = xhr
+      xhr.send(formData)
+    }
+
+    function saveExportData() {
+      if (isSaving) {
+        return
+      }
+
+      if (!pendingExportData || !pendingExportData.data) {
+        window.parent.postMessage({
+          type: 'EFORMSIGN_SAVE_FAIL',
+          payload: {
+            message: '저장할 서명 데이터가 없습니다.'
+          }
+        }, PARENT_ORIGIN)
+        return
+      }
+
+      if (!isValidExportData(pendingExportData.data)) {
+        window.parent.postMessage({
+          type: 'EFORMSIGN_SAVE_FAIL',
+          payload: {
+            message: 'eformsign 서명 데이터가 올바르지 않습니다. 신청서를 다시 열어 서명 후 확인해 주세요.'
+          }
+        }, PARENT_ORIGIN)
+        return
+      }
+
+      isSaving = true
+      uploadAttemptSeq += 1
+
+      var attemptId = uploadAttemptSeq
+
+      try {
+        uploadEformsignDocuments(
+          pendingExportData.mode || '02',
+          pendingExportData.data,
+          attemptId,
+          function(response, uploadDetail) {
+            if (attemptId !== uploadAttemptSeq) return
+
+            isSaving = false
+
+            window.parent.postMessage({
+              type: 'EFORMSIGN_SAVE_COMPLETE',
+              payload: {
+                response: response,
+                apiDomain: API_DOMAIN,
+                accessToken: accessToken,
+                refreshToken: refreshToken,
+                fileData: fileData,
+                exportData: pendingExportData.data,
+                uploadDetail: uploadDetail,
+                recordAudioDataUrl: recordAudioDataUrl,
+                signatureValidationTargets: fileData.map(function(item, index) {
+                  return {
+                    documentId: item.id,
+                    templateKey: fileTemplateKeys[index] || item.templateKey || ''
+                  }
+                }),
+              }
+            }, PARENT_ORIGIN)
+          },
+          function(message, uploadDetail) {
+            if (attemptId !== uploadAttemptSeq) return
+
+            uploadAttemptSeq += 1
+            isSaving = false
+            postUploadFail(message, uploadDetail)
+          }
+        )
+      } catch (e) {
+        uploadAttemptSeq += 1
+        isSaving = false
+        postUploadFail(
+          e && e.message ? e.message : 'eformsign 문서 업로드 중 오류가 발생했습니다.',
+          getUploadContext(0, 0, null, 'exception')
+        )
+      }
+    }
+
+    function initEformsign(initInfo) {
+      if (isInitialized) {
+        resetEformsignState()
+      }
+
+      TEMPLATE_IDS = getTemplateIds(initInfo.templateIds)
+
+      API_DOMAIN = initInfo.envUrl
+      SERVICE_DOMAIN = API_DOMAIN + '/Service'
+      COMPANY_ID = initInfo.companyId
+      fileTemplateKeys = []
+      REQUEST_KEY = initInfo.requestKey || ''
+      FORM_TYPE_CODE = initInfo.formTypeCode || ''
+      USER_ID = initInfo.userId
+      USER_NAME = initInfo.userName
+      accessToken = initInfo.accessToken
+      refreshToken = initInfo.refreshToken
+
+      window.API_DOMAIN = API_DOMAIN
+      window.SERVICE_DOMAIN = SERVICE_DOMAIN
+      window.COMPANY_ID = COMPANY_ID
+      window.USER_ID = USER_ID
+      window.USER_NAME = USER_NAME
+      window.accessToken = accessToken
+      window.refreshToken = refreshToken
+      window.RECORDING_COMPONENT_ID = RECORDING_COMPONENT_ID
+
+      try {
+        syncGlobalFileData(getFileData(initInfo))
+      } catch (e) {
+        window.parent.postMessage({
+          type: 'EFORMSIGN_SAVE_FAIL',
+          payload: {
+            phase: 'init',
+            message: e && e.message ? e.message : 'eFormSign 문서 정보 생성 중 오류가 발생했습니다.'
+          }
+        }, PARENT_ORIGIN)
+        return
+      }
+
+      if (!Array.isArray(fileData) || fileData.length === 0) {
+        window.parent.postMessage({
+          type: 'EFORMSIGN_SAVE_FAIL',
+          payload: {
+            phase: 'init',
+            message: '생성할 eFormSign 문서 정보가 없습니다.'
+          }
+        }, PARENT_ORIGIN)
+        return
+      }
+
+      notificationInfo = []
+      pendingExportData = null
+      saveRequested = false
+      isSaving = false
+      recordAudioDataUrl = null
+      pendingRecordAudioDataUrl = null
+      isViewerReady = false
+      currentUploadXhr = null
+
+      viewerData = {
+        viewer_type: '01',
+        mode: initInfo.mode || '01',
+        user_info: {
+          user_type: '01',
+          user_name: USER_NAME,
+          user_id: USER_ID,
+          company_id: COMPANY_ID,
+          access_token: accessToken,
+          refresh_token: refreshToken
+        },
+        export_type: 'file',
+        save_type: 'all',
+        fileData: fileData,
+        file_info: [],
+        viewer_option: {
+          'viewer.usetoolbar': 'false',
+          'viewer.usestatusbar': 'false',
+          'viewer.viewmode': 'fittowidth'
+        },
+        layout: {
+          header: false,
+          footer: false,
+          lang_code: 'ko',
+          theme: ''
+        }
+      }
+
+      window.viewerData = viewerData
+      isInitialized = true
+
+      try {
+        downloadInternalMultiMassDocuments(function() {
+          viewerData.fileData = fileData
+          window.viewerData = viewerData
+          window.fileData = fileData
+
+          multiFileViewer = new MultiFileViewer()
+          multiFileViewer.setDomain(API_DOMAIN)
+          multiFileViewer.setMultiFileInfo(viewerData, viewerCallback)
+        })
+      } catch (e) {
+        window.parent.postMessage({
+          type: 'EFORMSIGN_SAVE_FAIL',
+          payload: {
+            phase: 'init',
+            message: e && e.message ? e.message : 'eformsign init failed'
+          }
+        }, PARENT_ORIGIN)
+      }
+    }
+
+    window.addEventListener('message', function(event) {
+      if (event.origin !== PARENT_ORIGIN) return
+      if (event.source !== window.parent) return
+
+      var message = event.data
+      if (!message) return
+
+      if (message.type === 'EFORMSIGN_SET_RECORD_AUDIO') {
+        recordAudioDataUrl =
+          message.payload && message.payload.recordAudioDataUrl
+            ? message.payload.recordAudioDataUrl
+            : null
+
+        pendingRecordAudioDataUrl = recordAudioDataUrl
+        setRecordAudioData()
+        return
+      }
+
+      if (message.type === 'EFORMSIGN_SAVE_REQUEST') {
+        if (!multiFileViewer) {
+          window.parent.postMessage({
+            type: 'EFORMSIGN_SAVE_FAIL',
+            payload: {
+              message: '뷰어가 아직 준비되지 않았습니다.'
+            }
+          }, PARENT_ORIGIN)
+          return
+        }
+
+        saveRequested = true
+        pendingExportData = null
+
+        multiFileViewer.exportFile('02')
+        return
+      }
+
+      // 서명 데이터 추출만 (이폼서버 업로드 X) — 서비스변경 지연 업로드용
+      if (message.type === 'EFORMSIGN_EXPORT_ONLY_REQUEST') {
+        if (!multiFileViewer) {
+          window.parent.postMessage({
+            type: 'EFORMSIGN_SAVE_FAIL',
+            payload: {
+              message: '뷰어가 아직 준비되지 않았습니다.'
+            }
+          }, PARENT_ORIGIN)
+          return
+        }
+
+        saveRequested = false
+        pendingExportData = null
+
+        multiFileViewer.exportFile('02')
+        return
+      }
+
+      if (message.type === 'EFORMSIGN_DEFERRED_UPLOAD') {
+        if (pendingExportData && pendingExportData.data) {
+          saveExportData()
+          return
+        }
+
+        // fallback: 뷰어에서 재추출 (pendingExportData가 없는 경우)
+        if (multiFileViewer) {
+          saveRequested = true
+          setRecordAudioData()
+          multiFileViewer.exportFile('02')
+          return
+        }
+
+        window.parent.postMessage({
+          type: 'EFORMSIGN_SAVE_FAIL',
+          payload: { message: '저장할 서명 데이터가 없습니다.' }
+        }, PARENT_ORIGIN)
+        return
+      }
+
+      if (message.type !== 'EFORMSIGN_INIT') {
+        return
+      }
+
+      var initInfo = message.payload || {}
+
+      MsfEformsignSdk.loadMultiFileSdk(initInfo.envUrl, { patchSendEvent: true })
+        .then(function() {
+          initEformsign(initInfo)
+        })
+        .catch(function(e) {
+          window.parent.postMessage({
+            type: 'EFORMSIGN_SAVE_FAIL',
+            payload: {
+              phase: 'init',
+              message: e && e.message ? e.message : 'eformsign SDK 로드에 실패했습니다.'
+            }
+          }, PARENT_ORIGIN)
+        })
+    })
+
+    window.parent.postMessage({
+      type: 'EFORMSIGN_HTML_READY'
+    }, PARENT_ORIGIN)
+  </script>
+</body>
+</html>

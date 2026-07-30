@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.form.form.newchange.repository.msp.McpRequestMoveWriteMapper">
+  <insert id="insertMcpRequestMove" parameterType="com.ktmmobile.msf.domains.form.form.common.vo.McpRequestMoveVo">
+    INSERT INTO MCP_REQUEST_MOVE@DL_MCP
+    (     REQUEST_KEY
+        , SYS_RDATE
+        , RVISN_ID
+        , RVISN_DTTM
+        , MOVE_COMPANY
+        , MOVE_MOBILE_FN
+        , MOVE_MOBILE_MN
+        , MOVE_MOBILE_RN
+        , MOVE_AUTH_TYPE
+        , MOVE_AUTH_NUMBER
+        , MOVE_THISMONTH_PAY_TYPE
+        , MOVE_ALLOTMENT_STAT
+        , MOVE_REFUND_AGREE_FLAG
+        , REQ_GUIDE_FLAG
+        , REQ_GUIDE_FN
+        , REQ_GUIDE_RN
+        , REQ_GUIDE_MN
+        , OSST_PAY_DAY
+        , OSST_PAY_TYPE
+        , MOVE_PENALTY
+    )
+    VALUES
+    (     #{requestKey}
+        , #{sysRdate}
+        , #{rvisnId}
+        , #{rvisnDttm}
+        , #{moveCompany}
+        , #{moveMobileFn}
+        , #{moveMobileMn}
+        , #{moveMobileRn}
+        , #{moveAuthType}
+        , #{moveAuthNumber}
+        , #{moveThismonthPayType}
+        , #{moveAllotmentStat}
+        , #{moveRefundAgreeFlag}
+        , #{reqGuideFlag}
+        , #{reqGuideFn}
+        , #{reqGuideRn}
+        , #{reqGuideMn}
+        , #{osstPayDay}
+        , #{osstPayType}
+        , #{movePenalty}
+    )
+  </insert>
+
+    <update id="updateMcpRequestMove" parameterType="com.ktmmobile.msf.domains.form.form.common.vo.McpRequestMoveVo">
+    UPDATE MCP_REQUEST_MOVE@DL_MCP
+    SET
+          SYS_RDATE	 = #{sysRdate}
+        ,	RVISN_ID	 = #{rvisnId}
+        ,	RVISN_DTTM	 = #{rvisnDttm}
+        ,	MOVE_COMPANY	 = #{moveCompany}
+        ,	MOVE_MOBILE_FN	 = #{moveMobileFn}
+        ,	MOVE_MOBILE_MN	 = #{moveMobileMn}
+        ,	MOVE_MOBILE_RN	 = #{moveMobileRn}
+        ,	MOVE_AUTH_TYPE	 = #{moveAuthType}
+        ,	MOVE_AUTH_NUMBER	 = #{moveAuthNumber}
+        ,	MOVE_THISMONTH_PAY_TYPE	 = #{moveThismonthPayType}
+        ,	MOVE_ALLOTMENT_STAT	 = #{moveAllotmentStat}
+        ,	MOVE_REFUND_AGREE_FLAG	 = #{moveRefundAgreeFlag}
+        ,	REQ_GUIDE_FLAG	 = #{reqGuideFlag}
+        ,	REQ_GUIDE_FN	 = #{reqGuideFn}
+        ,	REQ_GUIDE_RN	 = #{reqGuideRn}
+        ,	REQ_GUIDE_MN	 = #{reqGuideMn}
+        ,	OSST_PAY_DAY	 = #{osstPayDay}
+        ,	OSST_PAY_TYPE	 = #{osstPayType}
+        ,	MOVE_PENALTY	 = #{movePenalty}
+      WHERE REQUEST_KEY = #{requestKey}
+  </update>
+</mapper>

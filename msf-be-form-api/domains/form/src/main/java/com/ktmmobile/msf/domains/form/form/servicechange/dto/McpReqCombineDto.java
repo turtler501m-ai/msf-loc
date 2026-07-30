@@ -1,10 +1,11 @@
 package com.ktmmobile.msf.domains.form.form.servicechange.dto;
 
+import java.util.Date;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.Date;
 import com.ktmmobile.msf.domains.form.common.util.StringMakerUtil;
 
 @Getter
@@ -13,6 +14,7 @@ import com.ktmmobile.msf.domains.form.common.util.StringMakerUtil;
 public class McpReqCombineDto {
 
     private String reqSeq;
+    private Long requestKey;
     private String combTypeCd;
     private String mCtn;
     private String mCustNm;
@@ -32,6 +34,8 @@ public class McpReqCombineDto {
     private String combSocNm;
     private String combRateAdsvcCd;
     private String combRateAdsvcNm;
+    private String rvisnId;
+    private String rateChgYn;
 
     /*    결합대상 (01: 본인, 02: 가족, 03: 타인)     */
     private String combTgtTypeCd;
@@ -43,12 +47,15 @@ public class McpReqCombineDto {
     public String getmCustBirth() {
         return mCustBirth;
     }
+
     public void setmCustBirth(String mCustBirth) {
         this.mCustBirth = mCustBirth;
     }
+
     public String getmSexCd() {
         return mSexCd;
     }
+
     public void setmSexCd(String mSexCd) {
         this.mSexCd = mSexCd;
     }
@@ -56,11 +63,11 @@ public class McpReqCombineDto {
     public String getCombTypeNm() {
         //결합유형 (01: ktM+ktM, 02: ktM+kt무선, 03: ktM+kt유선)';
         if ("01".equals(combTypeCd)) {
-            return "kt m결합" ;
+            return "kt m결합";
         } else if ("02".equals(combTypeCd)) {
-            return "<b>KT 모바일</b>" ;
+            return "<b>KT 모바일</b>";
         } else if ("03".equals(combTypeCd)) {
-            return "<b>KT 인터넷</b>" ;
+            return "<b>KT 인터넷</b>";
         } else {
             return combTypeCd;
         }
@@ -82,39 +89,51 @@ public class McpReqCombineDto {
     public void setmCtn(String mCtn) {
         this.mCtn = mCtn;
     }
+
     public String getmCustNm() {
         return mCustNm;
     }
+
     public void setmCustNm(String mCustNm) {
         this.mCustNm = mCustNm;
     }
+
     public String getmSvcCntrNo() {
         return mSvcCntrNo;
     }
+
     public void setmSvcCntrNo(String mSvcCntrNo) {
         this.mSvcCntrNo = mSvcCntrNo;
     }
+
     public String getmRateCd() {
         return mRateCd;
     }
+
     public void setmRateCd(String mRateCd) {
         this.mRateCd = mRateCd;
     }
+
     public String getmRateNm() {
         return mRateNm;
     }
+
     public void setmRateNm(String mRateNm) {
         this.mRateNm = mRateNm;
     }
+
     public String getmRateAdsvcCd() {
         return mRateAdsvcCd;
     }
+
     public void setmRateAdsvcCd(String mRateAdsvcCd) {
         this.mRateAdsvcCd = mRateAdsvcCd;
     }
+
     public String getmRateAdsvcNm() {
         return mRateAdsvcNm;
     }
+
     public void setmRateAdsvcNm(String mRateAdsvcNm) {
         this.mRateAdsvcNm = mRateAdsvcNm;
     }
@@ -135,17 +154,17 @@ public class McpReqCombineDto {
     public String getRsltNm() {
         //  승인여부, R:승인대기, N:미제출, S:승인완료, B:승인반려, C:신청취소,, H:임의보류   승인대기와 승인반려 두 상황이 노출됨
         if ("R".equals(rsltCd)) {
-            return "승인대기" ;
+            return "승인대기";
         } else if ("B".equals(rsltCd)) {
-            return "승인반려" ;
+            return "승인반려";
         } else if ("N".equals(rsltCd)) {
-            return "미제출" ;
+            return "미제출";
         } else if ("S".equals(rsltCd)) {
-            return "승인완료" ;
+            return "승인완료";
         } else if ("C".equals(rsltCd)) {
-            return "신청취소" ;
+            return "신청취소";
         } else if ("H".equals(rsltCd)) {
-            return "임의보류" ;
+            return "임의보류";
         } else {
             return rsltCd;
         }

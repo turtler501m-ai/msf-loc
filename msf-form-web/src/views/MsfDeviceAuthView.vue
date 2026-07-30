@@ -4,7 +4,10 @@
     <div class="login-inner">
       <div class="login-box">
         <div class="login-title">
-          <h1 class="logo"><img src="@/assets/images/logo.svg" alt="kt m mobile 로고" /></h1>
+          <div class="login-logo-row">
+            <h1 class="logo"><img src="@/assets/images/logo.svg" alt="kt m mobile 로고" /></h1>
+            <span v-if="envName" class="env-badge" :class="`env-badge--${envMode}`">{{ envName }}</span>
+          </div>
           <strong class="title"><span class="ut-color-point">SMART</span> 신청서</strong>
         </div>
         <form>
@@ -36,10 +39,13 @@ import { reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { post } from '@/libs/api/msf.api'
 import { showAlert } from '@/libs/utils/comp.utils'
+import { getEnvMode, getEnvName } from '@/libs/utils/env.utils'
 import { useMsfUserStore } from '@/stores/msf_user'
 
 const router = useRouter()
 const msfUserStore = useMsfUserStore()
+const envName = getEnvName()
+const envMode = getEnvMode()
 
 // 퍼블 샘플
 const formData = reactive({

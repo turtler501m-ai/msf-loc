@@ -8,5 +8,6 @@ public class StaticFileController {
 
     @GetMapping("favicon.ico")
     public void noFavicon() {
+        // Intentionally empty response for favicon requests.
     }
 }

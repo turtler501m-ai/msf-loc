@@ -11,6 +11,7 @@
       <!-- 상단 검색영역 -->
       <div class="search-header">
         <MsfInput
+          ref="addressSearchInputRef"
           v-model="searchQuery"
           placeholder="도로명 주소, 건물명 또는 지번 입력"
           clearable
@@ -139,8 +140,10 @@
             </div>
             <div class="detail-input">
               <MsfInput
+                ref="detailAddressInputRef"
                 v-model="detailAddress"
                 placeholder="상세주소(예 1202동 101호 / 종로빌딩 1층)"
+                maxlength="100"
               />
             </div>
           </div>
@@ -155,7 +158,7 @@
         <MsfButton
           variant="primary"
           class="btn-confirm"
-          :disabled="!detailAddress.trim()"
+          :disabled="props.detailAddressRequired && !detailAddress.trim()"
           @click="onConfirm"
           >주소 입력</MsfButton
         >
@@ -165,11 +168,16 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { post } from '@/libs/api/msf.api'
 import { formatCurrency, isEmpty } from '@/libs/utils/string.utils'
 
-const props = defineProps({ modelValue: Boolean })
+const props = defineProps({
+  modelValue: Boolean,
+  detailAddressRequired: { type: Boolean, default: true },
+  address1: { type: String, default: '' },
+  address2: { type: String, default: '' },
+})
 const emit = defineEmits(['update:modelValue', 'confirm', 'open', 'close'])
 
 // 샘플
@@ -226,18 +234,27 @@ const totalCount = ref(0)
 const results = ref([])
 const selectedAddress = ref(null)
 const detailAddress = ref('')
+const addressSearchInputRef = ref(null)
+const detailAddressInputRef = ref(null)
 
 const displayTotalCount = computed(() => formatCurrency(totalCount.value))
 
 const onOpen = () => resetAll()
 
-const resetAll = () => {
+const resetAll = async (isDefault = true) => {
   step.value = 'list'
-  searchQuery.value = ''
+  searchQuery.value = isDefault ? props.address1 || '' : ''
   isSearchPerformed.value = false
   results.value = []
   totalCount.value = 0
   detailAddress.value = ''
+
+  await nextTick()
+  addressSearchInputRef.value?.focus()
+
+  if (searchQuery.value) {
+    onSearch()
+  }
 }
 
 const onSearch = async () => {
@@ -265,10 +282,13 @@ const onChangePage = async () => {
   results.value = resData.data.list
 }
 
-const goToDetail = (item) => {
+const goToDetail = async (item) => {
   selectedAddress.value = item
-  detailAddress.value = ''
+  detailAddress.value = props.address2?.replace(/^\([^)]*\)\s*/, '') || ''
   step.value = 'detail'
+
+  await nextTick()
+  detailAddressInputRef.value?.focus()
 }
 
 const onConfirm = () => {
@@ -276,7 +296,7 @@ const onConfirm = () => {
   const finalAddressData = {
     zipNo: selectedAddress.value.zipNo,
     address: selectedAddress.value.roadAddress1,
-    detailAddress: selectedAddress.value.roadAddress2 + ' ' + detailAddress.value, // 사용자가 직접 입력한 상세 주소
+    detailAddress: `${selectedAddress.value.roadAddress2} ${detailAddress.value}`.trim(), // 사용자가 직접 입력한 상세 주소
   }
 
   // 부모 컴포넌트로 데이터 전송 및 팝업 닫기
@@ -288,9 +308,9 @@ const onClose = () => emit('update:modelValue', false)
 
 watch(
   () => searchQuery.value,
-  (newVal) => {
+  async (newVal) => {
     if (isEmpty(newVal)) {
-      resetAll()
+      await resetAll(false)
     }
   },
 )

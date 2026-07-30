@@ -6,11 +6,17 @@ package com.ktmmobile.msf.domains.form.common.dao;
 import java.util.List;
 import java.util.Map;
 
-import com.ktmmobile.msf.domains.form.common.dto.*;
+import com.ktmmobile.msf.domains.form.common.dto.AcesAlwdDto;
+import com.ktmmobile.msf.domains.form.common.dto.BannerDto;
+import com.ktmmobile.msf.domains.form.common.dto.BannerFloatDto;
+import com.ktmmobile.msf.domains.form.common.dto.BannerTextDto;
+import com.ktmmobile.msf.domains.form.common.dto.CdGroupBean;
+import com.ktmmobile.msf.domains.form.common.dto.McpIpStatisticDto;
 import com.ktmmobile.msf.domains.form.common.dto.MspCommDatPrvTxnDto;
-import com.ktmmobile.msf.domains.form.common.dto.MspSmsTemplateMstDto;
-import com.ktmmobile.msf.domains.form.common.dto.NmcpCdDtlDto;
 import com.ktmmobile.msf.domains.form.common.dto.MspRateMstDto;
+import com.ktmmobile.msf.domains.form.common.dto.NmcpCdDtlDto;
+import com.ktmmobile.msf.domains.form.common.dto.SiteMenuDto;
+import com.ktmmobile.msf.domains.form.common.dto.WorkNotiDto;
 
 
 /**
@@ -25,9 +31,9 @@ public interface FCommonDao {
     * @Author : ant
     * @Create Date : 2016. 1. 12.
     */
-    public int insertIpStat(McpIpStatisticDto mcpIpStatisticDto);
+    int insertIpStat(McpIpStatisticDto mcpIpStatisticDto);
 
-    public List<CdGroupBean> getCodeAllList() ;
+    List<CdGroupBean> getCodeAllList() ;
 
     /**
      * <pre>
@@ -37,7 +43,7 @@ public interface FCommonDao {
      * @return: List<NmcpCdDtlDto>
      * </pre>
      */
-    public List<NmcpCdDtlDto> getCodeList(NmcpCdDtlDto nmcpCdDtlDto) ;
+    List<NmcpCdDtlDto> getCodeList(NmcpCdDtlDto nmcpCdDtlDto) ;
 
 
     /**
@@ -48,7 +54,7 @@ public interface FCommonDao {
      * @return: NmcpCdDtlDto
      * </pre>
      */
-    public NmcpCdDtlDto getCodeNm(NmcpCdDtlDto nmcpCdDtlDto) ;
+    NmcpCdDtlDto getCodeNm(NmcpCdDtlDto nmcpCdDtlDto) ;
 
 
     /**
@@ -59,37 +65,7 @@ public interface FCommonDao {
      * @return: MspRateMstDto
      * </pre>
      */
-    public MspRateMstDto getMspRateMst(String rateCd) ;
-
-    /**
-     * <pre>
-     * 설명     : 팝업 리스트 조회
-     * @param PopupDto
-     * @return
-     * @return: List<PopupDto>
-     * </pre>
-     */
-    public List<PopupDto> getPopupList(PopupDto popupDto) ;
-
-    /**
-     * <pre>
-     * 설명     : 팝업 상세 조회
-     * @param popupSeq
-     * @return
-     * @return: PopupDto
-     * </pre>
-     */
-    public PopupDto getPopupDetail(PopupDto popupDto) ;
-
-    /**
-     * <pre>
-     * 설명     : 팝업 리스트 조회 메인PC
-     * @param
-     * @return
-     * @return: List<PopupDto>
-     * </pre>
-     */
-    public List<PopupDto> getPopupMainList(String menuCode);
+    MspRateMstDto getMspRateMst(String rateCd) ;
 
     /**
      * <pre>
@@ -99,106 +75,35 @@ public interface FCommonDao {
      * @return: List<PopupDto>
      * </pre>
      */
-    public boolean insertmspCommDatPrvTxn(MspCommDatPrvTxnDto mspCommDatPrvTxnDto);
+    boolean insertmspCommDatPrvTxn(MspCommDatPrvTxnDto mspCommDatPrvTxnDto);
 
+    int insertIpStatAdmin(McpIpStatisticDto mcpIpStatisticDto) ;
 
-    /**
-    * @Description : NMCP Login 정보 저장 테이블에 저장한다.
-    * @param loginHistoryDto
-    * @return
-    * @Author : ant
-    * @Create Date : 2016. 3. 28.
-    */
-    public int insertLoginHistory(LoginHistoryDto loginHistoryDto);
+    List<BannerDto> getBannerAllList();
 
+    List<BannerDto> getBannerApdList();
 
-    /**
-     * <pre>
-     * 설명     : SMS TEMPLATE 정보 조회
-     * @param int
-     * @param
-     * @return
-     * @return: MspSmsTemplateMstDto
-     * </pre>
-     */
-    public MspSmsTemplateMstDto getMspSmsTemplateMst(int templateId);
+    List<SiteMenuDto> getMenuAllList();
 
+    List<WorkNotiDto> getMenuUrlAllList();
 
-    /**
-     * <pre>
-     * 설명     : 동일한 아이피로 페이지 호출 건수 조회
-     * @param int
-     * @param
-     * @return
-     * @return: McpIpStatisticDto
-     * </pre>
-     */
-    public int checkCrawlingCount(McpIpStatisticDto mcpIpStatisticDto) ;
+    List<SiteMenuDto> getMenuAuthList();
 
-    /**
-     * <pre>
-     * 설명     : 이력정보 조회
-     * @param McpIpStatisticDto
-     * @param
-     * @return
-     * @return: McpIpStatisticDto
-     * </pre>
-     */
-    public List<McpIpStatisticDto> getAdminAccessTrace(McpIpStatisticDto mcpIpStatisticDto) ;
+    List<AcesAlwdDto> getAcesAlwdList();
 
-    public int insertIpStatAdmin(McpIpStatisticDto mcpIpStatisticDto) ;
+    List<BannerTextDto> getBannerTextList();
 
-    public List<BannerDto> getBannerAllList();
+    List<BannerFloatDto> getBannerFloatList();
 
-    public List<BannerDto> getBannerApdList();
+    int deleteRateResChgAccessTrace(String rateResChgSeq);
 
-    public List<PopupDto> getPopupAllList();
-
-    public List<SiteMenuDto> getMenuAllList();
-
-    public List<WorkNotiDto> getMenuUrlAllList();
-
-    public List<SiteMenuDto> getMenuAuthList();
-
-    public List<AcesAlwdDto> getAcesAlwdList();
-
-    public List<BannerTextDto> getBannerTextList();
-
-    public List<BannerFloatDto> getBannerFloatList();
-
-    public int insertRateResChgAccessTrace(McpIpStatisticDto mcpIpStatisticDto);
-
-    public int deleteRateResChgAccessTrace(String rateResChgSeq);
-
-    public String selectRateResChgAccessTrace(McpIpStatisticDto mcpIpStatisticDto);
-
-
-
-     /**
-     * <pre>
-     * 설명     : 요금제 예약번호 리스트 , 배치로 부가서비스 해지 등록 처리
-     * @param McpIpStatisticDto
-     * @return
-     * @return: List<McpIpStatisticDto>
-     * </pre>
-     */
-    public List<McpIpStatisticDto> getRateResChgList(McpIpStatisticDto ipStatistic) ;
-
-
-    /**
-     * <pre>
-     * 설명     : 배치로 부가서비스 해지 등록 결과 업데이트
-     * @param McpIpStatisticDto
-     * @return
-     * </pre>
-     */
-    public boolean updateNmcpRateResChgBas(McpIpStatisticDto ipStatistic);
+    String selectRateResChgAccessTrace(McpIpStatisticDto mcpIpStatisticDto);
 
     /**
      * recaptcha 로그 기록
      * @param recaptchaLogMap
      */
-    public int insertRecaptchaLog(Map<String, String> recaptchaLogMap);
+    int insertRecaptchaLog(Map<String, String> recaptchaLogMap);
 
     /**
      * <pre>
@@ -207,7 +112,7 @@ public interface FCommonDao {
      * @return NmcpCdDtlDto
      * </pre>
      */
-    public NmcpCdDtlDto getDtlCodeWithNm(NmcpCdDtlDto nmcpCdDtlDto);
+    NmcpCdDtlDto getDtlCodeWithNm(NmcpCdDtlDto nmcpCdDtlDto);
 
     /**
      * <pre>
@@ -218,35 +123,4 @@ public interface FCommonDao {
      */
     List<NmcpCdDtlDto> getAllDtlCdList(String cdGroupId);
 
-    /**
-     * <pre>
-     * 설명 : 고객이 특정  이벤트 정보 저장
-     * </pre>
-     */
-    public boolean insertUserEventTrace(UserEventTraceDto userEventTraceDto) ;
-
-
-    /**
-     * <pre>
-     * 설명     :고객이 특정  이벤트 정보  업데이트
-     * </pre>
-     */
-    public boolean updateUserEventTrace(UserEventTraceDto userEventTraceDto);
-
-    /**
-     * <pre>
-     * 설명     :고객이 특정  이벤트 정보  조회
-     * </pre>
-     */
-    public List<UserEventTraceDto> getUserEventTraceList(UserEventTraceDto userEventTraceDto);
-
-
-    PopupEditorDto getPopupEditor(PopupEditorDto popupEditorDto);
-
-    /*조회 수 증가*/
-    public void updatePageViewCount(McpIpStatisticDto mcpIpStatisticDto);
-
-    public int selectPageViewsCount(String url);
-
-    String getLastedRateAdsvcGdncVersion();
 }

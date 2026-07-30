@@ -230,7 +230,7 @@ const totalCount = computed(() => {
     line-height: var(--line-height-fit);
     // 범례 아이템 (li)
     .legend-item {
-      flex-basis: calc(50% - 8px);
+      flex-basis: calc(50% - rem(8px));
       @include flex($v: center);
       font-family: var(--font-family-base);
       // 컬러 스와치 스타일 (정사각형)

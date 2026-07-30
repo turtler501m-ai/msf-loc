@@ -1,25 +1,9 @@
 #### Common Profile
-
-
-
----
-#### LOCAL Profile
-spring:
-  config.activate.on-profile: local
-
-
-
----
-#### DEV Profile
-spring:
-  config.activate.on-profile: dev
-
-
-
----
-#### STG Profile
-spring:
-  config.activate.on-profile: stg
+common-sms:
+  error:
+    include-detail: false
+  otp:
+    expose-auth-number: false
 
 
 
@@ -28,4 +12,46 @@ spring:
 spring:
   config.activate.on-profile: prd
 
+## FIXME: 통합테스트 기간에 임시로 인증번호 노출
+common-sms:
+  otp:
+    expose-auth-number: true
 
+
+
+---
+#### STG Profile
+spring:
+  config.activate.on-profile: stg
+
+common-sms:
+  error:
+    include-detail: true
+  otp:
+    expose-auth-number: true
+
+
+
+---
+#### DEV Profile
+spring:
+  config.activate.on-profile: dev
+
+common-sms:
+  error:
+    include-detail: true
+  otp:
+    expose-auth-number: true
+
+
+
+---
+#### LOCAL Profile
+spring:
+  config.activate.on-profile: local
+
+common-sms:
+  error:
+    include-detail: true
+  otp:
+    expose-auth-number: true

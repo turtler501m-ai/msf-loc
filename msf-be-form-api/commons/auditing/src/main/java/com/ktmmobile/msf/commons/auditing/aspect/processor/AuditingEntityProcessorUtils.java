@@ -2,12 +2,14 @@ package com.ktmmobile.msf.commons.auditing.aspect.processor;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.ClassUtils;
 
 import com.ktmmobile.msf.commons.auditing.aspect.annotation.AuditingEntity;
 import com.ktmmobile.msf.commons.auditing.aspect.annotation.AuditingHandler;
 import com.ktmmobile.msf.commons.auditing.utils.AuditingUtils;
 
+@Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 class AuditingEntityProcessorUtils {
 
@@ -27,11 +29,11 @@ class AuditingEntityProcessorUtils {
     }
 
     private static void doProcessAuditing(AuditingEntity auditingEntity, AuditingHandler auditingHandler) {
-        AuditingUtils.setAudit(auditingEntity, auditingHandler.getAuditModifier());
+        AuditingUtils.setAudit(auditingEntity, auditingHandler.getAuditModifier(), auditingHandler.fallbackClientIp());
         logResult(auditingHandler);
     }
 
     private static void logResult(AuditingHandler auditingHandler) {
-        AuditingEntityProcessor.log.trace("Auditing has been processed.: {}", auditingHandler.getMethodSignatureName());
+        log.trace("Auditing has been processed.: {}", auditingHandler.getMethodSignatureName());
     }
 }

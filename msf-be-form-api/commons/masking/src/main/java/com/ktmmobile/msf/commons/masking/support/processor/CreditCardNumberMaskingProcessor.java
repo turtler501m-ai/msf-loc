@@ -23,10 +23,10 @@ public class CreditCardNumberMaskingProcessor implements MaskingProcessor {
 
     @Override
     public String mask(String value) {
-        String digits = MaskingTextUtils.onlyDigits(value);
+        String digits = MaskingProcessorUtils.onlyDigits(value);
         if (digits.length() < MIN_MASKING_DIGIT_COUNT) {
             return value;
         }
-        return MaskingTextUtils.maskDigits(value, VISIBLE_DIGIT_PREFIX_LENGTH, VISIBLE_DIGIT_SUFFIX_LENGTH);
+        return MaskingProcessorUtils.maskDigits(value, VISIBLE_DIGIT_PREFIX_LENGTH, VISIBLE_DIGIT_SUFFIX_LENGTH);
     }
 }

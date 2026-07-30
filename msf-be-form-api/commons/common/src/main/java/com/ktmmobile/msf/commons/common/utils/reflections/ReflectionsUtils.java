@@ -16,16 +16,16 @@ import com.ktmmobile.msf.commons.common.exception.CommonException;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ReflectionsUtils {
 
-    private static final Reflections reflections;
+    private static final Reflections REFLECTIONS;
 
     static {
         ConfigurationBuilder reflectionConfig = new ConfigurationBuilder()
             .setUrls(ClasspathHelper.forPackage(CommonBaseConst.BASE_PACKAGE));
-        reflections = new Reflections(reflectionConfig);
+        REFLECTIONS = new Reflections(reflectionConfig);
     }
 
     public static <T> Set<Class<? extends T>> getSubTypeOf(Class<T> baseType) {
-        return reflections.getSubTypesOf(baseType);
+        return REFLECTIONS.getSubTypesOf(baseType);
     }
 
     public static Object getFieldAsObjectByFieldType(Object object, Class<?> fieldType) {

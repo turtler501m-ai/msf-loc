@@ -13,12 +13,12 @@
     <div class="doc-list-wrap">
       <ul class="doc-list">
         <li>
-          <p>가족관계증명서</p>
+          <p><em class="required-text">[필수]</em>가족관계증명서</p>
           <MsfButton variant="subtle">촬영하기</MsfButton>
         </li>
         <li>
           <p>
-            외국인등록증/거소신고증
+            <em class="optional-text">[선택]</em>외국인등록증/거소신고증
             <MsfFlag data="완료" color="accent2" size="small" />
           </p>
           <MsfButton variant="subtle">촬영하기</MsfButton>

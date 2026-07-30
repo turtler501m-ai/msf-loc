@@ -20,12 +20,17 @@
 <script setup>
 import { ref } from 'vue'
 import { GuideUnit } from '@/views/guide/components'
+import { RADIO_VARIANTS } from '@/libs/ui/base/MsfRadio.vue'
 
 const deliveryMethod = ref('')
 
 // 1. 컨트롤러에 나타날 옵션 정의
 const componentConfig = {
-  // variant: ['default'],
+  variant: {
+    description: '라디오 스타일 지정 (type2는 체크박스와 동일한 모양)',
+    options: [...RADIO_VARIANTS],
+    default: 'default',
+  },
   // size: ['medium'],
   label: '레이블',
   id: '',
@@ -36,7 +41,7 @@ const componentConfig = {
 
 // 2. 초기값 정의
 const componentState = {
-  // variant: undefined,
+  variant: undefined,
   // size: undefined,
   label: '라디오',
   id: undefined,

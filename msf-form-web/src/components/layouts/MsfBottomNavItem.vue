@@ -6,16 +6,16 @@
   >
     <div class="menu-row">
       <div class="menu-content" :class="`cont-depth-${depth}`">
-        <router-link
+        <a
           v-if="toUrl"
-          :to="toUrl"
+          :href="toUrl"
           class="menu-link"
           :class="{ 'router-link-exact-active': isActiveRoot }"
-          :exact="item.url === '/'"
+          @click.prevent="onClickMenu"
         >
           <MsfIcon v-if="item.iconName" :name="item.iconName" size="large" />
           <span class="menu-text">{{ item.name }}</span>
-        </router-link>
+        </a>
         <span v-else class="menu-text">{{ item.name }}</span>
       </div>
     </div>
@@ -24,23 +24,23 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { useRoute } from 'vue-router'
 
 const props = defineProps({
   item: Object,
   depth: { type: Number, default: 0 },
+  activePath: { type: String, default: '' },
+  navigateTo: { type: Function, default: null },
 })
 
-const route = useRoute()
 const isOpen = ref(false)
 
 // 현재 루트 메뉴가 활성 상태인지 판단 (CSS :has 대체용으로도 사용 가능)
 // 홈('/')일 때는 정확히 일치해야 하고, 아닐 때는 하위 경로를 포함하는지 확인
 const isActiveRoot = computed(() => {
   if (props.item.url === '/') {
-    return route.path === '/'
+    return props.activePath === '/'
   }
-  return props.item.url ? route.path.startsWith(props.item.url) : false
+  return props.item.url ? props.activePath.startsWith(props.item.url) : false
 })
 
 const toUrl = computed(() => {
@@ -51,6 +51,11 @@ const toUrl = computed(() => {
   // 2. 자식이 없거나 자식들에게 url이 없다면 본인의 url 반환
   return props.item.url || null
 })
+
+const onClickMenu = async () => {
+  if (!toUrl.value) return
+  await props.navigateTo?.(toUrl.value)
+}
 </script>
 
 <style lang="scss" scoped>
@@ -81,6 +86,9 @@ const toUrl = computed(() => {
   @include flex($d: column) {
     gap: rem(4px);
   }
+  -webkit-touch-callout: none; // iOS 길게 눌렀을 때 링크 메뉴 방지
+  -webkit-user-select: none; // 텍스트 선택 방지
+  user-select: none;
 }
 
 /* --- 뎁스별 스타일링 --- */
@@ -89,7 +97,8 @@ const toUrl = computed(() => {
 }
 .depth-0 > .menu-row {
   height: 100%;
-  width: rem(64px);
+  // width: rem(64px);
+  width: rem(80px); // 안드로이드 줄바꿈현상 확인
   margin: 0 auto;
   position: relative;
 }
@@ -110,6 +119,8 @@ const toUrl = computed(() => {
   font-size: var(--font-size-15);
   font-weight: var(--font-weight-medium);
   color: var(--color-gray-500);
+  // 웹접근성 명도대비 수정 시 - 디자인 지정 컬러 (color-gray-300, 350, 400, 450 지정가능)
+  // color: var(--color-gray-300);
 }
 
 /* 2Depth */

@@ -4,6 +4,7 @@
     <MsfStack vertical type="formgroups">
       <MsfFormGroup label="상품" tag="div" required>
         <MsfChip
+          ref="productTypeRef"
           v-model="model.productType"
           name="inp-product"
           :data="productTypeData"
@@ -11,6 +12,7 @@
       </MsfFormGroup>
       <MsfFormGroup label="가입유형" tag="div" required>
         <MsfChip
+          ref="joinTypeRef"
           v-model="model.joinType"
           name="inp-joinType"
           :data="filteredJoinTypeCodes"
@@ -22,18 +24,25 @@
 <script setup>
 import { defineModel, defineProps, computed, watch, onMounted, ref } from 'vue'
 import { getCommonCodeList } from '@/libs/utils/comn.utils'
+import { showAlert } from '@/libs/utils/comp.utils'
+import { useMsfFormNewChgStore } from '@/stores/msf_newchange.js'
 
 const props = defineProps({
   title: { type: String, default: '가입유형 선택' },
   authFlags: { type: Object, default: () => ({}) },
+  disabled: Boolean,
 })
 const emit = defineEmits(['change-product-type', 'change-join-type'])
 const model = defineModel({ type: Object, required: true })
+const newChgStore = useMsfFormNewChgStore()
 
 const joinTypeCodes = ref([])
 const rawProductTypeCodes = ref([])
 
-const isAuthLocked = computed(() => model.value?.isVerified || model.value?.isSaved)
+const isAuthLocked = computed(
+  () =>
+    props.disabled || model.value?.isVerified || model.value?.isSaved || newChgStore.isDraftLoaded,
+)
 
 const productTypeData = computed(() =>
   rawProductTypeCodes.value.map((item) => ({ ...item, disabled: isAuthLocked.value })),
@@ -67,12 +76,13 @@ const filteredJoinTypeCodes = computed(() => {
   return base.map((item) => ({ ...item, disabled: isAuthLocked.value }))
 })
 
-// 상품 변경 시 가입유형 기본값으로 초기화
+// 상품 변경 시 가입유형 기본값으로 초기화 (임시저장 로드 중에는 리셋 방지)
 watch(
   () => model.value.productType,
   (newVal, oldVal) => {
     // 마운트 시 최초 세팅은 무시하고 실제로 값을 변경했을 때만 동작
     if (oldVal !== undefined && oldVal !== newVal) {
+      if (newChgStore.isDraftLoading) return // 임시저장 불러오기 중에는 가입유형 리셋 방지
       emit('change-product-type', { newVal, oldVal })
       model.value.joinType = 'MNP3' // 기본값 번호이동으로 리셋
     }
@@ -93,5 +103,23 @@ const validate = () => {
   return true
 }
 
-defineExpose({ validate })
+const productTypeRef = ref(null)
+const joinTypeRef = ref(null)
+const checkValidation = () => {
+  if (!model.value.productType) {
+    showAlert('상품을 선택해주세요.', () => {
+      productTypeRef.value?.focus()
+    })
+    return false
+  }
+  if (!model.value.joinType) {
+    showAlert('가입유형을 선택해주세요.', () => {
+      joinTypeRef.value?.focus()
+    })
+    return false
+  }
+  return true
+}
+
+defineExpose({ validate, checkValidation })
 </script>

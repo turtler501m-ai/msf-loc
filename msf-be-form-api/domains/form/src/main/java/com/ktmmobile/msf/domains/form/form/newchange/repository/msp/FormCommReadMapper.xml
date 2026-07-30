@@ -8,7 +8,7 @@
     SELECT MCP_MNG.SQ_RCP_RES_NO_01.NEXTVAL@DL_MCP FROM DUAL
   </select>
 
-  <select id="generateRequestKey" resultType="java.lang.Long">
+  <select id="generateRequestKey" resultType="java.lang.Long" useCache="false" flushCache="true">
     SELECT MCP_MNG.SQ_RCP_REQUEST_KEY_01.NEXTVAL@DL_MCP FROM DUAL
   </select>
 
@@ -16,101 +16,240 @@
     SELECT TO_NUMBER(TO_CHAR(SYSDATE, 'YYYYMMDD') || TRIM(TO_CHAR(MCP_MNG.NMCP_CUST_REQUEST_SEQ.NEXTVAL@DL_MCP, '00000'))) FROM DUAL
   </select>
 
+  <!--<select id="selectMsfRequestResNo" parameterType="java.lang.Long" resultType="java.lang.String">-->
+  <!--  SELECT RES_NO FROM MSF_REQUEST_TEMP WHERE REQUEST_KEY = #{requestKey}-->
+  <!--</select>-->
+
+  <select id="selectSlsNo" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.PreCheckRequest"
+          resultType="java.lang.String">
+    /** 특별판매번호 조회 **/
+    SELECT KTA.SLS_NO
+    FROM    MSP_KT_PLCY_MST KTA
+          , MSP_KT_PLCY_DISCOUNT KTB
+          , MSP_KT_PLCY_OPER KTC
+          , MSP_KT_PLCY_INST KTD
+          , MSP_KT_PLCY_ENGG KTE
+    WHERE   KTA.PLCY_ID = KTB.PLCY_ID
+            AND KTA.PLCY_ID = KTC.PLCY_ID
+            AND KTA.PLCY_ID = KTD.PLCY_ID
+            AND KTA.PLCY_ID = KTE.PLCY_ID
+            AND KTA.USE_YN = 'Y'
+            AND KTA.PPPO = #{serviceTypeCd} --SERVICE_TYPE_CD
+            AND KTA.PLCY_TYPE = #{plcyType} -- 01:REQ_BUY_TYPE_CD(MM), 02:REQ_BUY_TYPE_CD(UU), 03:USIM_KINDS_CD(09)
+            AND KTC.OPER_TYPE=#{operTypeCd} -- OPER_TYPE_CD
+            AND KTB.DC_TYPE =#{sprtTypeCd} -- SPRT_TYPE_CD
+            AND KTD.INST_CNT=#{modelMonthly} -- MODEL_MONTHLY
+            AND KTE.ENGG_CNT=#{enggMnthCnt} -- ENGG_MNTH_CNT
+  </select>
+
+
 <select id="selectAgentInfo" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.AgentInfoRequest"
             resultType="com.ktmmobile.msf.domains.form.form.newchange.dto.AgentInfoResponse">
-    /** 매장코드에 매칭된 대리점조회  **/
+    /** 매장코드에 매칭된 대리점조회 **/
     SELECT
-        KT_ORG_ID /* KT조직ID */
-        , ORGN_ID /* 조직 ID */
-        , ORGN_NM /* 조직명 */
+        KT_ORG_ID  /* KT조직ID */
+        , ORGN_ID  /* 조직 ID */
+        , ORGN_NM  /* 조직명 */
+        , TELNUM AS telephone
+        , REP_TEL_NO AS representativeTelephone
     FROM ORG_ORGN_INFO_MST
     WHERE ORGN_ID IN (
         SELECT B.AGNCY_ORGN_ID
         FROM ORG_ORGN_INFO_MST A, ORG_AGNCY_SHOP_REL B
         WHERE A.ORGN_ID = B.SHOP_ORGN_ID
             AND B.REL_END_DT = '99991231235959' AND B.REL_STAT_CD = 'CFM'
-            AND B.SHOP_ORGN_ID = #{shopOrgnId} -- 파라미터 : 로그인 사용자 조직 ( ex. V000001083 )
+            AND B.SHOP_ORGN_ID = #{shopOrgnId}  -- 파라미터 : 로그인 사용자 조직 ( ex. V000001083 )
     )
-    AND ORGN_STAT_CD = '4' -- /* CMN0005 - 1 : 등록, 2 : 폐기, 3 : 청산, 4 : 가동, 5 : 정리 */
-    AND TYPE_CD = '20' -- /* CMN0003 - 10 : 본사조직, 20 : 대리점, 30 : 판매점 */
-    AND ORGN_LVL_CD = '10' -- /* CMN0006 - 1 : 본사, 2 : 사업부, 3 : 지원부, 4 : 파트, 5 : 영업, 10 : 대리점, 20 : 판매점 */
+    AND ORGN_STAT_CD = '4'  -- /* CMN0005 - 1 : 등록, 2 : 폐기, 3 : 청산, 4 : 가동, 5 : 정리 */
+    AND TYPE_CD = '20'      -- /* CMN0003 - 10 : 본사조직, 20 : 대리점, 30 : 판매점 */
+    AND ORGN_LVL_CD = '10'  -- /* CMN0006 - 1 : 본사, 2 : 사업부, 3 : 지원부, 4 : 파트, 5 : 영업, 10 : 대리점, 20 : 판매점 */
+    AND APPL_STRT_DT &lt;= TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+    AND APPL_CMPLT_DT > TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+    AND TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN APPL_STRT_DT AND APPL_CMPLT_DT
+    AND USE_YN = 'Y'
 </select>
 
+
+<select id="selectMvnoOrdNo" parameterType="com.ktmmobile.msf.domains.form.form.common.dto.McpRequestOsstRequest"
+        resultType="java.lang.String">
+  SELECT T1.RES_NO
+  FROM MCP_REQUEST@DL_MCP T1, MCP_REQUEST_OSST@DL_MCP T2
+  WHERE 1=1
+    AND LPAD(T1.RES_NO, 14, '0') = T2.MVNO_ORD_NO
+    AND T2.PRGR_STAT_CD = #{prgrStatCd}
+    <if test="rsltCd != null and rsltCd != ''">
+      AND T2.RSLT_CD  = #{rsltCd}
+    </if>
+    AND T1.REQUEST_KEY = #{requestKey}
+    AND ROWNUM = 1
+</select>
 
 <select id="selectOsstCount" parameterType="com.ktmmobile.msf.domains.form.form.common.dto.McpRequestOsstRequest"
         resultType="java.lang.Integer">
-    SELECT /*AppformMapper.requestOsstCount  */
-    COUNT(1)
-    FROM MCP_REQUEST_OSST@DL_MCP T1
-    WHERE 1=1
-    AND T1.MVNO_ORD_NO = LPAD(#{mvnoOrdNo}, 14, '0')
-    AND T1.PRGR_STAT_CD = #{prgrStatCd}
+  SELECT COUNT(1)
+  FROM MCP_REQUEST@DL_MCP T1, MCP_REQUEST_OSST@DL_MCP T2
+  WHERE 1=1
+    AND LPAD(#{mvnoOrdNo}, 14, '0') = T2.MVNO_ORD_NO
+    AND T2.PRGR_STAT_CD = #{prgrStatCd}
     <if test="rsltCd != null and rsltCd != ''">
-        AND T1.RSLT_CD  = #{rsltCd}
+      AND T2.RSLT_CD  = #{rsltCd}
     </if>
 </select>
 
-    <select id="selectOsstOrdNo" parameterType="com.ktmmobile.msf.domains.form.form.common.dto.McpRequestOsstRequest"
-            resultType="java.lang.String">
-        SELECT distinct OSST_ORD_NO
-        FROM MCP_REQUEST_OSST@DL_MCP T1
-        WHERE 1=1
-        AND T1.MVNO_ORD_NO = LPAD(#{mvnoOrdNo}, 14, '0')
-        <if test="prgrStatCd != null and prgrStatCd != ''">
-        AND T1.PRGR_STAT_CD = #{prgrStatCd}
-        </if>
-        AND OSST_ORD_NO IS NOT NULL
-    </select>
+<select id="selectOsstOrdNo" parameterType="com.ktmmobile.msf.domains.form.form.common.dto.McpRequestOsstRequest"
+        resultType="java.lang.String">
+    SELECT DISTINCT OSST_ORD_NO
+    FROM MCP_REQUEST@DL_MCP T1, MCP_REQUEST_OSST@DL_MCP T2
+    WHERE 1=1
+      AND LPAD(#{mvnoOrdNo}, 14, '0') = T2.MVNO_ORD_NO
+      AND T2.PRGR_STAT_CD = #{prgrStatCd}
+      <if test="rsltCd != null and rsltCd != ''">
+        AND T2.RSLT_CD  = #{rsltCd}
+      </if>
+      <!--AND OSST_ORD_NO IS NOT NULL-->
+</select>
 
+  <select id="selectXmlMessageNU1" parameterType="java.lang.String" resultType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeNUInfoResponse">
+    /* mPlatformMapper.getXmlMessageNU1 */
+    SELECT  OSST.OSST_ORD_NO AS osstOrdNo   /* OSST 오더번호 */
+        , A.AGENT_CODE AS asgnAgncId    /* 할당대리점ID */
+        , 'Y' AS asgnAgncYn             /* 할당번호조회여부 */
+        , 'KOR' AS cntryCd              /* 국각코드 */
+        , OSST.CUST_ID AS custNo        /* 고객번호 */
+        , '1' AS inqrBase               /* 조회페이지 */
+        , '10' AS inqrCascnt            /* 조회카운트 */
+        , '03' AS nowSvcIndCd           /* 3G */
+        , '2' AS searchGubun            /* 조회구분(1:예약번호, 2:희망번호, 3:Aging) */
+        , 'GEN' AS tlphNoChrcCd         /* 전화번호특성코드 */
+        , '01' AS tlphNoIndCd           /* 전화번호구분코드 */
+        <!--, '010____' || NVL(#{wantTlphNo}, A.REQ_WANT_NUMBER) AS tlphNoPtrn /* 번호조회패턴 */-->
+        , DECODE(A.SERVICE_TYPE, 'PP', 'I', 'R') AS tlphNoUseCd         /* 번호사용용도코드(R:일반, I:선불) */
+        , DECODE(A.SERVICE_TYPE, 'PP', 'FUK', '') AS tlphNoUseMntCd     /* 선불인경우 */
+    FROM MCP_REQUEST@DL_MCP A, MCP_REQUEST_OSST@DL_MCP OSST
+    WHERE LPAD(A.RES_NO, 14, '0') = OSST.MVNO_ORD_NO
+        AND OSST.SEQ = (SELECT MAX(SEQ) FROM MCP_REQUEST_OSST@DL_MCP WHERE MVNO_ORD_NO = OSST.MVNO_ORD_NO AND PRGR_STAT_CD = 'PC2' AND RSLT_CD = '0000')
+        <!--AND     A.PSTATE = '00'-->
+        AND A.RES_NO = #{resNo}
+  </select>
+
+  <select id="selectXmlMessageNU2" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeNUInfoRequest" resultType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeNUInfoResponse">
+    /* mPlatformMapper.getXmlMessageNU2 */
+    SELECT  B.OSST_ORD_NO AS osstOrdNo                      /* OSST오더번호 */
+        , NVL(#{gubun}, 'RSV') AS gubun                 /* 업무구분코드(RSV:예약, RRS:취소) */
+        , C.TLPH_NO AS tlphNo                           /* 전화번호 */
+        , B.CUST_ID AS custNo                           /* 고객번호 */
+        , NVL(#{gubun}, 'RSV') AS tlphNoStatChngRsnCd   /* 전화번호상태변경사유코드 */
+        , DECODE(NVL(#{gubun}, 'RSV'), 'RSV', 'AR', 'AA') AS tlphNoStatCd   /* 전화번호상태코드(AR:예약, AA:취소) */
+        , GCM1.ETC2 AS custTypeCd                       /* 고객유형코드 */
+        , '03' AS nowSvcIndCd                           /* 서비스구분코드 */
+        , DECODE(A.OPER_TYPE, 'MNP3', 'I', '') AS mnpIndCd  /* 번호이동구분코드 */
+        , C.ENCD_TLPH_NO AS encdTlphNo                  /* 암호화전화번호 */
+        , A.AGENT_CODE AS asgnAgncId                    /* 할당대리점ID */
+    FROM MCP_REQUEST@DL_MCP A
+            , MCP_REQUEST_OSST@DL_MCP B /* 고객정보 */
+            , MCP_REQUEST_OSST@DL_MCP C /* 번호예약 */
+            , CMN_GRP_CD_MST GCM1   /* 고객유형조회 */
+    WHERE   LPAD(A.RES_NO, 14, '0') = B.MVNO_ORD_NO
+        AND     B.SEQ = (SELECT MAX(SEQ) FROM MCP_REQUEST_OSST@DL_MCP WHERE MVNO_ORD_NO = B.MVNO_ORD_NO AND PRGR_STAT_CD = 'PC2' AND RSLT_CD = '0000')
+        AND     B.MVNO_ORD_NO = C.MVNO_ORD_NO
+        AND     C.SEQ = (SELECT MAX(SEQ) FROM MCP_REQUEST_OSST@DL_MCP WHERE MVNO_ORD_NO = C.MVNO_ORD_NO AND PRGR_STAT_CD = 'NU2' AND RSLT_CD = '0000')
+        AND     A.CSTMR_TYPE = GCM1.CD_VAL
+        AND     GCM1.GRP_ID = 'RCP9007'
+        <!--AND     A.PSTATE = '00'-->
+        AND     A.RES_NO = #{resNo}
+  </select>
 
 <select id="selectActYearCnt" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.SubscriptionRequest"
         resultType="java.lang.Integer">
-  SELECT COUNT(*) AS YEAR_ACT_CNT
+  /** 1년 이내 사용회선 **/
+  SELECT COUNT(1) AS YEAR_ACT_CNT
+  FROM (
+        SELECT CUSTOMER_ID FROM MSP_JUO_CUS_INFO
+        WHERE CUSTOMER_SSN = CRYPTO_AES256.ENC_AES(#{customerSsn}) <!--파라미터 : 가입자 주민번호/사업자등록번호-->
+        UNION
+        SELECT CUSTOMER_ID FROM MSP_JUO_CUS_INFO
+        WHERE DRIVR_LICNS_NO = CRYPTO_AES256.ENC_AES(#{customerSsn}) <!--파라미터 : 가입자 주민번호/사업자등록번호-->
+        UNION
+        SELECT CUSTOMER_ID FROM MSP_JUO_CUS_INFO
+        WHERE TAX_ID = CRYPTO_AES256.ENC_AES(#{customerSsn}) <!--파라미터 : 가입자 주민번호/사업자등록번호-->
+      ) T1
+      INNER JOIN MSP_JUO_SUB_INFO T2
+      ON T2.CUSTOMER_ID = T1.CUSTOMER_ID
+      WHERE T2.SUB_STATUS IN ('A', 'S')  <!--정상, 정지 상태 조건 단순화-->
+          OR (T2.SUB_STATUS = 'C' AND T2.SUB_STATUS_DATE <![CDATA[>]]> TO_CHAR(SYSDATE - 365, 'YYYYMMDD'))
+  <!--SELECT COUNT(1) AS YEAR_ACT_CNT
   FROM (SELECT CUSTOMER_ID, CUSTOMER_TYPE, CUST_IDNT_NO_IND_CD, CUSTOMER_SSN, DRIVR_LICNS_NO
         FROM MSP_JUO_CUS_INFO
         WHERE (CUSTOMER_SSN = CRYPTO_AES256.ENC_AES(#{customerSsn})
                 OR DRIVR_LICNS_NO = CRYPTO_AES256.ENC_AES(#{customerSsn})
-                OR TAX_ID = CRYPTO_AES256.ENC_AES(#{customerSsn})) <!--파라미터 : 가입자 주민번호/사업자등록번호-->
+                OR TAX_ID = CRYPTO_AES256.ENC_AES(#{customerSsn})) &lt;!&ndash;파라미터 : 가입자 주민번호/사업자등록번호&ndash;&gt;
         ) T1
         INNER JOIN MSP_JUO_SUB_INFO T2
         ON T2.CUSTOMER_ID = T1.CUSTOMER_ID
-          AND (T2.SUB_STATUS = 'A' OR T2.SUB_STATUS = 'S' OR ( T2.SUB_STATUS = 'C' AND SUBSTR(NVL(T2.SUB_STATUS_DATE, '99991231'), 1, 6) > TO_CHAR(SYSDATE-365, 'YYYYMMDD') ) )
+          AND (T2.SUB_STATUS = 'A' OR T2.SUB_STATUS = 'S' OR ( T2.SUB_STATUS = 'C' AND SUBSTR(NVL(T2.SUB_STATUS_DATE, '99991231'), 1, 6) > TO_CHAR(SYSDATE-365, 'YYYYMMDD') ) )-->
 </select>
 <select id="selectCancelYearCnt" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.SubscriptionRequest"
         resultType="java.lang.Integer">
-  SELECT COUNT(*) AS YEAR_CAN_CNT
+  /** 1년 이내 해지 **/
+  SELECT COUNT(1) AS YEAR_CAN_CNT
+  FROM MSP_JUO_CUS_INFO T1
+      INNER JOIN MSP_JUO_SUB_INFO T2
+      ON T2.CUSTOMER_ID = T1.CUSTOMER_ID
+  WHERE T2.SUB_STATUS = 'C' <!--해지-->
+      AND T2.LST_COM_ACTV_DATE <![CDATA[>]]> TO_CHAR(SYSDATE - 365, 'YYYYMMDD')
+      AND CRYPTO_AES256.ENC_AES(#{customerSsn}) IN (T1.CUSTOMER_SSN, T1.DRIVR_LICNS_NO, T1.TAX_ID) <!--파라미터 : 가입자 주민번호/사업자등록번호-->
+  <!--SELECT COUNT(1) AS YEAR_CAN_CNT
   FROM (SELECT CUSTOMER_ID, CUSTOMER_TYPE, CUST_IDNT_NO_IND_CD, CUSTOMER_SSN, DRIVR_LICNS_NO
         FROM MSP_JUO_CUS_INFO
         WHERE (CUSTOMER_SSN = CRYPTO_AES256.ENC_AES(#{customerSsn})
                 OR DRIVR_LICNS_NO = CRYPTO_AES256.ENC_AES(#{customerSsn})
-                OR TAX_ID = CRYPTO_AES256.ENC_AES(#{customerSsn})) <!--파라미터 : 가입자 주민번호/사업자등록번호-->
+                OR TAX_ID = CRYPTO_AES256.ENC_AES(#{customerSsn})) &#45;&#45;파라미터 : 가입자 주민번호/사업자등록번호
         ) T1
         INNER JOIN (SELECT CUSTOMER_ID, SUB_STATUS, LST_COM_ACTV_DATE, SUB_STATUS_DATE FROM MSP_JUO_SUB_INFO
                       WHERE SUB_STATUS = 'C'
         ) T2
-        ON T2.CUSTOMER_ID = T1.CUSTOMER_ID AND T2.LST_COM_ACTV_DATE > TO_CHAR(SYSDATE-365, 'YYYYMMDD')
+        ON T2.CUSTOMER_ID = T1.CUSTOMER_ID AND T2.LST_COM_ACTV_DATE > TO_CHAR(SYSDATE-365, 'YYYYMMDD')-->
 </select>
 <select id="selectActThisMonthCnt" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.SubscriptionRequest"
         resultType="java.lang.Integer">
-  SELECT COUNT(*) AS THIS_MONTH_ACT_CNT
+  /** 당월 개통 회선 **/
+  SELECT COUNT(1) AS THIS_MONTH_ACT_CNT
+  FROM MSP_JUO_CUS_INFO T1
+        INNER JOIN MSP_JUO_SUB_INFO T2
+        ON T2.CUSTOMER_ID = T1.CUSTOMER_ID
+  WHERE T2.SUB_STATUS <![CDATA[<>]]> 'C' -- 해지건 제외
+    AND T2.LST_COM_ACTV_DATE <![CDATA[>=]]> TO_CHAR(SYSDATE, 'YYYYMM') || '01'
+    AND T2.LST_COM_ACTV_DATE <![CDATA[<]]> TO_CHAR(ADD_MONTHS(SYSDATE, 1), 'YYYYMM') || '01'
+    AND CRYPTO_AES256.ENC_AES(#{customerSsn}) IN (T1.CUSTOMER_SSN, T1.DRIVR_LICNS_NO, T1.TAX_ID) <!--파라미터 : 가입자 주민번호/사업자등록번호-->
+  <!--SELECT COUNT(1) AS THIS_MONTH_ACT_CNT
   FROM (SELECT CUSTOMER_ID, CUSTOMER_TYPE, CUST_IDNT_NO_IND_CD, CUSTOMER_SSN, DRIVR_LICNS_NO
         FROM MSP_JUO_CUS_INFO
         WHERE (CUSTOMER_SSN = CRYPTO_AES256.ENC_AES(#{customerSsn})
                 OR DRIVR_LICNS_NO = CRYPTO_AES256.ENC_AES(#{customerSsn})
-                OR TAX_ID = CRYPTO_AES256.ENC_AES(#{customerSsn})) <!--파라미터 : 가입자 주민번호/사업자등록번호-->
+                OR TAX_ID = CRYPTO_AES256.ENC_AES(#{customerSsn}))
         ) T1
-        INNER JOIN (SELECT * FROM MSP_JUO_SUB_INFO WHERE SUB_STATUS <![CDATA[<>]]> 'C' ) T2 <!--해지건 제외-->
+        INNER JOIN (SELECT * FROM MSP_JUO_SUB_INFO WHERE SUB_STATUS <> 'C' ) T2 &#45;&#45;해지건 제외
   ON T2.CUSTOMER_ID = T1.CUSTOMER_ID
-  AND SUBSTR(NVL(T2.LST_COM_ACTV_DATE, '99991231'), 1, 6) = TO_CHAR(SYSDATE, 'YYYYMM')
+  AND SUBSTR(NVL(T2.LST_COM_ACTV_DATE, '99991231'), 1, 6) = TO_CHAR(SYSDATE, 'YYYYMM')-->
 </select>
 <select id="selectUnpaidCnt" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.SubscriptionRequest"
         resultType="java.lang.Integer">
-  SELECT COUNT(*) AS DELINQ_STATUS_CNT
+  /** 미납 여부 조회 **/
+  <!--SELECT COUNT(1) AS DELINQ_STATUS_CNT-->
+  <!--FROM (-->
+  <!--      SELECT CUSTOMER_ID FROM MSP_JUO_CUS_INFO WHERE CUSTOMER_SSN = CRYPTO_AES256.ENC_AES(#{customerSsn}) &lt;!&ndash;파라미터 : 가입자 주민번호/사업자등록번호&ndash;&gt;-->
+  <!--      UNION-->
+  <!--      SELECT CUSTOMER_ID FROM MSP_JUO_CUS_INFO WHERE DRIVR_LICNS_NO = CRYPTO_AES256.ENC_AES(#{customerSsn}) &lt;!&ndash;파라미터 : 가입자 주민번호/사업자등록번호&ndash;&gt;-->
+  <!--      UNION-->
+  <!--      SELECT CUSTOMER_ID FROM MSP_JUO_CUS_INFO WHERE TAX_ID = CRYPTO_AES256.ENC_AES(#{customerSsn}) &lt;!&ndash;파라미터 : 가입자 주민번호/사업자등록번호&ndash;&gt;-->
+  <!--      ) T1-->
+  <!--INNER JOIN MSP_JUO_BAN_INFO T3 ON T3.CUSTOMER_ID = T1.CUSTOMER_ID-->
+  SELECT COUNT(1) AS DELINQ_STATUS_CNT
   FROM (SELECT CUSTOMER_ID, CUSTOMER_TYPE, CUST_IDNT_NO_IND_CD, CUSTOMER_SSN, DRIVR_LICNS_NO
         FROM MSP_JUO_CUS_INFO
         WHERE (CUSTOMER_SSN = CRYPTO_AES256.ENC_AES(#{customerSsn})
                 OR DRIVR_LICNS_NO = CRYPTO_AES256.ENC_AES(#{customerSsn})
-                OR TAX_ID = CRYPTO_AES256.ENC_AES(#{customerSsn})) <!--파라미터 : 가입자 주민번호/사업자등록번호-->
+                OR TAX_ID = CRYPTO_AES256.ENC_AES(#{customerSsn})) --파라미터 : 가입자 주민번호/사업자등록번호
       ) T1
       INNER JOIN (SELECT CUSTOMER_ID, BAN, CONTRACT_NUM FROM MSP_JUO_BAN_MAPP_INFO WHERE APP_END_DATE = '99991231000000'
       ) T3
@@ -121,16 +260,112 @@
 </select>
 <select id="selectActTotalCnt" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.SubscriptionRequest"
         resultType="java.lang.Integer">
-  SELECT COUNT(*) AS TOT_ACT_CNT
+  /** 전체 개통 회선 **/
+  SELECT COUNT(1) AS TOT_ACT_CNT
+  FROM MSP_JUO_CUS_INFO T1
+      INNER JOIN MSP_JUO_SUB_INFO T2
+      ON T2.CUSTOMER_ID = T1.CUSTOMER_ID
+  WHERE T2.SUB_STATUS <![CDATA[<>]]> 'C' <!--해지건 제외-->
+      AND CRYPTO_AES256.ENC_AES(#{customerSsn}) IN (T1.CUSTOMER_SSN, T1.DRIVR_LICNS_NO, T1.TAX_ID) <!--파라미터 : 가입자 주민번호/사업자등록번호-->
+  <!--SELECT COUNT(1) AS TOT_ACT_CNT
   FROM (SELECT CUSTOMER_ID, CUSTOMER_TYPE, CUST_IDNT_NO_IND_CD, CUSTOMER_SSN, DRIVR_LICNS_NO
         FROM MSP_JUO_CUS_INFO
         WHERE (CUSTOMER_SSN = CRYPTO_AES256.ENC_AES(#{customerSsn})
                 OR DRIVR_LICNS_NO = CRYPTO_AES256.ENC_AES(#{customerSsn})
-                OR TAX_ID = CRYPTO_AES256.ENC_AES(#{customerSsn})) <!--파라미터 : 가입자 주민번호/사업자등록번호-->
+                OR TAX_ID = CRYPTO_AES256.ENC_AES(#{customerSsn})) &#45;&#45;파라미터 : 가입자 주민번호/사업자등록번호
       ) T1
-      INNER JOIN (SELECT * FROM MSP_JUO_SUB_INFO WHERE SUB_STATUS <![CDATA[<>]]> 'C' ) T2 <!--해지건 제외-->
-      ON T2.CUSTOMER_ID = T1.CUSTOMER_ID
+      INNER JOIN (SELECT * FROM MSP_JUO_SUB_INFO WHERE SUB_STATUS <> 'C' ) T2 &#45;&#45;해지건 제외
+      ON T2.CUSTOMER_ID = T1.CUSTOMER_ID-->
 </select>
+
+  <select id="selectOpenHistory" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.SubscriptionRequest"
+          resultType="java.lang.Integer">
+    /* rcpMgmtMapper.getCheckCstmr 개통이력확인(후불) */
+    SELECT COUNT(1) AS TOTAL_OPEN_COUNT
+    FROM MSP_JUO_CUS_INFO A, MSP_JUO_SUB_INFO B
+    WHERE A.CUSTOMER_ID = B.CUSTOMER_ID
+      AND B.PPPO = 'PO'
+      AND A.CUSTOMER_SSN = CRYPTO_AES256.ENC_AES(#{customerSsn})
+      <if test="searchType != null and searchType =='NEW_ACCOUNT'">
+        AND B.LST_COM_ACTV_DATE > TO_CHAR(SYSDATE-30, 'YYYYMMDD')
+        AND B.SUB_STATUS <![CDATA[<>]]> 'C'
+        <!-- 신규개통 조건 필요 NAC3 -->
+      </if>
+  </select>
+
+  <select id="selectMpPreCheckResult" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.MpPreCheckRequest" resultType="com.ktmmobile.msf.domains.form.form.newchange.dto.MpPreCheckResponse">
+    /** 개통전 사전체크 성공여부 체크 (작성완료) **/
+    SELECT T2.RSLT_CD, T2.RSLT_MSG
+    FROM MCP_REQUEST_OSST@DL_MCP T2
+    WHERE 1=1
+      AND T2.SEQ = (SELECT MAX(SEQ) FROM MCP_REQUEST_OSST@DL_MCP WHERE MVNO_ORD_NO = T2.MVNO_ORD_NO AND PRGR_STAT_CD = #{prgrStatCd})
+      AND T2.PRGR_STAT_CD = #{prgrStatCd}
+      AND T2.MVNO_ORD_NO = LPAD(#{resNo}, 14, '0')
+      AND ROWNUM = 1
+    <!--SELECT T2.RSLT_CD, T2.RSLT_MSG-->
+    <!--FROM MCP_REQUEST@DL_MCP T1, MCP_REQUEST_OSST@DL_MCP T2-->
+    <!--WHERE 1=1-->
+    <!--    AND LPAD(T1.RES_NO, 14, '0') = T2.MVNO_ORD_NO-->
+    <!--    &#45;&#45;AND T2.SEQ = (SELECT MAX(SEQ) FROM MCP_REQUEST_OSST@DL_MCP WHERE MVNO_ORD_NO = T2.MVNO_ORD_NO AND PRGR_STAT_CD = #{prgrStatCd} AND RSLT_CD = '0000')-->
+    <!--    AND T2.SEQ = (SELECT MAX(SEQ) FROM MCP_REQUEST_OSST@DL_MCP WHERE MVNO_ORD_NO = T2.MVNO_ORD_NO AND PRGR_STAT_CD = #{prgrStatCd})-->
+    <!--    AND T2.PRGR_STAT_CD = #{prgrStatCd}-->
+    <!--    AND T1.REQUEST_KEY = #{requestKey}-->
+    <!--    AND ROWNUM = 1-->
+  </select>
+
+  <select id="selectMcpUploadPhoneInfo"  parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfUploadPhoneInfoVo"  resultType="com.ktmmobile.msf.domains.form.form.common.vo.McpUploadPhoneInfoVo">
+    SELECT
+        UPLOAD_PHONE_SRL_NO
+      , EID
+      , IMEI1
+      , IMEI2
+      , MODEL_ID
+      , REQ_PHONE_SN
+      , RST_CD
+      , MOVE_CMNC_GNRT_IND_CD
+      , MOVE_TLCM_IND_CD
+      , PRNTS_CONTRACT_NO
+    FROM MCP_UPLOAD_PHONE_INFO@DL_MCP
+    WHERE EID = #{eid} AND IMEI1 = #{imei1} AND IMEI2 = #{imei2}
+  </select>
+
+  <select id="selectContractObj" parameterType="java.util.Map" resultType="java.util.Map">
+    SELECT
+      CONTRACT_NUM
+      , SVC_CNTR_NO
+      , T1.SUBSCRIBER_NO
+      , T1.USER_SSN
+      , T1.SUB_LINK_NAME
+      , T2.BL_BILLING_METHOD
+      , T2.BAN
+      , T2.BAN_ADR_ZIP
+      , T2.BAN_ADR_PRIMARY_LN
+      , T2.BAN_ADR_SECONDARY_LN
+      , T1.CUSTOMER_ID
+      , T1.SUB_STATUS
+      , T3.CUSTOMER_TYPE
+    FROM  MSP_JUO_SUB_INFO T1
+        , MSP_JUO_BAN_INFO T2
+        , MSP_JUO_CUS_INFO T3
+    WHERE 1=1
+        AND T1.BAN = T2.BAN
+        AND T1.CUSTOMER_ID = T3.CUSTOMER_ID
+        AND SUB_STATUS <![CDATA[<>]]> 'C'
+        <if test="mobileNo != null and mobileNo != ''">
+          AND SUBSCRIBER_NO= TRIM(#{mobileNo})
+        </if>
+        <if test="name != null and name != ''">
+          AND UPPER(REPLACE(SUB_LINK_NAME,' ','')) = UPPER(REPLACE(#{name},' ',''))
+        </if>
+        <if test="contractNum != null and contractNum != ''">
+          AND CONTRACT_NUM = #{contractNum}
+        </if>
+        <if test="customerId != null and customerId != ''">
+          AND T1.CUSTOMER_ID = #{customerId}
+        </if>
+
+  </select>
+
 
 
 

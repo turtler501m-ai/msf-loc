@@ -142,7 +142,7 @@ public final class ExceptionMsgConstant {
     public static final String PAY_INFO_EXIST_IMG = "생성된 이미지가 존재합니다.";
 
 
-   //SocketTimeoutException  responseXml.isEmpty()) M-PlatForm
+    //SocketTimeoutException  responseXml.isEmpty()) M-PlatForm
     public static final String MPLATFORM_RESPONEXML_EMPTY_EXCEPTION = "처리중인 업무가 있습니다. 잠시 후 다시 시도해 주시기 바랍니다."; //"서비스 점검중입니다. 잠시후 다시 이용해 주세요."; // "서버(M-Platform) 점검중 입니다. 잠시후 다시 시도 하기기 바랍니다.(XML EMPTY)";
 
     //numberView01
@@ -159,11 +159,11 @@ public final class ExceptionMsgConstant {
     //온라인에서 부가서비스 해지 불가 안내
     public static final String NO_ONLINE_CAN_CHANGE_ADD = "해지할 수 없는 부가서비스는 고객센터를 통해 해지 가능합니다.";
 
-    public static final String SIMPLE_OPEN_TIME_EXCEPTION = "셀프 개통 가능한 시간은 신규(08:00~21:50), 번호이동(10:00~19:50) 입니다.";
+    public static final String SIMPLE_OPEN_TIME_EXCEPTION = "개통 가능한 시간은 신규(08:00~21:50), 번호이동(10:00~19:50) 입니다.";
 
-    public static final String SIMPLE_CNTPNT_SHOPID_EXCEPTION = "셀프 개통 가능한 접점코드가 아닙니다.";
+    public static final String SIMPLE_CNTPNT_SHOPID_EXCEPTION = "개통 가능한 접점코드가 아닙니다.";
 
-    public static final String SIMPLE_OPEN_DATE_EXCEPTION = "셀프 개통 가능한 날짜가 아닙니다.";
+    public static final String SIMPLE_OPEN_DATE_EXCEPTION = "개통 가능한 날짜가 아닙니다.";
 
     public static final String OVER_LIMIT_EXCEPTION = "개통희망번호 조회 20회 초과하셨습니다.\n신청서를 처음부터 다시 작성해 주십시요.";
 
@@ -216,39 +216,39 @@ public final class ExceptionMsgConstant {
     public static final String STEP_CNT_EXCEPTION = "[STEP] 필수 단계가 누락됐습니다. 새로고침 후 다시 시도해 주세요.";
 
     public static final String SIMPLE_OPEN_PLATFORM_EXCEPTION = "APP 점검으로 일부 메뉴의 서비스 제공이 중단되었습니다.<br>" +
-                                                                "https://www.ktmmobile.com 에서 서비스 이용이 가능합니다.<br>" +
-                                                                "불편을 끼쳐 드려 죄송합니다.";
+        "https://www.ktmmobile.com 에서 서비스 이용이 가능합니다.<br>" +
+        "불편을 끼쳐 드려 죄송합니다.";
 
     public static final String AUTH_TYPE_EXCEPTION = "이용 불가한 간편본인인증 수단입니다.";
 
     public static final String ALREADY_JOIN_EXCEPTION = "이미 가입 중인 서비스입니다.";
 
     public static final String STOLEN_IP_EXCEPTION = "접속하신 IP는 부정사용 개통 신고되어 있는<br>" +
-                                                     "IP로 셀프개통이 제한되어 있습니다.<br>" +
-                                                     "가입을 원하시면 『상담사 개통 신청』 을 통해<br>" +
-                                                     "가입신청 가능하며 IP 접속제한 해제를<br>" +
-                                                     "희망하실 경우 고객센터(114/무료)로<br>" +
-                                                     "연락주시면 본인인증 후 제한 해제 가능합니다.";
+        "IP로 개통이 제한되어 있습니다.<br>" +
+        "가입을 원하시면 『상담사 개통 신청』 을 통해<br>" +
+        "가입신청 가능하며 IP 접속제한 해제를<br>" +
+        "희망하실 경우 고객센터(114/무료)로<br>" +
+        "연락주시면 본인인증 후 제한 해제 가능합니다.";
 
     public static final String NAC_SELF_IP_EXCEPTION = "상담사 개통으로만 신청 가능합니다.<br/>『상담사 개통 신청』 을 이용 바랍니다.";
-    public static final String NAC_AGENT_SELF_IP_EXCEPTION = "셀프개통 이용이 불가합니다.";
+    public static final String NAC_AGENT_SELF_IP_EXCEPTION = "개통 이용이 불가합니다.";
 
-    public static final String ESIM_SELF_ABUSE_IMEI_EXCEPTION = "입력하신 단말기는 셀프개통 이용이 불가합니다.<br/>" +
-                                                                "자세한 내용은 고객센터(1899-5000)로 문의 부탁 드립니다.";
+    public static final String ESIM_SELF_ABUSE_IMEI_EXCEPTION = "입력하신 단말기는 개통 이용이 불가합니다.<br/>" +
+        "자세한 내용은 고객센터(1899-5000)로 문의 부탁 드립니다.";
 
     public static final String SELF_LIMIT_EXCEPTION = "※ 신규가입은 명의당 30일이내 1회선만 가입 가능합니다.<br>" +
-                                                      "추가 가입은 최근 가입하신 KT M모바일 회선 가입일을 기준으로 30일 경과된 시점에 신청 부탁드립니다.";
+        "추가 가입은 최근 가입하신 KT M모바일 회선 가입일을 기준으로 30일 경과된 시점에 신청 부탁드립니다.";
 
     public static final String CONTAINS_GOLD_NUMBER_EXCEPTION = "입력하신 가입희망번호 중<br>" +
-                                                                "골드번호가 포함되어 있습니다.<br>" +
-                                                                "희망번호 수정 후 다시 시도 부탁드립니다.";
+        "골드번호가 포함되어 있습니다.<br>" +
+        "희망번호 수정 후 다시 시도 부탁드립니다.";
     public static final String FATH_CERT_EXPIR_EXCEPTION = "안면인증 시간이 만료되었습니다.<br>" +
-                                                           "새로고침 후 다시 시도 부탁드립니다.";
-    
+        "새로고침 후 다시 시도 부탁드립니다.";
+
     public static final String FATH_CERT_RESLT1_EXCEPTION = "안면인증 결과가 아직 확인되지 않습니다.<br>" +
-                                                            "잠시 후 다시 시도해주세요. <br>";
+        "잠시 후 다시 시도해주세요. <br>";
     public static final String FATH_CERT_RESLT2_EXCEPTION = "안면인증 유효기간(영업일 7일)이 초과되었습니다.<br>" +
-                                                            "다시 안면인증을 진행해주세요";
+        "다시 안면인증을 진행해주세요";
     public static final String FATH_LIMIT_EXCEPTION = "안면인증 URL받기 5회 초과하셨습니다.<br>" +
-                                                        "새로고침 후 다시 진행해주세요.";
+        "새로고침 후 다시 진행해주세요.";
 }

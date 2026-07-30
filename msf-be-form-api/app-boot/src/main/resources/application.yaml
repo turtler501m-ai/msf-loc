@@ -8,7 +8,7 @@
 # Server
 #--------------------
 server:
-  port: 8085
+  port: 8080
 
 
 
@@ -16,11 +16,37 @@ server:
 # Spring
 #--------------------
 spring:
-  profiles:
-    active: local
+  profiles.active: local  # 기본 프로파일
   config:
     import:
-      - optional:classpath:application-private.yaml  # 개인용 설정 파일
+      ## Commons Modules
+      - optional:classpath:application-common.yaml
+      - optional:classpath:application-websecurity.yaml
+      - optional:classpath:application-mybatis.yaml
+      - optional:classpath:application-auditing.yaml
+      - optional:classpath:application-cache-core.yaml
+      - optional:classpath:application-batch-core.yaml
+      - optional:classpath:application-client.yaml
+      - optional:classpath:application-login-core.yaml
+      - optional:classpath:application-masking.yaml
+      - optional:classpath:application-crypto.yaml
+      - optional:classpath:application-file.yaml
+      - optional:classpath:application-excel.yaml
+
+      ## Domain Modules
+      - optional:classpath:application-cache.yaml
+      - optional:classpath:application-external-client.yaml
+      - optional:classpath:application-policy.yaml
+      - optional:classpath:application-login.yaml
+      - optional:classpath:application-shared.yaml
+      - optional:classpath:application-access-trace.yaml
+      - optional:classpath:application-form.yaml
+      - optional:classpath:application-eformsign.yaml
+      - optional:classpath:application-koi-ocr.yaml
+      - optional:classpath:application-koi-idcard.yaml
+
+      ## Private Local Overrides
+      - optional:application-private.yaml  # 로컬 기본 설정 파일
 
   application:
     name: form-api
@@ -34,3 +60,13 @@ spring:
 management:
   server:
     port: ${server.port}
+
+
+
+---
+#### LOCAL Profile
+spring:
+  config.activate.on-profile: local
+
+server:
+  port: 8080

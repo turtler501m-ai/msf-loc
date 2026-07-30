@@ -12,7 +12,7 @@ public class CanCustMgmtDto {
     @Setter
     @NoArgsConstructor
     public static class ListReqDto {
-        private String procCd;       // 처리상태 (RC/RQ/CP/BK, null=전체)
+        private String procCd;       // 처리상태 (RQ/RC/BK, null=전체)
         private String formTypeCd;   // 신청서구분 (1=신규/변경, 2=서비스변경, 3=명의변경, 4=서비스해지, null=전체)
         private String searchGbn;    // 검색구분 (CONTRACT_NUM/CANCEL_MOBILE_NO/CSTMR_NM)
         private String searchName;   // 검색어
@@ -85,6 +85,7 @@ public class CanCustMgmtDto {
         private String resCd;
         private String resMsg;
         private String resNo;
+        private String parentScanId;
     }
 
     @Getter
@@ -131,13 +132,13 @@ public class CanCustMgmtDto {
         public static ProcessResVO complete(String osstOrdNo) {
             ProcessResVO vo = new ProcessResVO();
             vo.osstOrdNo = osstOrdNo;
-            vo.procCd = "CP";
+            vo.procCd = "RC";
             return vo;
         }
 
         public static ProcessResVO revert() {
             ProcessResVO vo = new ProcessResVO();
-            vo.procCd = "RC";
+            vo.procCd = "RQ";
             return vo;
         }
 

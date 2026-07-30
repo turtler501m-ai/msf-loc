@@ -24,4 +24,6 @@ public class RateInfoResponse {
     private String prdtSctnCd; /* 제품구분코드  LTE5G, 5G, 3G, LTE */
     private String dataType; /* 데이타 유형 : 5G / 3G LTE */
     private String baseAmt; //
+    private String baseAmtVat;
+    private String baseAmtWithVat; //
 }

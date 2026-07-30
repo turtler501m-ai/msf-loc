@@ -1,0 +1,369 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.form.form.newchange.repository.msp.McpRequestNewChangeWriteMapper">
+  <insert id="insertMcpRequest" parameterType="com.ktmmobile.msf.domains.form.form.common.vo.McpRequestVo">
+    INSERT INTO MCP_REQUEST@DL_MCP
+    (   REQUEST_KEY
+        ,	RIP
+        ,	SYS_RDATE
+        ,	CRET_ID
+        ,	RVISN_DTTM
+        ,	RVISN_ID
+        ,	MANAGER_CODE
+        ,	AGENT_CODE
+        ,	SHOP_CD
+        ,	SHOP_NM
+        ,	REAL_SHOP_NM
+        ,	CPNT_ID
+        ,	CNTPNT_SHOP_ID
+        ,	REQ_BUY_TYPE
+        ,	SERVICE_TYPE
+        ,	OPER_TYPE
+        ,	CSTMR_TYPE
+        ,	FATH_TRG_YN
+        ,	FATH_TRANSAC_ID
+        ,	FATH_CMPLT_NTFY_DT
+        ,	ONLINE_AUTH_TYPE
+        ,	ONLINE_AUTH_INFO
+        ,	OPEN_NO
+        ,	CONTRACT_NUM
+        ,	PROD_TYPE
+        ,	PROD_ID
+        ,	PROD_NM
+        ,	REQ_PHONE_SN
+        ,	REQ_MODEL_NAME
+        ,	SNTY_CAPAC_CD
+        ,	SNTY_COLOR_CD
+        ,	REQ_MODEL_COLOR
+        ,	SHOP_USM_ID
+        ,	USIM_KINDS_CD
+        ,	REQ_USIM_SN
+        ,	REQ_USIM_NAME
+        ,	EID
+        ,	IMEI1
+        ,	IMEI2
+        ,	ESIM_PHONE_ID
+        ,	UPLOAD_PHONE_SRL_NO
+        ,	RWD_PROD_CD
+        ,	RWD_AUTH_INFO
+        ,	REQ_WANT_NUMBER
+        ,	REQ_WANT_NUMBER2
+        ,	REQ_WANT_NUMBER3
+        ,	INSR_CD
+        ,	INSR_PROD_CD
+        ,	CLAUSE_INSURANCE_FLAG
+        ,	CLAUSE_INSR_PROD_FLAG
+        ,	INSR_AUTH_INFO
+        ,	PRNTS_CONTRACT_NO
+        ,	JEHU_PARTNER_TYPE
+        ,	JEHU_PROD_TYPE
+        ,	REQ_ADDITION
+        ,	REQ_ADDITION_PRICE
+        ,	PHONE_PAYMENT
+        ,	REQ_PAY_TYPE
+        ,	ON_OFF_TYPE
+        ,	SO_CD
+        ,	OPEN_REQ_DATE
+        ,	REQ_IN_DAY
+        ,	KTM_REFERER
+        ,	OPEN_MARKET_REFERER
+        ,	SPC_CODE
+        ,	BANNER_CD
+        ,	PROMOTION_CD
+        ,	COUNTRY_CODE
+        ,	DIS_PRMT_ID
+        ,	HUB_ORDER_SEQ
+        ,	OPEN_MARKET_ID
+        ,	EVNT_CD_PRMT
+        ,	CLAUSE_PRI_COLLECT_FLAG
+        ,	CLAUSE_PRI_OFFER_FLAG
+        ,	CLAUSE_ESS_COLLECT_FLAG
+        ,	CLAUSE_PRI_TRUST_FLAG
+        ,	CLAUSE_PRI_AD_FLAG
+        ,	CLAUSE_CONFIDENCE_FLAG
+        ,	CLAUSE_FATH_FLAG
+        ,	NW_BLCK_AGRM_YN
+        ,	APP_BLCK_AGRM_YN
+        ,	APP_CD
+        ,	SO_TRNS_AGRM_YN
+        ,	CLAUSE_JEHU_FLAG
+        ,	CLAUSE_RENTAL_MODEL_CP
+        ,	CLAUSE_RENTAL_MODEL_CP_PR
+        ,	CLAUSE_RENTAL_SERVICE
+        ,	CLAUSE_MPPS35_FLAG
+        ,	CLAUSE_FINANCE_FLAG
+        ,	CLAUSE_5G_COVERAGE_FLAG
+        ,	PERSONAL_INFO_COLLECT_AGREE
+        ,	OTHERS_TRNS_AGREE
+        ,	CLAUSE_SENSI_COLLECT_FLAG
+        ,	CLAUSE_SENSI_OFFER_FLAG
+        ,	CLAUSE_PARTNER_OFFER_FLAG
+        ,	OTHERS_TRNS_KT_AGREE
+        ,	OTHERS_AD_RECEIVE_AGREE
+        ,	KT_COUNSEL_AGREE
+        ,	COMBINE_SOLO_TYPE
+        ,	COMBINE_SOLO_FLAG
+        ,	CLAUSE_RWD_FLAG
+        ,	ETC_SPECIAL
+        ,	MEMO
+        ,	REC_YN
+        ,	RES_CODE
+        ,	RES_MSG
+        ,	RES_NO
+        ,	PSTATE
+        ,	REQUEST_STATE_CODE
+        ,	SCAN_ID
+        ,	APP_FORM_YN
+        ,	APP_FORM_XML_YN
+        ,	FILE01
+        ,	FILE01_MASK
+        ,	FAXYN
+        ,	FAXNUM
+        , INDV_LOCA_PRV_AGREE
+    )
+    VALUES
+    (
+          #{requestKey, jdbcType=NUMERIC}
+        , #{rip, jdbcType=VARCHAR}
+        , #{sysRdate}
+        , #{cretId, jdbcType=VARCHAR}
+        , #{rvisnDttm}
+        , #{rvisnId, jdbcType=VARCHAR}
+        , #{managerCode, jdbcType=VARCHAR}
+        , #{agentCode, jdbcType=VARCHAR}
+        , #{shopCd, jdbcType=VARCHAR}
+        , #{shopNm, jdbcType=VARCHAR}
+        , #{realShopNm, jdbcType=VARCHAR}
+        , #{cpntId, jdbcType=VARCHAR}
+        , #{cntpntShopId, jdbcType=VARCHAR}
+        , #{reqBuyType, jdbcType=VARCHAR}
+        , #{serviceType, jdbcType=VARCHAR}
+        , #{operType, jdbcType=VARCHAR}
+        , #{cstmrType, jdbcType=VARCHAR}
+        , #{fathTrgYn, jdbcType=VARCHAR}
+        , #{fathTransacId, jdbcType=VARCHAR}
+        , #{fathCmpltNtfyDt, jdbcType=VARCHAR}
+        , #{onlineAuthType, jdbcType=VARCHAR}
+        , #{onlineAuthInfo, jdbcType=VARCHAR}
+        , #{openNo, jdbcType=VARCHAR}
+        , #{contractNum, jdbcType=VARCHAR}
+        , #{prodType, jdbcType=VARCHAR}
+        , #{prodId, jdbcType=VARCHAR}
+        , #{prodNm, jdbcType=VARCHAR}
+        , #{reqPhoneSn, jdbcType=VARCHAR}
+        , #{reqModelName, jdbcType=VARCHAR}
+        , #{sntyCapacCd, jdbcType=VARCHAR}
+        , #{sntyColorCd, jdbcType=VARCHAR}
+        , #{reqModelColor, jdbcType=VARCHAR}
+        , #{shopUsmId, jdbcType=VARCHAR}
+        , #{usimKindsCd, jdbcType=VARCHAR}
+        , #{reqUsimSn, jdbcType=VARCHAR}
+        , #{reqUsimName, jdbcType=VARCHAR}
+        , #{eid, jdbcType=VARCHAR}
+        , #{imei1, jdbcType=VARCHAR}
+        , #{imei2, jdbcType=VARCHAR}
+        , #{esimPhoneId, jdbcType=VARCHAR}
+        , #{uploadPhoneSrlNo, jdbcType=NUMERIC}
+        , #{rwdProdCd, jdbcType=VARCHAR}
+        , #{rwdAuthInfo, jdbcType=VARCHAR}
+        , #{reqWantNumber, jdbcType=VARCHAR}
+        , #{reqWantNumber2, jdbcType=VARCHAR}
+        , #{reqWantNumber3, jdbcType=VARCHAR}
+        , #{insrCd, jdbcType=VARCHAR}
+        , #{insrProdCd, jdbcType=VARCHAR}
+        , #{clauseInsuranceFlag, jdbcType=VARCHAR}
+        , #{clauseInsrProdFlag, jdbcType=VARCHAR}
+        , #{insrAuthInfo, jdbcType=VARCHAR}
+        , #{prntsContractNo, jdbcType=VARCHAR}
+        , #{jehuPartnerType, jdbcType=VARCHAR}
+        , #{jehuProdType, jdbcType=VARCHAR}
+        , #{reqAddition, jdbcType=VARCHAR}
+        , #{reqAdditionPrice, jdbcType=NUMERIC}
+        , #{phonePayment, jdbcType=VARCHAR}
+        , #{reqPayType, jdbcType=VARCHAR}
+        , #{onOffType, jdbcType=VARCHAR}
+        , #{soCd, jdbcType=VARCHAR}
+        , #{openReqDate}
+        , #{reqInDay}
+        , #{ktmReferer, jdbcType=VARCHAR}
+        , #{openMarketReferer, jdbcType=VARCHAR}
+        , #{spcCode, jdbcType=VARCHAR}
+        , #{bannerCd, jdbcType=VARCHAR}
+        , #{promotionCd, jdbcType=VARCHAR}
+        , #{countryCode, jdbcType=VARCHAR}
+        , #{disPrmtId, jdbcType=VARCHAR}
+        , #{hubOrderSeq, jdbcType=NUMERIC}
+        , #{openMarketId, jdbcType=VARCHAR}
+        , #{evntCdPrmt, jdbcType=VARCHAR}
+        , #{clausePriCollectFlag, jdbcType=VARCHAR}
+        , #{clausePriOfferFlag, jdbcType=VARCHAR}
+        , #{clauseEssCollectFlag, jdbcType=VARCHAR}
+        , #{clausePriTrustFlag, jdbcType=VARCHAR}
+        , #{clausePriAdFlag, jdbcType=VARCHAR}
+        , #{clauseConfidenceFlag, jdbcType=VARCHAR}
+        , #{clauseFathFlag, jdbcType=VARCHAR}
+        , #{nwBlckAgrmYn, jdbcType=VARCHAR}
+        , #{appBlckAgrmYn, jdbcType=VARCHAR}
+        , #{appCd, jdbcType=VARCHAR}
+        , #{soTrnsAgrmYn, jdbcType=VARCHAR}
+        , #{clauseJehuFlag, jdbcType=VARCHAR}
+        , #{clauseRentalModelCp, jdbcType=VARCHAR}
+        , #{clauseRentalModelCpPr, jdbcType=VARCHAR}
+        , #{clauseRentalService, jdbcType=VARCHAR}
+        , #{clauseMpps35Flag, jdbcType=VARCHAR}
+        , #{clauseFinanceFlag, jdbcType=VARCHAR}
+        , #{clause5gCoverageFlag, jdbcType=VARCHAR}
+        , #{personalInfoCollectAgree, jdbcType=VARCHAR}
+        , #{othersTrnsAgree, jdbcType=VARCHAR}
+        , #{clauseSensiCollectFlag, jdbcType=VARCHAR}
+        , #{clauseSensiOfferFlag, jdbcType=VARCHAR}
+        , #{clausePartnerOfferFlag, jdbcType=VARCHAR}
+        , #{othersTrnsKtAgree, jdbcType=VARCHAR}
+        , #{othersAdReceiveAgree, jdbcType=VARCHAR}
+        , #{ktCounselAgree, jdbcType=VARCHAR}
+        , #{combineSoloType, jdbcType=VARCHAR}
+        , #{combineSoloFlag, jdbcType=VARCHAR}
+        , #{clauseRwdFlag, jdbcType=VARCHAR}
+        , #{etcSpecial, jdbcType=VARCHAR}
+        , #{memo, jdbcType=VARCHAR}
+        , #{recYn, jdbcType=VARCHAR}
+        , #{resCode, jdbcType=VARCHAR}
+        , #{resMsg, jdbcType=VARCHAR}
+        , #{resNo, jdbcType=VARCHAR}
+        , #{pstate, jdbcType=VARCHAR}
+        , #{requestStateCode, jdbcType=VARCHAR}
+        , #{scanId, jdbcType=VARCHAR}
+        , #{appFormYn, jdbcType=VARCHAR}
+        , #{appFormXmlYn, jdbcType=VARCHAR}
+        , #{file01, jdbcType=VARCHAR}
+        , #{file01Mask, jdbcType=VARCHAR}
+        , #{faxyn, jdbcType=VARCHAR}
+        , #{faxnum, jdbcType=VARCHAR}
+        , #{indvLocaPrvAgree, jdbcType=VARCHAR}
+    )
+  </insert>
+
+  <update id="updateMcpRequest" parameterType="com.ktmmobile.msf.domains.form.form.common.vo.McpRequestVo">
+    UPDATE MCP_REQUEST@DL_MCP
+    SET
+    RIP = #{rip}
+    ,	SYS_RDATE = #{sysRdate}
+    ,	CRET_ID	 = #{cretId}
+    ,	RVISN_DTTM	 = #{rvisnDttm}
+    ,	RVISN_ID	 = #{rvisnId}
+    ,	MANAGER_CODE	 = #{managerCode}
+    ,	AGENT_CODE	 = #{agentCode}
+    ,	SHOP_CD	 = #{shopCd}
+    ,	SHOP_NM	 = #{shopNm}
+    ,	REAL_SHOP_NM	 = #{realShopNm}
+    ,	CPNT_ID	 = #{cpntId}
+    ,	CNTPNT_SHOP_ID	 = #{cntpntShopId}
+    ,	REQ_BUY_TYPE	 = #{reqBuyType}
+    ,	SERVICE_TYPE	 = #{serviceType}
+    ,	OPER_TYPE	 = #{operType}
+    ,	CSTMR_TYPE	 = #{cstmrType}
+    ,	FATH_TRG_YN	 = #{fathTrgYn}
+    ,	FATH_TRANSAC_ID	 = #{fathTransacId}
+    ,	FATH_CMPLT_NTFY_DT	 = #{fathCmpltNtfyDt}
+    ,	ONLINE_AUTH_TYPE	 = #{onlineAuthType}
+    ,	ONLINE_AUTH_INFO	 = #{onlineAuthInfo}
+    ,	OPEN_NO	 = #{openNo}
+    ,	CONTRACT_NUM	 = #{contractNum}
+    ,	PROD_TYPE	 = #{prodType}
+    ,	PROD_ID	 = #{prodId}
+    ,	PROD_NM	 = #{prodNm}
+    ,	REQ_PHONE_SN	 = #{reqPhoneSn}
+    ,	REQ_MODEL_NAME	 = #{reqModelName}
+    ,	SNTY_CAPAC_CD	 = #{sntyCapacCd}
+    ,	SNTY_COLOR_CD	 = #{sntyColorCd}
+    ,	REQ_MODEL_COLOR	 = #{reqModelColor}
+    ,	SHOP_USM_ID	 = #{shopUsmId}
+    ,	USIM_KINDS_CD	 = #{usimKindsCd}
+    ,	REQ_USIM_SN	 = #{reqUsimSn}
+    ,	REQ_USIM_NAME	 = #{reqUsimName}
+    ,	EID	 = #{eid}
+    ,	IMEI1	 = #{imei1}
+    ,	IMEI2	 = #{imei2}
+    ,	ESIM_PHONE_ID	 = #{esimPhoneId}
+    ,	UPLOAD_PHONE_SRL_NO	 = #{uploadPhoneSrlNo}
+    ,	RWD_PROD_CD	 = #{rwdProdCd}
+    ,	RWD_AUTH_INFO	 = #{rwdAuthInfo}
+    ,	REQ_WANT_NUMBER	 = #{reqWantNumber}
+    ,	REQ_WANT_NUMBER2	 = #{reqWantNumber2}
+    ,	REQ_WANT_NUMBER3	 = #{reqWantNumber3}
+    ,	INSR_CD	 = #{insrCd}
+    ,	INSR_PROD_CD	 = #{insrProdCd}
+    ,	CLAUSE_INSURANCE_FLAG	 = #{clauseInsuranceFlag}
+    ,	CLAUSE_INSR_PROD_FLAG	 = #{clauseInsrProdFlag}
+    ,	INSR_AUTH_INFO	 = #{insrAuthInfo}
+    ,	PRNTS_CONTRACT_NO	 = #{prntsContractNo}
+    ,	JEHU_PARTNER_TYPE	 = #{jehuPartnerType}
+    ,	JEHU_PROD_TYPE	 = #{jehuProdType}
+    ,	REQ_ADDITION	 = #{reqAddition}
+    ,	REQ_ADDITION_PRICE	 = #{reqAdditionPrice}
+    ,	PHONE_PAYMENT	 = #{phonePayment}
+    ,	REQ_PAY_TYPE	 = #{reqPayType}
+    ,	ON_OFF_TYPE	 = #{onOffType}
+    ,	SO_CD	 = #{soCd}
+    ,	OPEN_REQ_DATE	 = #{openReqDate}
+    ,	REQ_IN_DAY	 = #{reqInDay}
+    ,	KTM_REFERER	 = #{ktmReferer}
+    ,	OPEN_MARKET_REFERER	 = #{openMarketReferer}
+    ,	SPC_CODE	 = #{spcCode}
+    ,	BANNER_CD	 = #{bannerCd}
+    ,	PROMOTION_CD	 = #{promotionCd}
+    ,	COUNTRY_CODE	 = #{countryCode}
+    ,	DIS_PRMT_ID	 = #{disPrmtId}
+    ,	HUB_ORDER_SEQ	 = #{hubOrderSeq}
+    ,	OPEN_MARKET_ID	 = #{openMarketId}
+    ,	EVNT_CD_PRMT	 = #{evntCdPrmt}
+    ,	CLAUSE_PRI_COLLECT_FLAG	 = #{clausePriCollectFlag}
+    ,	CLAUSE_PRI_OFFER_FLAG	 = #{clausePriOfferFlag}
+    ,	CLAUSE_ESS_COLLECT_FLAG	 = #{clauseEssCollectFlag}
+    ,	CLAUSE_PRI_TRUST_FLAG	 = #{clausePriTrustFlag}
+    ,	CLAUSE_PRI_AD_FLAG	 = #{clausePriAdFlag}
+    ,	CLAUSE_CONFIDENCE_FLAG	 = #{clauseConfidenceFlag}
+    ,	CLAUSE_FATH_FLAG	 = #{clauseFathFlag}
+    ,	NW_BLCK_AGRM_YN	 = #{nwBlckAgrmYn}
+    ,	APP_BLCK_AGRM_YN	 = #{appBlckAgrmYn}
+    ,	APP_CD	 = #{appCd}
+    ,	SO_TRNS_AGRM_YN	 = #{soTrnsAgrmYn}
+    ,	CLAUSE_JEHU_FLAG	 = #{clauseJehuFlag}
+    ,	CLAUSE_RENTAL_MODEL_CP	 = #{clauseRentalModelCp}
+    ,	CLAUSE_RENTAL_MODEL_CP_PR	 = #{clauseRentalModelCpPr}
+    ,	CLAUSE_RENTAL_SERVICE	 = #{clauseRentalService}
+    ,	CLAUSE_MPPS35_FLAG	 = #{clauseMpps35Flag}
+    ,	CLAUSE_FINANCE_FLAG	 = #{clauseFinanceFlag}
+    ,	CLAUSE_5G_COVERAGE_FLAG	 = #{clause5gCoverageFlag}
+    ,	PERSONAL_INFO_COLLECT_AGREE	 = #{personalInfoCollectAgree}
+    ,	OTHERS_TRNS_AGREE	 = #{othersTrnsAgree}
+    ,	CLAUSE_SENSI_COLLECT_FLAG	 = #{clauseSensiCollectFlag}
+    ,	CLAUSE_SENSI_OFFER_FLAG	 = #{clauseSensiOfferFlag}
+    ,	CLAUSE_PARTNER_OFFER_FLAG	 = #{clausePartnerOfferFlag}
+    ,	OTHERS_TRNS_KT_AGREE	 = #{othersTrnsKtAgree}
+    ,	OTHERS_AD_RECEIVE_AGREE	 = #{othersAdReceiveAgree}
+    ,	KT_COUNSEL_AGREE	 = #{ktCounselAgree}
+    ,	COMBINE_SOLO_TYPE	 = #{combineSoloType}
+    ,	COMBINE_SOLO_FLAG	 = #{combineSoloFlag}
+    ,	CLAUSE_RWD_FLAG	 = #{clauseRwdFlag}
+    ,	ETC_SPECIAL	 = #{etcSpecial}
+    ,	MEMO	 = #{memo}
+    ,	REC_YN	 = #{recYn}
+    ,	RES_CODE	 = #{resCode}
+    ,	RES_MSG	 = #{resMsg}
+    ,	RES_NO	 = #{resNo}
+    ,	PSTATE	 = #{pstate}
+    ,	REQUEST_STATE_CODE	 = #{requestStateCode}
+    ,	SCAN_ID	 = #{scanId}
+    ,	APP_FORM_YN	 = #{appFormYn}
+    ,	APP_FORM_XML_YN	 = #{appFormXmlYn}
+    ,	FILE01	 = #{file01}
+    ,	FILE01_MASK	 = #{file01Mask}
+    ,	FAXYN	 = #{faxyn}
+    ,	FAXNUM	 = #{faxnum}
+    ,	INDV_LOCA_PRV_AGREE = #{indvLocaPrvAgree}
+    WHERE REQUEST_KEY	 = #{requestKey}
+  </update>
+</mapper>

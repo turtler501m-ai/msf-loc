@@ -22,46 +22,12 @@
     WHERE user_id = #{userId}
   </insert>
 
-  <update id="updateLoginFail">
-    <selectKey keyProperty="failCnt" resultType="Integer" order="AFTER">
-      SELECT login_chk_cnt as "failCnt"
-      FROM msf_user_info
-      WHERE user_id = #{userId}
-    </selectKey>
-    update msf_user_info
-    set
-      login_chk_cnt = login_chk_cnt + 1
-    <if test="userSttusCd != null and userSttusCd != ''">
-      , user_sttus_cd = #{userSttusCd}
-      , access_limit_yn = 'Y'
-      , pwd_chg_yn = 'N'
-      , access_limit_dt = now()
-      , chg_dt = now()
-    </if>
-    where 1=1
-    and user_id = #{userId}
-  </update>
-
-  <update id="updateLoginSucc">
-    update msf_user_info
-    set chg_dt = now()
-      , login_chk_cnt = 0
-    where 1=1
-    and user_id = #{userId}
-  </update>
-
-  <update id="updateBioLoginSucc">
-    update msf_usr_app_info
-    set last_access_dt = now()
-    where 1=1
-    and uuid = #{uuid}
-  </update>
-
   <update id="updateUserPass">
     update msf_user_info
     set pwd = #{newPassword}
-       , pwd_chg_dt = now()
-       , pwd_chg_yn = 'Y'
+      , pwd_chg_dt = now()
+      , pwd_chg_yn = 'Y'
+      , login_chk_cnt = 0
     where 1=1
     and user_id = #{userId}
   </update>
@@ -83,21 +49,41 @@
     and user_id = #{userId}
   </select>
 
-  <select id="selectUserAppInfo" resultType="com.ktmmobile.msf.domains.form.login.application.dto.LoginResponse">
-    select a.user_id
-      , user_nm
-      , agent_cd
-      , shop_cd
-      , mobile_no
-      , ip
-      , user_sttus_cd
-      , access_limit_yn
-      , case when pwd_chg_dt <![CDATA[<]]> now() - interval '3 months' then 'Y' else 'N' end as pwdChgYn
-    from msf_user_info a
-      , msf_usr_app_info b
-    where 1=1
-    and a.user_id = b.user_id
-    and b.uuid = #{uuid}
+  <select id="selectUserHstInfo" resultType="com.ktmmobile.msf.domains.form.login.application.dto.LoginResponse">
+    select pwd
+    from msf_user_hst
+    where user_id = #{userId}
+    and pwd_chg_yn = 'Y'
+    order by amd_dt desc
+    limit 1
   </select>
+
+  <insert id="insertAdminUserHistory">
+    INSERT INTO msf_admin_user_hst (
+    admin_seq, cret_ip, cret_dt, cret_id, amd_ip, amd_dt, amd_id,
+    orgn_type_cd, agent_cd, shop_cd, team_nm, admin_id, admin_nm,
+    admin_pwd, tel_no, mobile_no, email_adr, email_receive_yn,
+    ip, role_cd, user_sttus_cd, access_dt, pwd_chg_dt, pwd_chg_yn,
+    otp_auth_yn, login_chk_cnt, otp_chk_cnt, stack_count
+    )
+    SELECT
+    admin_seq, cret_ip, cret_dt, cret_id, amd_ip, amd_dt, amd_id,
+    orgn_type_cd, agent_cd, shop_cd, team_nm, admin_id, admin_nm,
+    admin_pwd, tel_no, mobile_no, email_adr, email_receive_yn,
+    ip, role_cd, user_sttus_cd, access_dt, pwd_chg_dt, pwd_chg_yn,
+    otp_auth_yn, login_chk_cnt, otp_chk_cnt, stack_count
+    FROM msf_admin_user_info
+    WHERE admin_id = #{userId}
+  </insert>
+
+  <update id="updateAdminUserPass">
+    update msf_admin_user_info
+    set admin_pwd = #{newPassword}
+      , pwd_chg_dt = now()
+      , pwd_chg_yn = 'Y'
+      , login_chk_cnt = 0
+    where 1=1
+    and admin_id = #{userId}
+  </update>
 
 </mapper>

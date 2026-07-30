@@ -27,7 +27,7 @@ public interface NiceCertifySvc {
      * @return: String
      * </pre>
      */
-    public String checkNiceAccount(NiceResDto niceResDto) ;
+    String checkNiceAccount(NiceResDto niceResDto) ;
 
     /**
      * <pre>
@@ -37,7 +37,7 @@ public interface NiceCertifySvc {
      * @return: String
      * </pre>
      */
-    public String niceAccountOtpName(NiceResDto niceResDto) ;
+    String niceAccountOtpName(NiceResDto niceResDto) ;
 
     /**
      * <pre>
@@ -47,7 +47,7 @@ public interface NiceCertifySvc {
      * @return: String
      * </pre>
      */
-    public String niceAccountOtpConfirm(NiceResDto niceResDto) ;
+    String niceAccountOtpConfirm(NiceResDto niceResDto) ;
 
     
     /**
@@ -58,7 +58,7 @@ public interface NiceCertifySvc {
      * @return: String
      * </pre>
      */
-	public String pushPassAlram(HttpServletRequest request);
+	String pushPassAlram(HttpServletRequest request);
 
 	/**
      * <pre>
@@ -68,7 +68,7 @@ public interface NiceCertifySvc {
      * @return: String
      * </pre>
      */
-	public String passCertifyInfo(HttpServletRequest request);
+	String passCertifyInfo(HttpServletRequest request);
     
     /**
      * <pre>
@@ -77,7 +77,7 @@ public interface NiceCertifySvc {
      * @return: boolean
      * </pre>
      */
-    public boolean getRegularAuthChk(Map<String,String> paraMap);
+    boolean getRegularAuthChk(Map<String,String> paraMap);
 
     /**
      * <pre>
@@ -86,7 +86,7 @@ public interface NiceCertifySvc {
      * @return: boolean
      * </pre>
      */
-    public boolean getAssociateAuthChk(UserSessionDto userSession);
+    boolean getAssociateAuthChk(UserSessionDto userSession);
 
 
     /**
@@ -94,7 +94,7 @@ public interface NiceCertifySvc {
      * 설명  : 간편본인인증 알림요청 전 SMS본인인증 완료 여부 확인 - 셀프개통
      * </pre>
      */
-    public boolean preChkSimpleAuth();
+    boolean preChkSimpleAuth();
 
     /** 유심구매하기 휴대폰 인증 요청 전, STEP 처리 */
     boolean chkUsimBuySmsReqInfo(NiceLogDto niceLogDto);

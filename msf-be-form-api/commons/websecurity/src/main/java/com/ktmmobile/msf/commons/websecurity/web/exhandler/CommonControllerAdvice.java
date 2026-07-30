@@ -8,8 +8,11 @@ import org.springframework.beans.propertyeditors.StringTrimmerEditor;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.BindException;
+import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.InitBinder;
@@ -78,11 +81,6 @@ public class CommonControllerAdvice {
         return ResponseUtils.badRequest(e);
     }
 
-    //@ExceptionHandler(MissingServletRequestParameterException.class)
-    // public ResponseEntity<CommonResponse<Void>> missingServletRequestParameterException(MissingServletRequestParameterException e) {
-    //    return ResponseUtils.badRequest(List.of(BindErrorResponse.of(e)));
-    //}
-
     @ExceptionHandler(DuplicateDataException.class)
     public ResponseEntity<CommonResponse<Void>> duplicateDataException(DuplicateDataException e) {
         return ResponseUtils.responseOf(CommonResponseType.CONFLICT, e);
@@ -91,6 +89,21 @@ public class CommonControllerAdvice {
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<CommonResponse<Void>> notFoundException(NotFoundException e) {
         return ResponseUtils.responseOf(CommonResponseType.RESOURCE_NOT_FOUND, e);
+    }
+
+    @ExceptionHandler({
+        NoHandlerFoundException.class,
+        NoResourceFoundException.class
+    })
+    public ResponseEntity<CommonResponse<Void>> apiNotFoundException(Exception e) {
+        return ResponseUtils.responseOf(CommonResponseType.API_NOT_FOUND);
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<CommonResponse<Void>> authenticationException(AuthenticationException e) {
+        String message = StringUtils.hasText(e.getMessage()) ? e.getMessage() : CommonResponseType.UNAUTHORIZED.message();
+        return ResponseEntity.status(CommonResponseType.UNAUTHORIZED.httpStatus())
+            .body(CommonResponse.of(CommonResponseType.UNAUTHORIZED.code(), message));
     }
 
     @ExceptionHandler(DomainException.class)

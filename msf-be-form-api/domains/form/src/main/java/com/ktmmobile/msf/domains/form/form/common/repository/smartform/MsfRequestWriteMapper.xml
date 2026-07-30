@@ -41,9 +41,9 @@
             CLAUSE_CNTR_DEL_YN,
             ETC_AGREE_YN,
             MEMO,
-            REG_DATE,
+            OPEN_REQ_DT,
             REGST_ID,
-            REG_DT,
+            REQ_IN_DT,
             PROC_DT,
             PROC_CD,
             REC_YN,
@@ -53,7 +53,8 @@
             APP_FORM_YN,
             APP_FORM_XML_YN,
             FILE_NM,
-            FILE_MASK_NM
+            FILE_MASK_NM,
+            PARENT_SCAN_ID
         ) VALUES (
             #{requestKey},
             #{managerCd},
@@ -90,7 +91,7 @@
             #{clauseCntrDelYn},
             #{etcAgreeYn},
             #{memo},
-            TO_CHAR(NOW(), 'YYYYMMDD'),
+            NOW(),
             #{regstId},
             NOW(),
             NOW(),
@@ -102,7 +103,8 @@
             #{appFormYn},
             #{appFormXmlYn},
             #{fileNm},
-            #{fileMaskNm}
+            #{fileMaskNm},
+            #{parentScanId}
         )
     </insert>
 
@@ -130,6 +132,8 @@
             CSTMR_JURIDICAL_RRN,
             CSTMR_JURIDICAL_BIZ_NO,
             CSTMR_JURIDICAL_REP_NM,
+            CSTMR_PRIVATE_BIZ_NO_ISSU_DATE,
+            CSTMR_JURIDICAL_BIZ_NO_ISSU_DATE,
             UPJN_CD,
             BCU_SBST,
             CSTMR_JURIDICAL_USER_NM,
@@ -171,6 +175,8 @@
             #{cstmrJuridicalRrn},
             #{cstmrJuridicalBizNo},
             #{cstmrJuridicalRepNm},
+            #{cstmrPrivateBizNoIssuDate},
+            #{cstmrJuridicalBizNoIssuDate},
             #{upjnCd},
             #{bcuSbst},
             #{cstmrJuridicalUserNm},
@@ -333,55 +339,31 @@
             #{othersPaymentRrn},
             #{othersPaymentRelTypeCd},
             #{othersPaymentReqNm},
-            'N',
+            #{othersPaymentAgrYn},
             #{prntsBillNo},
             #{cstmrBillSendTypeCd},
             #{cstmrEmailAdr}
         )
     </insert>
 
-    <insert id="insertMsfRequestClause"
-            parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestClauseVo">
-        INSERT INTO MSF_REQUEST_CLAUSE (
-            REQUEST_KEY,
-            CD_GROUP_ID,
-            CD_GROUP_ID2,
-            VERSION
-        ) VALUES (
-            #{requestKey},
-            #{cdGroupId},
-            #{cdGroupId2},
-            #{version}
-        )
-    </insert>
 
-    <!-- REQUEST_DOC_SEQ: 호출 전 시퀀스 채번 후 VO에 세팅 필요 -->
+    <!-- REQUEST_DOC_SEQ: DB sequence 채번 -->
     <insert id="insertMsfRequestDoc"
             parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestDocVo">
         INSERT INTO MSF_REQUEST_DOC (
             REQUEST_DOC_SEQ,
             REQUEST_KEY,
-            CRET_IP,
-            CRET_DT,
-            CRET_ID,
-            AMD_IP,
-            AMD_DT,
-            AMD_ID,
             FILE_TYPE_CD,
             FILE_PATH_NM,
-            FILE_NM
+            FILE_NM,
+            FILE_PAGE_NO
         ) VALUES (
-            #{requestDocSeq},
+            nextval('sq_request_doc_seq'),
             #{requestKey},
-            #{cretIp},
-            NOW(),
-            #{cretId},
-            #{amdIp},
-            NOW(),
-            #{amdId},
             #{fileTypeCd},
             #{filePathNm},
-            #{fileNm}
+            #{fileNm},
+            #{filePageNo}
         )
     </insert>
 
@@ -421,12 +403,12 @@
         INSERT INTO MSF_REQUEST_JOIN_FORM (
             REQUEST_RECV_SEQ,
             REQUEST_KEY,
-            CRET_IP,
-            CRET_DT,
-            CRET_ID,
-            AMD_IP,
-            AMD_ID,
-            AMD_DT,
+            <!--CRET_IP,-->
+            <!--CRET_DT,-->
+            <!--CRET_ID,-->
+            <!--AMD_IP,-->
+            <!--AMD_ID,-->
+            <!--AMD_DT,-->
             RECV_TYPE_CD,
             FAX_NO,
             CSTMR_ZIPCD,
@@ -439,12 +421,12 @@
         ) VALUES (
             #{requestRecvSeq},
             #{requestKey},
-            #{cretIp},
-            NOW(),
-            #{cretId},
-            #{amdIp},
-            #{amdId},
-            NOW(),
+            <!--#{cretIp},-->
+            <!--NOW(),-->
+            <!--#{cretId},-->
+            <!--#{amdIp},-->
+            <!--#{amdId},-->
+            <!--NOW(),-->
             #{recvTypeCd},
             #{faxNo},
             #{cstmrZipcd},
@@ -463,7 +445,7 @@
         INSERT INTO MSF_REQUEST_MOVE (
             REQUEST_KEY,
             CRET_IP,
-            REG_DT,
+            CRET_DT,
             CRET_ID,
             AMD_IP,
             AMD_ID,
@@ -511,41 +493,6 @@
         )
     </insert>
 
-    <insert id="insertMsfRequestMst"
-            parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestMstVo">
-        INSERT INTO MSF_REQUEST_MST (
-            REQUEST_KEY,
-            CRET_IP,
-            CRET_DT,
-            CRET_ID,
-            REQ_TYPE_CD,
-            USER_ID,
-            CSTMR_NM,
-            MOBILE_NO,
-            CSTMR_NATIVE_RRN,
-            CONTRACT_NUM,
-            CSTMR_TYPE_CD,
-            ONLINE_AUTH_TYPE_CD,
-            ONLINE_AUTH_INFO,
-            ETC_MOBILE_NO
-        ) VALUES (
-            #{requestKey},
-            #{cretIp},
-            NOW(),
-            #{cretId},
-            #{reqTypeCd},
-            #{userId},
-            #{cstmrNm},
-            #{mobileNo},
-            #{cstmrNativeRrn},
-            #{contractNum},
-            #{cstmrTypeCd},
-            #{onlineAuthTypeCd},
-            #{onlineAuthInfo},
-            #{etcMobileNo}
-        )
-    </insert>
-
     <insert id="insertMsfRequestNameChg">
         INSERT INTO MSF_REQUEST_NAME_CHG (
             REQUEST_KEY,
@@ -590,6 +537,7 @@
             JEHU_PROD_TYPE_CD,
             USIM_SUCC_YN,
             USIM_SN,
+            USIM_NM,
             ICC_ID,
             EID,
             IMEI1,
@@ -605,16 +553,24 @@
             CLAUSE_PRI_AD_YN,
             CLAUSE_JEHU_YN,
             CLAUSE_FINANCE_YN,
+            CLAUSE_PRI_TRUST_YN,
+            CLAUSE_SENSI_COLLECT_YN,
+            CLAUSE_SENSI_OFFER_YN,
             PERSONAL_INFO_COLLECT_AGREE_YN,
             OTHERS_TRNS_AGREE_YN,
             OTHERS_TRNS_KT_AGREE_YN,
+            OTHERS_TRNS_ALL_AGREE_YN,
             OTHERS_AD_RECEIVE_AGREE_YN,
+            CLAUSE_5G_COVERAGE_YN,
+            NW_BLCK_AGRM_YN,
+            APP_BLCK_AGRM_YN,
+            INDV_LOCA_PRV_AGREE_YN,
             CLAUSE_FATH_YN,
             MCN_STAT_RSN_CD,
             MEMO,
-            REG_DATE,
+            OPEN_REQ_DT,
             REGST_ID,
-            REG_DT,
+            REQ_IN_DT,
             PROC_DT,
             PROC_CD,
             MCN_STATE_CD,
@@ -627,7 +583,9 @@
             APP_FORM_YN,
             APP_FORM_XML_YN,
             FILE_NM,
-            FILE_MASK_NM
+            FILE_MASK_NM,
+            PARENT_SCAN_ID,
+            DIS_PRMT_ID
         ) VALUES (
             #{requestKey},
             #{managerCd},
@@ -645,11 +603,11 @@
             #{cstmrTypeCd},
             #{mcnResNo},
             #{teIdentityCertTypeCd},
-            #{teKnoteIdentityScanCstmrNm},
-            #{teKnoteIdentityEssNo},
-            #{teKnoteIdentityTypeCd},
-            #{teKnoteIdentityScanDt},
-            #{teKnoteScanId},
+            #{knoteIdentityScanCstmrNm},
+            #{knoteIdentityEssNo},
+            #{knoteIdentityTypeCd},
+            #{knoteIdentityScanDt},
+            #{knoteScanId},
             #{teFathTrgYn},
             #{teFathTrgIdentityCertTypeCd},
             #{teFathTransacId},
@@ -671,6 +629,7 @@
             #{jehuProdTypeCd},
             #{usimSuccYn},
             #{usimSn},
+            #{usimNm},
             #{iccId},
             #{eid},
             #{imei1},
@@ -686,19 +645,27 @@
             #{clausePriAdYn},
             #{clauseJehuYn},
             #{clauseFinanceYn},
+            #{clausePriTrustYn}, /* clausePriTrustYn */
+            'Y', /* clauseSensiCollectYn */
+            'Y', /* clauseSensiOfferYn */
             #{personalInfoCollectAgreeYn},
             #{othersTrnsAgreeYn},
             #{othersTrnsKtAgreeYn},
+            #{othersTrnsAllAgreeYn},
             #{othersAdReceiveAgreeYn},
+            #{clause5gCoverageYn},
+            #{nwBlckAgrmYn},
+            #{appBlckAgrmYn},
+            #{indvLocaPrvAgreeYn},
             #{clauseFathYn},
             #{mcnStatRsnCd},
             #{memo},
-            TO_CHAR(NOW(), 'YYYYMMDD'),
+            NOW(),
             #{regstId},
             NOW(),
             NOW(),
             #{procCd},
-            #{mcnStateCd},
+            '00',
             #{rcvCustNo},
             #{rcvBillAcntNo},
             #{recYn},
@@ -708,7 +675,9 @@
             #{appFormYn},
             #{appFormXmlYn},
             #{fileNm},
-            #{fileMaskNm}
+            #{fileMaskNm},
+            #{parentScanId},
+            #{disPrmtId}
         )
     </insert>
 
@@ -761,7 +730,13 @@
             MINOR_AGENT_SELF_ISSU_NO,
             TRNS_STTUS_CD,
             AUTH_DEL_YN,
-            CONFIRM_MEMO
+            CONFIRM_MEMO,
+            TRNS_BIRTH,
+            TRNS_GENDER_CD,
+            TRNS_CNAME,
+            TRNS_BIZ_NO,
+            TRNS_JURIDICAL_RRN,
+            TRNS_JURIDICAL_REP_NM
         ) VALUES (
           #{requestKey},
           nextVal('sq_nfl_chg_trns_seq'),
@@ -769,11 +744,11 @@
           #{trnsCstmrTypeCd},
           #{trnsTrnsfeMobileNo},
           #{trIdentityCertTypeCd},
-          #{trKnoteIdentityScanCstmrNm},
-          #{trKnoteIdentityEssNo},
-          #{trKnoteIdentityTypeCd},
-          #{trKnoteIdentityScanDt},
-          #{trKnoteScanId},
+          null,
+          null,
+          null,
+          null,
+          null,
           #{trFathTrgYn},
           #{trFathTrgIdentityCertTypeCd},
           #{trFathTransacId},
@@ -794,7 +769,7 @@
           #{trnsPwd},
           #{trnsMyslfConfMethCd},
           #{trnsTrnsfeNm},
-          #{cstmrVisitTypeCd},
+          #{trCstmrVisitTypeCd},
           #{trMinorAgentNm},
           #{trMinorAgentRrn},
           #{trMinorAgentBirth},
@@ -810,7 +785,13 @@
           #{trMinorAgentSelfIssuNo},
           #{trnsSttusCd},
           #{authDelYn},
-          #{confirmMemo}
+          #{confirmMemo},
+          #{trnsBirth},
+          #{trnsGenderCd},
+          #{trnsCname},
+          #{trnsBizNo},
+          #{trnsJuridicalRrn},
+          #{trnsJuridicalRepNm}
         )
     </insert>
 
@@ -818,22 +799,22 @@
             parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestRecVo">
         INSERT INTO MSF_REQUEST_REC (
             REQUEST_KEY,
-            CRET_IP,
-            CRET_DT,
-            CRET_ID,
-            AMD_IP,
-            AMD_DT,
-            AMD_ID,
+            <!--CRET_IP,-->
+            <!--CRET_DT,-->
+            <!--CRET_ID,-->
+            <!--AMD_IP,-->
+            <!--AMD_DT,-->
+            <!--AMD_ID,-->
             REC_FILE_PATH_NM,
             REC_FILE_NM
         ) VALUES (
             #{requestKey},
-            #{cretIp},
-            NOW(),
-            #{cretId},
-            #{amdIp},
-            NOW(),
-            #{amdId},
+            <!--#{cretIp},-->
+            <!--NOW(),-->
+            <!--#{cretId},-->
+            <!--#{amdIp},-->
+            <!--NOW(),-->
+            <!--#{amdId},-->
             #{recFilePathNm},
             #{recFileNm}
         )
@@ -843,12 +824,6 @@
             parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestSaleVo">
         INSERT INTO MSF_REQUEST_SALE (
             REQUEST_KEY,
-            CRET_IP,
-            CRET_DT,
-            CRET_ID,
-            AMD_IP,
-            AMD_ID,
-            AMD_DT,
             MODEL_ID,
             MODEL_MONTHLY,
             MODEL_INSTAMT,
@@ -865,25 +840,18 @@
             MAX_APD_SPRT,
             ADD_DC_AMT,
             ENGG_MNTH_CNT,
-            RECYCLE_YN,
             USIM_PRICE_TYPE_CD,
             USIM_PRICE,
             USIM_PAY_MTHD_CD,
-            SESPLS_YN,
             JOIN_PRICE_TYPE_CD,
             JOIN_PAY_MTHD_CD,
             JOIN_PRICE,
             SOC_CODE,
             SOC_NM,
-            SOC_BASE_CHRG_AMT
+            SOC_BASE_CHRG_AMT,
+            DIS_PRMT_AMT
         ) VALUES (
             #{requestKey},
-            #{cretIp},
-            NOW(),
-            #{cretId},
-            #{amdIp},
-            #{amdId},
-            NOW(),
             #{modelId},
             #{modelMonthly},
             #{modelInstamt},
@@ -900,17 +868,16 @@
             #{maxApdSprt},
             #{addDcAmt},
             #{enggMnthCnt},
-            #{recycleYn},
             #{usimPriceTypeCd},
             #{usimPrice},
             #{usimPayMthdCd},
-            #{sesplsYn},
             #{joinPriceTypeCd},
             #{joinPayMthdCd},
             #{joinPrice},
             #{socCode},
             #{socNm},
-            #{socBaseChrgAmt}
+            #{socBaseChrgAmt},
+            #{disPrmtAmt}
         )
     </insert>
 
@@ -955,7 +922,13 @@
             REQUEST_SVC_CHG_DTL_SEQ,
             REQUEST_KEY,
             SVC_TGT_CD,
+            SVC_CHG_TYPE_CD,
             PROC_TYPE_CD,
+            PROC_DT,
+            PROC_CD,
+            RES_CD,
+            RES_MSG,
+            RES_NO,
             SOC_CD,
             SOC_NM,
             ADDTION_INFO,
@@ -990,12 +963,19 @@
             APP_FORM_YN,
             APP_FORM_XML_YN,
             FILE_NM,
-            FILE_MASK_NM
+            FILE_MASK_NM,
+            PARENT_SCAN_ID
         ) VALUES (
             #{requestSvcChgDtlSeq},
             #{requestKey},
             #{svcTgtCd},
+            #{svcChgTypeCd},
             #{procTypeCd},
+            NOW(),
+            #{procCd},
+            #{resCd},
+            #{resMsg},
+            #{resNo},
             #{socCd},
             #{socNm},
             #{addtionInfo},
@@ -1030,7 +1010,8 @@
             #{appFormYn},
             #{appFormXmlYn},
             #{fileNm},
-            #{fileMaskNm}
+            #{fileMaskNm},
+            #{parentScanId}
         )
     </insert>
 
@@ -1053,9 +1034,9 @@
             CHG_MOBILE_NO,
             CHG_CONTRACT_NUM,
             MEMO,
-            REG_DATE,
+            OPEN_REQ_DT,
             REGST_ID,
-            REG_DT,
+            REQ_IN_DT,
             PROC_DT,
             PROC_CD,
             REC_YN,
@@ -1066,7 +1047,9 @@
             APP_FORM_YN,
             APP_FORM_XML_YN,
             FILE_NM,
-            FILE_MASK_NM
+            FILE_MASK_NM,
+            PARENT_SCAN_ID,
+            SIGN_TGT_SBST
         ) VALUES (
             #{requestKey},
             #{managerCd},
@@ -1084,7 +1067,7 @@
             #{chgMobileNo},
             #{chgContractNum},
             #{memo},
-            TO_CHAR(NOW(), 'YYYYMMDD'),
+            NOW(),
             #{regstId},
             NOW(),
             NOW(),
@@ -1097,9 +1080,83 @@
             #{appFormYn},
             #{appFormXmlYn},
             #{fileNm},
-            #{fileMaskNm}
+            #{fileMaskNm},
+            #{parentScanId},
+            #{signTgtSbst}
         )
     </insert>
+
+    <update id="updateMsfRequestSvcChgProcCd"
+            parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestSvcChgVo">
+        UPDATE MSF_REQUEST_SVC_CHG
+        SET PROC_DT = NOW(),
+            PROC_CD = #{procCd},
+            RES_CD = #{resCd},
+            RES_MSG = #{resMsg},
+            RES_NO = #{resNo}
+        WHERE REQUEST_KEY = #{requestKey}
+    </update>
+
+    <!-- 서비스변경 후처리 업로드: 이폼서버 업로드 완료 후 SCAN_ID 업데이트 -->
+    <update id="updateMsfRequestSvcChgScanId"
+            parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestSvcChgVo">
+        UPDATE MSF_REQUEST_SVC_CHG
+        SET SCAN_ID = #{scanId},
+            SIGN_TGT_SBST = COALESCE(NULLIF(#{signTgtSbst}, ''), SIGN_TGT_SBST)
+            <if test="fileNm != null and fileNm != ''">
+            , FILE_NM = #{fileNm}
+            , FILE_MASK_NM = #{fileMaskNm}
+            </if>
+        WHERE REQUEST_KEY = #{requestKey}
+    </update>
+
+    <!-- 서비스변경 후처리 업로드: DTL 행별 SCAN_ID 업데이트 (SVC_TGT_CD 기준) -->
+    <update id="updateMsfRequestSvcChgDtlScanId"
+            parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestSvcChgDtlVo">
+        UPDATE MSF_REQUEST_SVC_CHG_DTL
+        SET SCAN_ID = #{scanId}
+        <if test="fileNm != null and fileNm != ''">
+          , FILE_NM = #{fileNm}
+          , FILE_MASK_NM = #{fileMaskNm}
+        </if>
+        WHERE REQUEST_KEY = #{requestKey}
+          AND SVC_TGT_CD = #{svcTgtCd}
+    </update>
+
+    <!-- 서비스변경 후처리 업로드: R11/R12 DTL 행별 SCAN_ID 업데이트 (SVC_TGT_CD + SOC_CD 기준) -->
+    <update id="updateMsfRequestSvcChgDtlSocScanId"
+            parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestSvcChgDtlVo">
+        UPDATE MSF_REQUEST_SVC_CHG_DTL
+        SET SCAN_ID = #{scanId}
+        <if test="fileNm != null and fileNm != ''">
+          , FILE_NM = #{fileNm}
+          , FILE_MASK_NM = #{fileMaskNm}
+        </if>
+        WHERE REQUEST_KEY = #{requestKey}
+          AND SVC_TGT_CD = #{svcTgtCd}
+          AND SOC_CD = #{socCd}
+        <if test="procTypeCd != null and procTypeCd != ''">
+          AND PROC_TYPE_CD = #{procTypeCd}
+        </if>
+    </update>
+
+    <update id="updateMsfRequestSvcChgDtlProcResult"
+            parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestSvcChgDtlVo">
+        UPDATE MSF_REQUEST_SVC_CHG_DTL
+        SET PROC_DT = NOW(),
+            PROC_CD = #{procCd},
+            RES_CD = #{resCd},
+            RES_MSG = #{resMsg},
+            RES_NO = #{resNo}
+        WHERE REQUEST_KEY = #{requestKey}
+          AND SVC_TGT_CD = #{svcTgtCd}
+        <if test="socCd != null and socCd != ''">
+          AND SOC_CD = #{socCd}
+        </if>
+        <if test="procTypeCd != null and procTypeCd != ''">
+          AND PROC_TYPE_CD = #{procTypeCd}
+        </if>
+    </update>
 
     <insert id="insertMsfRequest"
             parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestVo">
@@ -1359,4 +1416,75 @@
             #{faxNo}
         )
     </insert>
+
+  <insert id="insertMsfRequestOsst"
+          parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestOsstVo">
+    INSERT INTO MSF_REQUEST_OSST
+    (
+      MVNO_ORD_NO
+      , SEQ
+      , OSST_ORD_NO
+      , PRGR_STAT_CD
+      , RSLT_CD
+      , RSLT_MSG
+      , RSLT_DATE
+      , NSTEP_GLOBAL_ID
+      , PRDC_CHK_NOTI_MSG
+      , IF_TYPE_CD
+      , SVC_CNTR_NO
+    )
+    VALUES (
+      LPAD(#{mvnoOrdNo}, 14, '0')
+      , COALESCE((SELECT MAX(SEQ+1) FROM MSF_REQUEST_OSST WHERE MVNO_ORD_NO = LPAD(#{mvnoOrdNo}, 14, '0')), 1)
+      , #{osstOrdNo}
+      , CASE WHEN LENGTH(#{prgrStatCd}) >= 4 THEN RIGHT(#{prgrStatCd},3) ELSE #{prgrStatCd} END
+      , #{rsltCd}
+      , #{rsltMsg}
+      , TO_CHAR(NOW(),'YYYYMMDDHH24MISS')
+      , #{nstepGlobalId}
+      , #{prdcChkNotiMsg}
+      , COALESCE(#{ifTypeCd}, 'WEB')
+      , COALESCE(#{svcCntrNo},0)
+    )
+  </insert>
+
+  <delete id="deleteMsfRequestNameChg">
+    DELETE FROM MSF_REQUEST_NAME_CHG
+    WHERE REQUEST_KEY = #{requestKey}
+  </delete>
+
+  <delete id="deleteMsfRequestNameTrns">
+    DELETE FROM MSF_REQUEST_NAME_TRNS
+    WHERE REQUEST_KEY = #{requestKey}
+  </delete>
+
+  <delete id="deleteMsfRequestCstmr">
+    DELETE FROM MSF_REQUEST_CSTMR
+    WHERE REQUEST_KEY = #{requestKey}
+  </delete>
+
+  <delete id="deleteMsfRequestAgent">
+    DELETE FROM MSF_REQUEST_AGENT
+    WHERE REQUEST_KEY = #{requestKey}
+  </delete>
+
+  <delete id="deleteMsfRequestBillReq">
+    DELETE FROM MSF_REQUEST_BILL_REQ
+    WHERE REQUEST_KEY = #{requestKey}
+  </delete>
+
+  <delete id="deleteMsfRequestJoinForm">
+    DELETE FROM MSF_REQUEST_JOIN_FORM
+    WHERE REQUEST_KEY = #{requestKey}
+  </delete>
+
+  <delete id="deleteMsfRequestDoc">
+    DELETE FROM MSF_REQUEST_DOC
+    WHERE REQUEST_KEY = #{requestKey}
+  </delete>
+  <delete id="deleteMsfRequestRec">
+    DELETE FROM MSF_REQUEST_REC
+    WHERE REQUEST_KEY = #{requestKey}
+  </delete>
+
 </mapper>

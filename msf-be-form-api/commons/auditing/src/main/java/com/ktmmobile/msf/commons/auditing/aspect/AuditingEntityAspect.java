@@ -17,6 +17,7 @@ import com.ktmmobile.msf.commons.auditing.aspect.annotation.AuditingHandler;
 import com.ktmmobile.msf.commons.auditing.aspect.processor.AuditingEntityProcessor;
 import com.ktmmobile.msf.commons.auditing.aspect.processor.DefaultAuditingEntityProcessor;
 
+@SuppressWarnings("PMD.UnusedPrivateMethod")
 @RequiredArgsConstructor
 @Aspect
 @Component
@@ -27,16 +28,10 @@ public class AuditingEntityAspect {
     private final List<AuditingEntityProcessor> auditingEntityProcessors;
 
     @Pointcut("@within(org.springframework.stereotype.Repository)")
-    private void repositoryAnnotation() { }
+    private void repositoryAnnotation() {
+        // Pointcut signature method.
+    }
 
-    /**
-     * MyBatis 매퍼는 MyBatis 인터셉터를 이용해서 Auditing 파라미터를 자동 전달하도록 구현했으므로
-     * AuditingEntityAspect가 동작할 필요가 없습니다.
-     */
-    @Pointcut("@within(org.apache.ibatis.annotations.Mapper)")
-    private void myBatisMapperAnnotation() { }
-
-    //@Before("repositoryAnnotation() || myBatisMapperAnnotation()")
     @Before("repositoryAnnotation()")
     public void doBefore(JoinPoint joinPoint) {
         if (Boolean.TRUE.equals(AUDITING_IN_PROGRESS.get())) {

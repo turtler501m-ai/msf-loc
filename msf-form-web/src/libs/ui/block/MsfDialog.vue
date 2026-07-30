@@ -9,6 +9,7 @@ let UI_MODAL_Z_INDEX_STACK = []
         v-if="props.keepAlive || props.isOpen"
         v-show="props.isOpen"
         class="overlay"
+        :class="{ 'is-web': isWeb }"
         :style="{ zIndex: currentZIndex }"
       >
         <FocusTrap :isActive="props.isOpen">
@@ -19,6 +20,8 @@ let UI_MODAL_Z_INDEX_STACK = []
               props.maximize ? 'maximize' : '',
               props.mode ? `mode-${props.mode}` : '',
               `dialog-size-${props.size}`,
+              props.autoHeight ? `is-autoHeight` : '',
+              props.dividerFooter ? 'divider-footer' : '',
               props.className,
             ]"
             role="dialog"
@@ -26,7 +29,12 @@ let UI_MODAL_Z_INDEX_STACK = []
             :aria-labelledby="props.title ? titleId : undefined"
           >
             <div v-if="!props.showClose" ref="initialFocusTarget" tabindex="0" class="blind"></div>
-            <div class="header-wrap">
+            <div
+              class="header-wrap"
+              :class="{
+                'empty-title': !props.title,
+              }"
+            >
               <div class="header-inner">
                 <div v-if="props.title" class="header">
                   <h2 :id="titleId" class="title">{{ props.title }}</h2>
@@ -60,9 +68,11 @@ let UI_MODAL_Z_INDEX_STACK = []
                 "
                 height="100%"
               >
-                <div class="body-inner">
-                  <slot></slot>
-                </div>
+                <MsfFocusScope class="ut-h100p" :disabled="isWeb || !props.useFocusScope">
+                  <div class="body-inner">
+                    <slot></slot>
+                  </div>
+                </MsfFocusScope>
               </MsfCustomScroll>
             </div>
             <div v-if="$slots.footer" class="footer">
@@ -85,6 +95,7 @@ const props = defineProps({
   keepAlive: { type: Boolean, default: false }, // true일 때 iframe 등 내부 상태 유지를 위해 v-show로 제어 (기본 false)
   title: String,
   divider: { type: Boolean, default: false },
+  dividerFooter: { type: Boolean, default: false }, // footer 위에 보더 설정 시
   className: String,
   bodyClassName: String,
   maximize: Boolean,
@@ -95,9 +106,11 @@ const props = defineProps({
   size: {
     type: String,
     default: 'large',
-    validator: (v) => ['large', 'medium', 'small'].includes(v),
+    validator: (v) => ['xlarge', 'large', 'medium', 'small'].includes(v),
   },
   customScroll: { type: Boolean, default: false }, // CustomScroll 사용 여부 결정 (기본값 false)
+  autoHeight: { type: Boolean, default: false }, // 컨텐츠의 높이만큼 높이 설정 여부
+  useFocusScope: { type: Boolean, default: true }, // MsfFocusScope 사용여부 (기본 true) - false하면 키보드 Enter 포커스 자동이동을 OFF
 })
 
 const containerRef = ref(null) // 모달 루트 컨테이너
@@ -109,10 +122,13 @@ const emit = defineEmits(['close', 'open'])
 
 const titleId = `modal-label--${useId()}`
 
+// 웹/앱 높이 스타일 분리를 위한 구분값
+const isWeb = localStorage.getItem('deviceType') === 'P'
+
 // z-index 관련
 const BASE_Z_INDEX = 10 // 현재 인스턴스의 z-index
 const currentZIndex = ref(BASE_Z_INDEX) //초기값에 사용
-document.documentElement.style.setProperty('--base-z-index', BASE_Z_INDEX) // CSS 변수설정
+document.documentElement.style.setProperty('--msf-dialog-zindex-base', BASE_Z_INDEX) // CSS 변수설정
 
 // z-index 할당: 현재 모달 중 가장 높은 번호에 +1 하여 등록
 const assignZIndex = () => {
@@ -127,15 +143,8 @@ const releaseZIndex = () => {
 }
 
 const { lock, unlock } = useScrollLock()
-const vh = ref(0)
 
-// 1. 뷰포트 높이(vh) 계산 로직 (컴포넌트 내부로 흡수)
-const updateVh = () => {
-  vh.value = window.innerHeight * 0.01
-  document.documentElement.style.setProperty('--layout-vh', `${vh.value}px`)
-}
-
-// 2. 스크롤 잠금 및 이벤트 관리
+// 스크롤 잠금 및 이벤트 관리
 watch(
   () => props.isOpen,
   async (newVal, oldVal) => {
@@ -145,8 +154,6 @@ watch(
       // 열릴 때: 현재 포커스된 요소를 저장
       lastFocusedElement.value = document.activeElement
       lock() // 3. 잠금 요청 (카운트 증가)
-      updateVh()
-      window.addEventListener('resize', updateVh)
       // DOM이 실제로 화면에 그려질 때까지 기다린 후 포커싱
       await nextTick()
       // 포커스 우선순위 결정
@@ -163,7 +170,6 @@ watch(
 
       // 이전에 열려있다가 닫히는 경우만 실행
       unlock() // 4. 해제 요청 (카운트 차감)
-      window.removeEventListener('resize', updateVh)
 
       // 닫힐 때: nextTick으로 DOM 업데이트 후 저장해둔 요소로 포커스 강제 이동
       await nextTick()
@@ -182,32 +188,39 @@ onUnmounted(() => {
   if (props.isOpen) {
     unlock()
   }
-  window.removeEventListener('resize', updateVh)
 })
 </script>
 
 <style lang="scss" scoped>
 .overlay {
-  @include position($p: fixed, $t: 0, $l: 0, $i: var(--base-z-index, 10));
+  @include position($p: fixed, $t: 0, $l: 0, $i: var(--msf-dialog-zindex-base, 10));
   width: 100%;
-  height: calc(var(--layout-vh, 1vh) * 100);
+  height: var(--msf-app-height, 100vh);
+  // 웹 viewport 높이 고정
+  &.is-web {
+    height: 100%;
+  }
   @include flex($h: center, $v: center);
   background-color: var(--color-alpha-dim);
 }
 
 .dialog-root {
   --dialog-max-width: #{rem(1024px)};
+  --dialog-max-height: #{rem(660px)}; // 높이지정 디자인사이즈
   --dialog-border-radius: #{rem(16px)};
   --dialog-inner-padding: #{rem(24px)};
+  --dialog-inner-padding-narrow: #{rem(16px)}; // dialog 내부 여백값중 부분적으로 좁게 지정할 경우 사용
   &:has(.footer) {
     .body {
       padding-bottom: 0;
     }
   }
-
+  // 기본 사이즈 100%에서 상하좌우 여백만큼 뺀다.
   width: calc(100% - var(--layout-padding-x) * 2);
+  height: calc(100% - var(--layout-padding-y) * 2);
+  // 사이즈 최대값 지정은 max-값 변수값을 변경한다
   max-width: var(--dialog-max-width);
-  height: rem(660px); // 높이지정 디자인사이즈
+  max-height: var(--dialog-max-height);
   position: relative;
   @include flex($d: column);
   border-radius: var(--dialog-border-radius);
@@ -217,21 +230,43 @@ onUnmounted(() => {
   &:has(.footer) {
     padding-bottom: 0;
   }
+  // props : dividerFooter 설정시 보더스타일
+  &.divider-footer {
+    .footer {
+      border-top: 1px solid var(--color-gray-150);
+    }
+    // 하단에 보더있는경우 eformsign-container 하단여백 설정
+    :deep(.eformsign-container) {
+      padding-bottom: rem(20px);
+    }
+  }
 
   // 사이즈별 크기 지정
-  &.dialog-size-large {
-    --dialog-max-width: #{rem(752px)};
-    // @include mobile() {
-    //   --dialog-max-width: 95%;
-    // }
+  /* xlarge : 신청서열람, 신청서확인 처럼 PC, tablet 영역을 크게 활용하는 팝업의 경우 사용합니다.*/
+  &.dialog-size-xlarge {
+    --dialog-max-width: #{rem(1400px)};
+    --dialog-max-height: 100%;
+    --layout-padding-y: #{rem(8px)};
+    --layout-padding-x: #{rem(8px)};
+
+    .header-wrap {
+      margin-bottom: var(--dialog-inner-padding-narrow);
+    }
+    .footer {
+      padding-top: var(--dialog-inner-padding-narrow);
+    }
   }
+  /* large */
+  &.dialog-size-large {
+    // --dialog-max-width: #{rem(752px)}; // 기존 디자인사이즈__20260610_변경
+    --dialog-max-width: #{rem(860px)};
+  }
+  /* medium */
   &.dialog-size-medium {
     --dialog-max-width: #{rem(460px)};
-    max-height: rem(540px); // 높이지정 디자인사이즈
-    // @include mobile() {
-    //   --dialog-max-width: 95%;
-    // }
+    --dialog-max-height: #{rem(540px)}; // 높이지정 디자인사이즈
   }
+  /* small */
   &.dialog-size-small {
     --dialog-max-width: #{rem(400px)};
     // @include mobile() {
@@ -245,6 +280,19 @@ onUnmounted(() => {
     height: 100%;
     max-height: none;
     border-radius: unset;
+  }
+
+  // 높이를 컨텐츠의 높이만큼 지정함 (최대높이는 가이드를 따라감)
+  &.is-autoHeight {
+    height: auto;
+
+    --dialog-max-height: #{rem(660px)};
+    &.dialog-size-medium {
+      --dialog-max-height: #{rem(540px)};
+    }
+    &:not(:has(.footer)) {
+      padding-block: var(--dialog-inner-padding) calc(var(--dialog-inner-padding) + 8px);
+    }
   }
 }
 .header-wrap {
@@ -260,11 +308,22 @@ onUnmounted(() => {
     border-bottom: rem(2px) solid var(--color-foreground);
   }
   .header {
+    flex: 1;
     padding-block: 0;
     .title {
       @include ellipsis(1);
       font-size: var(--font-size-24);
       font-weight: var(--font-weight-bold);
+      line-height: var(--line-height-fit);
+    }
+  }
+  // props.title 미지정시 스타일지정
+  &.empty-title {
+    margin-bottom: rem(12px);
+    .header-inner {
+      justify-content: end;
+      border-bottom: none;
+      padding-bottom: 0;
     }
   }
 }
@@ -283,16 +342,37 @@ onUnmounted(() => {
       padding-top: var(--dialog-inner-padding);
     }
   }
+  // MsfSelect 필터박스에 navbar 있다면 스타일 지정
+  &:has(.pop-search-box) {
+    margin-top: 0;
+    padding-bottom: rem(12px);
+    & + .body {
+      .body-inner {
+        padding-top: 0;
+      }
+    }
+    &:has(.pop-empty) {
+      border-bottom: none;
+    }
+  }
 }
 .body {
   flex: 1;
   // @include scrollbar;
   overflow-y: auto;
+  min-height: 0;
   // padding-block: var(--dialog-inner-padding);
   // padding-bottom: var(--layout-gutter-y);
   // margin-inline: calc(var(--dialog-inner-padding) * -1);
   // padding-inline: var(--dialog-inner-padding);
 
+  // 커스텀 스크롤바의 높이 100%로 채움
+  :deep(.cs-content-inner) {
+    height: 100%;
+    .body-inner {
+      height: 100%;
+    }
+  }
   .body-inner {
     padding: var(--dialog-inner-padding);
     padding-top: 0;
@@ -319,7 +399,7 @@ onUnmounted(() => {
 /* 페이드 애니메이션 */
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.2s;
+  transition: opacity 0.1s;
 }
 .fade-enter-from,
 .fade-leave-to {

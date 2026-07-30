@@ -17,9 +17,9 @@ import com.ktmmobile.msf.domains.form.main.domain.entity.Qna;
 @Mapper
 public interface FormMainMapper {
 
-    List<ChartCount> selectCountFormStatus();
+    List<ChartCount> selectCountFormStatus(String userId);
 
-    List<ChartCount> selectCountFormService();
+    List<ChartCount> selectCountFormService(String userId);
 
     Integer selectCountNotice(NoticeCondition condition);
 

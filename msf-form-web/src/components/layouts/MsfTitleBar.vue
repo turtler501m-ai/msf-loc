@@ -1,13 +1,13 @@
 <template>
-  <div class="title-area">
+  <div class="title-bar-root">
     <h3 class="page-title">
       <slot name="title">{{ title || $route.meta.title }}</slot>
     </h3>
-    <div class="title-side">
-      <div class="action-slot">
+    <div v-if="!!(slots.actions || slots.breadcrumb)" class="title-side">
+      <div v-if="$slots.actions" class="action-slot">
         <slot name="actions"></slot>
       </div>
-      <div class="breadcrumb-slot">
+      <div v-if="$slots.breadcrumb" class="breadcrumb-slot">
         <slot name="breadcrumb"></slot>
       </div>
     </div>
@@ -15,13 +15,16 @@
 </template>
 
 <script setup>
+import { useSlots } from 'vue'
+const slots = useSlots()
+
 defineProps({
   title: String,
 })
 </script>
 
 <style lang="scss" scoped>
-.title-area {
+.title-bar-root {
   @include flex($v: center);
   margin-bottom: var(--spacing-x10);
   .page-title {

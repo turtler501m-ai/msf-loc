@@ -13,6 +13,7 @@ import com.ktmmobile.msf.domains.form.common.dto.response.FormResponse;
 import com.ktmmobile.msf.domains.form.form.common.dto.MspJuoSubInfoRequest;
 import com.ktmmobile.msf.domains.form.form.common.dto.MspJuoSubInfoResponse;
 import com.ktmmobile.msf.domains.form.form.common.service.AuthInfoService;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeCustomerInfoResponse;
 
 @RestController
 @RequestMapping("/api/form")
@@ -25,7 +26,24 @@ public class AuthController {
     //as-is :: appform/selRMemberAjax.do
     @PostMapping("/ktmmember/auth")
     public CommonResponse<FormResponse<MspJuoSubInfoResponse>> authKtmMember(@RequestBody @Validated MspJuoSubInfoRequest request) {
-        return ResponseUtils.ok(authInfoService.getJuoSubInfo(request));
+        return ResponseUtils.ok(authInfoService.getKtmMemberInfo(request));
+    }
+
+    /**
+     * 신규변경 - 기기변경 고객인증
+     * 고객인증 : DB 조회
+     * 가입정보조회(X01)
+     * 납부방법조회(X23)
+     */
+    @PostMapping("/ktmmember/newchange-auth")
+    public CommonResponse<FormResponse<NewChangeCustomerInfoResponse>> authKtmMemberForNewChange(@RequestBody @Validated MspJuoSubInfoRequest request) {
+        return ResponseUtils.ok(authInfoService.authNewChangeAuthInfo(request));
+    }
+
+    // 서비스변경/해지는 인증 후 가입정보조회에서 NCN(SVC_CNTR_NO)을 사용하므로 신규/기기변경 인증과 분리한다.
+    @PostMapping("/ktmmember/servicechange-auth")
+    public CommonResponse<FormResponse<MspJuoSubInfoResponse>> authKtmMemberForServiceChange(@RequestBody @Validated MspJuoSubInfoRequest request) {
+        return ResponseUtils.ok(authInfoService.getServiceChangeAuthInfo(request));
     }
 
 }

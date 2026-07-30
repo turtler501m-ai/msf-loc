@@ -10,9 +10,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.util.StopWatch;
 
 /**
@@ -21,11 +20,11 @@ import org.springframework.util.StopWatch;
  * @작성자	: kmh
  * @설명		: 객체 컨트롤 관련
  */
+@Slf4j
 public class ObjectUtils {
     /**
      * Logger for this class
      */
-    private static final Logger logger = LoggerFactory.getLogger(ObjectUtils.class);
 
     /**
      * Object를 문자열로 변환
@@ -55,11 +54,6 @@ public class ObjectUtils {
         String fieldType = "";
 
         if (object == null) {
-            return "";
-        }
-
-        // LOG는 제외
-        if (object instanceof Logger || object instanceof org.apache.commons.logging.Log) {
             return "";
         }
 
@@ -173,9 +167,9 @@ public class ObjectUtils {
                         objectString.append(convertObjectToString(fieldObject, stringStyle));
                     }
                 } catch (IllegalArgumentException e) {
-                    logger.debug("IllegalArgumentException");
+                    log.debug("IllegalArgumentException");
                 } catch (IllegalAccessException e) {
-                    logger.debug("IllegalAccessException");
+                    log.debug("IllegalAccessException");
                 }
 
                 isFirst = false;
@@ -222,11 +216,11 @@ public class ObjectUtils {
             }
 //			Field field = object.getClass().getField(fieldName); // public 필드만 조회 가능함
         } catch (IllegalArgumentException e) {
-            logger.debug("ERROR IllegalArgumentException");
+            log.debug("ERROR IllegalArgumentException");
         } catch (IllegalAccessException e) {
-            logger.debug("ERROR IllegalAccessException");
+            log.debug("ERROR IllegalAccessException");
         } catch (SecurityException e1) {
-            logger.debug("ERROR SecurityException");
+            log.debug("ERROR SecurityException");
         }
 
         return null;
@@ -265,11 +259,11 @@ public class ObjectUtils {
                 }
             }
         } catch (IllegalArgumentException e) {
-            logger.debug("ERROR IllegalArgumentException");
+            log.debug("ERROR IllegalArgumentException");
         } catch (IllegalAccessException e) {
-            logger.debug("ERROR IllegalAccessException");
+            log.debug("ERROR IllegalAccessException");
         } catch (SecurityException e1) {
-            logger.debug("ERROR SecurityException");
+            log.debug("ERROR SecurityException");
         }
 
         return false;

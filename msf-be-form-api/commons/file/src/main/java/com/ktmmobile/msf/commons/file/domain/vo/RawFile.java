@@ -8,8 +8,8 @@ import com.ktmmobile.msf.commons.file.support.util.FileUtils;
 
 @Builder
 public record RawFile(
-    @JsonIgnore String path,
-    @JsonIgnore String name,
+    @JsonIgnore String directoryPath,
+    @JsonIgnore String fileName,
     String extension,
     long size,
     @JsonIgnore MediaType mediaType
@@ -20,7 +20,7 @@ public record RawFile(
     }
 
     @JsonIgnore
-    public String getPathFileName() {
-        return FileUtils.concat(path, name);
+    public String getFilePath() {
+        return FileUtils.concat(directoryPath, fileName);
     }
 }

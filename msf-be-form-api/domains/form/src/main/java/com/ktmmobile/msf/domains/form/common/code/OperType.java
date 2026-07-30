@@ -1,17 +1,19 @@
 package com.ktmmobile.msf.domains.form.common.code;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.ktmmobile.msf.commons.common.commonenum.core.CommonEnum;
-import com.ktmmobile.msf.commons.common.commonenum.core.CommonEnumConstant;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+
+import com.ktmmobile.msf.commons.common.commonenum.core.CommonEnum;
+import com.ktmmobile.msf.commons.common.commonenum.core.CommonEnumConstant;
 
 @Getter
 @RequiredArgsConstructor
 public enum OperType implements CommonEnum {
     NEW_ACTIVATION("NAC3", "신규가입"),
     MOBILE_NUMBER_PORTABILITY("MNP3", "번호이동"),
-    HANDSET_CHANGE("HDN3", "기기변경"),
+    HANDSET_CHANGE("HCN3", "기기변경"),
+    HANDSET_EXCHANGE("HDN3", "기기변경"),
 
     @Deprecated
     UNDEFINED(CommonEnumConstant.UNDEFINED_CODE, "Invalid OperType");

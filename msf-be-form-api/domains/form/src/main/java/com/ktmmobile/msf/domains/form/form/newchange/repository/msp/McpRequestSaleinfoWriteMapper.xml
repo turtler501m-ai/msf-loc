@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.form.form.newchange.repository.msp.McpRequestSaleinfoWriteMapper">
+  <insert id="insertMcpRequestSaleinfo" parameterType="com.ktmmobile.msf.domains.form.form.common.vo.McpRequestSaleinfoVo">
+    INSERT INTO MCP_REQUEST_SALEINFO@DL_MCP
+    (     REQUEST_KEY
+        , RVISN_ID
+        , RVISN_DTTM
+        , MODEL_ID
+        , MODEL_MONTHLY
+        , MODEL_INSTALLMENT
+        , MODEL_SALE_POLICY_CODE
+        , MODEL_PRICE_VAT
+        , MODEL_DISCOUNT1
+        , MODEL_DISCOUNT2
+        , MODEL_PRICE
+        , MODEL_DISCOUNT3
+        , REAL_MDL_INSTAMT
+        , HNDSET_SALE_PRICE
+        , SPRT_TP
+        , DC_AMT
+        , MAX_DISCOUNT3
+        , ADD_DC_AMT
+        , ENGG_MNTH_CNT
+        , RECYCLE_YN
+        , USIM_PRICE_TYPE
+        , USIM_PRICE
+        , USIM_PAY_MTHD_CD
+        , SETTL_WAY_CD
+        , SETTL_AMT
+        , SETTL_APV_NO
+        , SETTL_TRA_NO
+        , OWN_PERSONAL_CODE
+        , RENTAL_BASE_AMT
+        , RENTAL_BASE_DC_AMT
+        , RENTAL_MODEL_CP_AMT
+        , SESPLS_YN
+        , SESPLS_PROD_ID
+        , USE_POINT
+        , USE_POINT_SVC_CNTR_NO
+        , CARD_DC_CD
+        , CARD_DC_DIV_CD
+        , CARD_DC_AMT
+        , CARD_TOT_DC_AMT
+        , JOIN_PRICE_TYPE
+        , JOIN_PAY_MTHD_CD
+        , JOIN_PRICE
+        , SOC_CODE
+        , ADDTION_SERVICE
+        , ADDTION_SERVICE_SUM
+    )
+    VALUES
+    (     #{requestKey}
+        , #{rvisnId}
+        , #{rvisnDttm}
+        , #{modelId}
+        , #{modelMonthly}
+        , #{modelInstallment}
+        , #{modelSalePolicyCode}
+        , #{modelPriceVat}
+        , #{modelDiscount1}
+        , #{modelDiscount2}
+        , #{modelPrice}
+        , #{modelDiscount3}
+        , #{realMdlInstamt}
+        , #{hndsetSalePrice}
+        , #{sprtTp}
+        , #{dcAmt}
+        , #{maxDiscount3}
+        , #{addDcAmt}
+        , #{enggMnthCnt}
+        , #{recycleYn}
+        , #{usimPriceType}
+        , #{usimPrice}
+        , #{usimPayMthdCd}
+        , #{settlWayCd}
+        , #{settlAmt}
+        , #{settlApvNo}
+        , #{settlTraNo}
+        , #{ownPersonalCode}
+        , #{rentalBaseAmt}
+        , #{rentalBaseDcAmt}
+        , #{rentalModelCpAmt}
+        , #{sesplsYn}
+        , #{sesplsProdId}
+        , #{usePoint}
+        , #{usePointSvcCntrNo}
+        , #{cardDcCd}
+        , #{cardDcDivCd}
+        , #{cardDcAmt}
+        , #{cardTotDcAmt}
+        , #{joinPriceType}
+        , #{joinPayMthdCd}
+        , #{joinPrice}
+        , #{socCode}
+        , #{addtionService}
+        , #{addtionServiceSum}
+    )
+  </insert>
+
+  <update id="updateMcpRequestSaleinfo" parameterType="com.ktmmobile.msf.domains.form.form.common.vo.McpRequestSaleinfoVo">
+    UPDATE MCP_REQUEST_SALEINFO@DL_MCP
+    SET
+          RVISN_ID	 = #{rvisnId}
+        ,	RVISN_DTTM	 = #{rvisnDttm}
+        ,	MODEL_ID	 = #{modelId}
+        ,	MODEL_MONTHLY	 = #{modelMonthly}
+        ,	MODEL_INSTALLMENT	 = #{modelInstallment}
+        ,	MODEL_SALE_POLICY_CODE	 = #{modelSalePolicyCode}
+        ,	MODEL_PRICE_VAT	 = #{modelPriceVat}
+        ,	MODEL_DISCOUNT1	 = #{modelDiscount1}
+        ,	MODEL_DISCOUNT2	 = #{modelDiscount2}
+        ,	MODEL_PRICE	 = #{modelPrice}
+        ,	MODEL_DISCOUNT3	 = #{modelDiscount3}
+        ,	REAL_MDL_INSTAMT	 = #{realMdlInstamt}
+        ,	HNDSET_SALE_PRICE	 = #{hndsetSalePrice}
+        ,	SPRT_TP	 = #{sprtTp}
+        ,	DC_AMT	 = #{dcAmt}
+        ,	MAX_DISCOUNT3	 = #{maxDiscount3}
+        ,	ADD_DC_AMT	 = #{addDcAmt}
+        ,	ENGG_MNTH_CNT	 = #{enggMnthCnt}
+        ,	RECYCLE_YN	 = #{recycleYn}
+        ,	USIM_PRICE_TYPE	 = #{usimPriceType}
+        ,	USIM_PRICE	 = #{usimPrice}
+        ,	USIM_PAY_MTHD_CD	 = #{usimPayMthdCd}
+        ,	SETTL_WAY_CD	 = #{settlWayCd}
+        ,	SETTL_AMT	 = #{settlAmt}
+        ,	SETTL_APV_NO	 = #{settlApvNo}
+        ,	SETTL_TRA_NO	 = #{settlTraNo}
+        ,	OWN_PERSONAL_CODE	 = #{ownPersonalCode}
+        ,	RENTAL_BASE_AMT	 = #{rentalBaseAmt}
+        ,	RENTAL_BASE_DC_AMT	 = #{rentalBaseDcAmt}
+        ,	RENTAL_MODEL_CP_AMT	 = #{rentalModelCpAmt}
+        ,	SESPLS_YN	 = #{sesplsYn}
+        ,	SESPLS_PROD_ID	 = #{sesplsProdId}
+        ,	USE_POINT	 = #{usePoint}
+        ,	USE_POINT_SVC_CNTR_NO	 = #{usePointSvcCntrNo}
+        ,	CARD_DC_CD	 = #{cardDcCd}
+        ,	CARD_DC_DIV_CD	 = #{cardDcDivCd}
+        ,	CARD_DC_AMT	 = #{cardDcAmt}
+        ,	CARD_TOT_DC_AMT	 = #{cardTotDcAmt}
+        ,	JOIN_PRICE_TYPE	 = #{joinPriceType}
+        ,	JOIN_PAY_MTHD_CD	 = #{joinPayMthdCd}
+        ,	JOIN_PRICE	 = #{joinPrice}
+        ,	SOC_CODE	 = #{socCode}
+        ,	ADDTION_SERVICE	 = #{addtionService}
+        ,	ADDTION_SERVICE_SUM	 = #{addtionServiceSum}
+    WHERE REQUEST_KEY = #{requestKey}
+  </update>
+
+</mapper>

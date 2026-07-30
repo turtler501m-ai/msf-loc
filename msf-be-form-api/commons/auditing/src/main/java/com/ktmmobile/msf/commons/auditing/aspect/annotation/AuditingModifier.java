@@ -59,4 +59,9 @@ public @interface AuditingModifier {
      * </pre>
      */
     String modifier() default "";
+
+    /**
+     * 요청 없는 경우 대체 Client IP 사용 여부
+     */
+    boolean fallbackClientIp() default false;
 }

@@ -8,4 +8,6 @@ public interface SmsRepository {
     Integer registerMsfCrtVldDtl(IdVerifValidationDetail idVerifValidationDetail);
 
     Integer registerSmsInfo(MspSmsData mspSmsData);
+
+    Integer registerKakaoInfo(MspSmsData mspSmsData);
 }

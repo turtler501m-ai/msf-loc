@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.shared.form.common.complete.adapter.repository.mybatis.smartform.mapper.FormCommonCompleteMapper">
+
+  <resultMap id="completedRequestInfo" type="com.ktmmobile.msf.domains.shared.form.common.complete.domain.entity.CompletedRequestForm">
+    <id property="requestKey" column="request_key" />
+    <result property="formType" column="form_type" />
+    <result property="procCd" column="procCd" />
+    <result property="cretId" column="cret_id" />
+    <result property="scanId" column="scan_id" />
+    <result property="baseScanId" column="base_scan_id" />
+    <result property="cstmrTypeCd" column="cstmr_type_cd" />
+    <result property="cstmrVisitTypeCd" column="cstmr_visit_type_cd" />
+    <result property="cstmrNm" column="cstmr_nm" />
+    <result property="cstmrNativeBirth" column="cstmr_native_birth" />
+    <result property="cstmrForeignerBirth" column="cstmr_foreigner_birth" />
+    <result property="cstmrJuridicalBizNo" column="cstmr_juridical_biz_no" />
+    <result property="cstmrJuridicalRrn" column="cstmr_juridical_rrn" />
+    <result property="mobileNo" column="mobile_no" />
+    <result property="cstmrMobileNo" column="cstmr_mobile_no" />
+    <result property="cstmrReceiveTelNo" column="cstmr_receive_tel_no" />
+    <result property="minorAgentNm" column="minor_agent_nm" />
+    <result property="minorAgentTelNo" column="minor_agent_tel_no" />
+    <result property="jrdclAgentNm" column="jrdcl_agent_nm" />
+    <result property="jrdclAgentTelNo" column="jrdcl_agent_tel_no" />
+    <collection property="joinForms" ofType="com.ktmmobile.msf.domains.shared.form.common.complete.domain.entity.CompletedRequestJoinForm">
+      <id property="requestRecvSeq" column="request_recv_seq" />
+      <result property="recvTypeCd" column="recv_type_cd" />
+      <result property="joinCstmrMobileNo" column="join_cstmr_mobile_no" />
+      <result property="joinProcCd" column="join_proc_cd" />
+      <result property="etcMemo" column="etc_memo" />
+    </collection>
+  </resultMap>
+  <select id="selectCompletedRequestForm" resultMap="completedRequestInfo">
+    with newchange as (
+      select '1' as form_type, a.request_key, a.proc_cd, a.cret_id, a.scan_id, a.scan_id as base_scan_id, a.cstmr_type_cd, a.oper_type_cd
+           , b.cstmr_visit_type_cd, b.cstmr_nm
+           , b.cstmr_native_birth, b.cstmr_foreigner_birth, b.cstmr_juridical_biz_no, b.cstmr_juridical_rrn
+           , case a.oper_type_cd when 'MNP3'
+                  then concat(d.move_mobile_fn_no, d.move_mobile_mn_no, d.move_mobile_rn_no)
+                  else a.open_no
+              end as mobile_no
+           , concat(b.cstmr_mobile_fn_no, b.cstmr_mobile_mn_no, b.cstmr_mobile_rn_no) as cstmr_mobile_no
+           , concat(b.cstmr_receive_tel_fn_no, b.cstmr_receive_tel_nm_no, b.cstmr_receive_tel_rn_no) as cstmr_receive_tel_no
+           , c.minor_agent_nm
+           , concat(c.minor_agent_tel_fn_no, c.minor_agent_tel_mn_no, c.minor_agent_tel_rn_no) as minor_agent_tel_no
+           , c.jrdcl_agent_nm
+           , concat(c.jrdcl_agent_tel_fn_no, c.jrdcl_agent_tel_mn_no, c.jrdcl_agent_tel_rn_no) as jrdcl_agent_tel_no
+        from msf_request a
+             left outer join msf_request_cstmr b
+               on a.request_key = b.request_key
+             left outer join msf_request_agent c
+               on a.request_key = c.request_key
+             left outer join msf_request_move d
+               on a.request_key = d.request_key
+       where a.request_key = #{value}
+    )
+    , servicechange as (
+      select '2' as form_type, a.request_key, a.proc_cd, a.cret_id, a.scan_id, a.base_scan_id, a.cstmr_type_cd, '' as oper_type_cd
+           , b.cstmr_visit_type_cd, b.cstmr_nm
+           , b.cstmr_native_birth, b.cstmr_foreigner_birth, b.cstmr_juridical_biz_no, b.cstmr_juridical_rrn
+           , a.chg_mobile_no as mobile_no
+           , concat(b.cstmr_mobile_fn_no, b.cstmr_mobile_mn_no, b.cstmr_mobile_rn_no) as cstmr_mobile_no
+           , concat(b.cstmr_receive_tel_fn_no, b.cstmr_receive_tel_nm_no, b.cstmr_receive_tel_rn_no) as cstmr_receive_tel_no
+           , c.minor_agent_nm
+           , concat(c.minor_agent_tel_fn_no, c.minor_agent_tel_mn_no, c.minor_agent_tel_rn_no) as minor_agent_tel_no
+           , c.jrdcl_agent_nm
+           , concat(c.jrdcl_agent_tel_fn_no, c.jrdcl_agent_tel_mn_no, c.jrdcl_agent_tel_rn_no) as jrdcl_agent_tel_no
+        from (
+              select a.request_key, a.proc_cd, a.cret_id, a.cstmr_type_cd, a.chg_mobile_no, a.scan_id as base_scan_id
+                   , string_agg(nullif(trim(b.scan_id), ''), ',' order by request_svc_chg_dtl_seq) as scan_id
+                from msf_request_svc_chg a
+                     left outer join msf_request_svc_chg_dtl b
+                       on a.request_key = b.request_key
+               where a.request_key = #{value}
+               group by a.request_key, a.proc_cd, a.cret_id, a.cstmr_type_cd, a.chg_mobile_no
+             ) a
+             left outer join msf_request_cstmr b
+               on a.request_key = b.request_key
+             left outer join msf_request_agent c
+               on a.request_key = c.request_key
+    )
+    , ownerchange as (
+      select '3' as form_type, a.request_key, a.proc_cd, a.cret_id, a.scan_id, a.scan_id as base_scan_id, a.cstmr_type_cd, a.oper_type_cd
+           , b.cstmr_visit_type_cd, b.cstmr_nm
+           , b.cstmr_native_birth, b.cstmr_foreigner_birth, b.cstmr_juridical_biz_no, b.cstmr_juridical_rrn
+           , d.trns_mobile_no as mobile_no
+           , concat(b.cstmr_mobile_fn_no, b.cstmr_mobile_mn_no, b.cstmr_mobile_rn_no) as cstmr_mobile_no
+           , concat(b.cstmr_receive_tel_fn_no, b.cstmr_receive_tel_nm_no, b.cstmr_receive_tel_rn_no) as cstmr_receive_tel_no
+           , c.minor_agent_nm
+           , concat(c.minor_agent_tel_fn_no, c.minor_agent_tel_mn_no, c.minor_agent_tel_rn_no) as minor_agent_tel_no
+           , c.jrdcl_agent_nm
+           , concat(c.jrdcl_agent_tel_fn_no, c.jrdcl_agent_tel_mn_no, c.jrdcl_agent_tel_rn_no) as jrdcl_agent_tel_no
+        from msf_request_name_chg a
+             left outer join msf_request_cstmr b
+               on a.request_key = b.request_key
+             left outer join msf_request_agent c
+               on a.request_key = c.request_key
+             left outer join msf_request_name_trns d
+               on a.request_key = d.request_key
+       where a.request_key = #{value}
+    )
+    , servicecancel as (
+      select '4' as form_type, a.request_key, a.proc_cd, a.cret_id, a.scan_id, a.scan_id as base_scan_id, a.cstmr_type_cd, a.oper_type_cd
+           , b.cstmr_visit_type_cd, b.cstmr_nm
+           , b.cstmr_native_birth, b.cstmr_foreigner_birth, b.cstmr_juridical_biz_no, b.cstmr_juridical_rrn
+           , a.cancel_mobile_no as mobile_no
+           , concat(b.cstmr_mobile_fn_no, b.cstmr_mobile_mn_no, b.cstmr_mobile_rn_no) as cstmr_mobile_no
+           , concat(b.cstmr_receive_tel_fn_no, b.cstmr_receive_tel_nm_no, b.cstmr_receive_tel_rn_no) as cstmr_receive_tel_no
+           , c.minor_agent_nm
+           , concat(c.minor_agent_tel_fn_no, c.minor_agent_tel_mn_no, c.minor_agent_tel_rn_no) as minor_agent_tel_no
+           , c.jrdcl_agent_nm
+           , concat(c.jrdcl_agent_tel_fn_no, c.jrdcl_agent_tel_mn_no, c.jrdcl_agent_tel_rn_no) as jrdcl_agent_tel_no
+        from msf_request_cancel a
+             left outer join msf_request_cstmr b
+               on a.request_key = b.request_key
+             left outer join msf_request_agent c
+               on a.request_key = c.request_key
+       where a.request_key = #{value}
+    )
+    select distinct a.form_type, a.request_key, a.proc_cd, a.cret_id, a.scan_id, a.base_scan_id, a.cstmr_type_cd, a.oper_type_cd
+         , a.cstmr_visit_type_cd
+         , a.cstmr_nm
+         , a.cstmr_native_birth, a.cstmr_foreigner_birth, a.cstmr_juridical_biz_no, a.cstmr_juridical_rrn
+         , a.mobile_no
+         , a.cstmr_mobile_no, a.cstmr_receive_tel_no
+         , a.minor_agent_nm, a.minor_agent_tel_no
+         , a.jrdcl_agent_nm, a.jrdcl_agent_tel_no
+         , b.request_recv_seq, b.recv_type_cd, b.cstmr_mobile_no as join_cstmr_mobile_no, b.proc_cd as join_proc_cd, b.etc_memo
+      from (
+            select form_type, request_key, proc_cd, cret_id, scan_id, base_scan_id, cstmr_type_cd, oper_type_cd, cstmr_visit_type_cd
+                 , cstmr_nm, cstmr_native_birth, cstmr_foreigner_birth, cstmr_juridical_biz_no, cstmr_juridical_rrn
+                 , mobile_no
+                 , cstmr_mobile_no, cstmr_receive_tel_no
+                 , minor_agent_nm, minor_agent_tel_no
+                 , jrdcl_agent_nm, jrdcl_agent_tel_no
+              from newchange
+             union all
+            select form_type, request_key, proc_cd, cret_id, scan_id, base_scan_id, cstmr_type_cd, oper_type_cd, cstmr_visit_type_cd
+                 , cstmr_nm, cstmr_native_birth, cstmr_foreigner_birth, cstmr_juridical_biz_no, cstmr_juridical_rrn
+                 , mobile_no
+                 , cstmr_mobile_no, cstmr_receive_tel_no
+                 , minor_agent_nm, minor_agent_tel_no
+                 , jrdcl_agent_nm, jrdcl_agent_tel_no
+              from servicechange
+             union all
+            select form_type, request_key, proc_cd, cret_id, scan_id, base_scan_id, cstmr_type_cd, oper_type_cd, cstmr_visit_type_cd
+                 , cstmr_nm, cstmr_native_birth, cstmr_foreigner_birth, cstmr_juridical_biz_no, cstmr_juridical_rrn
+                 , mobile_no
+                 , cstmr_mobile_no, cstmr_receive_tel_no
+                 , minor_agent_nm, minor_agent_tel_no
+                 , jrdcl_agent_nm, jrdcl_agent_tel_no
+              from ownerchange
+             union all
+            select form_type, request_key, proc_cd, cret_id, scan_id, base_scan_id, cstmr_type_cd, oper_type_cd, cstmr_visit_type_cd
+                 , cstmr_nm, cstmr_native_birth, cstmr_foreigner_birth, cstmr_juridical_biz_no, cstmr_juridical_rrn
+                 , mobile_no
+                 , cstmr_mobile_no, cstmr_receive_tel_no
+                 , minor_agent_nm, minor_agent_tel_no
+                 , jrdcl_agent_nm, jrdcl_agent_tel_no
+              from servicecancel
+           ) a
+           left outer join msf_request_join_form b
+             on a.request_key = b.request_key
+     order by a.request_key, b.request_recv_seq
+  </select>
+</mapper>

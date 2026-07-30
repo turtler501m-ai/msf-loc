@@ -8,13 +8,15 @@
     :title="currentPolicy?.title"
     @open="emit('open')"
     @close="onClose"
+    :maximize="props.maximize"
   >
     <!-- 해당 키에 맞는 데이터가 있을 때만 렌더링 -->
-    <div v-if="currentPolicy" class="one-source" v-html="currentPolicy.content"></div>
+    <div class="terms-content">
+      <div v-if="currentPolicy" class="one-source" v-html="currentPolicy.content"></div>
+    </div>
     <template #footer>
       <MsfButtonGroup>
-        <MsfButton @click="onClose">취소</MsfButton>
-        <MsfButton variant="primary" @click="onConfirm">동의함</MsfButton>
+        <MsfButton variant="primary" @click="onConfirm">동의 후 닫기</MsfButton>
       </MsfButtonGroup>
     </template>
   </MsfDialog>
@@ -29,6 +31,8 @@ const props = defineProps({
     type: String,
     required: true,
   },
+  /** MsfDialog maximize (간편신청서 화면에서 꽉채우는 팝업으로 설정시 사용) */
+  maximize: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['update:modelValue', 'confirm', 'open', 'close'])

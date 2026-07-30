@@ -4,13 +4,10 @@ import java.io.UnsupportedEncodingException;
 
 import org.jdom.Element;
 
-import com.ktmmobile.msf.domains.form.common.util.SessionUtils;
-import com.ktmmobile.msf.domains.form.common.util.StringMakerUtil;
-import com.ktmmobile.msf.domains.form.common.util.StringUtil;
 import com.ktmmobile.msf.domains.form.common.util.XmlParse;
 
-
 public class MpPerMyktfInfoVO extends CommonXmlVO{
+
     private final static String ITEM = "item";
 
     private String ssn;//주민번호
@@ -49,33 +46,43 @@ public class MpPerMyktfInfoVO extends CommonXmlVO{
     public String getSsn() {
         return ssn;
     }
+
     public void setSsn(String ssn) {
         this.ssn = ssn;
     }
+
     public String getEmail() {
         return email;
     }
+
     public void setEmail(String email) {
         this.email = email;
     }
+
     public String getAddr() {
         return addr;
     }
+
     public void setAddr(String addr) {
         this.addr = addr;
     }
+
     public String getHomeTel() {
         return homeTel;
     }
+
     public void setHomeTel(String homeTel) {
         this.homeTel = homeTel;
     }
+
     public String getInitActivationDate() {
         return initActivationDate;
     }
+
     public void setInitActivationDate(String initActivationDate) {
         this.initActivationDate = initActivationDate;
     }
+
     public String getItem() {
         return ITEM;
     }

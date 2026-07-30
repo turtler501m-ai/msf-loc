@@ -1,0 +1,16 @@
+package com.ktmmobile.msf.domains.form.form.common.vo;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@NoArgsConstructor
+public class McpRequestClauseVo {
+
+    String requestKey;
+    String cdGroupId2;
+    String sysRdate;
+    String docVer;
+}

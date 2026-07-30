@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=10" />
+
+  <script>
+    var API_DOMAIN
+    var SERVICE_DOMAIN
+    var PARENT_ORIGIN = window.location.origin
+    var COMPANY_ID
+    var USER_ID
+    var USER_NAME
+    var accessToken
+    var refreshToken
+
+    var fileData = []
+    var notificationInfo = []
+  </script>
+
+  <script src="/eformsign/embedding/eformsign-sdk-loader.js"></script>
+
+  <style>
+	  html, body {
+		  margin: 0;
+		  padding: 0;
+		  height: 100%;
+		  overflow: hidden;
+	  }
+
+	  #eformsign_iframe {
+		  width: 100%;
+		  height: 100%;
+		  border: 0;
+	  }
+  </style>
+</head>
+
+<body>
+  <iframe id="eformsign_iframe" name="eformsign_iframe"></iframe>
+
+  <script>
+    var multiFileViewer
+    var viewerData
+    var isInitialized = false
+
+    var viewerCallback = {
+      init: function(returnData) {
+        window.parent.postMessage({
+          type: 'EFORMSIGN_VIEWER_READY',
+          payload: returnData
+        }, PARENT_ORIGIN)
+      },
+
+      complete: function(returnData) {
+        window.parent.postMessage({
+          type: 'EFORMSIGN_PREVIEW_COMPLETE',
+          payload: returnData
+        }, PARENT_ORIGIN)
+      },
+
+      send: function() {},
+
+      exportFile: function(returnData) {
+        window.parent.postMessage({
+          type: 'EFORMSIGN_EXPORT_READY',
+          payload: returnData
+        }, PARENT_ORIGIN)
+      },
+
+      tempSave: function(returnData) {},
+      preview: function(returnData) {},
+      moveReport: function(returnData) {},
+      isChanged: function(returnData) {},
+      dialog_handler: function(message) {},
+      custom_dialog_handler: function(message) {}
+    }
+
+    function addDocumentId(result, value) {
+      if (value == null) return
+
+      String(value)
+        .split(',')
+        .map(function(id) {
+          return id.trim()
+        })
+        .filter(function(id) {
+          return !!id
+        })
+        .forEach(function(id) {
+          if (result.indexOf(id) === -1) {
+            result.push(id)
+          }
+        })
+    }
+
+    function normalizeDocumentIds(initInfo) {
+      var ids = initInfo.documentId || initInfo.documentIds
+      var result = []
+
+      if (!Array.isArray(ids)) {
+        ids = ids ? [ids] : []
+      }
+
+      ids.forEach(function(item) {
+        if (!item) return
+
+        if (typeof item === 'object') {
+          addDocumentId(result, item.id || item.documentId || item.scanId)
+          return
+        }
+
+        addDocumentId(result, item)
+      })
+
+      return result
+    }
+
+    function createPreviewFileData(documentIds) {
+      return documentIds.map(function(documentId, index) {
+        return {
+          type: '02',
+          id: documentId,
+          title: '신청서_' + (index + 1),
+          inputParams: {},
+          custom_datas: []
+        }
+      })
+    }
+
+    function syncGlobalFileData(nextFileData) {
+      fileData = Array.isArray(nextFileData) ? nextFileData : []
+      window.fileData = fileData
+      window.notificationInfo = notificationInfo
+    }
+
+    function initEformsignPreview(initInfo) {
+      if (isInitialized) return
+
+      var documentIds = normalizeDocumentIds(initInfo)
+
+      if (documentIds.length === 0) {
+        window.parent.postMessage({
+          type: 'EFORMSIGN_PREVIEW_FAIL',
+          payload: {
+            message: '미리보기할 documentId가 없습니다.'
+          }
+        }, PARENT_ORIGIN)
+        return
+      }
+
+      API_DOMAIN = initInfo.envUrl
+      SERVICE_DOMAIN = API_DOMAIN + '/Service'
+      COMPANY_ID = initInfo.companyId
+      USER_ID = initInfo.userId
+      USER_NAME = initInfo.userName
+      accessToken = initInfo.accessToken
+      refreshToken = initInfo.refreshToken
+
+      window.API_DOMAIN = API_DOMAIN
+      window.SERVICE_DOMAIN = SERVICE_DOMAIN
+      window.COMPANY_ID = COMPANY_ID
+      window.USER_ID = USER_ID
+      window.USER_NAME = USER_NAME
+      window.accessToken = accessToken
+      window.refreshToken = refreshToken
+
+      syncGlobalFileData(createPreviewFileData(documentIds))
+
+      viewerData = {
+        viewer_type: '01',
+        mode: '03',
+        user_info: {
+          user_type: '01',
+          user_name: USER_NAME,
+          user_id: USER_ID,
+          company_id: COMPANY_ID,
+          access_token: accessToken,
+          refresh_token: refreshToken
+        },
+        export_type: 'file',
+        save_type: 'all',
+        fileData: fileData,
+        file_info: [],
+        viewer_option: {
+          'viewer.usetoolbar': 'false',
+          'viewer.usestatusbar': 'false',
+          'viewer.viewmode': 'fittowidth'
+        },
+        layout: {
+          header: false,
+          footer: false,
+          lang_code: 'ko',
+          theme: ''
+        }
+      }
+
+      window.viewerData = viewerData
+      isInitialized = true
+
+      downloadInternalMultiMassDocuments(function() {
+        viewerData.fileData = fileData
+        window.viewerData = viewerData
+        window.fileData = fileData
+
+        multiFileViewer = new MultiFileViewer()
+        multiFileViewer.setDomain(API_DOMAIN)
+        multiFileViewer.setMultiFileInfo(viewerData, viewerCallback)
+      })
+    }
+
+    window.addEventListener('message', function(event) {
+      if (event.origin !== PARENT_ORIGIN) return
+      if (event.source !== window.parent) return
+
+      var message = event.data
+      if (!message) return
+
+      if (message.type !== 'EFORMSIGN_INIT') return
+
+      var initInfo = message.payload || {}
+
+      MsfEformsignSdk.loadMultiFileSdk(initInfo.envUrl)
+        .then(function() {
+          initEformsignPreview(initInfo)
+        })
+        .catch(function(e) {
+          window.parent.postMessage({
+            type: 'EFORMSIGN_PREVIEW_FAIL',
+            payload: {
+              message: e && e.message ? e.message : 'eformsign SDK 로드에 실패했습니다.'
+            }
+          }, PARENT_ORIGIN)
+        })
+    })
+
+    window.parent.postMessage({
+      type: 'EFORMSIGN_HTML_READY'
+    }, PARENT_ORIGIN)
+  </script>
+</body>
+</html>

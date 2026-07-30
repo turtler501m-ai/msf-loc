@@ -12,7 +12,7 @@
       </router-link>
     </MsfButtonGroup>
     <div class="guide-item">
-      <!-- 
+      <!--
         // 체크박스 returnData 사용 예시
         const isReturnData = ref('N')
       -->
@@ -32,10 +32,12 @@
     <div class="guide-item">
       <MsfButtonGroup align="left">
         <MsfButton @click="handleLoadingTest">로딩 (MsfLoadingComp) 5초간 띄우기</MsfButton>
+        <MsfButton @click="handleLoadingIsOpen">로딩 (MsfLoadingComp) isOpen으로 띄우기</MsfButton>
         <MsfButton @click="handleShowAlert">알림창 (Alert)</MsfButton>
         <MsfButton @click="handleConfirmAlert">확인창 (Confirm)</MsfButton>
       </MsfButtonGroup>
       <MsfLoadingComp v-if="isLoading" />
+      <MsfLoadingComp :isOpen="isLoadingIsOpen" />
     </div>
     <div class="guide-item">
       <MsfCollapse>
@@ -63,7 +65,7 @@
     </div>
     <div class="guide-item">
       <MsfTitleArea title="약관 동의" />
-      <MsfAgreementGroup policy="join" ref="agreementRef" required />
+      <!-- <MsfAgreementGroup policy="join" ref="agreementRef" required /> -->
       <br />
       <br />
       <div>
@@ -512,7 +514,7 @@
         </div>
       </div>
     </div>
-    <div class="guide-item">
+    <!-- <div class="guide-item">
       <label>웹에디터:</label>
       <MsfWebEditor v-model="webEditorContent" />
       <br />
@@ -520,7 +522,7 @@
       <MsfWebEditor v-model="webEditorContent" height="100px" />
       <br />
       입력: {{ webEditorContent }}
-    </div>
+    </div> -->
     <div class="guide-item">
       <label>MsfTextarea height 지정가능 (기본값 200px 설정)</label>
       <MsfTextarea />
@@ -878,6 +880,15 @@ const handleLoadingTest = () => {
   // 실제 API 호출 대신 5초 뒤에 로딩을 종료하는 예시
   setTimeout(() => {
     isLoading.value = false
+  }, 5000)
+}
+// 로딩 isOpen 으로 띄우기
+const isLoadingIsOpen = ref(false)
+const handleLoadingIsOpen = () => {
+  isLoadingIsOpen.value = true
+  // 실제 API 호출 대신 5초 뒤에 로딩을 종료하는 예시
+  setTimeout(() => {
+    isLoadingIsOpen.value = false
   }, 5000)
 }
 

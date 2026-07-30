@@ -24,9 +24,9 @@ public class SubscriptionResponse {
     String installmentDiscountResultMessage; //할부할인 조회 결과 메세지
 
 
-    //String yearActCnt; //1년이내 사용회선 건수
-    //String yearCanCnt; //1년이내 해지 건수
-    //String thisMonthActCnt; //당월 개통 회선
-    //String delinqStatusCnt; //미납조회 건수
-    //String totActCnt; //전체 개통 회선
+    int yearActCnt; //1년이내 사용회선 건수
+    int yearCanCnt; //1년이내 해지 건수
+    int thisMonthActCnt; //당월 개통 회선
+    int delinqStatusCnt; //미납조회 건수
+    int totActCnt; //전체 개통 회선
 }

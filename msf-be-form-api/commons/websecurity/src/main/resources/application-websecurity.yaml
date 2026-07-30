@@ -23,12 +23,15 @@ spring:
     authorization:
       permit-all-urls:
         - /api/n/**
-        - /actuator/prometheus
+        - /actuator/**
       token-ignore-urls:
         - /api/n/**
+        - /actuator/**
     jwt:
-      secret-key: ${SECURITY_JWT_SECRET_KEY}
+      secret-key:  ## 환경별 설정
       issuer: kt-Mmobile-SmartForm
+      allowed-user-types:
+        - USER
 
   ## Request Log
   request-log:
@@ -36,11 +39,41 @@ spring:
       - /favicon.ico
       - /actuator/**
 
+    enabled:
+      request-headers: true
+      response-headers: true
+      request-body: true
+      response-body: true
+    response-body-content-types:
+      - application/json
+    max-body-length: 1000
+
+    ## 헤더 로깅 공통 룰 확장
+    header-names:
+      additional-include:
+        request-log:
+          - Content-Length
+
+    ## 바디(JSON, form-urlencoded, form-data) 필드 축약 공통 룰 확장
+    body-truncated-fields:
+      additional-include:
+        request-log: []
+
+  ## Body Cache
+  body-cache:
+    request:
+      ## RequestLogFilter/AccessTraceFilter가 요청 본문을 재사용하기 위해 캐시할 최대 바이트 수
+      ## 너무 작으면 긴 JSON이 잘려 필드별 마스킹/축약 전에 JSON 파싱이 실패할 수 있음
+      limit: 524288
+    response:
+      ## RequestLogFilter/AccessTraceFilter가 응답 본문을 로깅/이력 저장하기 위해 캐시할 최대 바이트 수
+      limit: 524288
+
   ## Servlet Multipart Handling
   servlet:
     multipart:
-      max-file-size: 20MB
-      max-request-size: 20MB
+      max-file-size: 500MB
+      max-request-size: 500MB
 
   ## Binding
   binding:
@@ -49,10 +82,18 @@ spring:
 
 
 
-## Logging
-logging:
-  pattern:
-    correlation: "[%X{traceId}-%X{spanId}][%X{clientId}] "
+## 외부 서비스 인증 (Inbound)
+external-service-auth:
+  api-key-header-name: X-Service-Api-Key
+  services:
+    eformsign: ## eFormSign
+      user-name: eFormSign
+      api-key:                 ## 각 환경별 설정
+      allowed-ip-addresses: [] ## 각 환경별 설정
+    koi-idcard: ## KOI 모바일신분증 인증
+      user-name: KOI-IDCARD
+      api-key:                 ## 각 환경별 설정
+      allowed-ip-addresses: [] ## 각 환경별 설정
 
 
 
@@ -81,73 +122,4 @@ management:
   otlp:
     metrics:
       export:
-        enabled: false
-
-
-
----
-#### PRD Profile
-spring:
-  config.activate.on-profile: prd
-
-## Response Handling
-response-handling:
-  exception:
-    className: false
-    message: true
-
-
-
----
-#### STG Profile
-spring:
-  config.activate.on-profile: stg
-
-## Response Handling
-response-handling:
-  exception:
-    className: false
-    message: true
-
-
-
----
-#### DEV Profile
-spring:
-  config.activate.on-profile: dev
-
-## Response Handling
-response-handling:
-  exception:
-    className: false
-    message: true
-
-
-
----
-#### LOCAL Profile
-spring:
-  config.activate.on-profile: local
-
-  ## Security
-  security:
-    jwt:
-      secret-key: ENC(peB8Z1gpdde6RFV2gPM4xmq+AamVsosvePPhuvJDdCtJNR2YHfgM5BUoCDwY7ZJkwe19LgNam8tD9J8LOoh51+kbQkN7K/BxjcxCzJQvrGU=)
-
-## Response Handling
-response-handling:
-  exception:
-    className: false
-    message: true
-
-## Logging
-logging:
-  pattern:
-    correlation: "[%X{clientId}] "
-
-## Actuator
-management:
-  tracing:
-    export:
-      otlp:
         enabled: false

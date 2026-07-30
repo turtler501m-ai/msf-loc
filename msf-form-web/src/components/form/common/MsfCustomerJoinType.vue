@@ -2,6 +2,9 @@
 import { nextTick, ref } from 'vue'
 
 const formData = defineModel({ type: Object, required: true })
+const props = defineProps({
+  disabled: { type: Boolean, default: false },
+})
 
 const afterTel1Ref = ref(null)
 const afterTel2Ref = ref(null)
@@ -24,6 +27,7 @@ const focusPostMethod = () => {
           id="inp-afterTel1"
           placeholder="010/지역번호"
           maxlength="3"
+          :readonly="props.disabled"
           @maxlength="afterTel2Ref?.focus()"
         />
         <span class="unit-sep">-</span>
@@ -33,6 +37,7 @@ const focusPostMethod = () => {
           id="inp-afterTel2"
           placeholder="가운데 4자리"
           maxlength="4"
+          :readonly="props.disabled"
           @maxlength="afterTel3Ref?.focus()"
         />
         <span class="unit-sep">-</span>
@@ -42,6 +47,7 @@ const focusPostMethod = () => {
           id="inp-afterTel3"
           placeholder="뒤 4자리"
           maxlength="4"
+          :readonly="props.disabled"
           @maxlength="focusPostMethod"
         />
       </MsfStack>
@@ -50,6 +56,7 @@ const focusPostMethod = () => {
       <MsfChip
         v-model="formData.postMethod"
         name="inp-postMethod"
+        :readonly="props.disabled"
         :data="[
           { value: 'P', label: '우편' },
           { value: 'E', label: '이메일' },

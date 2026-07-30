@@ -99,8 +99,8 @@ public class MaskingUtil {
     private static List<Character> excludeCharList;
 
     static {
-        excludeCharList = new ArrayList<Character>();
-        excludeCharList.add(new Character('-'));
+        excludeCharList = new ArrayList<>();
+        excludeCharList.add('-');
     }
  
     
@@ -291,9 +291,9 @@ public class MaskingUtil {
             if(len < 12) { // 카드번호 최소길이 부족
          	   nOrgValue = MASK_CREDIT_CARD_ERR;
             }else {
-         	   StringBuilder orgValueTmp = new StringBuilder(nOrgValue.substring(0, 4) + "-");
-                orgValueTmp.append(nOrgValue.substring(4, 8) + "-");
-                orgValueTmp.append(nOrgValue.substring(8, 12) + "-");
+               StringBuilder orgValueTmp = new StringBuilder(nOrgValue.substring(0, 4)).append("-");
+                orgValueTmp.append(nOrgValue, 4, 8).append("-");
+                orgValueTmp.append(nOrgValue, 8, 12).append("-");
                 orgValueTmp.append(nOrgValue.substring(12, len));
 
                 nOrgValue = orgValueTmp.toString();
@@ -499,7 +499,7 @@ public class MaskingUtil {
                 }
 
                 for (int i = startIdx; i < endIdx; i++) {
-                    if( excludeCharList != null && excludeCharList.contains(Character.valueOf(sb.charAt(i)))) {
+                    if( excludeCharList != null && excludeCharList.contains(sb.charAt(i))) {
                         continue;
                     }
                     sb.setCharAt(i, MASK_CHAR);
@@ -645,7 +645,7 @@ public class MaskingUtil {
     			 StringBuilder sb = new StringBuilder(target);
      			 
      			 for (int i = strIndex; i < endIndex; i++) {
-                     if( excludeCharList != null && excludeCharList.contains(Character.valueOf(sb.charAt(i)))) {
+                     if( excludeCharList != null && excludeCharList.contains(sb.charAt(i))) {
                         continue;
                      }
                      sb.setCharAt(i, MASK_CHAR);
@@ -1005,7 +1005,9 @@ public class MaskingUtil {
         String ret = "";
         String ret2 = addr2;
         if (!StringUtils.isBlank(addr1)) {
-            if (ret2 == null) ret2 = "";
+            if (ret2 == null) {
+                ret2 = "";
+            }
             String addr = addr1.trim() + " " + ret2;
 
             // 면,읍,리,동,로,길,가

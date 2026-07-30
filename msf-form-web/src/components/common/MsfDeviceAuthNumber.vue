@@ -37,8 +37,9 @@ import { computed, onBeforeMount, onBeforeUpdate, ref, shallowRef, watch } from 
 import { useRoute, useRouter } from 'vue-router'
 import { useCountdown } from '@vueuse/core'
 import { showAlert } from '@/libs/utils/comp.utils'
-import { isEmpty } from '@/libs/utils/string.utils'
+import { isEmpty, formatTelephone } from '@/libs/utils/string.utils'
 import { post } from '@/libs/api/msf.api'
+import { isProduction } from '@/libs/utils/env.utils'
 
 const route = useRoute()
 const router = useRouter()
@@ -54,7 +55,7 @@ const emit = defineEmits(['complete'])
 
 const loginKey = ref(props.loginKey)
 const userName = ref(props.name)
-const userPhone = ref(props.phone)
+const userPhone = ref(formatTelephone(props.phone))
 const authNumber = ref('')
 const status = ref('none')
 const sendedKey = ref('')
@@ -79,12 +80,24 @@ const { remaining, start, stop, reset } = useCountdown(countdown, {
   },
 })
 
+const validateVerifyMobile = () => {
+  if (authNumber.value.length !== 6) {
+    showAlert('인증번호는 6자리 숫자로 입력해 주세요.')
+    return false
+  }
+  return true
+}
+
 const onClickSendAuthNumber = async () => {
-  const result = await post('/api/n/auth/sms/otp/send', {
-    type: 'F-0-OTP',
-    path: route.path,
-    token: loginKey.value,
-  })
+  const result = await post(
+    '/api/n/auth/sms/otp/send',
+    {
+      type: 'F-0-OTP',
+      path: route.path,
+      token: loginKey.value,
+    },
+    { skipAlert: true },
+  )
   if (result?.code === '6000') {
     showAlert(result.message, () => {
       router.push('/login')
@@ -96,14 +109,25 @@ const onClickSendAuthNumber = async () => {
   } else {
     showAlert('인증번호가 발송되었습니다.')
   }
+
   sendedKey.value = result.data.sendedKey
-  authNumber.value = result.data.authNumber || ''
+
+  if (isProduction() && false) {  // FIXME: 통합테스트 기간에 임시로 인증번호 노출
+    authNumber.value = '';
+  } else {
+    authNumber.value = result.data.authNumber || '';
+    console.log(`authNumber: ${result.data.authNumber}`);
+  }
   status.value = 'sent'
   reset(countTime)
   start()
 }
 
 const onClickVerifyAuthNumber = async () => {
+  if (!validateVerifyMobile()) {
+    return false
+  }
+
   const result = await post('/api/n/auth/sms/otp/verify', {
     type: 'F-0-OTP',
     path: route.path,
@@ -143,7 +167,7 @@ watch(
     if (!newVal) {
       userPhone.value = ''
     } else {
-      userPhone.value = newVal
+      userPhone.value = formatTelephone(newVal)
     }
     if (!isEmpty(userPhone.value)) {
       status.value = 'ready'

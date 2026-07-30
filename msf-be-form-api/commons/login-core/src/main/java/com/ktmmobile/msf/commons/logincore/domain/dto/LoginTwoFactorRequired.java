@@ -21,6 +21,23 @@ public record LoginTwoFactorRequired(
     List<LoginRequiredAction> requiredActions
 ) implements LoginResult {
 
+    /**
+     * 조직 코드 기반 2FA 필요 결과 생성
+     *
+     * @param loginSessionId 로그인 세션 ID
+     * @param expiresAt 2FA 만료 일시
+     * @param userId 사용자 ID
+     * @param userType 사용자 유형
+     * @param userName 사용자명
+     * @param phoneNumber 휴대폰번호
+     * @param clientIp 클라이언트 IP
+     * @param agentCode 대리점 코드
+     * @param agentName 대리점명
+     * @param shopCode 판매점 코드
+     * @param shopName 판매점명
+     * @param attributes 부가 속성
+     * @param requiredActions 필수 조치 목록
+     */
     public LoginTwoFactorRequired(
         String loginSessionId,
         LocalDateTime expiresAt,

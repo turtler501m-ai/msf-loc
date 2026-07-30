@@ -8,16 +8,25 @@ import com.ktmmobile.msf.commons.logincore.domain.policy.completion.LoginAuthent
 
 public class NoopLoginUserFinder implements LoginUserFinder<LoginAuthenticationCredential> {
 
+    /**
+     * 기본 로그인 사용자 조회
+     *
+     * @param credential 로그인 인증 정보
+     * @return 빈 사용자 정보
+     */
     @Override
     public Optional<LoginUser> findByCredential(LoginAuthenticationCredential credential) {
         return Optional.empty();
     }
 
+    /**
+     * 기본 인증 완료 사용자 검증
+     *
+     * @param user 로그인 사용자
+     * @param credential 로그인 인증 정보
+     */
     @Override
-    public void recordLoginSuccess(LoginUser user, LoginAuthenticationCredential credential) {
-    }
-
-    @Override
-    public void recordLoginFailure(LoginUser user, LoginAuthenticationCredential credential, boolean shouldLock) {
+    public void verifyAuthenticatedUser(LoginUser user, LoginAuthenticationCredential credential) {
+        //noop
     }
 }

@@ -1,6 +1,9 @@
 package com.ktmmobile.msf.commons.websecurity.security.auth.service;
 
+import java.util.Objects;
+
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -16,7 +19,11 @@ import com.ktmmobile.msf.commons.websecurity.security.auth.port.ActiveTokenCheck
 @Component
 public class LoginJwtTokenValidator {
 
-    private final ActiveTokenChecker activeTokenChecker;
+    public static final String TOKEN_EXPIRED_MESSAGE = "로그인 시간이 만료되었습니다.";
+    public static final String TOKEN_LOGGED_OUT_MESSAGE = "로그인이 해제되었습니다.";
+    public static final String TOKEN_REPLACED_MESSAGE = "다른 기기(브라우저)에서 로그인되어 현재 기기의 로그인이 해제되었습니다.";
+
+    private final ObjectProvider<ActiveTokenChecker> activeTokenCheckerProvider;
 
     public LoginJwtClaims validate(Jwt jwt, TokenType expectedTokenType) {
         String userId = jwt.getSubject();
@@ -44,8 +51,18 @@ public class LoginJwtTokenValidator {
 
     public LoginJwtClaims validateActive(Jwt jwt, TokenType expectedTokenType) {
         LoginJwtClaims claims = validate(jwt, expectedTokenType);
-        if (!activeTokenChecker.exists(claims.tokenType(), claims.userType(), claims.userId(), claims.jti())) {
-            throw new MemberAuthenticationException(expectedTokenType.getDisplayName() + "이 유효하지 않습니다.");
+        ActiveTokenChecker activeTokenChecker = activeTokenCheckerProvider.getIfAvailable();
+        if (activeTokenChecker == null) {
+            return claims;
+        }
+        String activeJti = activeTokenChecker.getActiveTokenJti(claims.tokenType(), claims.userType(), claims.userId());
+        // 로그아웃, 강제 인증 해제, 캐시 만료 등으로 활성 토큰 JTI가 없는 경우
+        if (!StringUtils.hasText(activeJti)) {
+            throw new MemberAuthenticationException(TOKEN_LOGGED_OUT_MESSAGE);
+        }
+        // 다른 기기 로그인으로 활성 토큰 JTI가 교체된 경우
+        if (!Objects.equals(activeJti, claims.jti())) {
+            throw new MemberAuthenticationException(TOKEN_REPLACED_MESSAGE);
         }
         return claims;
     }

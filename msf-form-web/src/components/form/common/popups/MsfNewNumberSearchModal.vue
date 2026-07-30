@@ -8,9 +8,10 @@
   >
     <!-- 팝업 내용 -->
     <p class="ut-text-desc">번호를 선택해 주세요.</p>
-    <div v-if="loading" class="ut-flex ut-justify-center ut-py-20">
-      <MsfLoadingComp />
-    </div>
+
+    <!-- 컨텐츠 로딩형태 추가_20260610 -->
+    <MsfLoadingComp v-if="loading" inline height="400" />
+
     <template v-else>
       <MsfRadioGroup
         v-if="numberOptions.length > 0"
@@ -19,8 +20,12 @@
         :options="numberOptions"
         grid
       />
-      <p v-else class="ut-text-center ut-py-20 ut-text-gray-400">조회된 번호가 없습니다.</p>
+      <!-- 데이터 없는 경우 추가_20260415 -->
+      <div v-else class="nodata-wrap">
+        희망번호에 해당하는 신규 번호가 없습니다.<br />다른 번호로 다시 조회해 주세요.
+      </div>
     </template>
+
     <!-- 하단 고정 -->
     <template #footer>
       <MsfButtonGroup>
@@ -32,9 +37,11 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { nextTick, ref } from 'vue'
 import { post } from '@/libs/api/msf.api'
 import { useMsfFormNewChgStore } from '@/stores/msf_newchange.js'
+import { formatTelephone } from '@/libs/utils/string.utils'
+import { showAlert } from '@/libs/utils/comp.utils'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -50,6 +57,8 @@ const numberOptions = ref([])
 const loading = ref(false)
 
 const onOpen = async () => {
+  numberOptions.value = []
+  numberSelect.value = ''
   emit('open')
   await fetchNumbers()
 }
@@ -57,20 +66,37 @@ const onOpen = async () => {
 const fetchNumbers = async () => {
   loading.value = true
   try {
-    const payload = {
-      resNo: '2999999',
-      reqWantNumber: props.searchParams.reqWantRnNo || '', // 뒤 4자리 검색
-      requestKey: store.applicationKey || '278',
+    console.log('props.searchParams.pageMode', props.searchParams.pageMode)
+    if (props.searchParams.pageMode !== undefined && props.searchParams.pageMode === 'CHG') {
+      // 변경 신청
+      await fetchNumbersChg()
+    } else {
+      // 신규 변경
+      await fetchNumbersNew()
     }
-    const res = await post('/api/form/hopenumber/get', payload)
+  } catch (error) {
+    console.error('Search number error:', error)
+    numberOptions.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
+const fetchNumbersNew = async () => {
+  try {
+    const payload = {
+      reqWantNumber: props.searchParams.reqWantRnNo || '', // 뒤 4자리 검색
+      requestKey: store.applicationKey || '',
+      operTypeCd: props.searchParams.operTypeCd || store.customer?.joinType || '',
+    }
+    const res = await post('/api/form/hopenumber/get', payload, { skipAlert: true })
     if (res && res.code === '0000') {
-      const resData = res.data?.resData || {}
-      const list = resData.marketList || []
+      const list = res.data?.resData || []
 
       numberOptions.value = list.map((num) => {
         return {
-          value: num.orignCtn,
-          label: num.ctn || num.orignCtn,
+          value: num.tlphNo,
+          label: num.tlphNo ? formatTelephone(num.tlphNo) : '',
           raw: num,
         }
       })
@@ -85,9 +111,41 @@ const fetchNumbers = async () => {
     }
   } catch (error) {
     console.error('Search number error:', error)
-    numberOptions.value = []
-  } finally {
-    loading.value = false
+  }
+}
+
+/* 서비스 변경 시 사용 */
+const fetchNumbersChg = async () => {
+  try {
+    const payload = {
+      chkCtn: props.searchParams.reqWantRnNo || '', // 뒤 4자리 검색
+      ...props.searchParams,
+    }
+    const res = await post('/api/msf/formServiceChange/numChge/list', payload, { skipAlert: true })
+    if (res && res.code === '0000') {
+      if (res.data.resCode !== '0000') {
+        showAlert(res.data.resMessage)
+      }
+
+      const list = res.data?.resData?.outDtoList || []
+      numberOptions.value = list.map((num) => {
+        return {
+          value: num.ctn,
+          label: num.ctn ? formatTelephone(num.ctn) : '',
+          raw: num,
+        }
+      })
+      if (numberOptions.value.length > 0) {
+        numberSelect.value = numberOptions.value[0].value
+      } else {
+        numberSelect.value = ''
+      }
+    } else {
+      numberOptions.value = []
+      numberSelect.value = ''
+    }
+  } catch (error) {
+    console.error('Search number error:', error)
   }
 }
 
@@ -99,10 +157,11 @@ const onClose = () => {
   }
 }
 
-const onConfirm = () => {
-  const selected = numberOptions.value.find(opt => opt.value === numberSelect.value)
-  emit('confirm', selected?.raw || numberSelect.value)
+const onConfirm = async () => {
+  const selected = numberOptions.value.find((opt) => opt.value === numberSelect.value)
   onClose()
+  await nextTick()
+  emit('confirm', selected?.raw || numberSelect.value)
 }
 </script>
 

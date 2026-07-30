@@ -24,4 +24,5 @@ public class AppRegistRequest {
     private String appNm;
     private String autoLoginYn;
     private String bioLoginYn;
+    private String bioLoginToken;
 }

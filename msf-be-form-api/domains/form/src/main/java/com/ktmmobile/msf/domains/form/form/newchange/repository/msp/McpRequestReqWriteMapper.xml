@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.form.form.newchange.repository.msp.McpRequestReqWriteMapper">
+  <insert id="insertMcpRequestReq" parameterType="com.ktmmobile.msf.domains.form.form.common.vo.McpRequestReqVo">
+    INSERT INTO MCP_REQUEST_REQ@DL_MCP
+    (     REQUEST_KEY
+        , SYS_RDATE
+        , RVISN_ID
+        , RVISN_DTTM
+        , REQ_BANK
+        , REQ_ACCOUNT_NAME
+        , REQ_ACCOUNT_RRN
+        , REQ_ACCOUNT_RELATION
+        , REQ_ACCOUNT_NUMBER
+        , REQ_CARD_NAME
+        , REQ_CARD_RRN
+        , REQ_CARD_COMPANY
+        , REQ_CARD_NO
+        , REQ_CARD_YY
+        , REQ_CARD_MM
+        , REQ_WIRE_TYPE
+        , REQ_PAY_OTHER_FLAG
+        , REQ_PAY_OTHER_TEL_FN
+        , REQ_PAY_OTHER_TEL_MN
+        , REQ_PAY_OTHER_TEL_RN
+        , PRNTS_BILL_NO
+    )
+    VALUES
+    (     #{requestKey}
+        , #{sysRdate}
+        , #{rvisnId}
+        , #{rvisnDttm}
+        , #{reqBank}
+        , #{reqAccountName}
+        , #{reqAccountRrn}
+        , #{reqAccountRelation}
+        , #{reqAccountNumber}
+        , #{reqCardName}
+        , #{reqCardRrn}
+        , #{reqCardCompany}
+        , #{reqCardNo}
+        , #{reqCardYy}
+        , #{reqCardMm}
+        , #{reqWireType}
+        , #{reqPayOtherFlag}
+        , #{reqPayOtherTelFn}
+        , #{reqPayOtherTelMn}
+        , #{reqPayOtherTelRn}
+        , #{prntsBillNo}
+    )
+  </insert>
+
+  <update id="updateMcpRequestReq" parameterType="com.ktmmobile.msf.domains.form.form.common.vo.McpRequestReqVo">
+    UPDATE MCP_REQUEST_REQ@DL_MCP
+    SET
+          SYS_RDATE	 = #{sysRdate}
+        ,	RVISN_ID	 = #{rvisnId}
+        ,	RVISN_DTTM	 = #{rvisnDttm}
+        ,	REQ_BANK	 = #{reqBank}
+        ,	REQ_ACCOUNT_NAME	 = #{reqAccountName}
+        ,	REQ_ACCOUNT_RRN	 = #{reqAccountRrn}
+        ,	REQ_ACCOUNT_RELATION	 = #{reqAccountRelation}
+        ,	REQ_ACCOUNT_NUMBER	 = #{reqAccountNumber}
+        ,	REQ_CARD_NAME	 = #{reqCardName}
+        ,	REQ_CARD_RRN	 = #{reqCardRrn}
+        ,	REQ_CARD_COMPANY	 = #{reqCardCompany}
+        ,	REQ_CARD_NO	 = #{reqCardNo}
+        ,	REQ_CARD_YY	 = #{reqCardYy}
+        ,	REQ_CARD_MM	 = #{reqCardMm}
+        ,	REQ_WIRE_TYPE	 = #{reqWireType}
+        ,	REQ_PAY_OTHER_FLAG	 = #{reqPayOtherFlag}
+        ,	REQ_PAY_OTHER_TEL_FN	 = #{reqPayOtherTelFn}
+        ,	REQ_PAY_OTHER_TEL_MN	 = #{reqPayOtherTelMn}
+        ,	REQ_PAY_OTHER_TEL_RN	 = #{reqPayOtherTelRn}
+        ,	PRNTS_BILL_NO	 = #{prntsBillNo}
+    WHERE REQUEST_KEY = #{requestKey}
+  </update>
+</mapper>

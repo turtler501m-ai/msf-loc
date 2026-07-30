@@ -78,7 +78,7 @@
             </div>
           </div>
           <!-- 답변영역 -->
-          <div class="board-answer">
+          <div class="board-answer" v-if="item.answer?.status?.code === 'E'">
             <em class="qna-mark">A.</em>
             <div class="qna-cont">
               {{ item.answer?.contents }}
@@ -105,43 +105,38 @@ import { addMonths } from 'date-fns'
 import { useMsfMainStore } from '@/stores/msf_main'
 import { post } from '@/libs/api/msf.api'
 import { formatDate, formatDatetimeMinutes } from '@/libs/utils/date.utils'
-import { formatCurrency } from '@/libs/utils/string.utils'
+import { formatCurrency, isEmpty } from '@/libs/utils/string.utils'
 
 const mainStore = useMsfMainStore()
 
 const props = defineProps({
   modelValue: Boolean,
-  search: Object,
-  targetId: [String, Number], // 부모에서 넘겨주는 id 값
-  data: Array,
-  total: [String, Number],
-  currentPage: { type: Number, default: 1 },
-  itemsPerPage: { type: Number, default: 10 },
+  target: Object,
 })
 
 const emit = defineEmits(['update:modelValue', 'open', 'regist', 'close'])
 
 // 퍼블샘플용
-const searchData = reactive(
-  props.search || {
-    category: '',
-    value: '', //검색어입력 필드
-    startDate: formatDate(addMonths(new Date(), -1)),
-    endDate: formatDate(new Date()),
-  },
-)
+const searchData = reactive({
+  category: props.target?.category?.code || '',
+  value: props.target?.title || '', //검색어입력 필드
+  startDate: formatDate(props.target?.writeDate) || formatDate(addMonths(new Date(), -1)),
+  endDate: formatDate(props.target?.writeDate) || formatDate(new Date()),
+})
 
 // 상태 관리
 const openedItems = ref([]) // 아코디언 열림 상태
-const currentPage = ref(props.currentPage) // 현재 페이지
-const itemsPerPage = ref(props.itemsPerPage) // 한 페이지당 보여줄 개수
+const currentPage = ref(1) // 현재 페이지
+const itemsPerPage = ref(10) // 한 페이지당 보여줄 개수
 
 // 데이터 계산
 // 현재 페이지에 보여줄 데이터만 추출
-const totalCount = ref(props.total || 0)
-const list = ref(props.data || [])
+const totalCount = ref(0)
+const list = ref([])
 
 const searchQna = async (page) => {
+  await nextTick()
+
   openedItems.value = []
   currentPage.value = page
   const response = await post('/api/main/qna/list', {
@@ -156,6 +151,31 @@ const searchQna = async (page) => {
   }
   totalCount.value = response.meta?.page?.totalCount || 0
   list.value = response.data || []
+
+  if (props.target) {
+    // 2. 특정 ID로 이동해야 하는 경우 로직 수행
+    const targetIndex = list.value.findIndex((item) => item.id === props.target.id)
+
+    if (targetIndex !== -1) {
+      currentPage.value = Math.ceil((targetIndex + 1) / itemsPerPage.value)
+
+      await nextTick() // 페이지 데이터 렌더링 대기
+
+      // 3. 해당 아코디언만 새로 열기
+      openedItems.value = [props.target.id]
+
+      await nextTick() // 아코디언 펼쳐짐 대기
+
+      // 4. 스크롤 이동 (ID 체크 주의: notice-item-...)
+      const element = document.getElementById(`notice-item-${props.target.id}`)
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          element.focus()
+        }, 100)
+      }
+    }
+  }
 }
 
 const addHitCountQna = async (ids) => {
@@ -193,49 +213,15 @@ const onClickRegistPopup = () => {
   onClose()
 }
 
-// 팝업이 열릴 때 targetId 처리
+// 팝업이 열릴 때 target 처리
 watch(
   () => props.modelValue,
   async (isOpen) => {
     if (isOpen) {
-      console.log('props.data:', props.data)
-      if (props.data?.length > 0) {
-        currentPage.value = 1
-        totalCount.value = props.total
-        list.value = props.data
-      } else {
-        await searchQna(1)
-      }
       // 1. 팝업이 열릴 때 열림 상태를 초기화
       openedItems.value = []
 
-      // 검색 폼 등 다른 상태도 초기화하고 싶다면
-      // searchData.value = ''
-
-      if (props.targetId) {
-        // 2. 특정 ID로 이동해야 하는 경우 로직 수행
-        const targetIndex = list.value.findIndex((item) => item.id === props.targetId)
-
-        if (targetIndex !== -1) {
-          currentPage.value = Math.ceil((targetIndex + 1) / itemsPerPage.value)
-
-          await nextTick() // 페이지 데이터 렌더링 대기
-
-          // 3. 해당 아코디언만 새로 열기
-          openedItems.value = [props.targetId]
-
-          await nextTick() // 아코디언 펼쳐짐 대기
-
-          // 4. 스크롤 이동 (ID 체크 주의: notice-item-...)
-          const element = document.getElementById(`notice-item-${props.targetId}`)
-          if (element) {
-            setTimeout(() => {
-              element.scrollIntoView({ behavior: 'smooth', block: 'start' })
-              element.focus()
-            }, 100)
-          }
-        }
-      }
+      await searchQna(1)
     }
   },
 )
@@ -251,6 +237,21 @@ watch(
     if (result) {
       mainStore.addHittedQnas(nVal)
     }
+  },
+  { immediate: true, deep: true },
+)
+watch(
+  () => props.target,
+  async (newVal) => {
+    if (isEmpty(newVal?.title)) {
+      return
+    }
+    searchData.category = newVal?.category?.code || ''
+    searchData.value = newVal?.title || '' //검색어입력 필드
+    searchData.startDate = formatDate(newVal?.writeDate) || formatDate(addMonths(new Date(), -1))
+    searchData.endDate = formatDate(newVal?.writeDate) || formatDate(new Date())
+
+    await searchQna(1)
   },
   { immediate: true, deep: true },
 )

@@ -8,6 +8,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class MsfRequestOsstVo {
+
     String mvnoOrdNo;
     Long seq;
     String osstOrdNo;
@@ -20,18 +21,18 @@ public class MsfRequestOsstVo {
     String nstepGlobalId;
     String prdcChkNotiMsg;
     String npBcntrTypeCd;
-    Long npFee;
-    Long npNchrgAmt;
-    Long npPnltAmt;
-    Long npUnpayAmt;
-    Long npHndstInstAmt;
-    Long npPrepayAmt;
-    Long npBaseChrgAmt;
-    Long npNtnlChrgAmt;
-    Long npIntlChrgAmt;
-    Long npAddChrgAmt;
-    Long npEtcChrgAmt;
-    Long npVat;
+    Long npFee = 0L;
+    Long npNchrgAmt = 0L;
+    Long npPnltAmt = 0L;
+    Long npUnpayAmt = 0L;
+    Long npHndstInstAmt = 0L;
+    Long npPrepayAmt = 0L;
+    Long npBaseChrgAmt = 0L;
+    Long npNtnlChrgAmt = 0L;
+    Long npIntlChrgAmt = 0L;
+    Long npAddChrgAmt = 0L;
+    Long npEtcChrgAmt = 0L;
+    Long npVat = 0L;
     String npRmnStrtDate;
     String npRmnEndDate;
     String tlphNoStatCd;

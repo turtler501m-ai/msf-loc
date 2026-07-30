@@ -3,6 +3,9 @@ import { ref } from 'vue'
 import { useMsfFormTerminationStore } from '@/stores/msf_termination'
 
 const formData = defineModel({ type: Object, required: true })
+const props = defineProps({
+  disabled: { type: Boolean, default: false },
+})
 
 const terminationStore = useMsfFormTerminationStore()
 const isLoadingCharge = ref(false)
@@ -30,7 +33,7 @@ const formatSettlementAmount = (value) => {
 <template>
   <MsfTitleArea title="해지 정산">
     <template #right>
-      <MsfButton variant="subtle" :disabled="isLoadingCharge" @click="onClickRemainCharge">
+      <MsfButton variant="subtle" :disabled="props.disabled || isLoadingCharge" @click="onClickRemainCharge">
         {{ isLoadingCharge ? '조회 중..' : '잔여요금 조회' }}
       </MsfButton>
     </template>

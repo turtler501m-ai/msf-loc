@@ -3,6 +3,8 @@ login-core:
   policy:
     ## 스프링 빈(bean) 이름 기준, 로그인 정책에 적용할 화이트리스트
     completion:
+      - globalIpLimitLoginCompletionPolicy
+      - userIpLimitLoginCompletionPolicy
       - userStatusLoginCompletionPolicy
       - passwordLoginCompletionPolicy
       - deviceAuthLoginCompletionPolicy

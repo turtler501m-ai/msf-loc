@@ -15,6 +15,7 @@ import lombok.Setter;
 public class MspSmsData {
     private Long msgId;
     private Integer msgType;
+    private Integer msgTypeSecond;
     private String subject;
     private String scheduleTime;
     private String submitTime;
@@ -22,7 +23,11 @@ public class MspSmsData {
     private String callbackNum;
     private String rcptData;
     private String kAdflag;
+    private String kTmplcode;
+    private String kMessage;
+    private String kSenderkey;
     private String reserved01;
     private String reserved02;
     private String reserved03;
+    private String failSend;
 }

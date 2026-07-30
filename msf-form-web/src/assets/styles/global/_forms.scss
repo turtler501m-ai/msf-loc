@@ -2,8 +2,9 @@
 
 /** input field 기본 스타일 (input-root 클래스로 한번 감싼후 input 사용) **/
 .input-root {
-  &:not(.is-readonly):focus-within {
-    border-color: var(--color-primary);
+  &:focus-within,
+  &:read-only:focus-within {
+    border-color: var(--color-primary-base);
     box-shadow: inset 0 0 0 1px var(--color-foreground);
   }
   position: relative;
@@ -78,6 +79,7 @@
   --dp-font-family: var(--font-family-base);
   --dp-cell-padding: #{rem(6px)};
   --dp-cell-size: #{rem(44px)};
+  --dp-text-color: var(--color-primary-base) !important;
 }
 .dp--menu-wrapper {
   .dp__menu {
@@ -87,6 +89,7 @@
     @include flex($d: column);
   }
   .dp__action_row {
+    padding-top: 0;
     padding-bottom: var(--spacing-x4);
     padding-inline: var(--spacing-x4);
   }
@@ -95,10 +98,13 @@
     font-weight: var(--font-weight-regular);
     color: var(--color-gray-500);
   }
+  .dp__calendar_header_item {
+    @include flex($display: inline-flex, $v: center, $h: center);
+  }
   .dp__month_year_wrap {
     font-size: var(--font-size-20);
     font-weight: var(--font-weight-bold);
-    margin-bottom: rem(8px);
+    margin-bottom: rem(4px);
     height: rem(44px);
     .dp__month_year_wrap {
       margin-bottom: 0;
@@ -126,11 +132,6 @@
   .dp__cell_inner {
     border-radius: var(--border-radius-max);
     font-weight: var(--font-weight-medium);
-  }
-  .dp__today {
-    border-color: var(--color-gray-450);
-    background-color: var(--color-gray-450);
-    color: var(--color-white);
   }
   .dp__calendar_row {
     margin: 0;
@@ -226,5 +227,87 @@
   .dp__selection_preview,
   .dp__btn.dp__button.dp__overlay_action {
     display: none;
+  }
+  // Day 디자인 설정
+  .dp__calendar_item {
+    // day: selected
+    &:has(.dp__marker_dot) {
+      border-radius: 50%;
+      background-color: var(--color-gray-900) !important;
+      color: var(--color-white) !important;
+      .dp__active_date {
+        background-color: var(--color-gray-900) !important;
+        color: var(--color-white) !important;
+      }
+      .dp__marker_dot {
+        height: 0;
+      }
+    }
+    // day: select
+    .dp__active_date {
+      background-color: var(--color-gray-450);
+      color: var(--color-white);
+    }
+  }
+  // today (오늘날짜 스타일)
+  .dp__today {
+    border-color: var(--color-primary-base);
+    // background-color: var(--color-gray-450);
+    // color: var(--color-white);
+  }
+  // 호버색상 초기화
+  .dp__date_hover:hover,
+  .dp__btn:hover,
+  .dp__overlay_cell:hover,
+  .dp__inner_nav:hover {
+    background-color: inherit;
+    color: inherit;
+  }
+  // 비활성화된 셀 스타일
+  .dp__overlay_cell_disabled,
+  .dp__overlay_cell_disabled:hover {
+    background-color: transparent;
+    color: var(--color-text-disabled);
+  }
+  // 달력 레이어
+  --dp-overlay-height: #{rem(428px)}; // 일(day), 년(year) 선택 팝업의 최소높이
+  min-height: var(--dp-overlay-height);
+
+  .dp__calendar[role='rowgroup'] {
+    .dp__calendar_row:first-child {
+      margin-top: 0;
+    }
+    .dp__calendar_row:last-child {
+      margin-bottom: 0;
+    }
+  }
+  &:has(.dp__overlay) {
+    will-change: transform;
+    transition: none;
+    // dp__overlay 선택 팝업 최소높이
+    .dp__instance_calendar {
+      .dp__menu_inner {
+        min-height: var(--dp-overlay-height);
+      }
+    }
+  }
+  // 년(year) 달력 선택된 영역 너비 디자인사이즈
+  [data-dp-element='overlay-year'] + .dp__overlay .dp__overlay_cell_active {
+    width: 84%;
+  }
+  // 월(month) 달력 최소높이 다르게 지정
+  &:has([aria-label='Month picker overlay']) {
+    min-height: auto;
+    .dp__menu_inner {
+      min-height: auto !important;
+    }
+  }
+  // 년, 월 선택 오버레이일 때 하단 버튼 지우기
+  &:has(.dp__menu [aria-label='Year picker overlay']) .dp__menu,
+  &:has(.dp__menu [aria-label='Month picker overlay']) .dp__menu {
+    transition: none;
+    .dp__action_row {
+      display: none !important;
+    }
   }
 }

@@ -14,7 +14,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class MsfRequestAdditionRequest {
 
-    private String operTypeCd; //업무구분코드 NAC3 / MNP3 / HDN3 -> 있을수도 없을수도 있음?
+    private String operTypeCd; //업무구분코드 NAC3 / MNP3 / HDN3
 
     private String prodCtgTypeCd; //상품 카테고리 코드 (R:부가서비스) - 소스에 고정 할까?
     private String rateAdsvcDivCd; //상품 카테고리 코드 (R:부가서비스) >> prodCtgTypeCd 삭제하자~

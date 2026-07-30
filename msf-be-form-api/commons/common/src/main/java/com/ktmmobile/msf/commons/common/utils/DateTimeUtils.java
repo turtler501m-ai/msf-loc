@@ -29,6 +29,7 @@ public class DateTimeUtils {
     public static final DateTimeFormatter DEFAULT_TIME;
     public static final DateTimeFormatter DEFAULT_DATE_TIME;
     public static final DateTimeFormatter CORE_SYSTEM_DATE;
+    public static final DateTimeFormatter UI_DATE_TIME;
 
     static {
         DEFAULT_DATE = new DateTimeFormatterBuilder()
@@ -58,11 +59,17 @@ public class DateTimeUtils {
             .appendValue(MONTH_OF_YEAR, 2)
             .appendValue(DAY_OF_MONTH, 2)
             .toFormatter();
+
+        UI_DATE_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     }
 
 
     public static String formattedDateTimeOf(LocalDateTime dateTime) {
         return dateTime.format(DEFAULT_DATE_TIME);
+    }
+
+    public static String uiDateTimeOf(LocalDateTime dateTime) {
+        return dateTime.format(UI_DATE_TIME);
     }
 
     public static String formattedDateOf(LocalDate date) {

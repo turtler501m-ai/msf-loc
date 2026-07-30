@@ -20,6 +20,9 @@
     SELECT KT_ORG_ID
     FROM ORG_ORGN_INFO_MST
     WHERE 1=1
+    AND ORGN_STAT_CD = '4'
+    AND TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN APPL_STRT_DT AND APPL_CMPLT_DT
+    AND USE_YN = 'Y'
     AND ORGN_ID = #{cntpntShopId}
     AND ROWNUM = 1
     ) AS AGENT_CODE
@@ -103,8 +106,11 @@
            , ROADN_ADR_DTL_SBST
        FROM ORG_ORGN_INFO_MST
        WHERE 1=1
-           AND ORGN_ID = #{cntpntShopId}
-           AND ROWNUM = 1
+       AND ORGN_STAT_CD = '4'
+       AND TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN APPL_STRT_DT AND APPL_CMPLT_DT
+       AND USE_YN = 'Y'
+       AND ORGN_ID = #{cntpntShopId}
+       AND ROWNUM = 1
     </select>
 
 
@@ -367,6 +373,28 @@
                     AND     ROWNUM = 1)
     </select>
 
+  <select id="selectSpclSlsNo" parameterType="com.ktmmobile.msf.domains.form.common.dto.AppformReqDto" resultType="java.lang.String">
+    SELECT  /* /appform/getSpclSlsNo : McpAppformMapper.selectSpclSlsNo 특별판매번호 조회 */
+            KTA.SLS_NO
+    FROM    MSP_KT_PLCY_MST KTA
+          , MSP_KT_PLCY_DISCOUNT KTB
+          , MSP_KT_PLCY_OPER KTC
+          , MSP_KT_PLCY_INST KTD
+          , MSP_KT_PLCY_ENGG KTE
+    WHERE   KTA.PLCY_ID = KTB.PLCY_ID
+    AND     KTA.PLCY_ID = KTC.PLCY_ID
+    AND     KTA.PLCY_ID = KTD.PLCY_ID
+    AND     KTA.PLCY_ID = KTE.PLCY_ID
+    AND     KTA.USE_YN = 'Y'
+    AND     KTA.PPPO = #{serviceType}
+    AND     KTA.PLCY_TYPE = DECODE(#{reqBuyType}, 'MM', '01', DECODE(#{usimKindsCd}, '09', '03', '02'))
+    AND     KTB.DC_TYPE = NVL(#{sprtTp}, 'NN')
+    AND     KTC.OPER_TYPE = #{operType}
+    AND     KTD.INST_CNT = NVL(#{modelMonthly}, '0')
+    AND     KTE.ENGG_CNT = NVL(#{enggMnthCnt}, '0')
+    AND     ROWNUM = 1
+  </select>
+
 
   <!-- /appform/getDisPrmtId - (오프라인) 평생할인 프로모션 아이디 가져오기 (SELECT(MSP) : CMN_GRP_CD_MST, MSP_KT_PLCY_MST, MSP_KT_PLCY_DISCOUNT, MSP_KT_PLCY_OPER, MSP_KT_PLCY_INST, MSP_KT_PLCY_ENGG, VW_DIS_PRMT_DTL) -->
   <!-- SQL 메소드 변경 : getDisPrmtId -> selectDisPrmtSlsTp -->
@@ -505,7 +533,13 @@
                 WHERE   FILE_NM = (SELECT MAX(FILE_NM) FROM MDS_ORG_CPNT_INFO)
                 AND     CPNT_ID IN (SELECT CPNT_ID
                     FROM MDS_ORG_REL_INFO
-                    WHERE ORG_ID = (SELECT KT_ORG_ID FROM ORG_ORGN_INFO_MST WHERE ORGN_ID = #{cntpntShopId})
+                    WHERE ORG_ID = (SELECT KT_ORG_ID
+                                    FROM ORG_ORGN_INFO_MST
+                                    WHERE ORGN_ID = #{cntpntShopId}
+                                    AND ORGN_STAT_CD = '4'
+                                    AND TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN APPL_STRT_DT AND APPL_CMPLT_DT
+                                    AND USE_YN = 'Y'
+                                    )
                     AND FILE_NM = (SELECT MAX(FILE_NM) FROM MDS_ORG_REL_INFO)
                     )
                 AND CH_TYPE_DIV_CD   = '02' --비대면 (안면인증)

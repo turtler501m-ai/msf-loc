@@ -1,17 +1,19 @@
 <template>
   <div :class="rootClasses" v-bind="rootAttrs">
     <VueDatePicker
+      ref="datePickerRef"
       v-bind="inputAttrs"
+      inputmode="numeric"
       :model-value="parsedDate"
       :auto-apply="!centered"
       :centered="centered"
       teleport="body"
       year-first
-      :placeholder="props.placeholder ? props.placeholder : '발급 일자 (YYYY.MM.DD)'"
+      :placeholder="props.placeholder"
       model-type="yyyy-MM-dd"
       class="msf-date-input-value"
       :formats="{ input: 'yyyy-MM-dd' }"
-      :text-input="{ format: 'yyyyMMdd' }"
+      :text-input="{ format: 'yyyyMMdd', openMenu: false }"
       :locale="ko"
       :week-start="WeekStart.Sunday"
       :year-range="[1900, 9999]"
@@ -23,6 +25,7 @@
         selectBtnLabel: '확인',
         cancelBtnLabel: '취소',
       }"
+      :markers="parsedDate ? [{ date: parsedDate, type: 'dot', tooltip: [] }] : []"
     >
       <!-- 년,월 표시 -->
       <template #year="slotProps"> {{ slotProps.year || slotProps.value }}년 </template>
@@ -30,7 +33,7 @@
         {{ (slotProps.month !== undefined ? slotProps.month : slotProps.value) + 1 }}월
       </template>
       <template #input-icon>
-        <MsfIcon name="calendar" size="large" />
+        <MsfIcon name="calendar" size="large" @click.stop="openCalendar" />
       </template>
       <!-- 클리어 버튼 필요시 사용 -->
       <!-- <template #clear-icon="{ clear }">
@@ -46,11 +49,18 @@
 </template>
 
 <script setup>
-import { computed, onUnmounted, useAttrs } from 'vue'
+import { computed, onMounted, onUnmounted, ref, useAttrs } from 'vue'
 import { VueDatePicker, WeekStart } from '@vuepic/vue-datepicker'
 import { ko } from 'date-fns/locale'
 import { formatDate } from '@/libs/utils/date.utils'
 import '@vuepic/vue-datepicker/dist/main.css'
+
+const datePickerRef = ref(null)
+
+const openCalendar = () => {
+  console.log(datePickerRef.value?.inputRef())
+  datePickerRef.value?.openMenu()
+}
 
 // 캘린더 열림
 const onOpen = () => {
@@ -64,6 +74,12 @@ const onClose = () => {
     document.body.classList.remove('datepicker-open')
   }
 }
+onMounted(() => {
+  const inputElement = datePickerRef.value?.$el.querySelector('input')
+  if (inputElement) {
+    inputElement.setAttribute('inputmode', 'numeric')
+  }
+})
 // 언마운트
 onUnmounted(() => {
   if (props.centered) {
@@ -105,7 +121,7 @@ const props = defineProps({
     default: true,
   },
   /** placeholder */
-  placeholder: { type: String, default: '발급 일자 (YYYY.MM.DD)' },
+  placeholder: { type: String, default: '발급 일자 (YYYY-MM-DD)' },
   /** 에러 */
   error: Boolean,
 })
@@ -123,6 +139,15 @@ const onDatePickerSelect = (selectedDate /*, maskRef*/) => {
   }
   emit('update:modelValue', formatDate(selectedDate))
 }
+
+defineExpose({
+  focus: () => {
+    const inputElement = datePickerRef.value?.$el?.querySelector('input')
+    if (inputElement) {
+      inputElement.focus()
+    }
+  },
+})
 </script>
 
 <style scoped lang="scss">
@@ -149,17 +174,33 @@ const onDatePickerSelect = (selectedDate /*, maskRef*/) => {
   /* 입력창 패딩 조정 */
   :deep(.dp__input) {
     padding-inline-start: var(--dp-input-side-padding);
-    padding-inline-end: var(--dp-input-side-padding);
+    padding-inline-end: calc(var(--dp-input-side-padding) + var(--dp-input-side-icon-size));
     height: rem(52px);
     font-size: var(--font-size-16);
+    font-weight: var(--font-weight-medium);
+    &::placeholder {
+      opacity: 1;
+    }
     &.dp__input_focus {
-      border-color: var(--color-primary);
+      border-color: var(--color-primary-base);
+      border-width: 2px;
     }
     &.dp__disabled {
       border: 1px solid var(--color-gray-150);
+      color: var(--color-text-disabled);
       + div {
         .msf-icon {
           color: var(--color-text-disabled);
+        }
+      }
+    }
+    &[readonly] {
+      border: 1px solid var(--color-gray-400);
+      color: var(--color-text-readonly);
+      background-color: var(--color-bg-disabled);
+      + div {
+        .msf-icon {
+          color: var(--color-text-readonly);
         }
       }
     }
@@ -181,6 +222,10 @@ const onDatePickerSelect = (selectedDate /*, maskRef*/) => {
     height: var(--dp-input-side-icon-size);
     right: calc(var(--dp-input-side-padding) + calc(var(--dp-input-side-icon-size) + rem(8px)));
   }
+  // 기본 지원되는 클리어버튼은 숨김처리(클리어 사용시 템플릿에서 커스텀 활성화)
+  :deep(button.dp--clear-btn) {
+    display: none;
+  }
   :deep(.dp__menu) {
     border-radius: var(--border-radius-l);
   }
@@ -189,7 +234,8 @@ const onDatePickerSelect = (selectedDate /*, maskRef*/) => {
   }
   &.is-error {
     &:deep(.dp__input) {
-      border: 2px solid var(--color-accent1-base) !important;
+      border-color: var(--color-accent1-base);
+      box-shadow: inset 0 0 0 1px var(--color-accent1-base);
     }
   }
 }

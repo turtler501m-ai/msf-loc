@@ -5,7 +5,7 @@ const formData = defineModel({ type: Object, required: true })
 
 // 상품 유형이 휴대폰('MM')이고 가입유형이 기기변경('HDN3')인 경우 개통유형 고정
 watchEffect(() => {
-  if (formData.value.productType === 'MM' && formData.value.joinType === 'HDN3') {
+  if (formData.value.productType === 'MM' && (formData.value.joinType === 'HDN3' || formData.value.joinType === 'HCN3')) {
     formData.value.openTypeCd = 'openingType1'
   }
 })
@@ -22,28 +22,6 @@ watchEffect(() => {
         :options="[
           { label: '갤럭시 A36', value: 'deviceModel1' },
           { label: '갤럭시 A366', value: 'deviceModel2' },
-        ]"
-        class="ut-w-300"
-      />
-    </MsfFormGroup>
-    <MsfFormGroup label="용량" tag="div" required>
-      <MsfSelect
-        title="용량"
-        v-model="formData.capacity"
-        :options="[
-          { label: '64GB', value: 'capacity1' },
-          { label: '128GB', value: 'capacity2' },
-        ]"
-        class="ut-w-300"
-      />
-    </MsfFormGroup>
-    <MsfFormGroup label="색상" tag="div" required>
-      <MsfSelect
-        title="색상"
-        v-model="formData.color"
-        :options="[
-          { label: '화이트', value: 'color1' },
-          { label: '블랙', value: 'color2' },
         ]"
         class="ut-w-300"
       />
@@ -114,10 +92,10 @@ watchEffect(() => {
     <MsfFormGroup label="대리점" tag="div" required>
       <MsfSelect
         title="대리점 선택"
-        v-model="formData.agency"
+        v-model="formData.agent"
         :options="[
-          { label: '대리점1', value: 'agency1' },
-          { label: '대리점2', value: 'agency2' },
+          { label: '대리점1', value: 'agent1' },
+          { label: '대리점2', value: 'agent2' },
         ]"
         class="ut-w-300"
         placeholder="대리점 선택"

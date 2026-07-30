@@ -1,32 +1,19 @@
 <template>
   <div class="page-step-panel">
     <!-- 해지 신청 -->
-    <MsfCancelRequest v-model="formData" />
+    <MsfCancelRequest v-model="formData" :disabled="isApplicationConfirmed" />
     <!-- // 해지 신청 -->
     <!-- 해지 정산 -->
-    <MsfCancelSettlement v-model="formData" />
+    <MsfCancelSettlement v-model="formData" :disabled="isApplicationConfirmed" />
     <!-- // 해지 정산 -->
     <!-- 메모 -->
     <MsfMemo v-model="formData" />
     <!-- // 메모 -->
-
-    <!-- (화면테스트용 테스트영역) 추후 지워질수도 있는것-->
-    <div class="ut-mt-50">
-      <div>
-        <p>- 개발자주석 부분- 화면 프로세스</p>
-        <select v-model="isCompleteOverride">
-          <option value="">해지 정산</option>
-          <option value="true">성공</option>
-          <option value="false">실패</option>
-        </select>
-      </div>
-    </div>
-    <!-- // (화면테스트용 테스트영역) 추후 제거 -->
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { computed, watch, onMounted, ref } from 'vue'
 import { useMsfFormTerminationStore } from '@/stores/msf_termination'
 import { storeToRefs } from 'pinia'
 import { showAlert } from '@/libs/utils/comp.utils'
@@ -35,27 +22,17 @@ const emit = defineEmits(['complete'])
 
 const terminationStore = useMsfFormTerminationStore()
 const { formData } = storeToRefs(terminationStore)
+const isApplicationConfirmed = computed(() => terminationStore.applicationConfirmed)
+const REMAIN_CHARGE_NOTICE =
+  '해지 시 까지 사용한 사용료, 위약금, 잔여 단말기 대금 등의 자세한 사용 요금은 다음달 청구서에서 확인 가능합니다.'
+const remainChargeNoticeShown = ref(false)
 
 const isComplete = computed(() => {
-  return (
-    !!formData.value.cancelUseCompanyCd &&
-    !!formData.value.usageFee &&
-    !!formData.value.penaltyFee &&
-    !!formData.value.finalAmount
-  )
-})
-
-// [TEST] 화면 테스트용 오버라이드: ''이면 해지 정산 입력값 기준으로 판단
-const isCompleteOverride = ref('')
-
-const isCompleteEffective = computed(() => {
-  if (isCompleteOverride.value === 'true') return true
-  if (isCompleteOverride.value === 'false') return false
-  return isComplete.value
+  return !!formData.value.cancelUseCompanyCd
 })
 
 watch(
-  isCompleteEffective,
+  isComplete,
   (val) => {
     emit('complete', val)
   },
@@ -63,7 +40,8 @@ watch(
 )
 
 onMounted(() => {
-  emit('complete', isCompleteEffective.value)
+  emit('complete', isComplete.value)
+  terminationStore.validateProductWithAlert = validateWithAlert
 })
 
 const focusField = (target) => {
@@ -79,33 +57,31 @@ const focusField = (target) => {
 const validateWithAlert = () => {
   const f = formData.value
   if (!f.cancelUseCompanyCd) {
-    showAlert('해지 후 사용 통신사를 선택해 주세요.', () => focusField('input[name="inp-cancelUseCompanyCd"]'))
+    showAlert('해지 후 사용 통신사를 선택해 주세요.', () =>
+      focusField('input[name="inp-cancelUseCompanyCd"]'),
+    )
     return false
   }
-  if (!f.usageFee) {
-    showAlert('사용요금을 입력해 주세요.', () => focusField('inp-usageFee'))
-    return false
-  }
-  if (!f.penaltyFee) {
-    showAlert('위약금을 입력해 주세요.', () => focusField('inp-penaltyFee'))
-    return false
-  }
-  if (!f.finalAmount) {
-    showAlert('최종 정산요금을 입력해 주세요.', () => focusField('inp-finalAmount'))
-    return false
+  //20260713 PRX 요금조회 오류 오류 발생후에도 진행가능하게 수정
+  //'해지 시 까지 사용한 사용료, 위약금, 잔여 단말기 대금 등의 자세한 사용 요금은 다음달 청구서에서 확인 가능합니다.' 라는 메시지를 표시
+  if ((!f.usageFee || !f.penaltyFee || !f.finalAmount) && !remainChargeNoticeShown.value) {
+    remainChargeNoticeShown.value = true
+    showAlert(REMAIN_CHARGE_NOTICE)
   }
   return true
 }
 
 const save = async () => {
-  if (isCompleteOverride.value === 'false') return false
+  if (!terminationStore.validateCustomerWithAlert()) return false
   if (!validateWithAlert()) return false
   return true
 }
 
 const reset = async () => {
+  remainChargeNoticeShown.value = false
   terminationStore.resetStep(1)
-  emit('complete', isCompleteEffective.value)
+  terminationStore.resetCustomerAgreement()
+  emit('complete', isComplete.value)
 }
 
 defineExpose({ save, validateWithAlert, reset })

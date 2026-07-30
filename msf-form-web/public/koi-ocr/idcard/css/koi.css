@@ -1,0 +1,2320 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera*/
+}
+body {
+  transform: rotate(0deg);
+  transform-origin: center center;
+  font-family: "NEXON Lv1 Gothic OTF";
+  color: #191919;
+  background-color: #ffffff00;
+  overflow: hidden;
+  touch-action: none;
+  /* overflow-y: scroll; */
+  /* touch-action: none; */
+  height: 100%;
+  height: 100dvh;
+  /* overscroll-behavior-x: none; */
+  /* overflow-x: hidden; */
+  -webkit-user-select: none !important;
+  -moz-user-select: -moz-none !important;
+  -ms-user-select: none !important;
+}
+
+html,
+body,
+div,
+span,
+applet,
+object,
+iframe,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote,
+pre,
+a,
+abbr,
+acronym,
+address,
+big,
+cite,
+code,
+del,
+dfn,
+em,
+img,
+ins,
+kbd,
+q,
+s,
+samp,
+small,
+strike,
+strong,
+sub,
+sup,
+tt,
+var,
+b,
+u,
+i,
+center,
+dl,
+dt,
+dd,
+ol,
+ul,
+li,
+fieldset,
+form,
+label,
+legend,
+table,
+caption,
+tbody,
+tfoot,
+thead,
+tr,
+th,
+td,
+article,
+aside,
+canvas,
+details,
+embed,
+figure,
+figcaption,
+footer,
+header,
+hgroup,
+menu,
+nav,
+output,
+ruby,
+section,
+summary,
+time,
+mark,
+audio,
+video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  vertical-align: baseline;
+}
+/* HTML5 display-role reset for older browsers */
+article,
+aside,
+details,
+figcaption,
+figure,
+footer,
+header,
+hgroup,
+menu,
+nav,
+section {
+  display: block;
+}
+ol,
+ul {
+  list-style: none;
+}
+blockquote,
+q {
+  quotes: none;
+}
+blockquote:before,
+blockquote:after,
+q:before,
+q:after {
+  content: "";
+  content: none;
+}
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  width: 90%;
+  height: fit-content;
+  overflow: scroll;
+  /* margin-top: 5%; */
+}
+
+* {
+  box-sizing: border-box;
+}
+button {
+  font-size: 16px;
+}
+
+:root {
+  --blur_bg_height: calc(calc(var(--vh, 1vh) * 50) - (100vw * 0.375));
+}
+
+.content {
+  margin: 0 auto;
+  max-width: 500px;
+  width: 100%;
+  height: 100%;
+  padding: 0 16px;
+  /* background-color: rgba(255, 255, 255, 1); */
+}
+.content > section {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 300px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Muli", sans-serif;
+  background-color: #f9eded1f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  overflow: hidden;
+  margin: 0;
+  overflow-x: hidden;
+}
+
+header {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 60px;
+  border-bottom: 2px solid;
+  border-color: rgb(173 173 173 / 28%);
+  box-shadow: rgba(0, 0, 0, 0.08) 0px 0px 24px 0px;
+  background: #fff;
+}
+
+#koiOcrFrame {
+  position: absolute;
+  width: 100%;
+  height: 100vh;
+  border: 0;
+}
+
+#koiModule {
+  /* background-color: #fff; */
+  background-color: #f9eded1f;
+  position: static;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+#webcamera_container {
+  /* display: block; */
+  position: absolute;
+  /* position: absolute; */
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  display: flex;
+  /* text-align: center; */
+  justify-content: center;
+}
+
+/* timeout 메시지 화면 중앙 표시 */
+.timeout-message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 20px 40px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  font-size: 18px;
+  font-weight: bold;
+  border-radius: 8px;
+  text-align: center;
+  z-index: 9999;
+}
+
+.contents-section.camera-section {
+  /* display: block; */
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.back-btn {
+  position: absolute;
+  top: 15px; /* 상단 여백 */
+  left: 5px; /* 좌측 여백 */
+  z-index: 100; /* 최상단 배치 */
+  border: none;
+  border-radius: 50%;
+  width: 200px;
+  height: 40px;
+  display: none;
+  gap: 5px;
+  justify-content: start;
+  margin-left: 10px;
+  align-items: center;
+  color: rgb(77, 77, 77);
+  cursor: pointer;
+  transition: background 0.2s;
+  z-index: 10060;
+}
+
+.back-btn:active {
+  background: rgba(0, 0, 0, 0.6); /* 클릭 시 피드백 */
+}
+
+.back-btn-title {
+  margin-left: 4px; /* 화살표와의 간격 */
+  font-size: 16px; /* 적절한 글자 크기 */
+  font-weight: 500;
+}
+
+.back-btn svg {
+  display: block;
+}
+
+.top {
+  display: block;
+  z-index: 10001;
+  position: absolute;
+  height: 312px;
+  /* background-color: black; */
+  width: 100%;
+}
+
+#kwcVideo {
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  width: 100%;
+  height: 100%;
+  z-index: 10002;
+  background-color: transparent;
+  opacity: 1;
+  transition: opacity 0.8s ease 0s;
+  object-fit: cover;
+}
+
+.btn3 {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0);
+  position: fixed;
+  bottom: 30px;
+  left: 40%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  z-index: 10007;
+  border: 2px solid #000;
+  overflow: hidden;
+}
+
+.btn3 > .inner-circle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0);
+  border: 2px solid #000;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+#cap_btn {
+  display: none;
+  top: 85%;
+  left: 50%;
+  /* bottom: 0; */
+  background-color: rgb(255 255 255);
+  transform: translate(-50%, -50%);
+  z-index: 10010;
+}
+
+#switch_btn {
+  display: none;
+  /* left: 40%; */
+  top: 85%;
+  left: 50%;
+  background-color: rgb(255 255 255);
+  transform: translate(-50%, -50%);
+  z-index: 10020;
+}
+
+.default-guide {
+  /* border: 3px solid yellow; */
+  z-index: 10006;
+}
+
+/* 내부 가이드 박스 스타일 */
+.innerGuideBox.public {
+  position: absolute;
+  top: 5%;
+  left: 5%;
+  width: 90%;
+  height: 90%;
+  padding: 0;
+  margin: 0;
+  /* border: 5px dashed #edcad0; */
+  border: 4px dashed #3a6fe3ad;
+  pointer-events: none;
+  box-sizing: border-box;
+  border-radius: 20px;
+  box-shadow: 0 0 0 100vmax rgb(0 0 0 / 48%);
+}
+
+.innerGuideBox.ingam {
+  position: absolute;
+  width: 50%;
+  height: 60%;
+  top: 20%;
+  left: 25%;
+  padding: 0;
+  margin: 0;
+  border: 5px dashed #edcad0;
+  pointer-events: none;
+  box-sizing: border-box;
+  border-radius: 20px;
+  box-shadow: 0 0 0 100vmax rgb(0 0 0 / 48%);
+}
+
+.innerGuideBox.QR {
+  position: absolute;
+  width: 60%; /* 원하는 크기 */
+  aspect-ratio: 1 / 1; /* 정사각형 유지 */
+  top: 20%;
+  left: 20%;
+  padding: 0;
+  margin: 0;
+  border: 5px dashed yellow;
+  pointer-events: none;
+  box-sizing: border-box;
+  border-radius: 20px;
+  box-shadow: 0 0 0 100vmax rgb(0 0 0 / 48%);
+}
+.innerGuideBox.account {
+  position: absolute;
+  width: 90%; /* 원하는 크기 */
+  aspect-ratio: 2 / 1; /* 정사각형 유지 */
+  top: 5%;
+  left: 5%;
+  padding: 0;
+  margin: 0;
+  border: 5px dashed yellow;
+  pointer-events: none;
+  box-sizing: border-box;
+  border-radius: 20px;
+  box-shadow: 0 0 0 100vmax rgb(0 0 0 / 48%);
+}
+/* .guideBox.scan {
+  position: absolute;
+  top: 4%;
+  left: 4%;
+  right: 4%;
+  bottom: 4%;
+  padding: 0;
+  margin: 0;
+  border: 5px dashed yellow;
+  pointer-events: none;
+  box-sizing: border-box;
+  border-radius: 12px;
+  box-shadow: 0 0 0 100vmax rgb(0 0 0 / 48%);
+} */
+
+.guideBox.scan {
+  position: absolute;
+  top: 4%;
+  left: 4%;
+  right: 4%;
+  bottom: 4%;
+  pointer-events: none;
+  box-sizing: border-box;
+  border-radius: 12px;
+
+  /* 1. 그림자(암전 효과)는 여기서 담당 */
+  box-shadow: 0 0 0 100vmax rgb(0 0 0 / 48%);
+  border: none;
+}
+
+/* 2. 코너 선은 가상 요소로 분리해서 마스킹 */
+.guideBox.scan::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 5px solid #597fef8c; /* 실제 보더 */
+  border-radius: 12px; /* 둥근 안쪽 코너 */
+  box-sizing: border-box;
+
+  /* 코너 부분(40px)만 남기고 나머지는 투명하게 마스킹 */
+  -webkit-mask-image:
+    linear-gradient(to right, black 30px, transparent 30px, transparent calc(100% - 30px), black calc(100% - 30px)),
+    linear-gradient(to bottom, black 30px, transparent 30px, transparent calc(100% - 30px), black calc(100% - 30px));
+  -webkit-mask-composite: source-over;
+  mask-composite: intersect;
+}
+
+.guideBox.scan.reg::before {
+  border: 5px solid #ffdb00; /* 감지 시 노란색(#ffdb00)으로 변경 */
+}
+.innerGuideBox.public.detect {
+  border-color: #ffdb00;
+}
+
+/* 영상 영역 스타일 */
+.video-wrapper-idcard,
+.video-wrapper-creditcard,
+.video-wrapper-idcardfull,
+.video-wrapper-passport,
+.video-wrapper-QR {
+  /* background-image: url("../images/sample.png"); */
+  border-radius: 20px;
+  box-sizing: border-box;
+  overflow: hidden;
+  background-color: black;
+}
+
+.video-wrapper-scan {
+  /* background-image: url("../images/sample.png"); */
+  border-radius: 12px;
+  box-sizing: border-box;
+  overflow: hidden;
+  background-color: black;
+}
+
+video-wrapper-ingam {
+  border-radius: 20px;
+  box-sizing: border-box;
+  overflow: hidden;
+  background-color: black;
+}
+
+.innerGuideBox.corner {
+  position: absolute;
+  top: 5%;
+  left: 5%;
+  width: 90%;
+  height: 90%;
+  padding: 0px;
+  margin: 0px;
+  border: none;
+  box-sizing: border-box;
+}
+
+.corner-mark {
+  position: absolute;
+  color: yellow;
+  font-size: 80px;
+  line-height: 80px;
+  pointer-events: none;
+  transform: translate(0, 0);
+}
+
+/* 위치별 클래스 정의 */
+.corner-mark.top-left {
+  top: 0;
+  left: 0;
+}
+
+.corner-mark.top-right {
+  top: 0;
+  right: 0;
+}
+
+.corner-mark.bottom-left {
+  bottom: 0;
+  left: 0;
+}
+
+.corner-mark.bottom-right {
+  bottom: 0;
+  right: 0;
+}
+
+.bottom {
+  display: block;
+  z-index: 10003;
+  position: absolute;
+  height: 312px;
+  /* background-color: black; */
+  width: 100%;
+}
+
+.ocr-status-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px; /* 요소 간 간격 */
+  padding: 10px;
+  text-align: center;
+}
+
+#letterTop-title {
+  position: absolute;
+  width: 100%;
+  display: flex;
+  z-index: 10005;
+  color: #1b2c4b;
+  /* width: 300px; */
+  animation: 1s cubic-bezier(0.4, 0, 1, 1) 0s infinite normal none running blink-effect;
+  text-align: center;
+  font-weight: bolder;
+  justify-content: center;
+  align-items: center;
+  bottom: 0;
+  padding: 5px;
+}
+
+#letterTop-title.affine {
+  display: none;
+}
+
+#regis-title {
+  position: absolute;
+  width: 100%;
+  display: flex;
+  z-index: 10005;
+  color: black;
+  animation: 1s cubic-bezier(0.4, 0, 1, 1) 0s infinite normal none running blink-effect;
+  text-align: center;
+  font-weight: bolder;
+  justify-content: center;
+  align-items: center;
+  bottom: 50%;
+  font-size: larger;
+}
+
+#guideUI {
+  /* position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 60px;
+  font-weight: bolder;
+  background-color: #fff;
+  width: 90%;
+  max-height: 100px;
+  border-radius: 15px;
+  box-sizing: border-box;
+  z-index: 10;
+  flex-direction: row; */
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin-top: 6%;
+  font-weight: bolder;
+  background-color: #fff;
+  width: 90%;
+  border-radius: 15px;
+  box-sizing: border-box;
+}
+
+/* 공통 가이드 메시지 박스 */
+.guide-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1; /* 균등 배분 */
+  padding: 14px 0; /* margin 대신 padding 사용 권장 (선 위치 때문) */
+  position: relative; /* 선의 기준점 */
+}
+
+/* 1. 아이콘 영역 (before) */
+.guide-message::before {
+  content: "";
+  display: block;
+  width: 36px;
+  height: 36px;
+  background-size: 70%;
+  background-repeat: no-repeat;
+  background-position: center;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  background-color: #a9a3a338;
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.1),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  margin-bottom: 10px; /* 텍스트와의 간격 */
+}
+
+/* 2. 세로 구분선 (after) - 마지막 요소 제외 */
+.guide-message:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  right: 0; /* 요소의 맨 오른쪽 끝 */
+  top: 30%; /* 위아래 여백 줘서 중앙 정렬 느낌 */
+  bottom: 30%;
+  width: 1.5px; /* 선 두께 */
+  background-color: #eee; /* 연한 회색 (너무 튀지 않게) */
+}
+
+/* 텍스트 스타일 */
+.guide-message P {
+  margin: 0;
+  font-size: 12px;
+  text-align: center;
+  width: 100%;
+  white-space: nowrap; /* 한 줄 유지 */
+}
+
+/* 각 아이콘 이미지 지정 */
+.guide1::before {
+  background-image: url("../images/guide1.svg");
+}
+.guide2::before {
+  background-image: url("../images/guide2.svg");
+}
+.guide3::before {
+  background-image: url("../images/guide3.svg");
+}
+
+.giroepn-top-padding,
+.giroepn-bottom-padding {
+  position: absolute;
+  z-index: 10040;
+  left: 0;
+  width: 100%;
+  background-color: rgba(169, 169, 169, 0.6);
+}
+
+.giroepn-top-padding {
+  top: 0;
+  height: 42.5%;
+}
+
+.giroepn-bottom-padding {
+  bottom: 0;
+  height: 42.5%;
+}
+
+.giroepn-guide-box {
+  position: absolute;
+  z-index: 10040;
+  top: 42.5%;
+  left: 40%;
+  width: 60%;
+  height: 15%;
+  border: 2px solid red;
+  box-sizing: border-box;
+}
+
+.giroepn-out-guide-box {
+  position: absolute;
+  z-index: 10040;
+  top: 42.5%;
+  left: 0;
+  width: 40%;
+  height: 15%;
+  background-color: rgba(169, 169, 169, 0.6);
+  background-image: url("../images/giro_epn.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+#kwcGuideArea.public {
+  border: 0px;
+}
+
+#kwcGuideArea.yellow {
+  border: 3px solid yellow;
+}
+
+/* 가이드 영역 스타일 */
+.qrcode-guide {
+  /* border: 3px solid yellow; */
+  z-index: 10006;
+  position: relative; /* 혹시 필요하면 추가 */
+  overflow: hidden;
+}
+
+.dual-guide {
+  border: 3px solid yellow;
+  z-index: 10006;
+  position: relative; /* 혹시 필요하면 추가 */
+  overflow: hidden;
+}
+
+/* QR코드 박스 */
+.qr-code-box {
+  position: absolute;
+  top: 10%;
+  left: 18%;
+  width: 60%;
+  height: 60%;
+  border-radius: 10px;
+  box-sizing: border-box;
+}
+
+/* 코너 하이라이트 공통 */
+.corner-highlight {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  font-size: 60px;
+  color: #fff;
+  pointer-events: none;
+  line-height: 20px;
+}
+
+/* 위치별 클래스 */
+.corner-highlight.top {
+  top: 0;
+}
+.corner-highlight.bottom {
+  bottom: 0;
+}
+.corner-highlight.left {
+  left: 0;
+}
+.corner-highlight.right {
+  right: 0;
+}
+
+.uncovered-area {
+  position: absolute;
+  width: 100%;
+  z-index: 10020;
+}
+
+.uncovered-area-top {
+  background-color: rgba(169, 169, 169, 0.6);
+  height: 75%;
+  top: 0;
+  z-index: 10020;
+}
+
+.uncovered-area-bottom {
+  border: 3px solid yellow;
+  height: 25%;
+  bottom: 0;
+  z-index: 10205;
+  border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 20px;
+}
+.uncovered-area-bottom.detect {
+  border: 3px solid yellow;
+  height: 25%;
+  bottom: 0;
+  z-index: 10205;
+}
+.dashed-line {
+  position: absolute;
+  top: 50%; /* 세로 중앙 */
+  left: 0;
+  width: 100%;
+  border-top: 2px dashed yellow; /* 점선 */
+  transform: translateY(-50%);
+}
+.mrz-face {
+  position: absolute;
+  width: 27%;
+  height: 60%;
+  top: 30%;
+  left: 5%;
+  background-image: url("../images/faceline.png");
+  background-size: cover;
+  background-position: center;
+}
+
+.dscan-guide-box {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  /* border: 3px solid yellow; */
+  box-sizing: border-box;
+  touch-action: auto;
+}
+
+.preview-modal {
+  position: relative;
+  width: 100%;
+  height: auto;
+}
+
+.modal-content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.affine-container {
+  width: 100%;
+  height: 100%;
+  position: fixed;
+}
+
+.affineDiv {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  z-index: 10000;
+}
+.affineContent {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+#affine-guideImage {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+}
+.affine-overlay-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 10020;
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+}
+.point-div {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  background-color: rgb(253 253 253 / 65%);
+  border-radius: 50%;
+  z-index: 10040;
+  border: 2px solid;
+  /* border-color: #0052fe; */
+  border-color: #4db6ac;
+  pointer-events: auto;
+}
+.inner-circle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background-color: #4db6ac;
+  border-radius: 50%;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+.affine-container,
+.affine-container img,
+.point-div {
+  /* 1. 꾹 눌렀을 때 뜨는 시스템 메뉴(복사/저장) 차단 */
+  -webkit-touch-callout: none;
+
+  /* 2. 텍스트나 이미지 선택 방지 */
+  -webkit-user-select: none;
+  user-select: none;
+
+  /* 3. 이미지 드래그 방지 */
+  -webkit-user-drag: none;
+
+  /* 4. 브라우저 기본 터치 액션(스크롤 등) 차단 (포인트 이동에 집중) */
+  touch-action: none;
+}
+
+#affine-button-area {
+  outline: none;
+  position: fixed;
+  display: flex !important;
+  width: 100%;
+  background-color: #fff;
+  border-top-right-radius: 20px;
+  border-top-left-radius: 20px;
+  bottom: 0;
+  z-index: 10001;
+  overflow: scroll;
+  flex-direction: row;
+  gap: 5px;
+  height: 70px;
+  justify-content: center;
+  align-items: center;
+}
+
+#affine-button-area.landscape {
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  align-items: end;
+}
+.affine-button.landscape {
+  height: 50%;
+  width: 50%;
+  writing-mode: vertical-rl;
+}
+
+#modal-button-area {
+  outline: none;
+  position: fixed;
+  display: flex !important;
+  width: 100%;
+  bottom: 0;
+  z-index: 10001;
+  overflow: scroll;
+  flex-direction: column;
+  gap: 10px;
+  height: 150px;
+  justify-content: center;
+  align-items: center;
+  background-color: #fff;
+  border-top-right-radius: 20px;
+  border-top-left-radius: 20px;
+}
+#modal-button-area.landscape {
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  align-items: end;
+}
+/* From Uiverse.io by shah1345 */
+.affine-button {
+  position: relative;
+  /* display: none; */
+  z-index: 1;
+  border: 0;
+  background-color: #97abe529;
+  color: #3362ef;
+  font-weight: 500;
+  width: 45%;
+  height: 50px;
+  align-items: center;
+  border-radius: 20px;
+}
+
+.affine-button::after {
+  /* content: ""; */
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 25px;
+  background-color: #ccc;
+  z-index: 10030;
+}
+#affineBackBtn {
+  color: #191919;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+#affineBackBtn::before {
+  content: "";
+  background-image: url(../images/photo.svg);
+  width: 22px;
+  height: 22px;
+  display: inline-block;
+}
+
+#affineSaveBtn {
+  color: #fff;
+  background-color: #0052fe;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+#affineSaveBtn::before {
+  content: "";
+  background-image: url(../images/end.svg);
+  width: 22px;
+  height: 22px;
+  display: inline-block;
+}
+
+#getImagesBtn {
+  color: #191919;
+  display: flex;
+  width: 90%;
+  height: 50px;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  border-radius: 20px;
+  font-weight: 500;
+}
+
+#getImagesBtn::before {
+  content: "";
+  background-image: url(../images/photo.svg);
+  width: 22px;
+  height: 22px;
+  background-position: center;
+  flex-shrink: 0;
+}
+
+#btnCaptureDone {
+  color: #fff;
+  background-color: #0052fe;
+  display: flex; /* flex 사용 */
+  width: 90%;
+  height: 50px; /* .affine-button의 높이 상속 확인 */
+  justify-content: center;
+  align-items: center; /* 핵심: 자식 요소들을 수직 중앙 정렬 */
+  gap: 10px; /* 아이콘과 텍스트 사이 간격 */
+  border: 0;
+  border-radius: 20px;
+  font-weight: 500;
+}
+#btnCaptureDone::before {
+  content: "";
+  background-image: url(../images/end.svg);
+  background-size: contain; /* 아이콘이 잘리지 않게 설정 */
+  background-repeat: no-repeat;
+  background-position: center;
+  width: 22px;
+  height: 22px;
+  /* display: inline-block; <-- 제거: flex-item으로 동작하게 함 */
+  flex-shrink: 0; /* 아이콘 크기 고정 */
+}
+#btnCaptureDone:disabled,
+#btnCaptureDone.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: not-allowed;
+  background-color: #ccc;
+  color: #666;
+  border: 1px solid #aaa;
+}
+
+#previewImage {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+#previewModifyBtn {
+  margin-top: 8px;
+  padding: 6px 12px;
+  font-size: 14px;
+}
+
+#imageCountBadge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: crimson;
+  color: white;
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 12px;
+}
+
+#page-index {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 8px;
+}
+
+#page-count {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+#pointerBtn {
+  display: none;
+  position: absolute;
+  bottom: 7%;
+  left: 50%;
+  background-color: #77b5dfbd;
+  transform: translate(-50%, -50%);
+  z-index: 200011;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+#pointerBtn :after {
+  transform: scale(0.98);
+  box-shadow: 1px 1px 6px 1px rgba(0, 0, 0, 0.1);
+}
+
+#pointerRetryBtn {
+  display: none;
+  position: absolute;
+  bottom: 7%;
+  left: 50%;
+  background-color: #77b5df9e;
+  transform: translate(-50%, -50%);
+  z-index: 100011;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+.mask-box {
+  box-sizing: border-box;
+  transition: border 0.2s;
+}
+.mask-box:hover {
+  border: 2px solid #00f;
+}
+.resize-handle:hover {
+  background: #00f;
+}
+
+.cropButton {
+  width: 30%;
+  height: 50px;
+  border-radius: 32px;
+  outline: none;
+  background-color: transparent;
+  margin: 10px auto;
+  z-index: 10001;
+  overflow: scroll;
+  border: 0px;
+  font-weight: bold;
+  color: #f6f7fb;
+}
+.album-wrapper {
+  padding-left: 30px;
+  padding-top: 30px;
+}
+#albumSelectBtn {
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#albumSelectBtn img {
+  text-align: center;
+  align-items: center;
+  width: 24px;
+  height: 24px;
+}
+#ocr-timer {
+  display: none;
+  position: relative;
+  padding: 8px 12px;
+  font-size: 16px;
+  z-index: 9999;
+  justify-content: center;
+  align-items: center;
+  color: black;
+  font-weight: 600;
+  width: 150px;
+  height: 40px;
+  margin: auto;
+  border-radius: 20px;
+  margin-top: 30px;
+  background-color: #0033cb;
+  color: #fff;
+  font-size: 14px;
+}
+
+#ocr-timer img {
+  width: 16px;
+  height: 16px;
+  margin-right: 4px;
+}
+.red-text {
+  color: #ff0000;
+  font-weight: bold; /* 선택사항 */
+}
+
+#ocr-timer-document {
+  display: none;
+  position: absolute;
+  top: 0;
+  right: 1%;
+  width: 60px;
+  height: 60px;
+}
+
+#ocr-timer-document.show {
+  display: block;
+}
+
+#ocr-timer-document.hide {
+  display: none;
+}
+
+.progress-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 60px;
+  height: 60px;
+  transform: rotate(-90deg);
+}
+
+.progress-ring__background {
+  stroke: #ddd; /* 회색 배경 원 */
+}
+
+.progress-ring__circle {
+  transition:
+    stroke-dashoffset 0.25s linear,
+    stroke 0.3s ease;
+  transform-origin: 50% 50%;
+}
+
+.timer-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+  pointer-events: none;
+}
+#scan-button {
+  display: block;
+  /* left: 40%; */
+  top: 85%;
+  left: 50%;
+  background-color: rgb(255 255 255);
+  transform: translate(-50%, -50%);
+  z-index: 10002;
+}
+
+#previewModal {
+  /* display: none; */ /* 이거 빼기 */
+  opacity: 0; /* 완전히 투명하게 */
+  pointer-events: none;
+  position: absolute;
+  bottom: 2%;
+  right: 2%;
+  width: 16%;
+  height: 16%;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 9999;
+  transition: opacity 0.3s ease;
+  border-radius: 8px;
+}
+
+#previewModal.visible {
+  opacity: 1;
+  pointer-events: none; /* 보일 때 이벤트 활성화 */
+}
+
+#previewModal.click {
+  opacity: 1;
+  pointer-events: auto; /* 보일 때 이벤트 활성화 */
+}
+
+#previewImage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+}
+
+#imageCountBadge {
+  position: absolute;
+  margin-top: -10px;
+  margin-right: -5px;
+  top: 0px;
+  right: 0px;
+  background-color: #0052fe;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 15px;
+  font-size: 11px;
+
+  font-weight: bold;
+  display: block;
+}
+
+.document-guide {
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  text-align: center;
+  color: white;
+}
+
+#previewModifyBtn {
+  position: relative;
+  writing-mode: horizontal-tb;
+  width: 100%;
+  height: auto;
+  border-radius: 5px;
+  border: 0px;
+  background-color: #8195d3;
+  color: white;
+}
+
+#fullPreviewModal {
+  position: relative;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: calc(100% - 210px);
+  top: 60px;
+  background-color: #f9eded1f;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  overflow-y: auto;
+  z-index: 10090;
+}
+
+#fullPreviewModal .close-btn {
+  align-self: flex-end;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 2rem;
+  cursor: pointer;
+  /* margin-bottom: 1rem; */
+}
+#fullPreviewModal .submit-previewBtn {
+  position: absolute;
+  width: 100%;
+  height: 5%;
+  top: 10%;
+  z-index: 10050;
+  color: white;
+}
+#fullPreviewModal .image-list {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0;
+  width: 100%; /* [수정] 스냅이 정확히 걸리려면 컨테이너는 100%여야 합니다 */
+  height: auto;
+  margin: 0 auto;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  align-items: center;
+  /* aspect-ratio: 1 / 1.4;  부모보다 자식에서 비율을 잡는게 더 안정적입니다 */
+}
+
+/* 2. 각 이미지 아이템 (여기서 너비를 100%로 줘야 한 장씩 보입니다) */
+#fullPreviewModal .image-item {
+  flex: 0 0 100%; /* [추가] 부모 너비만큼 한 칸을 다 차지하게 함 */
+  width: 100%; /* [추가] 흔들림 방지 */
+  height: 100%;
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center; /* 이미지 중앙 정렬 */
+  position: relative;
+  box-sizing: border-box;
+  gap: 5px;
+}
+
+#fullPreviewModal .image-list img {
+  width: 70%;
+  overflow: hidden;
+  aspect-ratio: 1 / 1.4;
+  border-radius: 8px; /* [유지] 보더 라운드 사수 */
+  object-fit: contain;
+  pointer-events: none;
+  max-height: 80vh; /* 화면 밖으로 나가지 않게 높이 제한 */
+}
+
+#fullPreviewModal .image-index {
+  position: absolute;
+  display: grid;
+  place-items: center; /* 가로/세로 중앙 정렬을 동시에 엄격하게 적용 */
+  top: 6px;
+  left: 17%;
+  color: white;
+  padding: 0 6px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  border-radius: 20px;
+  background-color: #07446b;
+  width: 55px;
+  height: 23px;
+  text-align: center;
+  z-index: 10;
+  padding-top: 1px;
+}
+
+#fullPreviewModal .image-placeholder {
+  flex: 0 0 100%; /* 아이템과 동일하게 100% */
+  height: 300px;
+  scroll-snap-align: center;
+  border: 2px dashed #ccc;
+  border-radius: 8px; /* [유지] */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  font-style: italic;
+}
+
+#fullPreviewModal .image-placeholder.empty {
+  flex: 0 0 70%;
+  justify-content: center;
+  margin: auto;
+}
+.nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 10060;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+}
+
+.nav-btn:disabled {
+  background: rgba(255, 255, 255, 0.1);
+  color: #87858563;
+  cursor: not-allowed;
+}
+
+.nav-btn.prev {
+  left: 10px;
+}
+.nav-btn.next {
+  right: 10px;
+}
+
+#fullPreviewModal .image-progress {
+  margin-top: 6px;
+  text-align: center;
+  color: #191919;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+#fullPreviewModal .retake-btn {
+  position: absolute;
+  top: 6px;
+  right: 17%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 300;
+  width: 24px;
+  height: 24px;
+  border-radius: 20px;
+}
+
+#fullPreviewModal .retake-btn img {
+  background-image: url(../images/delete.svg);
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-radius: 20px;
+  background-repeat: no-repeat;
+
+  justify-content: center;
+  border: 0;
+
+  background-color: #f9bdbd;
+}
+
+#fullPreviewModal .retake-btn:hover {
+  background-color: #d32f2f;
+}
+
+/* 마스킹 편집 버튼 스타일 */
+.mask-edit-btn {
+  position: absolute;
+  bottom: 40px;
+  right: 17%;
+  padding: 6px 10px;
+  font-size: 13px;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 20px;
+  background-color: #00426b;
+  color: #fff;
+  font-weight: bold;
+  width: 120px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+}
+
+.mask-edit-btn:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+#fullPreviewModal .mask-edit-btn img {
+  width: 16px;
+  height: 19px;
+  display: inline-block;
+  vertical-align: middle;
+
+  aspect-ratio: auto; /* 문서 비율 해제 */
+  border-radius: 0; /* 8px 둥글기 해제 */
+  box-shadow: none; /* 그림자 해제 */
+  max-height: none; /* 높이 제한 해제 */
+
+  /* 아이콘 색상 관련 (SVG라면 stroke 사용) */
+  stroke: #fff;
+  filter: brightness(0) invert(1); /* 일반 img 태그 아이콘을 흰색으로 만들 때 유용 */
+}
+
+/* 아이폰 사파리 대응: path에 직접 stroke 주입 */
+.mask-edit-btn img path {
+  stroke: #ffffff !important;
+  stroke-width: 2px;
+}
+
+.masking-modal {
+  position: absolute;
+  /* top: 80px;  <-- inset 내부의 첫 번째 값이 top이라 이제 필요 없어요 */
+  inset: 80px 0 0 0; /* 상(80px), 우(0), 하(0), 좌(0) */
+
+  height: calc(100% - 250px); /* 이 높이가 우선순위를 갖게 됨 */
+  background-color: #f9eded;
+  z-index: 10090;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.close-btn {
+  align-self: flex-end;
+  border: none;
+  color: white;
+  font-size: 2rem;
+  cursor: pointer;
+  position: fixed;
+  width: 24px;
+  height: 24px;
+  color: black;
+  z-index: 999999;
+  top: 5%;
+  right: 5%;
+  background-image: url("../images/close.svg");
+}
+
+.masking-wrapper {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 30px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  /* top: 70px; */
+  height: 100%;
+}
+
+.masking-edit-image {
+  max-width: 90vw;
+  max-height: 80vh;
+  display: block;
+  pointer-events: none; /* 터치 이벤트가 이미지로 가지 않게 */
+}
+
+.mask-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: auto; /* 캔버스에서 드로잉 가능 */
+  touch-action: none; /* 스크롤 방지 */
+  z-index: 10;
+}
+
+/* 이미지 부모 컨테이너 (img가 단독일 때는 modal에 줘도 됨) */
+.masking-modal img {
+  width: 80%;
+  position: relative;
+  border-radius: 12px;
+  aspect-ratio: 1 / 1.4;
+}
+
+/* 버튼 컨테이너 (하단 고정) */
+/* 기본 스타일 유지 */
+.masking-controls {
+  position: fixed;
+  bottom: 5px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #ededed;
+  flex-direction: column;
+  align-items: center;
+  background-color: #fff;
+  border-top-right-radius: 20px;
+  border-top-left-radius: 20px;
+  justify-content: center;
+  gap: 8px;
+  pointer-events: auto;
+  z-index: 999999;
+  padding: 10px 0;
+}
+
+.masking-menu {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+/* 공통 버튼 */
+.masking-controls button {
+  padding: 12px 18px;
+  border: none;
+  border-radius: 14px;
+  font-size: 13px;
+  color: #0088ff;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    background 0.2s;
+  /* min-width는 아이콘 버튼에는 적합하지 않을 수 있습니다. */
+  /* min-width: 90px; */
+
+  /* 아이콘 버튼의 텍스트와 아이콘을 위한 flex 설정 */
+  display: flex;
+  flex-direction: column; /* 아이콘 위에 텍스트 (또는 반대) */
+  align-items: center;
+  justify-content: center;
+  line-height: 1; /* 아이콘 주변의 여백 최소화 */
+}
+
+/* 아이콘 버튼 공통 스타일 */
+.masking-controls .icon-button {
+  /* 아이콘 버튼은 배경색을 투명하게 설정하여 툴바의 일부처럼 보이게 합니다 */
+  background: transparent;
+  color: #444; /* 기본 텍스트 색상을 어둡게 변경 */
+  padding: 4px 8px; /* 아이콘 버튼의 패딩 조정 */
+  min-width: 60px; /* 터치 영역 확보 */
+}
+
+.masking-controls .icon-button::before {
+  content: "";
+  display: block;
+  width: 24px; /* 아이콘 크기 */
+  height: 24px; /* 아이콘 크기 */
+  margin-bottom: 4px; /* 아이콘과 텍스트 라벨 사이 간격 */
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.masking-controls .cancel-btn::before {
+  background-image: url("../images/undo.png");
+}
+
+.masking-controls .undo-btn::before {
+  background-image: url("../images/back.svg");
+}
+
+/* 2. 원본 복원 버튼 스타일 */
+.masking-controls .restore-btn::before {
+  background-image: url("../images/restore.svg"); /* 요청하신 redo.png 사용 */
+}
+
+.masking-controls .save-btn::before {
+  background-image: url("../images/end.svg"); /* 요청하신 redo.png 사용 */
+  margin: 0;
+  width: 20px;
+  height: 20px;
+}
+
+/* 편집 취소 버튼 스타일 (텍스트 버튼) */
+.masking-controls button:first-child {
+  background: transparent;
+  color: #444;
+  font-weight: 500;
+  min-width: initial;
+  padding: 12px 18px;
+}
+
+/* 저장 버튼 스타일 (강조된 버튼) */
+.masking-controls button:last-child {
+  /* background: #0088ff;
+  color: white; */
+  font-weight: 600;
+  min-width: 100px; /* 강조 */
+  padding: 12px 20px;
+}
+
+#maskingSave {
+  flex-direction: row;
+  gap: 5px;
+  color: #fff;
+  background-color: #0052fe;
+  width: 90%;
+  height: 40px;
+  border-radius: 20px;
+  font-size: 14px;
+}
+
+/* 터치 반응 */
+.masking-modal button:active {
+  transform: scale(0.97);
+}
+
+.masking-reset-btn {
+  background: #ffbb00;
+  color: #000;
+}
+.masking-reset-btn:hover {
+  background: #ff9900;
+}
+
+/* From Uiverse.io by cssbuttons-io */
+button {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  outline: none;
+  border: 0;
+  vertical-align: middle;
+  text-decoration: none;
+  background: transparent;
+  padding: 0;
+  font-size: inherit;
+  font-family: inherit;
+}
+
+button.learn-more {
+  width: 12rem;
+  height: auto;
+}
+
+button.learn-more .circle {
+  transition: all 0.45s cubic-bezier(0.65, 0, 0.076, 1);
+  position: relative;
+  display: block;
+  margin: 0;
+  width: 3rem;
+  height: 3rem;
+  background: #282936;
+  border-radius: 1.625rem;
+}
+
+button.learn-more .circle .icon {
+  transition: all 0.45s cubic-bezier(0.65, 0, 0.076, 1);
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  margin: auto;
+  background: #fff;
+}
+
+button.learn-more .circle .icon.arrow {
+  transition: all 0.45s cubic-bezier(0.65, 0, 0.076, 1);
+  left: 0.625rem;
+  width: 1.125rem;
+  height: 0.125rem;
+  background: none;
+}
+
+button.learn-more .circle .icon.arrow::before {
+  position: absolute;
+  content: "";
+  top: -0.29rem;
+  right: 0.0625rem;
+  width: 0.625rem;
+  height: 0.625rem;
+  border-top: 0.125rem solid #fff;
+  border-right: 0.125rem solid #fff;
+  transform: rotate(45deg);
+}
+
+button.learn-more .button-text {
+  transition: all 0.45s cubic-bezier(0.65, 0, 0.076, 1);
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 0.75rem 0;
+  margin: 0 0 0 1.85rem;
+  color: #282936;
+  font-weight: 700;
+  line-height: 1.6;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+button:hover .circle {
+  width: 100%;
+}
+
+button:hover .circle .icon.arrow {
+  background: #fff;
+  transform: translate(1rem, 0);
+}
+
+button:hover .button-text {
+  color: #fff;
+}
+
+@keyframes scanEffect {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+    box-shadow: 0 0 0 rgba(0, 255, 0, 0.3);
+  }
+  30% {
+    opacity: 1;
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.6);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow: 0 0 0 rgba(0, 255, 0, 0);
+  }
+}
+
+@keyframes flyToModal {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--target-x), var(--target-y)) scale(0.2);
+  }
+}
+
+.image-popup-wrapper {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10030;
+  /* pointer-events: none; */
+}
+
+.image-popup {
+  max-width: 300px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  animation: scanEffect 2s ease forwards;
+}
+
+.mask-box {
+  border-radius: 4px;
+  transition: outline 0.2s;
+}
+
+#orientationchange {
+  position: absolute;
+  bottom: 9%;
+  right: 7%;
+  background-color: transparent;
+  border: transparent;
+}
+
+#orientationchange img {
+  width: 50px;
+  height: 50px;
+  background-color: transparent;
+}
+
+.orientation-button {
+  width: 48px;
+  height: 48px;
+  background-image: url("../images/360-camera_1-removebg.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  border: none;
+  cursor: pointer;
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  z-index: 10007;
+}
+
+#reloadWrapper {
+  display: flex;
+}
+
+#reloadMsg {
+  width: 90%;
+  text-align: right;
+  padding: 10px;
+  font-weight: 500;
+  font-size: 13px;
+  display: none;
+}
+
+#reloadCameraBtn {
+  display: none;
+  justify-content: flex-end;
+  width: 10%;
+  height: 30px;
+  padding: 5px;
+  background-image: url("../images/refresh.svg");
+  background-size: 30px 30px; /* 아이콘 크기 */
+  background-repeat: no-repeat;
+  background-position: right;
+  margin-top: 5px;
+}
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5); /* 어두운 반투명 배경 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10050;
+}
+
+.three-body {
+  --uib-size: 35px;
+  --uib-speed: 0.8s;
+  --uib-color: #5d3fd3;
+  position: relative;
+  display: inline-block;
+  height: var(--uib-size);
+  width: var(--uib-size);
+  animation: spin78236 calc(var(--uib-speed) * 2.5) infinite linear;
+}
+
+.three-body__dot {
+  position: absolute;
+  height: 100%;
+  width: 30%;
+}
+
+.three-body__dot:after {
+  content: "";
+  position: absolute;
+  height: 0%;
+  width: 100%;
+  padding-bottom: 100%;
+  background-color: var(--uib-color);
+  border-radius: 50%;
+}
+
+.three-body__dot:nth-child(1) {
+  bottom: 5%;
+  left: 0;
+  transform: rotate(60deg);
+  transform-origin: 50% 85%;
+}
+
+.three-body__dot:nth-child(1)::after {
+  bottom: 0;
+  left: 0;
+  animation: wobble1 var(--uib-speed) infinite ease-in-out;
+  animation-delay: calc(var(--uib-speed) * -0.3);
+}
+
+.three-body__dot:nth-child(2) {
+  bottom: 5%;
+  right: 0;
+  transform: rotate(-60deg);
+  transform-origin: 50% 85%;
+}
+
+.three-body__dot:nth-child(2)::after {
+  bottom: 0;
+  left: 0;
+  animation: wobble1 var(--uib-speed) infinite calc(var(--uib-speed) * -0.15) ease-in-out;
+}
+
+.three-body__dot:nth-child(3) {
+  bottom: -5%;
+  left: 0;
+  transform: translateX(116.666%);
+}
+
+.three-body__dot:nth-child(3)::after {
+  top: 0;
+  left: 0;
+  animation: wobble2 var(--uib-speed) infinite ease-in-out;
+}
+
+.qr-result-display {
+  display: flex;
+  position: absolute;
+  width: 100%;
+  height: 50%;
+  /* bottom: 0; */
+  overflow: scroll;
+  font-size: 13px;
+  margin-top: -10px;
+}
+
+.qr-page-result table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+@keyframes spin78236 {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes wobble1 {
+  0%,
+  100% {
+    transform: translateY(0%) scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: translateY(-66%) scale(0.65);
+    opacity: 0.8;
+  }
+}
+
+@keyframes wobble2 {
+  0%,
+  100% {
+    transform: translateY(0%) scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: translateY(66%) scale(0.65);
+    opacity: 0.8;
+  }
+}
+
+/* 태블릿 */
+@media screen and (min-width: 768px) and (max-width: 1023px) {
+  /* #letterTop-title {
+    margin-top: 15%;
+    top: 0;
+  } */
+  /* #guideUI {
+    top: 25%;
+  } */
+}
+
+@media screen and (min-width: 580px) and (max-width: 650px) {
+  #guideUI {
+    display: none;
+  }
+}
+@media screen and (orientation: landscape) {
+  #letterTop-title {
+    width: 100%;
+    align-items: flex-start;
+    margin-top: 10%;
+    top: 0;
+  }
+  #reloadWrapper {
+    flex-direction: column-reverse;
+  }
+
+  #affine-button-area {
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    align-items: self-end;
+  }
+  .affine-button {
+    height: 50%;
+    width: 50%;
+  }
+  #modal-button-area {
+    position: absolute;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+  }
+  #reloadCameraBtn {
+    background-position: left;
+    margin-left: 8px;
+    width: 100%;
+  }
+
+  #reloadMsg {
+    width: 100%;
+    text-align: left;
+  }
+
+  #ocr-timer {
+    position: fixed;
+    top: 50%;
+    left: 90%;
+    transform: translate(-50%, -50%);
+    width: auto;
+    height: 140px;
+    writing-mode: vertical-rl;
+    margin: 0;
+    padding: 12px 8px;
+    z-index: 10000;
+  }
+
+  #ocr-timer span {
+    writing-mode: horizontal-tb;
+  }
+
+  #ocr-timer img {
+    margin: 0;
+    margin-bottom: 4px;
+  }
+
+  #guideUI {
+    flex-direction: column-reverse;
+    top: 50%;
+    height: 100%;
+    width: 100%;
+    justify-content: center;
+    margin-top: 0px;
+  }
+
+  .guide-message:not(:last-child)::after {
+    right: 15%; /* 좌우 여백 */
+    left: 15%;
+    bottom: 0; /* 요소의 아래쪽에 배치 */
+    top: auto; /* 기존 top 초기화 */
+    width: auto; /* 기존 너비 초기화 */
+    height: 1px; /* 가로선이니까 높이를 1px로 */
+    background-color: #eee;
+  }
+}
+
+/* ====================================
+    kt m mobile 스타일 적용
+ ====================================== */
+/* 카메라 영역 가림 (테스트용) */
+/* .video-wrapper-idcard::before,
+.video-wrapper-creditcard::before,
+.video-wrapper-idcardfull::before,
+.video-wrapper-passport::before,
+.video-wrapper-QR::before,
+.wrapper::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.9) !important;
+  z-index: 99999;
+} */
+/* 배경색 흰색으로 덮기*/
+#koiModule {
+  background-color: #ffffff !important;
+}
+/* 영상 영역 스타일 재선언 */
+.video-wrapper-idcard,
+.video-wrapper-creditcard,
+.video-wrapper-idcardfull,
+.video-wrapper-passport,
+.video-wrapper-QR,
+.camera-section .wrapper {
+  /* background-image: url("../images/sample.png"); */
+  border-radius: 20px;
+  box-sizing: border-box;
+  overflow: hidden;
+  background-color: black;
+}
+/* 폰트 설정 */
+body {
+  font-family: 'Pretendard', sans-serif;
+}
+/* 스캔 안내문구 영역 영역부족으로 삭제*/
+#guideUI {
+  display: none !important;
+}
+/* '이전'버튼 일단 사용하지 않을것이므로 숨김 */
+.camera-section .back-btn {
+  display: none !important;
+}
+/* (남은시간) 카메라 우측 세로로 배치시에 스타일 활성화 */
+/* #ocr-timer {
+  left: auto;
+  right: 0;
+  transform: translate(0, -50%);
+} */
+/* (남은시간) 카메라 하단 가로로 배치시에 스타일 활성화 */
+#ocr-timer {
+  left: 50%;
+  bottom: 24px;
+  top: auto;
+  writing-mode: horizontal-tb;
+  transform: translate(-50%, 0);
+  height: auto;
+  padding: 4px 10px;
+}
+/* 하단영역(bottom) 가려짐 수정*/
+.bottom {
+  z-index: 10006; /* qrcode-guide 사용시에 dim보다 1더 높인값 */
+}
+/* QR 사용시에 가이드박스 스타일 public이랑 스타일 통일 (색상만 유지)*/
+.innerGuideBox.QR {
+  position: absolute;
+  width: 90%; /* 원하는 크기 (60% -> 90% 로 변경) */
+  aspect-ratio: 1 / 1; /* 정사각형 유지 */
+  top: 5%; /* (20% -> 5%) */
+  left: 5%; /* (20% -> 5%) */
+  padding: 0;
+  margin: 0;
+  border: 5px dashed yellow;
+  pointer-events: none;
+  box-sizing: border-box;
+  border-radius: 20px;
+  box-shadow: 0 0 0 100vmax rgb(0 0 0 / 48%);
+}

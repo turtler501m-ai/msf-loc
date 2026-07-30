@@ -31,6 +31,7 @@ class MaskingJacksonModuleTest {
             "900101-3234567",
             "123-456789-01234",
             "1234-5678-9012-5678",
+            "192.168.0.1",
             "서울특별시 강남구 테헤란로 123, 456동 789호",
             "visible"
         );
@@ -45,6 +46,7 @@ class MaskingJacksonModuleTest {
         assertThat(JsonPath.<String>read(json, "$.foreignRegistrationNumber")).isEqualTo("900101-3******");
         assertThat(JsonPath.<String>read(json, "$.bankAccountNumber")).isEqualTo("123-******-**234");
         assertThat(JsonPath.<String>read(json, "$.creditCardNumber")).isEqualTo("1234-56**-****-5678");
+        assertThat(JsonPath.<String>read(json, "$.ipAddress")).isEqualTo("192.168.*.1");
         assertThat(JsonPath.<String>read(json, "$.address")).isEqualTo("서울특별시 강남구 테헤란로 ***, *******");
         assertThat(JsonPath.<String>read(json, "$.plainText")).isEqualTo("visible");
     }
@@ -75,6 +77,9 @@ class MaskingJacksonModuleTest {
 
         @Masked(type = MaskingType.CREDIT_CARD_NUMBER)
         String creditCardNumber,
+
+        @Masked(type = MaskingType.IP_ADDRESS)
+        String ipAddress,
 
         @Masked(type = MaskingType.ADDRESS)
         String address,

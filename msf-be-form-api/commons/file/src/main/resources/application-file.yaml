@@ -5,31 +5,58 @@ file:
     region: standard
     base-path: files
     credentials:
-      access-key: ${OBJECT_STORAGE_ACCESS_KEY}
-      secret-key: ${OBJECT_STORAGE_SECRET_KEY}
-    bucket:  ## 환경별 설정
+      access-key: ## 환경별 설정
+      secret-key: ## 환경별 설정
+    bucket:       ## 환경별 설정
     configurations:
       max-connections: 200
-      connection-timeout: 5000
-      socket-timeout: 30000
-      api-call-timeout: 30000
+      connection-timeout: 2000  # TCP 연결 타임아웃
+      socket-timeout: 60000     # 파일 송수신 타임아웃
+      api-call-timeout: 60000   # API 호출 당 타임아웃(연결, 요청 전송, 응답 수신, 재시도 포함)
   local-filesystem:
     base-path: /app_data/files
 
-  policy:
-    max-file-size: 10MB
+  variants:
+    image:
+      resized:
+        small:
+          max-width: 200
+          max-height: 200
+        medium:
+          max-width: 800
+          max-height: 800
+      formats:
+        jpg:
+          compression-quality: 0.9 # JPG 변환 압축 품질
+        png:
+          compression-quality: 0.9 # PNG 변환 압축 품질
+        tiff:
+          compression-type: LZW # TIFF 변환 압축 방식
+
+  policy: ## 기본 정책
+    max-file-size: 50MB
     allowed-extensions:
+      - pdf
       - jpg
       - jpeg
       - png
       - gif
       - tif
       - tiff
+      - m4a
+      - webm
     allowed-mime-types:
+      - application/pdf
       - image/jpeg
       - image/png
       - image/gif
       - image/tiff
+      - audio/m4a
+      - audio/mp4
+      - audio/aac
+      - audio/webm
+      - application/x-matroska
+      - video/quicktime
 
 
 
@@ -40,6 +67,9 @@ spring:
 
 file:
   object-storage:
+    credentials:
+      access-key: ENC(UCFX34YjZP/ZTS5OP5jVbh6XiuGBrO4llv57azf/Lf0VhvSBQjPDvobBBjrrvmmsHiCs38DnMx+9yYWLNyNdyA==)
+      secret-key: ENC(ANNEG9+S4KWQKlrLQQTjyF0gIcn3pgqan6SPygEcjZ1XCYYU+QRq5adrz3lmJ5NUyniJvIVUPvrGuN4zPoJIEKi4VdlbnLjqRs+Si7cORwI=)
     bucket: msf-storage-prd
 
 
@@ -51,6 +81,9 @@ spring:
 
 file:
   object-storage:
+    credentials:
+      access-key: ENC(...)
+      secret-key: ENC(...)
     bucket: msf-storage-stg
 
 
@@ -62,6 +95,9 @@ spring:
 
 file:
   object-storage:
+    credentials:
+      access-key: ENC(e/fQq/3uyULCHqz3YbvqipllXsZIQfRq2RXFfEu9EsxuOAV711OHOuGhRuVewIRrzz0VMvprKe3iIm0qXEN1xA==)
+      secret-key: ENC(20VMfkyD0uPsvpTmEtie2UInbuBqxcSdQ0igA6MRAqfeNFEpzMFgObd0yM51UwBaTPhamKR6B8rWWkXEMBICfY0IK60v5M5m4rWxc1NpARo=)
     bucket: msf-storage-dev
 
 
@@ -73,6 +109,9 @@ spring:
 
 file:
   object-storage:
+    credentials:
+      access-key: ENC(id/00yA54jFZ9QnmjtEOBaq/lbCSKU/s9gRC4x5khRnYvhIZsCcITGwplwilYKPbiCJdSZajGSVjntW7u7uOww==)
+      secret-key: ENC(lpU4u0NCoEn/h64jlI6B5pnZfEZK9URa0mZB/ENXcaUXlFNCGsROvs3HRqAaaaAq0SMYwp1MH1zwuNgeGyul/TVrvNUavOpZVvHxjhPwSzE=)
     bucket: msf-storage-dev
   local-filesystem:
     base-path: c:/tmp/msf-files

@@ -1,7 +1,7 @@
 <template>
   <div class="guide-page">
     <GuideUnit
-      name="ClassGuide"
+      name="NoData"
       title="데이터 없음 영역"
       description="데이터 없음 영역에 설계에 맞게 텍스트 변경하여 사용합니다."
       caseTitle="nodata-wrap 클래스로 감싼 형태"
@@ -48,7 +48,6 @@ import selfSource from './NodataGuide.vue?raw'
 <style lang="scss" scoped>
 .guide-page {
   background-color: #fff;
-  padding: 20px;
 
   .demo-list {
     display: flex;

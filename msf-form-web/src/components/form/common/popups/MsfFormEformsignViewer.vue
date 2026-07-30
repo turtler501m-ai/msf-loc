@@ -72,16 +72,16 @@ const loadScript = (src) =>
 /**
  * eformsign SDK 로드
  * .env
- * VITE_EFORM_API_URL=https://www.eformsign.com/lib/js/efs_embedded_form.js
+ * VITE_EFORM_BASE_URL=https://www.eformsign.com/lib/js/efs_embedded_form.js
  */
 const loadEformSdk = async () => {
   if (window.EformSignTemplate) return
 
-  const sdkUrl = import.meta.env.VITE_EFORM_API_URL
+  const sdkUrl = import.meta.env.VITE_EFORM_BASE_URL
 
   if (!sdkUrl) {
     throw new Error(
-        'VITE_EFORM_API_URL 환경변수가 없습니다.',
+        'VITE_EFORM_BASE_URL 환경변수가 없습니다.',
     )
   }
 

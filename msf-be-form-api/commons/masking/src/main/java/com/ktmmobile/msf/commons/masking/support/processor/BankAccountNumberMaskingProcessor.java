@@ -17,10 +17,10 @@ public class BankAccountNumberMaskingProcessor implements MaskingProcessor {
 
     @Override
     public String mask(String value) {
-        String digits = MaskingTextUtils.onlyDigits(value);
+        String digits = MaskingProcessorUtils.onlyDigits(value);
         if (digits.length() < MIN_MASKING_DIGIT_COUNT) {
             return value;
         }
-        return MaskingTextUtils.maskDigits(value, 3, 3);
+        return MaskingProcessorUtils.maskDigits(value, 3, 3);
     }
 }

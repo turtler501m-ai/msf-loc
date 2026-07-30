@@ -18,7 +18,13 @@ public class MsfRequestSvcChgDtlVo {
     String amdDt;
     String amdId;
     String svcTgtCd;
+    String svcChgTypeCd;
     String procTypeCd;
+    String procDt;
+    String procCd;
+    String resCd;
+    String resMsg;
+    String resNo;
     String socCd;
     String socNm;
     String addtionInfo;
@@ -54,5 +60,6 @@ public class MsfRequestSvcChgDtlVo {
     String appFormXmlYn;
     String fileNm;
     String fileMaskNm;
+    String parentScanId;
 
 }

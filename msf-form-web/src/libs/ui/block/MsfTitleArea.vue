@@ -26,7 +26,7 @@
 import { computed } from 'vue'
 
 const props = defineProps({
-  // 타이틀 레벨 (기본: 1(14px) / 2(16px) / 3(18px))
+  // 타이틀 레벨 (기본: 1(20px) / 2(16px) / 3(18px))
   level: {
     type: String,
     default: '1',
@@ -57,6 +57,11 @@ const props = defineProps({
     type: String,
     default: undefined,
   },
+  /** 상단 여백 (0, 1(40px), 2(32px), 3(24px), 4(16px/12px))*/
+  margin: {
+    type: [String, Number],
+    default: undefined,
+  },
 })
 
 const rootClasses = computed(() => [
@@ -66,6 +71,7 @@ const rootClasses = computed(() => [
     'is-noline': props.noline,
     'is-bold': props.bold,
   },
+  props.margin && `mt-${props.margin}`,
 ])
 
 // 타이틀 유틸클래스 지정
@@ -117,7 +123,7 @@ const colorClass = computed(() => {
     --title-area-border-color: var(--color-gray-150);
 
     --title-area-margin-top: #{rem(24px)};
-    --title-area-margin-bottom: #{rem(16px)};
+    --title-area-margin-bottom: #{rem(12px)};
   }
   &.level-3 {
     --title-area-font-size: var(--font-size-18);
@@ -131,6 +137,8 @@ const colorClass = computed(() => {
   }
   // 하단 라인 숨김
   &.is-noline {
+    // 라인 없는경우 색상 진하게 수정(신청서 열람, 확인 관련 수정반영)
+    --title-area-text-color: var(--color-gray-900);
     .heading-area {
       border-bottom: none;
       .title {
@@ -141,6 +149,7 @@ const colorClass = computed(() => {
   // 타이틀 볼드처리
   &.is-bold {
     --title-area-font-weight: var(--font-weight-bold);
+    --title-area-text-color: var(--color-foreground); // 볼드처리 기본컬러 블랙지정
   }
   // 첫번째 자식일경우 상단 공간 초기화
   &:first-child {
@@ -149,6 +158,28 @@ const colorClass = computed(() => {
   // 부모가 StepView 레이아웃 클래스를 가지고있는경우에는 무조건 상단마진 부여
   .page-step-panel & {
     margin-block: var(--title-area-margin-top) var(--title-area-margin-bottom);
+    // .page-step-panel의 첫 번째 자식 div를 찾고, 그 div 안의 첫 번째 자식이 본인(.title-area-root)일 때 상단 마진 초기화
+    &:is(.page-step-panel > div:first-child > :first-child) {
+      margin-block-start: 0;
+    }
+  }
+
+  // Margin Block
+  &.mt-0 {
+    margin-top: 0;
+  }
+  &.mt-1 {
+    margin-top: rem(40px);
+  }
+  &.mt-2 {
+    margin-top: rem(32px);
+  }
+  &.mt-3 {
+    margin-top: rem(24px);
+  }
+  &.mt-4 {
+    margin-top: rem(16px);
+    margin-bottom: rem(12px);
   }
 }
 </style>

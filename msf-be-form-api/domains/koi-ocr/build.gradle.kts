@@ -10,4 +10,6 @@ dependencies {
     implementation(project(":commons:file"))
 
     implementation(project(":domains:policy"))
+    implementation(project(":domains:shared"))
+    implementation(project(":domains:external-client"))
 }

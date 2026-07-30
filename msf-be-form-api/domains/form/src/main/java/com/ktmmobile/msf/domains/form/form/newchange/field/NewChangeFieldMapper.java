@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
 import org.mapstruct.factory.Mappers;
 
 import com.ktmmobile.msf.commons.mybatis.annotation.AutoAuditing;
@@ -28,7 +29,7 @@ import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoResponse;
  */
 
 @AutoAuditing
-@Mapper
+@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface NewChangeFieldMapper {
 
     NewChangeFieldMapper INSTANCE = Mappers.getMapper(NewChangeFieldMapper.class);
@@ -71,7 +72,6 @@ public interface NewChangeFieldMapper {
     //NewChangeInfoRequest ~> MSF_REQUEST_ADDITION_TEMP
     //MsfRequestAdditionVo toMsfRequestAdditionVo(NewChangeInfoRequest request);
     List<MsfRequestAdditionVo> toMsfRequestAdditionVo(List<NewChangeAdditionRequest> additionList);
-
 
     //MsfRequestOsstVo toMsfRequestOsstVo(NewChangeInfoRequest request); //MSF_REQUEST
 

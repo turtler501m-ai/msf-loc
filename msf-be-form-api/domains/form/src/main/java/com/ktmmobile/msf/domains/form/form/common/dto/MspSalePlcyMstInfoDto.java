@@ -23,7 +23,7 @@ public class MspSalePlcyMstInfoDto {
     private String saleEndDttm; //판매종료일시
     private String plcyTypeCd; //정책유형코드
     private String plcySctnCd; //정책구분코드(01:단말,02:유심)
-    private String prdtSctnCd; //제품구분코드(02:3G , 03:LTE)
+    private String prdtSctnCd; //제품구분코드(02:3G , 03:LTE) >> LTE5G / 5G / 3G / LTE / -1
     private String applSctnCd; //적용구분코드 (O:개통일, R:접수일)
     private BigDecimal instRate; //할부이자율
     private String agrmTrm; //약정기간

@@ -15,4 +15,15 @@
           AND A.SOC = B.RATE_CD
           AND B.PAY_CL_CD = 'PP'
     </select>
+
+    <update id="updateMcpCancelRequestProcCd"
+            parameterType="com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto$ProcessUpdateDto">
+        UPDATE MCP_CANCEL_REQUEST@DL_MCP
+        SET
+            PROC_CD = #{procCd},
+            MEMO = COALESCE(NULLIF(#{memo}, ''), MEMO),
+            RVISN_DTTM = SYSDATE
+        WHERE CUST_REQ_SEQ = #{requestKey}
+          AND PROC_CD != #{procCd}
+    </update>
 </mapper>

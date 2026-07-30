@@ -19,10 +19,16 @@ import {
   TextareaGuide,
   SelectGuide,
   TableGuide,
-  SearchBoxGuide,
   ClassGuide,
   FileButtonGuide,
   NodataGuide,
+  FlagGuide,
+  LoadingGuide,
+  ColorGuide,
+  TypoGuide,
+  TitleAreaGuide,
+  TextListGuide,
+  SwitchGuide,
 } from './components'
 
 const route = useRoute()
@@ -30,6 +36,9 @@ const router = useRouter()
 
 // 2. 가이드 탭 구성 (컴포넌트 객체를 직접 매핑)
 const guideTabs = {
+  typography: { name: 'Typography', component: markRaw(TypoGuide) },
+  color: { name: 'Color', component: markRaw(ColorGuide) },
+  titleArea: { name: 'TitleArea', component: markRaw(TitleAreaGuide) },
   button: { name: 'Button', component: markRaw(ButtonGuide) },
   buttonGroup: { name: 'ButtonGroup', component: markRaw(ButtonGroupGuide) },
   FileButton: { name: 'FileButton', component: markRaw(FileButtonGuide) },
@@ -42,13 +51,16 @@ const guideTabs = {
   radio: { name: 'Radio', component: markRaw(RadioGuide) },
   radioGroup: { name: 'RadioGroup', component: markRaw(RadioGroupGuide) },
   chip: { name: 'Chip', component: markRaw(ChipGuide) },
+  switch: { name: 'Switch', component: markRaw(SwitchGuide) },
   formGroup: { name: 'FormGroup', component: markRaw(FormGroupGuide) },
-  searchBox: { name: 'SearchBox', component: markRaw(SearchBoxGuide) },
+  textList: { name: 'TextList', component: markRaw(TextListGuide) },
   table: { name: 'Table', component: markRaw(TableGuide) },
   alert: { name: 'Alert', component: markRaw(AlertGuide) },
   dialog: { name: 'Dialog', component: markRaw(DialogGuide) },
   class: { name: 'Class', component: markRaw(ClassGuide) },
   nodata: { name: 'Nodata', component: markRaw(NodataGuide) },
+  flag: { name: 'Flag', component: markRaw(FlagGuide) },
+  loading: { name: 'Loading', component: markRaw(LoadingGuide) },
 }
 
 // 3. 현재 선택된 탭 관리

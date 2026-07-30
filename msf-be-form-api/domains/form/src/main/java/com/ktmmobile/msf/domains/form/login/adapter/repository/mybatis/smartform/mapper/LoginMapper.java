@@ -13,16 +13,15 @@ public interface LoginMapper {
 
     LoginResponse selectUserInfo(LoginRequest request);
 
-    LoginResponse selectUserAppInfo(LoginRequest request);
-
-    Integer updateLoginFail(LoginRequest request);
-
-    Integer updateLoginSucc(LoginRequest request);
-
     @AutoAuditing(false)
     Integer insertUserHistory(String userId);
 
-    Integer updateBioLoginSucc(LoginRequest request);
-
     Integer updateUserPass(PassChangeRequest request);
+
+    LoginResponse selectUserHstInfo(LoginRequest loginRequest);
+
+    @AutoAuditing(false)
+    Integer insertAdminUserHistory(String userId);
+
+    Integer updateAdminUserPass(PassChangeRequest request);
 }

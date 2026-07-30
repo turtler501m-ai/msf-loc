@@ -7,11 +7,16 @@
     <select id="selectKtmCustomer"
             parameterType="com.ktmmobile.msf.domains.form.form.common.dto.MspJuoSubInfoRequest"
             resultType="com.ktmmobile.msf.domains.form.form.common.dto.MspJuoSubInfoResponse">
+        <!-- mcp-api : /appform/selRMemberAjax -->
         <![CDATA[
         WITH CNTR AS (
             SELECT
                 A.CONTRACT_NUM
-                , A.USER_SSN
+                , A.CUSTOMER_ID
+                --, A.USER_SSN 2026.05.20 변경전 :: 고객데이터 조회시 주민등록번호는 MSP_JUO_CUS_INFO.USER_SSN 이 아닌 MSP_JUO_CUS_INFO.CUSTOMER_SSN 으로 조회되야함.
+                , CRYPTO_AES256.DEC_AES(D.CUSTOMER_SSN) AS USER_SSN -- 2026.05.20 변경 후
+                , D.DRIVR_LICNS_NO
+                , D.TAX_ID
                 , D.CUSTOMER_LINK_NAME
                 , A.SUBSCRIBER_NO
                 , A.SUB_STATUS
@@ -26,7 +31,7 @@
                     FROM    MSP_JUO_ADD_INFO X
                             , MSP_DVC_CHG_AGNT_HST Y
                     WHERE   X.CONTRACT_NUM = (SELECT MAX(CONTRACT_NUM) FROM MSP_JUO_SUB_INFO
-                                                WHERE SUBSCRIBER_NO = #{subscriberNo} AND PPPO = 'PO' AND SUB_STATUS <> 'C')
+                                                WHERE SUBSCRIBER_NO = #{customerMobileNo} AND PPPO = 'PO' AND SUB_STATUS <> 'C')
                     AND     X.MODEL_CHN_CD = '01'
                     AND     X.CONTRACT_NUM = Y.CONTRACT_NUM
                     AND     X.EVNT_TRTM_NO = Y.EVNT_TRTM_NO
@@ -39,27 +44,25 @@
                     SELECT  SUBSTR(X.SIM_START_DT, 1, 8) || X.ENGG_MNTH_CNT
                     FROM    MSP_JUO_ADD_INFO X
                     WHERE   X.CONTRACT_NUM = (SELECT MAX(CONTRACT_NUM) FROM MSP_JUO_SUB_INFO
-                                                WHERE SUBSCRIBER_NO = #{subscriberNo} AND PPPO = 'PO' AND SUB_STATUS <> 'C')
+                                                WHERE SUBSCRIBER_NO = #{customerMobileNo} AND PPPO = 'PO' AND SUB_STATUS <> 'C')
                     AND     X.EVNT_CD = 'SIM'
                     AND     X.GRNT_INSR_STAT_CD = 'A'
                     AND     X.APP_END_DATE LIKE '99991231%'
                     AND     X.SIM_START_DT = (
-                        SELECT MAX(X2.SIM_START_DT)
-                        FROM MSP_JUO_ADD_INFO X2
-                        WHERE X2.CONTRACT_NUM = (SELECT MAX(CONTRACT_NUM) FROM MSP_JUO_SUB_INFO
-                                                    WHERE SUBSCRIBER_NO = #{subscriberNo} AND PPPO = 'PO' AND SUB_STATUS <> 'C')
-                          AND     X2.EVNT_CD = 'SIM'
-                          AND     X2.GRNT_INSR_STAT_CD = 'A'
-                          AND     X2.APP_END_DATE LIKE '99991231%'
-                        GROUP BY X2.CONTRACT_NUM
-                    )
+                              SELECT MAX(X2.SIM_START_DT) FROM MSP_JUO_ADD_INFO X2
+                              WHERE X2.CONTRACT_NUM = (SELECT MAX(CONTRACT_NUM) FROM MSP_JUO_SUB_INFO
+                                                          WHERE SUBSCRIBER_NO = #{customerMobileNo} AND PPPO = 'PO' AND SUB_STATUS <> 'C')
+                                    AND     X2.EVNT_CD = 'SIM'
+                                    AND     X2.GRNT_INSR_STAT_CD = 'A'
+                                    AND     X2.APP_END_DATE LIKE '99991231%'
+                              GROUP BY X2.CONTRACT_NUM )
                     UNION
                     -- 기변개발전 우수기변 대상
                     SELECT  DECODE(X.GRNT_INSR_MNGM_NO, 'none', MIN(SUBSTR(X.APP_START_DD, 1, 8)), SUBSTR(X.GRNT_INSR_MNGM_NO, 1, 8)) ||
                             MAX(X.ENGG_MNTH_CNT)
                     FROM    MSP_JUO_ADD_INFO X
                     WHERE   X.CONTRACT_NUM = (SELECT MAX(CONTRACT_NUM) FROM MSP_JUO_SUB_INFO
-                                                WHERE SUBSCRIBER_NO = #{subscriberNo} AND PPPO = 'PO' AND SUB_STATUS <> 'C')
+                                                WHERE SUBSCRIBER_NO = #{customerMobileNo} AND PPPO = 'PO' AND SUB_STATUS <> 'C')
                     AND     X.EVNT_CD IN ('UPD','UAD')
                     AND     X.MODEL_CHN_CD = '01'
                     AND     NOT EXISTS ( SELECT 1 FROM MSP_DVC_CHG_AGNT_HST WHERE CONTRACT_NUM = X.CONTRACT_NUM AND APPL_END_DTTM LIKE '99991231%' )
@@ -72,7 +75,7 @@
                     FROM    MSP_JUO_SUB_INFO X
                             , MSP_JUO_ADD_INFO Y
                     WHERE   X.CONTRACT_NUM = (SELECT MAX(CONTRACT_NUM) FROM MSP_JUO_SUB_INFO
-                                                WHERE SUBSCRIBER_NO = #{subscriberNo} AND PPPO = 'PO' AND SUB_STATUS <> 'C')
+                                                WHERE SUBSCRIBER_NO = #{customerMobileNo} AND PPPO = 'PO' AND SUB_STATUS <> 'C')
                     AND     X.CONTRACT_NUM = Y.CONTRACT_NUM
                     AND     Y.MODEL_CHN_CD <> '01'
                     AND     Y.ENGG_MNTH_CNT IS NOT NULL
@@ -88,23 +91,25 @@
                     , MSP_DVC_CHG_AGNT_HST B
                     , MSP_JUO_ADD_INFO C
                     , MSP_JUO_CUS_INFO D
-            WHERE   A.SUB_STATUS <> 'C'
-            AND     A.PPPO = 'PO'
-            AND     A.CONTRACT_NUM = B.CONTRACT_NUM(+)
-            AND     B.REQUEST_KEY(+) IS NOT NULL
-            AND     ( B.APPL_END_DTTM(+) LIKE '99991231%'
-                      OR TO_DATE(SUBSTR(B.APPL_END_DTTM(+), 1, 8), 'YYYYMMDD') - TO_DATE(SUBSTR(B.APPL_STRT_DTTM(+), 1, 8), 'YYYYMMDD') >= 15 )
-            AND     B.CONTRACT_NUM = C.CONTRACT_NUM(+)
-            AND     B.EVNT_TRTM_NO = C.EVNT_TRTM_NO(+)
-            AND     A.CUSTOMER_ID = D.CUSTOMER_ID
-            AND     REPLACE(D.CUSTOMER_LINK_NAME,' ') = UPPER(TRIM(#{customerLinkName}))
-            AND     A.SUBSCRIBER_NO = #{subscriberNo}
+            WHERE       A.SUB_STATUS <> 'C'
+                AND     A.PPPO = 'PO'
+                AND     A.CONTRACT_NUM = B.CONTRACT_NUM(+)
+                AND     B.REQUEST_KEY(+) IS NOT NULL
+                AND     ( B.APPL_END_DTTM(+) LIKE '99991231%' OR TO_DATE(SUBSTR(B.APPL_END_DTTM(+), 1, 8), 'YYYYMMDD') - TO_DATE(SUBSTR(B.APPL_STRT_DTTM(+), 1, 8), 'YYYYMMDD') >= 15 )
+                AND     B.CONTRACT_NUM = C.CONTRACT_NUM(+)
+                AND     B.EVNT_TRTM_NO = C.EVNT_TRTM_NO(+)
+                AND     A.CUSTOMER_ID = D.CUSTOMER_ID
+                AND     UPPER(D.CUSTOMER_LINK_NAME) = UPPER(TRIM(#{customerLinkName}))
+                AND     A.SUBSCRIBER_NO = #{customerMobileNo}
             ORDER BY B.APPL_STRT_DTTM DESC
         )
-        SELECT  A.CONTRACT_NUM  CONTRACT_NUM              -- 가입계약번호
-                , A.USER_SSN  CUSTOMER_SSN                -- 주민등록번호
-                , A.CUSTOMER_LINK_NAME  CUSTOMER_LINK_NAME     -- 고객이름
-                , A.SUBSCRIBER_NO  SUBSCRIBER_NO         -- 전화번호_이전CTN
+        SELECT  A.CONTRACT_NUM CONTRACT_NUM                -- 가입계약번호
+                , A.CUSTOMER_ID CUSTOMER_ID                -- 고객아이디
+                , A.USER_SSN  CUSTOMER_SSN                 -- 주민등록번호
+                , A.DRIVR_LICNS_NO
+                , A.TAX_ID
+                , A.CUSTOMER_LINK_NAME  CUSTOMER_LINK_NAME -- 고객이름
+                , A.SUBSCRIBER_NO SUBSCRIBER_NO -- 전화번호_이전CTN
                 , A.LGL_AGNT_SSN
                 , CASE
                     WHEN A.HIST_YN = 'Y' AND SYSDATE - TO_DATE(A.DVC_CHG_DT, 'YYYYMMDD') < 15 THEN 'N'
@@ -112,12 +117,86 @@
                     ELSE 'Y'
                   END AS DVC_CHG_YN
                 , LST_COM_ACTV_DATE  /* 개통일자 추가 20260423 */
-        FROM    CNTR A
-                , CMN_GRP_CD_MST B
+        FROM    CNTR A , CMN_GRP_CD_MST B
         WHERE   B.GRP_ID = 'RCP0028'
         AND     B.ETC1 = '10'
         AND     ROWNUM = 1
       ]]>
+    </select>
+
+    <select id="selectServiceChangeCustomerSubStatus"
+            parameterType="com.ktmmobile.msf.domains.form.form.common.dto.MspJuoSubInfoRequest"
+            resultType="string">
+        <![CDATA[
+        SELECT SUB_STATUS
+        FROM (
+            SELECT A.SUB_STATUS
+            FROM MSP_JUO_SUB_INFO A
+            WHERE A.SUBSCRIBER_NO = #{subscriberNo}
+            ORDER BY CASE WHEN A.SUB_STATUS <> 'C' THEN 0 ELSE 1 END, A.CONTRACT_NUM DESC
+        )
+        WHERE ROWNUM = 1
+        ]]>
+    </select>
+
+    <select id="selectServiceChangeCustomer"
+            parameterType="com.ktmmobile.msf.domains.form.form.common.dto.MspJuoSubInfoRequest"
+            resultType="com.ktmmobile.msf.domains.form.form.common.dto.MspJuoSubInfoResponse">
+        <!-- 서비스변경/해지 전용 인증 조회.
+             후속 changinfo/view 조회는 SVC_CNTR_NO(NCN)를 기준으로 하므로 CONTRACT_NUM과 분리해서 반환한다. -->
+        <![CDATA[
+        SELECT
+            SVC_CNTR_NO,
+            CONTRACT_NUM,
+            CUSTOMER_LINK_NAME,
+            SUBSCRIBER_NO,
+            LST_COM_ACTV_DATE,
+            CUSTOMER_ID,
+            CUSTOMER_TYPE,
+            FST_ESIM_YN
+        FROM (
+            SELECT
+                A.SVC_CNTR_NO,
+                A.CONTRACT_NUM,
+                D.CUSTOMER_LINK_NAME,
+                A.SUBSCRIBER_NO,
+                A.LST_COM_ACTV_DATE,
+                D.CUSTOMER_ID,
+                D.CUSTOMER_TYPE,
+                C.FST_ESIM_YN
+            FROM MSP_JUO_SUB_INFO A
+               , MSP_JUO_CUS_INFO D
+               , MSP_REQUEST_DTL C
+            WHERE A.CUSTOMER_ID = D.CUSTOMER_ID
+              AND A.CONTRACT_NUM = C.CONTRACT_NUM(+)
+              AND A.SUB_STATUS <> 'C'
+              AND A.SUBSCRIBER_NO = #{subscriberNo}
+              AND REPLACE(D.CUSTOMER_LINK_NAME, ' ') = REPLACE(UPPER(TRIM(#{customerLinkName})), ' ')
+              AND (
+                    -- 개인/미성년자: 생년월일 또는 주민번호로 검증
+                    (
+                        D.CUSTOMER_TYPE NOT IN ('B', 'G')
+                        AND (
+                            A.DOBYYYYMMDD = #{customerSsn}
+                            OR (
+                                #{cstmrType} IN ('NM', 'FM')
+                                AND SUBSTR(CRYPTO_AES256.DEC_AES(D.CUSTOMER_SSN), 1, 6) = SUBSTR(#{customerSsn}, 3, 6)
+                            )
+                        )
+                    )
+                    -- 법인/공공기관: 사업자번호 또는 법인등록번호로 검증
+                    OR (
+                        D.CUSTOMER_TYPE IN ('B', 'G')
+                        AND (
+                            D.TAX_ID = #{bizNo}
+                            OR D.DRIVR_LICNS_NO = #{cstmrJuridicalRrn}
+                        )
+                    )
+                  )
+            ORDER BY A.CONTRACT_NUM DESC
+        )
+        WHERE ROWNUM = 1
+        ]]>
     </select>
 
     <select id="verifyBillInfo"
@@ -132,48 +211,34 @@
                             AND BL_BILLING_METHOD != 'R' -- 지로 제외
                             AND COL_DELINQ_STATUS != 'D' -- 미납 제외
                             AND MARKET_GUBUN = 'KIS'
-                            -- 파라미터 : 청구계정ID
-                            AND BAN = #{ban}
+                            AND BAN = #{ban} -- 파라미터 : 청구계정ID
                         ) A
-                        INNER JOIN (SELECT CONTRACT_NUM, BAN, CUSTOMER_ID FROM MSP_JUO_BAN_MAPP_INFO
-                                    WHERE (APP_END_DATE = '99991231000000' OR APP_END_DATE = '99991231235959')
-                        ) B
+                        INNER JOIN (SELECT CONTRACT_NUM, BAN, CUSTOMER_ID FROM MSP_JUO_SUB_INFO WHERE BAN = #{ban}) B
                         ON B.BAN = A.BAN
                         AND B.CUSTOMER_ID = A.CUSTOMER_ID
                         INNER JOIN (SELECT CUSTOMER_ID, CUSTOMER_TYPE, CUSTOMER_SSN, DRIVR_LICNS_NO, TAX_ID, CUSTOMER_LINK_NAME, CUST_IDNT_NO_IND_CD
                                     FROM MSP_JUO_CUS_INFO
                                     WHERE 1=1
-                                    <!--파라미터 : 고객명-->
-                                    AND CUSTOMER_LINK_NAME = #{customerLinkName}
-                                    <!--파라미터 : 식별번호-->
+                                    <!--AND CUSTOMER_LINK_NAME = #{customerLinkName} &#45;&#45; 고객명-->
+                                    AND UPPER(CUSTOMER_LINK_NAME) = UPPER(TRIM(#{customerLinkName})) -- 고객명
+                                    AND CUSTOMER_TYPE = #{cstmrTypeCd.customerType} -- 고객구분 (I/B/G)
                                     AND (CUSTOMER_SSN = CRYPTO_AES256.ENC_AES(#{customerSsn})
                                                 OR DRIVR_LICNS_NO = #{customerSsn}
-                                                OR TAX_ID = #{customerSsn})
-                                    <!--파라미터 : 고객구분별 식별번호-->
-                                    <!--AND CUSTOMER_TYPE = #{cstmrTypeCd.customerType}-->
-                                    <!--<choose>
-                                        <when test='customerType.equals("B")'>
-                                            &lt;!&ndash; CUSTOMER_SSN: 사업자번호(암호문), DRIVR_LICNS_NO: 법인번호(평문), TAX_ID: 사업자번호(평문) &ndash;&gt;
-                                            AND (CUSTOMER_SSN = CRYPTO_AES256.ENC_AES(#{customerSsn})
-                                                    OR DRIVR_LICNS_NO = CRYPTO_AES256.ENC_AES(#{customerSsn})
-                                                    OR TAX_ID = CRYPTO_AES256.ENC_AES(#{customerSsn}))
-                                        </when>
-                                        <when test='customerType.equals("G")'>&lt;!&ndash; 공공 &ndash;&gt;
-                                            AND (CUSTOMER_SSN = CRYPTO_AES256.ENC_AES(#{customerSsn})
-                                                    OR DRIVR_LICNS_NO = CRYPTO_AES256.ENC_AES(#{customerSsn})
-                                                    OR TAX_ID = CRYPTO_AES256.ENC_AES(#{customerSsn}))
-                                        </when>
-                                        <otherwise>&lt;!&ndash; 내국인성인, 내국인미성년자, 외국인성인, 외국인미성년자 &ndash;&gt;
-                                            &lt;!&ndash; CUSTOMER_SSN: 식별번호(암호문), DRIVR_LICNS_NO: 개발기준데이타없음, TAX_ID: 사업자번호(평문) &ndash;&gt;
-                                            AND (CUSTOMER_SSN = CRYPTO_AES256.ENC_AES(#{customerSsn})
-                                                    OR DRIVR_LICNS_NO = CRYPTO_AES256.ENC_AES(#{customerSsn})
-                                                    OR TAX_ID = CRYPTO_AES256.ENC_AES(#{customerSsn}))
-                                        </otherwise>
-                                    </choose>-->
+                                                OR TAX_ID = #{customerSsn}) -- 고객 식별번호
                         ) C
                         ON C.CUSTOMER_ID = B.CUSTOMER_ID
                     ORDER BY A.EVNT_TRTM_DT DESC
             ) BAN
         WHERE ROWNUM = 1
     </select>
+
+  <!--<select id="ktOrgId" parameterType="java.lang.String" resultType="java.lang.String">-->
+  <!--  /** KTM모바일의 선택한 대리점코드에 매핑되는 KT조직코드 조회 **/-->
+  <!--  SELECT KT_ORG_ID-->
+  <!--  FROM ORG_ORGN_INFO_MST-->
+  <!--  WHERE ORGN_ID=#{agentCd}-->
+  <!--  AND ORGN_STAT_CD = '4'-->
+  <!--  AND TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN APPL_STRT_DT AND APPL_CMPLT_DT-->
+  <!--  AND USE_YN = 'Y'-->
+  <!--</select>-->
 </mapper>

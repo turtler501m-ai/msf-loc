@@ -6,6 +6,8 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 public class MspJuoSubInfoResponse {
+
+    String svcCntrNo;
     String contractNum;
     String customerSsn;
     String customerLinkName;
@@ -18,4 +20,8 @@ public class MspJuoSubInfoResponse {
     String customerType;
     String legalCi;
     String lglAgntSsn;
+    String esimYn;
+
+    String drivrLicnsNo;
+    String taxId;
 }

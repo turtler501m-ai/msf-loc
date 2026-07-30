@@ -24,11 +24,26 @@ const inputValue = ref('')
 
 // 1. 컨트롤러에 나타날 옵션 정의
 const componentConfig = {
+  type: {
+    description: '패스워드 reveal props 상태 확인용',
+    options: ['text', 'password', '등등....'],
+    default: 'text',
+  },
+  variant: {
+    description: '스타일 (underline: 로그인 에서 사용하는 스타일)',
+    options: ['default', 'underline'],
+    default: 'default',
+  },
   id: undefined,
   clearable: {
     default: true,
     description: '비활성화 여부',
   },
+  reveal: {
+    default: false,
+    description: '비밀번호 숨김/보임 버튼 노출여부',
+  },
+  placeholder: undefined,
   disabled: false,
   readonly: false,
   error: false,
@@ -45,8 +60,11 @@ const componentConfig = {
 
 // 2. 초기값 정의
 const componentState = {
+  type: 'text',
   id: 'input-id',
-  clearable: false,
+  clearable: true,
+  reveal: false,
+  placeholder: '입력하세요.',
   disabled: false,
   readonly: false,
   error: false,

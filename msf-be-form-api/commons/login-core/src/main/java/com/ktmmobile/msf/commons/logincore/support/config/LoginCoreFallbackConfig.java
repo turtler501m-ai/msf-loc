@@ -11,6 +11,11 @@ import com.ktmmobile.msf.commons.logincore.domain.policy.completion.LoginAuthent
 @Configuration
 public class LoginCoreFallbackConfig {
 
+    /**
+     * 기본 Noop LoginUserFinder Bean 생성
+     *
+     * @return Noop LoginUserFinder
+     */
     @Bean
     @ConditionalOnMissingBean(LoginUserFinder.class)
     public LoginUserFinder<LoginAuthenticationCredential> noopLoginUserFinder() {

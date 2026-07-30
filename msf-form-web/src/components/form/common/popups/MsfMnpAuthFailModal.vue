@@ -16,9 +16,10 @@
     </div>
     <MsfBox>
       <MsfTextList type="dash">
+        <li>번호이동 사전 인증(문자 또는 ARS) 진행 여부를 확인해 주세요.</li>
         <li>현재 사용 중인 통신사를 맞게 선택했는지 확인해 주세요.</li>
         <li>고객정보가 틀리지 않았는지 확인해 주세요.</li>
-        <li>인증항목(납부 카드, 계좌 또는 단말 일련번호 4자리 수)이 맞는지 확인해 주세요.</li>
+        <!-- <li>인증항목(납부 카드, 계좌 또는 단말 일련번호 4자리 수)이 맞는지 확인해 주세요.</li> -->
         <li>번호이동을 한 지 3개월 이내일 경우 번호이동이 불가합니다.</li>
         <li>
           전 통신사에 미납금액이 있을 경우(할부 금액, 로밍 요금 등), 전 통신사에 잔여 금액을
@@ -37,7 +38,6 @@
     <!-- 하단 고정 -->
     <template #footer>
       <MsfButtonGroup>
-        <MsfButton variant="subtle" @click="emit('pay-opn')">납부주장</MsfButton>
         <MsfButton variant="primary" @click="onClose">확인</MsfButton>
       </MsfButtonGroup>
     </template>
@@ -49,7 +49,7 @@ const props = defineProps({
   modelValue: Boolean,
 })
 
-const emit = defineEmits(['update:modelValue', 'open', 'close', 'pay-opn'])
+const emit = defineEmits(['update:modelValue', 'open', 'close'])
 
 // 닫힘 이벤트
 const onClose = () => {

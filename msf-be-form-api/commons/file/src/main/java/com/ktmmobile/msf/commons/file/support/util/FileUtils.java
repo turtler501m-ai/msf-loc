@@ -26,19 +26,19 @@ public class FileUtils {
         return generateFileName(originalName);
     }
 
-    public static String concat(String basePath, String fileName) {
-        if (!StringUtils.hasText(basePath)) {
-            return normalizePathFileName(fileName);
+    public static String concat(String directoryPath, String fileName) {
+        if (!StringUtils.hasText(directoryPath)) {
+            return normalizeFilePath(fileName);
         }
-        return Paths.get(basePath, fileName).toString().replace("\\", "/");
+        return Paths.get(directoryPath, fileName).toString().replace("\\", "/");
     }
 
-    public static String normalizeDirectoryPath(String path) {
-        if (!StringUtils.hasText(path)) {
+    public static String normalizeDirectoryPath(String directoryPath) {
+        if (!StringUtils.hasText(directoryPath)) {
             return "";
         }
 
-        String normalizedPath = path.trim().replace("\\", "/");
+        String normalizedPath = directoryPath.trim().replace("\\", "/");
         if ("/".equals(normalizedPath)) {
             return "";
         }
@@ -48,14 +48,14 @@ public class FileUtils {
         return normalizedPath;
     }
 
-    public static String normalizePathFileName(String pathFileName) {
-        if (!StringUtils.hasText(pathFileName)) {
+    public static String normalizeFilePath(String filePath) {
+        if (!StringUtils.hasText(filePath)) {
             return "";
         }
 
-        String normalizedPathFileName = pathFileName.trim().replace("\\", "/");
-        normalizedPathFileName = normalizedPathFileName.replaceAll("^/+", "");
-        return normalizedPathFileName;
+        String normalizedFilePath = filePath.trim().replace("\\", "/");
+        normalizedFilePath = normalizedFilePath.replaceAll("^/+", "");
+        return normalizedFilePath;
     }
 
     public static String getDirNameUsingDate() {

@@ -1,0 +1,66 @@
+#### Common Profile
+spring:
+  ## Request Log
+  request-log:
+    ## 바디(JSON, form-urlencoded, form-data) 필드 축약 공통 룰 확장
+    body-truncated-fields:
+      additional-include:
+        koi-idcard:
+          - customerNm[1]
+          - customerBirth[:4]
+          - customerRrn[7:]
+          - imageBase64[10]  # TODO: 미사용 예정으로 제거 검토
+
+
+## HTTP Client
+http-client:
+  recording:
+    ## 바디(JSON, form-urlencoded, form-data) 필드 축약 공통 룰 확장
+    body-truncated-fields:
+      additional-include:
+        koi-idcard:
+          - customerNm[1]
+          - customerBirth[:4]
+          - customerRrn[7:]
+          - imageBase64[10]  # TODO: 미사용 예정으로 제거 검토
+
+
+## Access Trace (API 인바운드 요청 DB 기록)
+access-trace:
+  parameter:
+    ## 바디(JSON, form-urlencoded, form-data) 필드 축약 공통 룰 확장
+    body-truncated-fields:
+      additional-include:
+        koi-idcard:
+          - customerNm[1]
+          - customerBirth[:4]
+          - customerRrn[7:]
+          - imageBase64[10]  # TODO: 미사용 예정으로 제거 검토
+
+
+
+---
+#### PRD Profile
+spring:
+  config.activate.on-profile: prd
+
+
+
+---
+#### STG Profile
+spring:
+  config.activate.on-profile: stg
+
+
+
+---
+#### DEV Profile
+spring:
+  config.activate.on-profile: dev
+
+
+
+---
+#### LOCAL Profile
+spring:
+  config.activate.on-profile: local

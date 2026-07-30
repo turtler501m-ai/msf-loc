@@ -21,7 +21,7 @@ public interface ScanSvc {
      * @return: void
      * </pre>
      */
-    public void prodSendScan(long requestKey, String cretId);
+    void prodSendScan(long requestKey, String cretId);
 
 
 }

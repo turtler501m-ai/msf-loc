@@ -1,7 +1,6 @@
 package com.ktmmobile.msf.commons.websecurity.web.dto.response;
 
 import org.springframework.context.MessageSourceResolvable;
-import org.springframework.core.MethodParameter;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.method.ParameterValidationResult;
 
@@ -20,11 +19,11 @@ public record BindErrorResponse(
     }
 
     private static String getRejectedValue(Object argument) {
-        if (argument instanceof FieldError) {
-            return getRejectedValueOfFieldError((FieldError) argument);
+        if (argument instanceof FieldError fieldError) {
+            return getRejectedValueOfFieldError(fieldError);
         }
-        if (argument instanceof BindRejectable) {
-            return ((BindRejectable) argument).rejectedValue();
+        if (argument instanceof BindRejectable bindRejectable) {
+            return bindRejectable.rejectedValue();
         }
         return null;
     }
@@ -32,8 +31,8 @@ public record BindErrorResponse(
     private static String getRejectedValueOfFieldError(FieldError argument) {
         Object rejectedValue = argument.getRejectedValue();
         if (rejectedValue != null) {
-            if (rejectedValue instanceof BindRejectable) {
-                return ((BindRejectable) rejectedValue).rejectedValue();
+            if (rejectedValue instanceof BindRejectable bindRejectable) {
+                return bindRejectable.rejectedValue();
             }
             return rejectedValue.toString();
         }
@@ -53,20 +52,5 @@ public record BindErrorResponse(
             .map(MessageSourceResolvable::getDefaultMessage)
             .findFirst()
             .orElse(DEFAULT_INVALID_PARAMETER_MESSAGE);
-    }
-
-    // public static BindErrorResponse of(MissingServletRequestParameterException e) {
-    //    String field = e.getParameterName();
-    //    String message = getMessageOfMethodParameter(e.getMethodParameter());
-    //    String rejectedValue = null;
-    //    return new BindErrorResponse(field, message, rejectedValue);
-    //}
-
-    private static String getMessageOfMethodParameter(MethodParameter methodParameter) {
-        if (methodParameter == null) {
-            return DEFAULT_INVALID_PARAMETER_MESSAGE;
-        }
-        Class<?> parameterType = methodParameter.getParameterType();
-        return DEFAULT_INVALID_PARAMETER_MESSAGE;
     }
 }

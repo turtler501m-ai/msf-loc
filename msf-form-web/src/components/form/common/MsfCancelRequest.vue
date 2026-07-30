@@ -1,5 +1,8 @@
 <script setup>
 const formData = defineModel({ type: Object, required: true })
+const props = defineProps({
+  disabled: { type: Boolean, default: false },
+})
 
 const CANCEL_USE_COMPANY_OPTIONS = [
   { value: 'KTM', label: 'kt M mobile 재사용' },
@@ -16,6 +19,7 @@ const CANCEL_USE_COMPANY_OPTIONS = [
       <MsfChip
         v-model="formData.cancelUseCompanyCd"
         name="inp-cancelUseCompanyCd"
+        :readonly="props.disabled"
         :data="CANCEL_USE_COMPANY_OPTIONS"
       />
     </MsfFormGroup>

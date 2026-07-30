@@ -11,9 +11,16 @@
       ORGN_NM AS organizationName,
       TYPE_CD AS typeCode,
       ORGN_LVL_CD AS levelCode,
-      HGHR_ORGN_CD AS higherOrganizationCode
+      HGHR_ORGN_CD AS higherOrganizationCode,
+      RESPN_PRSN_ID AS respnPrsnId,
+      RESPN_PRSN_NM AS respnPrsnNm,
+      ADM_USER_ID AS admUserId,
+      TELNUM AS telephone,
+      REP_TEL_NO AS representativeTelephone
     FROM ORG_ORGN_INFO_MST
     WHERE ORGN_STAT_CD = '4'
+      AND TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN APPL_STRT_DT AND APPL_CMPLT_DT
+      AND USE_YN = 'Y'
     --ORDER BY NVL(RVISN_DTTM, REG_DTTM) DESC, REG_DTTM DESC
   </select>
 

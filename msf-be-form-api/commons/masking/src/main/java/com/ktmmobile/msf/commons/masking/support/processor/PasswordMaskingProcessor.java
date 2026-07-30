@@ -17,6 +17,6 @@ public class PasswordMaskingProcessor implements MaskingProcessor {
 
     @Override
     public String mask(String value) {
-        return String.valueOf(MaskingTextUtils.MASK).repeat(MASKING_LENGTH);
+        return String.valueOf(MaskingProcessorUtils.MASK).repeat(MASKING_LENGTH);
     }
 }

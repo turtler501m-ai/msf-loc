@@ -2,6 +2,7 @@
   <div class="slider-container" ref="container" role="region" aria-roledescription="carousel">
     <div class="slider-wrapper">
       <MsfButton
+        v-if="hasItems"
         variant="ghost"
         class="nav-btn prev"
         @click="prev"
@@ -11,6 +12,7 @@
       />
       <div
         class="slider-content"
+        :class="{ 'is-lock': totalItems <= currentVisibleCount }"
         ref="slider"
         @mousedown="onTouchStart"
         @touchstart="onTouchStart"
@@ -28,6 +30,7 @@
         </div>
       </div>
       <MsfButton
+        v-if="hasItems"
         variant="ghost"
         class="nav-btn next"
         @click="next"
@@ -69,6 +72,9 @@ const itemWidth = ref(0) // 계산된 아이템 한 개의 너비
 const totalItems = ref(0) // 전체 아이템 개수
 const isDragging = ref(false) // 현재 드래그 중인지 여부 (스타일 제어용)
 const dragOffset = ref(0) // 드래그 중인 실시간 이동 거리 (px)
+
+// 데이터가 1개 이상 존재할 때만 화살표 버튼 노출
+const hasItems = computed(() => totalItems.value > 0)
 
 // touch 이벤트 옵션 통일
 const touchOptions = { passive: false }
@@ -148,6 +154,9 @@ const handleCaptureClick = (e) => {
  * 드래그 시작 (Mouse / Touch)
  */
 const onTouchStart = (e) => {
+  // 지정된 개수보다 아이템이 적거나 같으면 드래그(스와이프) 막기
+  if (totalItems.value <= currentVisibleCount.value) return
+
   isDragging.value = true
   isMoved = false // 시작 시 이동 여부 초기화
   startX = e.touches ? e.touches[0].clientX : e.clientX
@@ -333,6 +342,15 @@ onUnmounted(() => {
 
   &:active {
     cursor: grabbing;
+  }
+
+  // 아이템 개수가 지정 개수보다 적을 때는 커서와 터치 액션을 기본값으로 잠금
+  &.is-lock {
+    cursor: default;
+    touch-action: auto;
+    &:active {
+      cursor: default;
+    }
   }
 
   // 키보드 접근성: focus-visible 일 때만 스타일 적용

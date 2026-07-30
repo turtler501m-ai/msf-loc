@@ -3,31 +3,34 @@ package com.ktmmobile.msf.domains.form.form.common.repository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.ktmmobile.msf.domains.form.common.mplatform.vo.MplatFormFMC0FrmInfoResponse;
+import com.ktmmobile.msf.domains.form.form.common.repository.smartform.MsfRequestReadMapper;
 import com.ktmmobile.msf.domains.form.form.common.repository.smartform.MsfRequestWriteMapper;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestAdditionVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestAgentVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestBillReqVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestCancelVo;
-import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestClauseVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestCstmrVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestDocVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestDvcChgVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestJoinFormVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestMoveVo;
-import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestMstVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestNameChgVo;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestOsstVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestRecVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestSaleVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestStateVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestSvcChgDtlVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestSvcChgVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestVo;
+import com.ktmmobile.msf.domains.form.form.ownerchange.dto.OwnerChangeFormInfoResponse;
 
 @Repository
 @RequiredArgsConstructor
 public class MsfRequestRepositoryImpl {
 
     private final MsfRequestWriteMapper msfRequestWriteMapper;
+    private final MsfRequestReadMapper msfRequestReadMapper;
 
     public int insertMsfRequestCancel(MsfRequestCancelVo vo) {
         return msfRequestWriteMapper.insertMsfRequestCancel(vo);
@@ -49,10 +52,6 @@ public class MsfRequestRepositoryImpl {
         return msfRequestWriteMapper.insertMsfRequestBillReq(vo);
     }
 
-    public int insertMsfRequestClause(MsfRequestClauseVo vo) {
-        return msfRequestWriteMapper.insertMsfRequestClause(vo);
-    }
-
     public int insertMsfRequestDoc(MsfRequestDocVo vo) {
         return msfRequestWriteMapper.insertMsfRequestDoc(vo);
     }
@@ -67,10 +66,6 @@ public class MsfRequestRepositoryImpl {
 
     public int insertMsfRequestMove(MsfRequestMoveVo vo) {
         return msfRequestWriteMapper.insertMsfRequestMove(vo);
-    }
-
-    public int insertMsfRequestMst(MsfRequestMstVo vo) {
-        return msfRequestWriteMapper.insertMsfRequestMst(vo);
     }
 
     public int insertMsfRequestNameChg(MsfRequestNameChgVo vo) {
@@ -101,8 +96,58 @@ public class MsfRequestRepositoryImpl {
         return msfRequestWriteMapper.insertMsfRequestSvcChg(vo);
     }
 
+    public boolean existsMsfRequestSvcChg(Long requestKey) {
+        return requestKey != null && msfRequestReadMapper.countMsfRequestSvcChg(requestKey) > 0;
+    }
+
+    public int updateMsfRequestSvcChgProcCd(MsfRequestSvcChgVo vo) {
+        return msfRequestWriteMapper.updateMsfRequestSvcChgProcCd(vo);
+    }
+
+    public int updateMsfRequestSvcChgScanId(MsfRequestSvcChgVo vo) {
+        return msfRequestWriteMapper.updateMsfRequestSvcChgScanId(vo);
+    }
+
+    public int updateMsfRequestSvcChgDtlScanId(MsfRequestSvcChgDtlVo vo) {
+        return msfRequestWriteMapper.updateMsfRequestSvcChgDtlScanId(vo);
+    }
+
+    public int updateMsfRequestSvcChgDtlSocScanId(MsfRequestSvcChgDtlVo vo) {
+        return msfRequestWriteMapper.updateMsfRequestSvcChgDtlSocScanId(vo);
+    }
+
+    public int updateMsfRequestSvcChgDtlProcResult(MsfRequestSvcChgDtlVo vo) {
+        return msfRequestWriteMapper.updateMsfRequestSvcChgDtlProcResult(vo);
+    }
+
     public int insertMsfRequest(MsfRequestVo vo) {
         return msfRequestWriteMapper.insertMsfRequest(vo);
     }
+
+    public int insertMsfRequestOsst(MsfRequestOsstVo vo) {
+        return msfRequestWriteMapper.insertMsfRequestOsst(vo);
+    }
+
+    public OwnerChangeFormInfoResponse selectMsfRequestOwnerChgInfo(Long requestKey) {
+        return msfRequestReadMapper.selectMsfRequestOwnerChgInfo(requestKey);
+    }
+
+    public int deleteMsfRequestNameChg(Long requestKey) { return msfRequestWriteMapper.deleteMsfRequestNameChg(requestKey); }
+
+    public int deleteMsfRequestNameTrns(Long requestKey) { return msfRequestWriteMapper.deleteMsfRequestNameTrns(requestKey); }
+
+    public int deleteMsfRequestCstmr(Long requestKey) { return msfRequestWriteMapper.deleteMsfRequestCstmr(requestKey); }
+
+    public int deleteMsfRequestAgent(Long requestKey) { return msfRequestWriteMapper.deleteMsfRequestAgent(requestKey); }
+
+    public int deleteMsfRequestBillReq(Long requestKey) { return msfRequestWriteMapper.deleteMsfRequestBillReq(requestKey); }
+
+    public int deleteMsfRequestJoinForm(Long requestKey) { return msfRequestWriteMapper.deleteMsfRequestJoinForm(requestKey); }
+
+    public int deleteMsfRequestDoc(Long requestKey) { return msfRequestWriteMapper.deleteMsfRequestDoc(requestKey); }
+
+    public int deleteMsfRequestRec(Long requestKey) { return msfRequestWriteMapper.deleteMsfRequestRec(requestKey); }
+
+    public MplatFormFMC0FrmInfoResponse selectMsfFMC0(MsfRequestNameChgVo request) { return msfRequestReadMapper.selectMsfFMC0(request); }
 
 }

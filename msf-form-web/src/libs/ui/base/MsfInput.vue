@@ -3,22 +3,24 @@
     <!-- displayMask 설정 시 레이어 -->
     <div v-if="props.displayMask" class="visual-layer" aria-hidden="true">
       <div class="visual-wrapper" :class="[`is-align-${props.align}`]">
-        <template v-if="value">
-          <span v-for="i in String(value).length" :key="i" class="dot">
+        <template v-if="model">
+          <span v-for="i in String(model).length" :key="i" class="dot">
             {{ props.displayMaskChar }}
           </span>
         </template>
         <span v-if="isFocus" class="custom-cursor"></span>
       </div>
     </div>
+    <div class="left-slot" v-if="$slots['left-slot']"><slot name="left-slot"></slot></div>
     <input
       ref="inputRef"
       :style="{ textAlign: props.align }"
       v-bind="inputAttrs"
-      v-model="value"
+      v-model="model"
       :id="inputId"
       :aria-invalid="props.error"
       :aria-label="computedAriaLabel"
+      :data-focus-scope-skip-enter="hasExternalKeyHandler ? '' : undefined"
       class="input-inner"
       @input="onInput"
       @focus="onFocus"
@@ -31,7 +33,7 @@
       @cut="handleSecurity"
       @paste="handleSecurity"
     />
-    <div class="action-slot" v-if="showClearBtn || $slots.rightSlot">
+    <div class="action-slot" v-if="showClearBtn || showRevealBtn || $slots['right-slot']">
       <button
         v-if="showClearBtn"
         type="button"
@@ -43,20 +45,40 @@
       >
         <MsfIcon name="clear" size="large" />
       </button>
+      <button
+        v-if="showRevealBtn"
+        type="button"
+        class="btn-reveal"
+        :aria-label="isRevealed ? '비밀번호 숨기기' : '비밀번호 보이기'"
+        :aria-pressed="isRevealed"
+        :class="{ 'is-visible': isFocus }"
+        @click="handleReveal"
+      >
+        <MsfIcon :name="isRevealed ? 'eyeOff' : 'eyeOn'" size="large" />
+      </button>
       <slot name="right-slot"></slot>
     </div>
   </div>
 </template>
 
 <script setup>
-import { useAttrs, inject, computed, useId, ref, watch, nextTick } from 'vue'
+import {
+  useAttrs,
+  inject,
+  computed,
+  useId,
+  ref,
+  nextTick,
+  onMounted,
+  onBeforeUnmount,
+  watch,
+} from 'vue'
+import { useMsfFormControlLabel } from '@/hooks/useMsfFormGroupLabel'
+
+const model = defineModel({ type: [String, Number], default: '' })
 
 const props = defineProps({
-  modelValue: {
-    type: [String, Number],
-    default: '',
-  },
-  /** 인풋 스타일 */
+  /** 스타일 */
   variant: {
     type: String,
     default: 'default',
@@ -68,11 +90,23 @@ const props = defineProps({
     default: 'left',
     validator: (v) => ['left', 'center', 'right'].includes(v),
   },
-  id: { type: String, default: undefined }, // 외부 전달 ID
-  clearable: { type: Boolean, default: true }, //지우기 버튼 표시 여부
-  error: Boolean, // 에러
-  inline: Boolean, // 인라인 스타일 여부
-  ariaLabel: { type: String, default: undefined }, //접근성 aria-label설정필요시 사용
+  /** 외부 전달 ID */
+  id: { type: String, default: undefined }, //
+  /** 지우기 버튼 표시 여부 */
+  clearable: { type: Boolean, default: true },
+  /** type="password"일 때 비밀번호 보이기/숨기기 버튼 사용 여부 */
+  reveal: {
+    type: Boolean,
+    default: false,
+  },
+  /** 에러 */
+  error: Boolean,
+  /** FormGroup 자동 검증용 유효성 */
+  isValid: { type: Boolean, default: true },
+  /** 인라인 스타일 여부 */
+  inline: Boolean,
+  /** 접근성 aria-label설정필요시 사용 */
+  ariaLabel: { type: String, default: undefined },
   /** 입력값은 그대로 두고, 화면상에서 글자를 가림 (중간수정방지, 복사금지, 단방향 입력 보장, type="text") */
   displayMask: { type: Boolean, default: false },
   /** displayMask가 true일 때 화면에 표시할 문자 (기본 '●') */
@@ -80,8 +114,7 @@ const props = defineProps({
 })
 
 // 부모가 사용할 이벤트선언
-const emit = defineEmits(['input', 'update:modelValue', 'focus', 'blur'])
-const value = ref(props.modelValue)
+const emit = defineEmits(['input', 'focus', 'blur'])
 
 // 속성에 접근
 const attrs = useAttrs()
@@ -95,20 +128,92 @@ const rootAttrs = computed(() => ({
 }))
 // input에 부여할 속성
 const inputAttrs = computed(() => {
-  const rest = { ...attrs }
+  const rest = {
+    // 기본값은 off로 두고, password 타입만 new-password로 설정하며 부모 autocomplete가 있으면 우선 적용됨
+    autocomplete: attrs.type === 'password' ? 'new-password' : 'off',
+    ...attrs,
+  }
   delete rest.class
   delete rest.style
+
+  // reveal은 password 전용 옵션으로, 클릭 상태에 따라 실제 input type을 변경
+  if (props.reveal && attrs.type === 'password') {
+    rest.type = isRevealed.value ? 'text' : 'password'
+  }
+
   return rest
 })
 
+// 외부에서 전달된 키 이벤트가 있으면 MsfFocusScope의 Enter 자동 이동을 건너뛴다.
+const hasExternalKeyHandler = computed(() => {
+  return Object.keys(attrs).some((key) => /^on(Keydown|Keyup|Keypress|Enter)/.test(key))
+})
+
 // ID 결정
-const injectedId = inject('form-group-id', null)
-// 1순워: 직접넣은 ID / 2순위: 부모간 준 ID(Label연결용) / 3순위: 고유ID생성
-const inputId = computed(() => props.id || injectedId || useId())
+const injectedId = inject('form-group-id', null) // MsfInput의 실제 id 연결은 useMsfFormControlLabel(inputId)가 담당
+const fallbackId = useId()
+
+// 1순위: 직접 넣은 ID / 2순위: 고유 ID 생성
+// 부모가 준 injectedId는 중복 id 방지를 위해 inputId로 직접 사용하지 않음
+// FormGroup label은 useMsfFormControlLabel에 등록된 실제 inputId를 따라감
+const inputId = computed(() => props.id || fallbackId)
+
+// FormGroup에 실제 input id 등록
+const { formGroupLabelContext } = useMsfFormControlLabel(inputId)
 
 // 현재 iput의 상태 파악
 const isDisabled = computed(() => attrs.disabled !== undefined && attrs.disabled !== false)
 const isReadonly = computed(() => attrs.readonly !== undefined && attrs.readonly !== false)
+
+// FormGroup 검증 컨텍스트
+const formGroupContext = inject('msf-form-group-context', null)
+
+// MsfFormGroup에 전달할 현재 input 상태
+const getInputState = () => {
+  const value = String(model.value ?? '').trim()
+  const maxlength = Number(attrs.maxlength || attrs.maxLength || 0)
+
+  return {
+    id: inputId.value,
+    value,
+    empty: value === '',
+    disabled: isDisabled.value,
+    readonly: isReadonly.value,
+    valid: props.isValid,
+    validLength: maxlength ? value.length >= maxlength : true,
+  }
+}
+
+// FormGroup에 현재 input 상태 반영
+const syncInputState = () => {
+  formGroupContext?.updateInput?.(inputId.value, getInputState())
+}
+// FormGroup에 input 등록
+onMounted(() => {
+  formGroupContext?.registerInput?.(getInputState())
+})
+// FormGroup에서 input 해제
+onBeforeUnmount(() => {
+  formGroupContext?.unregisterInput?.(inputId.value)
+})
+// 외부 v-model 변경, maxlength 변경 등도 반영
+watch(
+  () => [
+    model.value,
+    props.isValid,
+    attrs.maxlength,
+    attrs.maxLength,
+    isDisabled.value,
+    isReadonly.value,
+  ],
+  () => {
+    // 외부에서 값이 초기화된 경우 다시 숨김
+    if (!model.value) {
+      isRevealed.value = false
+    }
+    syncInputState()
+  },
+)
 
 // 스타일 클래스
 const rootClasses = computed(() => [
@@ -126,10 +231,10 @@ const rootClasses = computed(() => [
 
 const onInput = (event) => {
   const newValue = event.target.value
-  value.value = newValue
+  model.value = newValue
 
-  emit('update:modelValue', newValue)
   emit('input', event)
+  syncInputState()
 
   if (props.displayMask) moveCursorToEnd()
 }
@@ -137,19 +242,34 @@ const onInput = (event) => {
 // 입력값 초기화
 const inputRef = ref(null)
 const handleClear = () => {
-  emit('update:modelValue', '')
+  model.value = ''
+  isRevealed.value = false // 값을 지우면 비밀번호도 다시 숨김
+
   emit('input', { target: { value: '' } })
 
   // 지운 후 인풋으로 포커스 돌려주기 (키보드 사용자 배려)
   nextTick(() => {
+    syncInputState()
     inputRef.value?.focus()
   })
 }
 
 // 지우기 버튼 노출 조건
 const showClearBtn = computed(() => {
-  return props.clearable && value.value && !isDisabled.value && !isReadonly.value
+  return props.clearable && model.value && !isDisabled.value && !isReadonly.value
 })
+
+// 비밀번호 숨김/보임 버튼 노출 조건
+const showRevealBtn = computed(() => {
+  return props.reveal && attrs.type === 'password' && !isDisabled.value && !isReadonly.value
+})
+
+// 비밀번호 표시 상태
+const isRevealed = ref(false)
+// 비밀번호 보기/숨기기
+const handleReveal = () => {
+  isRevealed.value = !isRevealed.value
+}
 
 // 포커스 상태 관리용
 const isFocus = ref(false)
@@ -182,7 +302,7 @@ const handleKeyDown = (e) => {
 const handleSelect = (e) => {
   if (props.displayMask) {
     // 전체 선택이 일어날 때 강제로 커서를 끝으로 이동시켜 선택을 해제함
-    const len = String(value.value).length
+    const len = String(model.value).length
     e.target.setSelectionRange(len, len)
   }
 }
@@ -209,31 +329,30 @@ const moveCursorToEnd = () => {
   if (!props.displayMask) return
   nextTick(() => {
     if (inputRef.value) {
-      const len = String(value.value).length
+      const len = String(model.value).length
       inputRef.value.setSelectionRange(len, len)
     }
   })
 }
-
-watch(
-  () => props.modelValue,
-  (newVal) => {
-    if (newVal !== value.value) {
-      value.value = newVal
-    }
-  },
-)
 
 // 접근성 ariaLabel
 const computedAriaLabel = computed(() => {
   // 1. 직접 정의한 ariaLabel이 최우선(placeholder와 의미가 맞지않을때 직접디테일하게 지정)
   if (props.ariaLabel) return props.ariaLabel
 
-  // 2. 부모 레이블(ID)과 연결된 본체 인풋이라면 중복 방지를 위해 비움
-  if (injectedId && inputId.value === injectedId) return undefined
+  // 2. FormGroup label과 실제 연결된 input이면 중복 방지
+  if (formGroupLabelContext?.labelFor?.value === inputId.value) return undefined
 
-  // 3. 그 외(연결되지 않은 서브 인풋 등)에는 attrs에 부여한 placeholder를 이름으로 사용하여 대처
-  return attrs.placeholder || undefined
+  // 3. 기존 방식 호환
+  if (!formGroupLabelContext && injectedId && inputId.value === injectedId) return undefined
+
+  // 4. placeholder 처리
+  const placeholder = attrs.placeholder
+  if (!placeholder) return undefined
+
+  // "입력"이라는 단어가 이미 들어가 있는지 확인 (포함되어 있으면 그대로 사용)
+  const hasInputKeyword = placeholder.includes('입력')
+  return hasInputKeyword ? placeholder : `${placeholder} 입력`
 })
 
 // 외부 노출 메서드
@@ -262,6 +381,9 @@ defineExpose({
     border-radius: 0;
     &:focus-within {
       box-shadow: none;
+    }
+    &.is-focus {
+      border-color: var(--color-primary-base);
     }
     &.is-disabled {
       background-color: var(--color-bg-disabled);
@@ -293,14 +415,38 @@ defineExpose({
     display: block;
   }
 }
+
+.btn-reveal {
+  position: relative;
+  display: block;
+  line-height: 1;
+  color: var(--color-gray-400);
+}
+// input, X, 눈 버튼 중 하나에 포커스가 있으면 X 표시
+.input-root:focus-within {
+  .btn-clear {
+    display: block;
+  }
+}
+// 필드 오른쪽 슬롯
 .action-slot {
   position: relative;
   @include flex($v: center) {
     gap: var(--spacing-x4);
   }
 }
+// 필드 왼쪽 슬롯
+.left-slot {
+  position: relative;
+  @include flex($v: center) {
+    gap: var(--spacing-x4);
+  }
+}
+
 // props: displayMask 설정시 스타일
 .input-root.has-display-mask {
+  --display-mask-inset-x: #{rem(16px)}; // 입력폼 좌우 패딩
+
   .input-inner {
     color: transparent !important;
     caret-color: transparent !important;
@@ -315,7 +461,7 @@ defineExpose({
     -webkit-user-select: none;
 
     position: absolute;
-    inset: 0 var(--spacing-x2);
+    inset: 0 var(--display-mask-inset-x);
     @include flex($v: center);
     pointer-events: none;
     z-index: 0;
@@ -355,6 +501,9 @@ defineExpose({
         animation: blink 1.1s step-start infinite;
       }
     }
+  }
+  &.input-underline {
+    --display-mask-inset-x: rem(8px);
   }
 }
 // 커서 blink 효과

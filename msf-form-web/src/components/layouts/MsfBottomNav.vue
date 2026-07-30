@@ -3,7 +3,13 @@
     <h2 class="ut-blind">하단 메뉴</h2>
     <div class="bottom-list-wrapper">
       <ul class="bottom-list" ref="bottomListRef">
-        <MsfBottomNavItem v-for="menu in menuStore.menus" :key="menu.id" :item="menu" />
+        <MsfBottomNavItem
+          v-for="menu in menuStore.menus"
+          :key="menu.id"
+          :item="menu"
+          :active-path="activePath"
+          :navigate-to="navigateTo"
+        />
         <li>
           <MsfButton iconOnly="logout" class="logout-btn" @click="onClickLogout"
             >로그아웃</MsfButton
@@ -21,6 +27,8 @@ import { ref, reactive, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useMsfUserStore } from '@/stores/msf_user'
 import { useMsfMenuStore } from '@/stores/msf_menu' // 메뉴
+import { useMsfStepStore } from '@/stores/msf_step'
+import { useMsfLoadingStore } from '@/stores/msf_loading'
 import { post } from '@/libs/api/msf.api'
 import { showConfirm } from '@/libs/utils/comp.utils'
 
@@ -28,6 +36,9 @@ const router = useRouter()
 const route = useRoute()
 const userStore = useMsfUserStore()
 const menuStore = useMsfMenuStore()
+const stepStore = useMsfStepStore()
+const loadingStore = useMsfLoadingStore()
+const activePath = ref(route.path)
 
 // DOM 참조 및 언더라인 스타일 상태
 const bottomListRef = ref(null)
@@ -64,10 +75,42 @@ const updateUnderlinePosition = async () => {
   underlineStyle.opacity = 1
 }
 
+const navigateTo = async (path) => {
+  if (route.path === path) {
+    return
+  }
+
+  const shouldWaitForLeaveConfirm =
+    route.path.startsWith('/form/') && route.path !== path && !stepStore.isWorkNotice()
+
+  if (shouldWaitForLeaveConfirm) {
+    const result = await router.push(path)
+    activePath.value = result ? route.path : path
+    await updateUnderlinePosition()
+    return
+  }
+
+  activePath.value = path
+  await updateUnderlinePosition()
+
+  const loadingGeneration = loadingStore.showLoading()
+  try {
+    const result = await router.push(path)
+    if (result) {
+      activePath.value = route.path
+      await updateUnderlinePosition()
+    }
+  } finally {
+    await nextTick()
+    loadingStore.hideLoading(loadingGeneration)
+  }
+}
+
 // 라우트 변경 감시 (페이지 이동 시 언더라인 이동)
 watch(
   () => route.path,
   () => {
+    activePath.value = route.path
     updateUnderlinePosition()
   },
   { immediate: true },
@@ -96,7 +139,7 @@ const onClickLogout = () => {
 <style lang="scss" scoped>
 .bottom-container {
   width: 100%;
-  height: rem(64px);
+  height: var(--layout-bottom-nav-height);
   background-color: var(--color-primary-base);
   padding-inline: rem(24px);
   // 하단바높이(64px) + 디바이스 홈바 영역(safe-area) 처리

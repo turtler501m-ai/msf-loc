@@ -34,9 +34,10 @@
         </div>
         <div class="sec right">
           <MsfStack type="field" nowrap>
-            <MsfInput
+            <MsfNumberInput
               v-model="phoneNumber"
               placeholder="휴대폰번호 ‘-’ 없이 입력"
+              maxLength="11"
               class="ut-flex-1"
             />
             <MsfButton variant="subtle" label="ios 발송" class="send-btn" prefixIcon="ios"

@@ -1,0 +1,21 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- 외곽 프레임 코너 -->
+    <path d="M6 14V8C6 6.89543 6.89543 6 8 6H14" stroke="#2D3748" stroke-width="2"
+        stroke-linecap="round" />
+    <path d="M34 6H40C41.1046 6 42 6.89543 42 8V14" stroke="#2D3748" stroke-width="2"
+        stroke-linecap="round" />
+    <path d="M42 34V40C42 41.1046 41.1046 42 40 42H34" stroke="#2D3748" stroke-width="2"
+        stroke-linecap="round" />
+    <path d="M14 42H8C6.89543 42 6 41.1046 6 40V34" stroke="#2D3748" stroke-width="2"
+        stroke-linecap="round" />
+    <!-- 신분증 카드 -->
+    <rect x="12" y="16" width="24" height="16" rx="2" stroke="#2D3748" stroke-width="2" />
+    <!-- 사람 실루엣 (머리) -->
+    <circle cx="18.5" cy="21.5" r="1.8" fill="#2D3748" />
+    <!-- 사람 실루엣 (어깨/몸통) -->
+    <path d="M15.5 28C15.5 25.5 16.5 24.5 18.5 24.5C20.5 24.5 21.5 25.5 21.5 28" fill="#2D3748" />
+    <!-- 카드 내 텍스트 라인 -->
+    <line x1="25" y1="20" x2="33" y2="20" stroke="#2D3748" stroke-width="1.5" stroke-linecap="round" />
+    <line x1="25" y1="24" x2="31" y2="24" stroke="#2D3748" stroke-width="1.5" stroke-linecap="round" />
+    <line x1="25" y1="28" x2="33" y2="28" stroke="#2D3748" stroke-width="1.5" stroke-linecap="round" />
+</svg>

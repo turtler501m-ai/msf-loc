@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ktmmobile.msf.domains.form.form.ownerchange.repository.msp.MspOwnerChangeMapper">
+  <select id="selectRateInfo">
+    SELECT
+      JEHU_PROD_TYPE
+      , RATE_CD
+      , RATE_NM
+      , (SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID='JehuProdType' AND DTL_CD= JEHU_PROD_TYPE AND ROWNUM=1) AS JEHU_PROD_NM
+    FROM MSP_RATE_MST
+    WHERE rate_cd = #{rateCd}
+  </select>
+</mapper>

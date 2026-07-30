@@ -1,7 +1,15 @@
 <template>
   <div class="pub-popup-wrap">
     <!-- 약관 테스트용 팝업목록 (실제 약관은 MsfAgreementDetail 에 그려짐) -->
-    <p class="pub-popup-info">※ MsfAgreementDetail 약관 샘플 목록 (kt m mobile 소스코드 가져옴)</p>
+    <p class="pub-popup-info">
+      ※ MsfAgreementDetail 약관 샘플 목록 (kt m mobile 소스코드 가져옴)<span
+        class="ut-d-flex ut-text-desc"
+      >
+        - 실제 데이터 링크 오류 수정 필요한 부분 : 서비스 이용약관, 개인정보 처리 위탁 및 고객 혜택
+        제공을 위한 광고 수신 동의
+      </span>
+    </p>
+
     <div class="pub-popup-list">
       <div class="popup-list-items">
         <MsfButtonGroup align="left">
@@ -25,8 +33,8 @@
             >고객 혜택 제공을 위한 개인정보 수집 및 이용 관련 동의</MsfButton
           >
           <MsfButton @click="openPolicy('policy10')"
-            >고객 혜택 제공을 위한 개인정보 수집 및 이용 관련 동의</MsfButton
-          >
+            >개인정보 처리 위탁 및 고객 혜택 제공을 위한 광고 수신 동의
+          </MsfButton>
           <MsfButton @click="openPolicy('policy11')">혜택 제공을 위한 제3자 제공 동의</MsfButton>
           <MsfButton @click="openPolicy('policy12')">제3자 제공관련 광고 수신 동의</MsfButton>
           <MsfButton @click="openPolicy('policy13')">개인위치정보 제3자 제공 동의</MsfButton>
@@ -51,6 +59,9 @@
           <MsfButton @click="S101040104Open = true">신청서 확인 (S101040104)</MsfButton>
           <MsfButton @click="S101050102Open = true">비밀번호 입력 (S101050102)</MsfButton>
           <MsfButton @click="S101030106Open = true">부가서비스 추가/삭제 (S101030106)</MsfButton>
+          <MsfButton @click="S101030106_2Open = true"
+            >부가서비스 추가/삭제 (개발 수정) (S101030106_2)</MsfButton
+          >
           <MsfButton @click="S101020106Open = true">주소검색 (S101020106)</MsfButton>
           <MsfButton @click="S101020104Open = true">안면인증 (S101020104)</MsfButton>
         </MsfButtonGroup>
@@ -109,6 +120,7 @@
   <S101050103 v-model="S101050103Open" />
   <S101050102 v-model="S101050102Open" />
   <S101030106 v-model="S101030106Open" />
+  <S101030106_2 v-model="S101030106_2Open" />
   <S101040104 v-model="S101040104Open" />
   <S101020106 v-model="S101020106Open" />
   <S102030103 v-model="S102030103Open" />
@@ -146,6 +158,7 @@ import S101030105 from '@/views/guide/pages/pub/S101030105.vue'
 import S101050103 from '@/views/guide/pages/pub/S101050103.vue'
 import S101050102 from '@/views/guide/pages/pub/S101050102.vue'
 import S101030106 from '@/views/guide/pages/pub/S101030106.vue'
+import S101030106_2 from '@/views/guide/pages/pub/S101030106_2.vue'
 import S101040104 from '@/views/guide/pages/pub/S101040104.vue'
 import S101020106 from '@/views/guide/pages/pub/S101020106.vue'
 import S102030103 from '@/views/guide/pages/pub/S102030103.vue'
@@ -175,6 +188,7 @@ const S101030105Open = ref(false)
 const S101050103Open = ref(false)
 const S101050102Open = ref(false)
 const S101030106Open = ref(false)
+const S101030106_2Open = ref(false)
 const S101040104Open = ref(false)
 const S101020106Open = ref(false)
 const S102030103Open = ref(false)

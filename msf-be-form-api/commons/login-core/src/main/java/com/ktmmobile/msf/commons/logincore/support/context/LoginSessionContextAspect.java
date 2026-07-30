@@ -30,6 +30,13 @@ public class LoginSessionContextAspect {
     private final LoginSessionService loginSessionService;
     private final ObjectProvider<CacheService<Object>> cacheServiceProvider;
 
+    /**
+     * 로그인 세션 컨텍스트 적용
+     *
+     * @param joinPoint 실행 지점
+     * @param loginSessionContext 로그인 세션 컨텍스트 애너테이션
+     * @return 실행 결과
+     */
     @Around("@annotation(loginSessionContext)")
     public Object apply(ProceedingJoinPoint joinPoint, LoginSessionContext loginSessionContext) throws Throwable {
         if (hasAuthenticatedUser()) {
@@ -43,6 +50,11 @@ public class LoginSessionContextAspect {
         return LoginContextHolder.callWithUserId(user.get().userId(), joinPoint::proceed);
     }
 
+    /**
+     * 인증 사용자 존재 여부 확인
+     *
+     * @return 인증 사용자 존재 여부
+     */
     private boolean hasAuthenticatedUser() {
         try {
             AuthenticationUtils.getUser();
@@ -52,6 +64,12 @@ public class LoginSessionContextAspect {
         }
     }
 
+    /**
+     * 메서드 인자 배열에서 로그인 세션 사용자 조회
+     *
+     * @param args 메서드 인자 배열
+     * @return 로그인 세션 사용자
+     */
     private Optional<LoginSessionUser> findLoginSessionUser(Object[] args) {
         for (Object arg : args) {
             Optional<LoginSessionUser> user = findLoginSessionUser(arg);
@@ -62,11 +80,23 @@ public class LoginSessionContextAspect {
         return Optional.empty();
     }
 
+    /**
+     * 메서드 인자에서 로그인 세션 사용자 조회
+     *
+     * @param arg 메서드 인자
+     * @return 로그인 세션 사용자
+     */
     private Optional<LoginSessionUser> findLoginSessionUser(Object arg) {
         return findLoginSessionId(arg)
             .flatMap(this::findLoginSessionUser);
     }
 
+    /**
+     * 로그인 세션 ID 또는 캐시 키 기준 로그인 세션 사용자 조회
+     *
+     * @param loginSessionIdOrCacheKey 로그인 세션 ID 또는 캐시 키
+     * @return 로그인 세션 사용자
+     */
     private Optional<LoginSessionUser> findLoginSessionUser(String loginSessionIdOrCacheKey) {
         Optional<LoginSessionUser> user = getPrincipal(loginSessionIdOrCacheKey);
         if (user.isPresent()) {
@@ -76,6 +106,12 @@ public class LoginSessionContextAspect {
             .flatMap(this::getPrincipal);
     }
 
+    /**
+     * 로그인 세션 ID 기준 principal 조회
+     *
+     * @param loginSessionId 로그인 세션 ID
+     * @return 로그인 세션 사용자
+     */
     private Optional<LoginSessionUser> getPrincipal(String loginSessionId) {
         try {
             return Optional.of(loginSessionService.getPrincipal(loginSessionId));
@@ -84,6 +120,12 @@ public class LoginSessionContextAspect {
         }
     }
 
+    /**
+     * 캐시 키 기준 로그인 세션 ID 조회
+     *
+     * @param cacheKey 캐시 키
+     * @return 로그인 세션 ID
+     */
     private Optional<String> findLoginSessionIdByCache(String cacheKey) {
         CacheService<Object> cacheService = cacheServiceProvider.getIfAvailable();
         if (cacheService == null) {
@@ -95,6 +137,12 @@ public class LoginSessionContextAspect {
             .filter(StringUtils::hasText);
     }
 
+    /**
+     * 인자에서 로그인 세션 ID 추출
+     *
+     * @param arg 메서드 인자
+     * @return 로그인 세션 ID
+     */
     private Optional<String> findLoginSessionId(Object arg) {
         if (arg instanceof String value) {
             return Optional.of(value)
@@ -111,6 +159,13 @@ public class LoginSessionContextAspect {
             .filter(StringUtils::hasText);
     }
 
+    /**
+     * 객체 속성 문자열 조회
+     *
+     * @param arg 대상 객체
+     * @param propertyName 속성명
+     * @return 속성 값
+     */
     private String readProperty(Object arg, String propertyName) {
         if (arg == null) {
             return null;

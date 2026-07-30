@@ -30,7 +30,7 @@ public class QueryIdGenerationInterceptor implements Interceptor {
             args[0] = createNewMappedStatement(mappedStatement);
             log.trace(">>> 쿼리ID 주석 자동 적용: {}", mappedStatement.getId());
         } catch (Exception e) {
-            log.warn("쿼리ID 주석 자동 적용에 실패했습니다. 무시하고 계속 진행합니다.", e);
+            log.warn("쿼리ID 주석 자동 적용에 실패했습니다. 무시하고 계속 진행합니다.: {}", e.getMessage());
         }
         return invocation.proceed();
     }

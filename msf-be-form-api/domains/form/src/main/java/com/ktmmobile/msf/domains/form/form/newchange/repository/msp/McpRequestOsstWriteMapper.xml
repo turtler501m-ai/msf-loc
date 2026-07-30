@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.form.form.newchange.repository.msp.McpRequestOsstWriteMapper">
+  <insert id="insertMcpRequestOsst" parameterType="com.ktmmobile.msf.domains.form.form.common.vo.McpRequestOsstVo">
+    INSERT INTO MCP_REQUEST_OSST@DL_MCP
+    (
+          MVNO_ORD_NO
+        , SEQ
+        , OSST_ORD_NO
+        , PRGR_STAT_CD
+        , CUST_ID
+        , SVC_CNTR_NO
+        , RSLT_CD
+        , RSLT_MSG
+        , RSLT_DT
+        , NSTEP_GLOBAL_ID
+        , PRDC_CHK_NOTI_MSG
+        , NP_BCNTR_TYPE_CD
+        , NP_FEE
+        , NP_NCHRG_AMT
+        , NP_PNLT_AMT
+        , NP_UNPAY_AMT
+        , NP_HNDST_INST_AMT
+        , NP_PREPAY_AMT
+        , NP_BASE_CHRG_AMT
+        , NP_NTNL_CHRG_AMT
+        , NP_INTL_CHRG_AMT
+        , NP_ADD_CHRG_AMT
+        , NP_ETC_CHRG_AMT
+        , NP_VAT
+        , NP_RMN_STRT_DT
+        , NP_RMN_END_DT
+        , TLPH_NO_STAT_CD
+        , ASGN_AGNC_ID
+        , TLPH_NO_OWN_CMPN_CD
+        , OPEN_SVC_IND_CD
+        , ENCD_TLPH_NO
+        , TLPH_NO
+        , IF_TYPE
+        , REGST_DTTM
+        , DCLA_DEED_EFT_DT
+        , SBSC_LMT_QNTY
+        , SBSC_CIRCUIT_NUM
+        , DLNQ_AMT
+        , EICC_ID)
+    VALUES(
+          LPAD(#{mvnoOrdNo}, 14, '0')
+        , NVL((SELECT MAX(SEQ+1) FROM MCP_REQUEST_OSST@DL_MCP WHERE MVNO_ORD_NO = LPAD(#{mvnoOrdNo}, 14, '0')), 1)
+        , #{osstOrdNo}
+        , #{prgrStatCd}
+        , #{custId}
+        , #{svcCntrNo}
+        , #{rsltCd}
+        , #{rsltMsg}
+        , TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')
+        , #{nstepGlobalId}
+        , #{prdcChkNotiMsg}
+        , #{npBcntrTypeCd}
+        , #{npFee}
+        , #{npNchrgAmt}
+        , #{npPnltAmt}
+        , #{npUnpayAmt}
+        , #{npHndstInstAmt}
+        , #{npPrepayAmt}
+        , #{npBaseChrgAmt}
+        , #{npNtnlChrgAmt}
+        , #{npIntlChrgAmt}
+        , #{npAddChrgAmt}
+        , #{npEtcChrgAmt}
+        , #{npVat}
+        , #{npRmnStrtDt}
+        , #{npRmnEndDt}
+        , #{tlphNoStatCd}
+        , #{asgnAgncId}
+        , #{tlphNoOwnCmpnCd}
+        , #{openSvcIndCd}
+        , #{encdTlphNo}
+        , #{tlphNo}
+        , NVL(#{ifType}, 'WEB')
+        , SYSDATE
+        , #{dclaDeedEftDt}
+        , #{sbscLmtQnty}
+        , #{sbscCircuitNum}
+        , #{dlnqAmt}
+        , #{eiccId}
+    )
+  </insert>
+
+  <update id="updateMcpRequestOsst" parameterType="com.ktmmobile.msf.domains.form.form.common.vo.McpRequestOsstVo">
+    UPDATE MCP_REQUEST_OSST@DL_MCP
+    SET
+          SEQ	 = #{seq}
+        ,	RVISN_ID	 = #{rvisnId}
+        ,	OSST_ORD_NO	 = #{osstOrdNo}
+        ,	PRGR_STAT_CD	 = #{prgrStatCd}
+        ,	CUST_ID	 = #{custId}
+        ,	SVC_CNTR_NO	 = #{svcCntrNo}
+        ,	RSLT_CD	 = #{rsltCd}
+        ,	RSLT_MSG	 = #{rsltMsg}
+        ,	RSLT_DT	 = #{rsltDt}
+        ,	NSTEP_GLOBAL_ID	 = #{nstepGlobalId}
+        ,	PRDC_CHK_NOTI_MSG	 = #{prdcChkNotiMsg}
+        ,	NP_BCNTR_TYPE_CD	 = #{npBcntrTypeCd}
+        ,	NP_FEE	 = #{npFee}
+        ,	NP_NCHRG_AMT	 = #{npNchrgAmt}
+        ,	NP_PNLT_AMT	 = #{npPnltAmt}
+        ,	NP_UNPAY_AMT	 = #{npUnpayAmt}
+        ,	NP_HNDST_INST_AMT	 = #{npHndstInstAmt}
+        ,	NP_PREPAY_AMT	 = #{npPrepayAmt}
+        ,	NP_BASE_CHRG_AMT	 = #{npBaseChrgAmt}
+        ,	NP_NTNL_CHRG_AMT	 = #{npNtnlChrgAmt}
+        ,	NP_INTL_CHRG_AMT	 = #{npIntlChrgAmt}
+        ,	NP_ADD_CHRG_AMT	 = #{npAddChrgAmt}
+        ,	NP_ETC_CHRG_AMT	 = #{npEtcChrgAmt}
+        ,	NP_VAT	 = #{npVat}
+        ,	NP_RMN_STRT_DT	 = #{npRmnStrtDt}
+        ,	NP_RMN_END_DT	 = #{npRmnEndDt}
+        ,	TLPH_NO_STAT_CD	 = #{tlphNoStatCd}
+        ,	ASGN_AGNC_ID	 = #{asgnAgncId}
+        ,	TLPH_NO_OWN_CMPN_CD	 = #{tlphNoOwnCmpnCd}
+        ,	OPEN_SVC_IND_CD	 = #{openSvcIndCd}
+        ,	ENCD_TLPH_NO	 = #{encdTlphNo}
+        ,	TLPH_NO	 = #{tlphNo}
+        ,	IF_TYPE	 = #{ifType}
+        ,	REGST_DTTM	 = #{regstDttm}
+        ,	DCLA_DEED_EFT_DT	 = #{dclaDeedEftDt}
+        ,	SBSC_LMT_QNTY	 = #{sbscLmtQnty}
+        ,	SBSC_CIRCUIT_NUM	 = #{sbscCircuitNum}
+        ,	DLNQ_AMT	 = #{dlnqAmt}
+        ,	EICC_ID	 = #{eiccId}
+    WHERE MVNO_ORD_NO = #{mvnoOrdNo}
+  </update>
+</mapper>

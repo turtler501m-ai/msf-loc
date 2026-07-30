@@ -15,4 +15,7 @@ public class MspAdditionDto {
     private String rateCd;
     private String rateNm;
     private String baseAmt;
+    private Integer sortOrdr;
+    private String usePrd;
+    private Integer additionKey;
 }

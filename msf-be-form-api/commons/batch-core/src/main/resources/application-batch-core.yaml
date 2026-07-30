@@ -1,0 +1,9 @@
+spring:
+  batch:
+    job:
+      enabled: false
+
+
+batch-core:
+  jdbc:
+    table-prefix: support.BATCH_

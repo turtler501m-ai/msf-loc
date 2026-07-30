@@ -1,164 +1,75 @@
 <template>
   <MsfDialog
-      v-bind="$attrs"
-      :is-open="modelValue"
-      title="신분증 스캔"
-      @open="onOpen"
-      @close="onClose"
+    v-bind="$attrs"
+    :is-open="modelValue"
+    title="신분증 스캔"
+    @open="onOpen"
+    @close="onClose"
   >
-    <!-- 팝업 내용 -->
-    <p class="ut-text-caution ut-weight-medium">촬영 버튼을 선택하신 후, 신분증을 촬영해주세요.</p>
-    <div class="doc-list-wrap">
-      <ul class="doc-list">
-        <li>
-          <p>
-            {{ props.identityTypeNm || '신분증 원본' }}
-            <MsfFlag v-if="docFile" data="완료" color="accent2" size="small" />
-          </p>
-          <MsfStack type="field">
-            <img
-                v-if="previewUrl"
-                :src="previewUrl"
-                alt="미리보기"
-                class="preview-img"
-                @click="openCamera"
-            />
-            <MsfButton variant="subtle" @click="openCamera">
-              {{ docFile ? '재촬영' : '촬영하기' }}
-            </MsfButton>
-          </MsfStack>
-        </li>
-      </ul>
+    <div class="ocr-container">
+      <MsfKoiOcr
+        :key="ocrKey"
+        ref="ocrRef"
+        class="ocr-frame"
+        :ocr-type="props.identityTypeCd"
+        :return-file="props.returnFile"
+        @ready="handleOcrReady"
+        @success="handleOcrSuccess"
+        @error="handleOcrError"
+        @timeout="handleOcrTimeout"
+      />
     </div>
-
-    <!-- TEST_SCAN_SAMPLE_START: 운영 반영 전 이 블록과 아래 TEST_SCAN_SAMPLE script/style 영역을 삭제 -->
-    <div class="sample-list-wrap">
-      <p class="sample-title">테스트용 스캔 결과</p>
-      <ul class="sample-list">
-        <li v-for="sample in scanSamples" :key="sample.scanId">
-          <div
-              class="sample-row"
-              :class="{ active: selectedSample?.scanId === sample.scanId }"
-              @click="selectSample(sample)"
-          >
-            <span class="sample-type">{{ sample.identityTypeNm }}</span>
-            <MsfInput
-                v-model="sample.cstmrNm"
-                placeholder="이름"
-                class="sample-name"
-                @click.stop
-                @focus="selectSample(sample)"
-            />
-            <MsfNumberInput
-                v-model="sample.rrn1"
-                placeholder="생년월일"
-                maxlength="8"
-                class="sample-birth"
-                @click.stop
-                @focus="selectSample(sample)"
-            />
-            <MsfNumberInput
-                v-model="sample.telNo"
-                placeholder="휴대폰번호"
-                maxlength="11"
-                class="sample-tel"
-                @click.stop
-                @focus="selectSample(sample)"
-            />
-            <span class="sample-date">{{ sample.scanDate }}</span>
-          </div>
-        </li>
-      </ul>
-    </div>
-    <!-- TEST_SCAN_SAMPLE_END -->
-
-    <!-- 하단 고정 -->
-    <template #footer>
-      <MsfButtonGroup>
-        <MsfButton @click="onClose">취소</MsfButton>
-        <MsfButton variant="primary" @click="onConfirm">확인</MsfButton>
-      </MsfButtonGroup>
-    </template>
   </MsfDialog>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { post } from '@/libs/api/msf.api.js'
+import { nextTick, ref } from 'vue'
+import MsfKoiOcr from '@/components/common/koi-ocr/MsfKoiOcr.vue'
+import { showConfirm } from '@/libs/utils/comp.utils.js'
 
 const props = defineProps({
   modelValue: Boolean,
-  identityTypeNm: String, // 신분증 명칭 추가
   identityTypeCd: String,
+  identityTypeNm: String,
+  returnFile: { type: Boolean, default: false },
+  fileCategory: { type: String, default: 'newchange' },
 })
 
 const emit = defineEmits(['update:modelValue', 'open', 'close', 'confirm'])
 
+const ocrRef = ref(null)
 const docFile = ref(null)
-const previewUrl = ref(null)
+const isOcrReady = ref(false)
+const ocrKey = ref(0)
 
-// TEST_SCAN_SAMPLE_START: 운영 반영 전 삭제
-const selectedSample = ref(null)
+const isIOS = () =>
+  /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
 
-const scanSamples = ref([
-  {
-    scanDate: '2024-04-20 14:20',
-    scanDt: '2024-04-20 14:20',
-    scanId: 'SCAN202404201420001',
-    cstmrNm: '황순철',
-    identityTypeNm: '주민등록증',
-    identityTypeCd: '01',
-    rrn1: '19861111',
-    rrn2: '1000000',
-    identityIssuDate: '2020.01.15',
-    telNo: '01042496249',
-  },
-  {
-    scanDate: '2024-04-21 10:15',
-    scanDt: '2024-04-21 10:15',
-    scanId: 'SCAN202404211015001',
-    cstmrNm: '이선임',
-    identityTypeNm: '운전면허증',
-    identityTypeCd: '02',
-    rrn1: '19700728',
-    rrn2: '2000000',
-    identityIssuDate: '2021.05.03',
-    identityIssuRegion: '11',
-    driveLicnsNo: '11-85-123456-78',
-    telNo: '01052077586',
-  },
-  {
-    scanDate: '2024-04-22 09:30',
-    scanDt: '2024-04-22 09:30',
-    scanId: 'SCAN202404220930001',
-    cstmrNm: '박진용',
-    identityTypeNm: '주민등록증',
-    identityTypeCd: '01',
-    rrn1: '19981223',
-    rrn2: '1000000',
-    identityIssuDate: '2019.12.10',
-    telNo: '01043107338',
-  },
-])
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
-const toScanData = (sample) => ({
-  ...sample,
-  identityTypeCd: props.identityTypeCd || sample.identityTypeCd,
-  identityTypeNm: props.identityTypeNm || sample.identityTypeNm,
-  rrn: `${sample.rrn1 || ''}${sample.rrn2 || ''}`,
-})
+const recreateOcr = async () => {
+  isOcrReady.value = false
 
-const selectSample = (sample) => {
-  selectedSample.value = sample
-  docFile.value = { data: toScanData(sample) }
+  // iframe 완전 제거 후 재생성
+  ocrKey.value += 1
+
+  await nextTick()
+
+  // iOS 카메라 해제 대기
+  await sleep(isIOS() ? 1500 : 300)
 }
-// TEST_SCAN_SAMPLE_END
 
 const onOpen = () => {
   emit('open')
+
+  nextTick(() => {
+    if (isOcrReady.value) {
+      openCamera()
+    }
+  })
 }
 
-// 닫힘 이벤트
 const onClose = () => {
   if (props.modelValue) {
     emit('update:modelValue', false)
@@ -166,108 +77,161 @@ const onClose = () => {
   }
 }
 
-// 촬영 버튼 클릭 시 카메라(파일 입력) 호출
-const openCamera = async () => {
-  docFile.value = await post('/api/shared/common/document/scan')
-  emit('confirm', docFile.value?.data)
-  onClose()
+const openCamera = () => {
+  ocrRef.value?.startOCR({ useCapOcr: 1 })
 }
 
-const onConfirm = () => {
-  // 촬영된 파일 전송
-  emit('confirm', selectedSample.value ? toScanData(selectedSample.value) : docFile.value?.data)
-  onClose()
-}
-</script>
+const handleOcrReady = () => {
+  isOcrReady.value = true
 
-<style lang="scss" scoped>
-.doc-list-wrap {
-  width: 100%;
-  margin-top: rem(16px);
-  border-top: var(--border-width-base) solid var(--color-gray-150);
-  border-bottom: var(--border-width-base) solid var(--color-gray-75);
-  .doc-list {
-    & > li {
-      padding-block: rem(16px);
-      padding-inline: rem(24px);
-      @include flex($v: center, $h: space-between) {
-        gap: rem(16px);
+  if (props.modelValue) {
+    openCamera()
+  }
+}
+
+const handleOcrSuccess = (result) => {
+  const raw = result?.data || result
+  const code = raw?.ocrResultCode || raw?.resultCode
+
+  if (code !== '0000') {
+    handleOcrError({
+      message: raw?.ocrResultMessage || raw?.message,
+      code,
+      raw: result,
+    })
+    return
+  }
+  docFile.value = raw
+  showConfirm('신분증 인증이 완료되었습니다. 적용하시겠습니까?', onConfirm, '', onClose)
+}
+
+const handleOcrError = (error) => {
+  docFile.value = null
+
+  const errorMessage =
+    typeof error === 'string' ? error : error?.message || '알 수 없는 오류가 발생했습니다.'
+
+  showConfirm(
+    '신분증 인식 중 오류가 발생했습니다.\n다시 촬영하시겠습니까?',
+    async () => {
+      await recreateOcr()
+      // OCR_READY 수신 시 handleOcrReady에서 자동 재시작
+    },
+    '사유 : ' + errorMessage,
+    onClose,
+  )
+}
+
+const handleOcrTimeout = () => {
+  showConfirm(
+    '신분증 인식 시간이 초과되었습니다.\n다시 촬영하시겠습니까?',
+    async () => {
+      await recreateOcr()
+    },
+    '',
+    onClose,
+  )
+}
+
+const base64ToBlob = (base64, mimeType = 'image/jpeg') => {
+  if (!base64) return null
+
+  const pureBase64 = base64.includes(',') ? base64.split(',')[1] : base64
+
+  const byteCharacters = atob(pureBase64)
+  const byteNumbers = new Array(byteCharacters.length)
+
+  for (let i = 0; i < byteCharacters.length; i++) {
+    byteNumbers[i] = byteCharacters.charCodeAt(i)
+  }
+
+  return new Blob([new Uint8Array(byteNumbers)], {
+    type: mimeType,
+  })
+}
+
+/**
+ * 주민등록증 OCR로 인식한 전체 주소를 기본주소와 상세주소로 분리한다.
+ * 주소 형식을 판별할 수 없으면 원문 전체를 기본주소로 반환한다.
+ *
+ * @param {string} fullAddress
+ * @returns {{ baseAddress: string, detailAddress: string }}
+ */
+const splitAddress = (fullAddress) => {
+  if (typeof fullAddress !== 'string' || !fullAddress.trim()) {
+    return { baseAddress: '', detailAddress: '' }
+  }
+
+  const cleanedAddress = fullAddress.trim().replace(/\s+/g, ' ').replace(/\s*,\s*/g, ', ')
+  const addressPatterns = [
+    // 도로명 주소: 테헤란로 123, 경수대로 910번길 15, 고북로 123-4, 올림픽로 지하 23
+    /^(.+?(?:대로|로|길)(?:\s+\d+번길)?\s+(?:지하\s+)?\d+(?:-\d+)?)(?:,\s*|\s+)(.+)$/,
+    // 지번 주소: 역삼동 123-45, 태평로1가 31 번지, 개포동 산 12-3, 개포동 산12-3
+    /^(.+?(?:읍|면|동|리|가)\s+(?:산\s*)?\d+(?:-\d+)?(?:\s*번지)?)(?:,\s*|\s+)(.+)$/,
+  ]
+
+  for (const pattern of addressPatterns) {
+    const match = cleanedAddress.match(pattern)
+
+    if (match) {
+      // "31 번지"처럼 번지만 남은 경우에는 상세주소로 취급하지 않는다.
+      if (match[2].trim() === '번지') {
+        return { baseAddress: cleanedAddress, detailAddress: '' }
       }
-      border-top: var(--border-width-base) solid var(--color-gray-75);
-      & > p:first-child {
-        flex: 1;
-        @include flex($v: center, $w: wrap) {
-          gap: rem(4px);
-        }
+
+      let baseAddress = match[1].trim()
+      let detailAddress = match[2].trim()
+
+      // OCR 줄바꿈으로 건물번호가 "231" → "23 1,"처럼 분리된 경우 복원한다.
+      const splitBuildingNumber = detailAddress.match(
+        /^(\d+)\s*,\s*((?:제?\d+|[A-Za-z가-힣]+)\s*(?:동|층|호|관|상가)(?:\s|$).*)$/,
+      )
+
+      if (splitBuildingNumber && /(?:대로|로|길)\s+(?:지하\s+)?\d+$/.test(baseAddress)) {
+        baseAddress += splitBuildingNumber[1]
+        detailAddress = splitBuildingNumber[2].trim()
       }
-      & > :last-child {
-        flex-shrink: 0;
-        flex-grow: 0;
-      }
-      .preview-img {
-        width: rem(40px);
-        height: rem(40px);
-        object-fit: cover;
-        border-radius: var(--border-radius-base);
-        border: var(--border-width-base) solid var(--color-gray-150);
-        cursor: pointer;
+
+      return {
+        baseAddress,
+        detailAddress,
       }
     }
   }
+
+  return { baseAddress: cleanedAddress, detailAddress: '' }
 }
 
-// TEST_SCAN_SAMPLE_START: 운영 반영 전 삭제
-.sample-list-wrap {
-  margin-top: rem(12px);
-  padding: rem(12px) rem(24px) 0;
-  border-top: var(--border-width-base) solid var(--color-gray-75);
+const onConfirm = () => {
+  const raw = docFile.value || {}
+  const scanRrn = raw.cstmrNativeRrn || raw.cstmrForeignerRrn || raw.rrn || raw.essNo || ''
+  const scanDt = raw.scanDt || raw.identityScanDt || ''
+  const scanId = raw.scanId || raw.frmpapId || ''
+  const maskImageBlob = base64ToBlob(raw.maskImageFile)
+  const maskImageFile = maskImageBlob ? URL.createObjectURL(maskImageBlob) : ''
+  const parsedAddress = splitAddress(raw.address)
+
+  emit('confirm', {
+    scanSource: 'REAL_OCR',
+    isRealOcr: true,
+    cstmrNm: raw.cstmrNm || '',
+    cstmrNativeRrn: raw.cstmrNativeRrn || '',
+    identityIssuDate: raw.identityIssuDate || '',
+    driveLicnsNo: raw.driveLicnsNo || '',
+    cstmrForeignerRrn: raw.cstmrForeignerRrn || '',
+    trnsNm: raw.trnsNm || '',
+    identityIssuRegion: raw.identityIssuRegion || '',
+    zipNo: raw.zipNo || '',
+    address: parsedAddress.baseAddress,
+    detailAddress: parsedAddress.detailAddress,
+    identityTypeCd: props.identityTypeCd || raw.identityTypeCd || '',
+    identityTypeNm: props.identityTypeNm || raw.identityTypeNm || '',
+    rrn: scanRrn,
+    scanDt,
+    scanId,
+    maskImageFile: maskImageFile,
+  })
+
+  onClose()
 }
-.sample-title {
-  margin-bottom: rem(6px);
-  font-size: rem(12px);
-  font-weight: 600;
-  color: var(--color-gray-700);
-}
-.sample-list {
-  display: grid;
-  gap: rem(4px);
-}
-.sample-row {
-  min-height: rem(36px);
-  padding: rem(4px) rem(8px);
-  display: flex;
-  align-items: center;
-  gap: rem(10px);
-  font-size: rem(12px);
-  border: var(--border-width-base) solid var(--color-gray-150);
-  border-radius: var(--border-radius-base);
-  background: var(--color-white);
-  cursor: pointer;
-  &.active {
-    border-color: var(--color-primary-base);
-    background: var(--color-gray-50);
-  }
-}
-.sample-type {
-  width: rem(76px);
-  flex-shrink: 0;
-}
-.sample-name {
-  width: rem(30px);
-  flex-shrink: 0;
-}
-.sample-birth {
-  width: rem(82px);
-  flex-shrink: 0;
-}
-.sample-tel {
-  width: rem(140px);
-  flex-shrink: 0;
-}
-.sample-date {
-  margin-left: auto;
-  flex-shrink: 0;
-  text-align: right;
-}
-// TEST_SCAN_SAMPLE_END
-</style>
+</script>

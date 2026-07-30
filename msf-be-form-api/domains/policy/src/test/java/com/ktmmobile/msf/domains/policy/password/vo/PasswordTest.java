@@ -15,13 +15,13 @@ class PasswordTest {
     @DisplayName("유효한 패스워드")
     @ParameterizedTest
     @ValueSource(strings = {
-        "Abcd1234!!",      // 영문, 숫자, 허용 특수문자를 모두 포함
-        "Password1!",      // 10자 길이를 만족
-        "A1!bcdefgh",      // 최소 길이 10자를 만족
-        "abcDEF123+=",     // 허용 특수문자 2개를 포함
-        "Zz9@abcd1234567", // 최대 길이 15자
+        "Abcd1357!!",      // 영문, 숫자, 허용 특수문자를 모두 포함
+        "Password1!",      // 10자 길이 만족
+        "A1!bcdefgh",      // 최소 길이 10자 만족
+        "abcDEF135+=",     // 허용 특수문자 2개 포함
+        "Zz9@abcd13579",   // 최대 길이 15자 이내
         "AA11!!bbcc",      // 대소문자, 숫자, 허용 특수문자 조합
-        "aB3$567890",      // 허용 특수문자 '$'를 사용
+        "aB3$570246",      // 허용 특수문자 '$' 사용
     })
     void shouldCreatePasswordWhenValueIsValid(String value) {
         assertThatCode(() -> new Password(value))
@@ -51,6 +51,10 @@ class PasswordTest {
         "Abcd1234/.",       // 허용되지 않은 특수문자 '/', '.'가 포함된 경우
         "Abcd1234🙂!",     // 이모지가 포함된 경우
         "Abcd1234!!!12345", // 최대 길이 15자를 초과하는 경우
+        "Abcd1234!!",       // 연속 증가 숫자 4자리가 포함된 경우
+        "Abcd0123!!",       // 0부터 시작하는 연속 증가 숫자 4자리가 포함된 경우
+        "Abcd4321!!",       // 연속 감소 숫자 4자리가 포함된 경우
+        "Abcd9876!!",       // 9부터 시작하는 연속 감소 숫자 4자리가 포함된 경우
     })
     void shouldThrowExceptionWhenValueIsInvalid(String value) {
         assertThatThrownBy(() -> new Password(value))

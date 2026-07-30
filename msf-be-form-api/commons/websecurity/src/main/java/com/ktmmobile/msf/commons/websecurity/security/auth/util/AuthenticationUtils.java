@@ -6,6 +6,7 @@ import org.springframework.security.authentication.AuthenticationCredentialsNotF
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import com.ktmmobile.msf.commons.common.data.entity.user.AdminUser;
 import com.ktmmobile.msf.commons.common.data.entity.user.MsfUser;
 import com.ktmmobile.msf.commons.websecurity.security.auth.data.memberdetails.MsfUserDetails;
 
@@ -34,6 +35,14 @@ public class AuthenticationUtils {
 
     public static String getOrganizationLevelCode() {
         return getUser().getOrganization().levelCode();
+    }
+
+    public static String getRoleCode() {
+        MsfUser user = getUser();
+        if (user instanceof AdminUser adminUser) {
+            return adminUser.getRoleCode();
+        }
+        return null;
     }
 
     private static MsfUserDetails getUserDetails() {

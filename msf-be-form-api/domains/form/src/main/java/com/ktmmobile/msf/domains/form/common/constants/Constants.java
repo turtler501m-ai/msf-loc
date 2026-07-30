@@ -105,7 +105,7 @@ public final class Constants {
     /** HDN3 : 우수기변 */
     public static final String OPER_TYPE_EXCHANGE = "HDN3";
 
-    public static Map<String, String> OPER_TYPE_NAME_MAP;
+    public static final Map<String, String> OPER_TYPE_NAME_MAP;
 
 
     /** 고객구분
@@ -119,7 +119,7 @@ public final class Constants {
     /** FN:외국인 */
     public static final String CSTMR_TYPE_FN = "FN";
 
-    public static Map<String, String> CSTMR_TYPE_NAME_MAP;
+    public static final Map<String, String> CSTMR_TYPE_NAME_MAP;
 
     /** 구매유형
      * 단말 구매:MM
@@ -477,7 +477,7 @@ public final class Constants {
 
 
     //############################# NICI 관련 ##############################################
-    public static Map<String, String> NICE_ERROR_CODE_MAP;
+    public static final Map<String, String> NICE_ERROR_CODE_MAP;
 
     /**
      * NICE로부터 부여받은 사이트 코드1
@@ -515,7 +515,7 @@ public final class Constants {
     /**
      * 한국신용정보에서 고객사에 부여한 구분 id
      */
-    public static String NICE_UID = "Nktisc";
+    public static final String NICE_UID = "Nktisc";
 
 
     /** 전화상담 구매 예정지역 1차코드 */
@@ -608,7 +608,7 @@ public final class Constants {
 
 
     /**  가입비 , USIM 밑줄 처리*/
-    public static ArrayList<String> MNG_CNTPNT_STRIKE;
+    public static final ArrayList<String> MNG_CNTPNT_STRIKE;
 
     static {
         MNG_CNTPNT_STRIKE = new ArrayList<String>();
@@ -849,7 +849,7 @@ public final class Constants {
     public static final String DIRECT_USIM_EMART24 = "emart24";
 
     /**  오프라인 유심 URL 구분 리스트 */
-    public static ArrayList<String> DIRECT_USIM_URL_GUBUN_LIST;
+    public static final ArrayList<String> DIRECT_USIM_URL_GUBUN_LIST;
 
     static {
         DIRECT_USIM_URL_GUBUN_LIST = new ArrayList<String>();
@@ -863,7 +863,7 @@ public final class Constants {
     }
 
     /**  오프라인 유심 판매점별 매인 롤링 배너 코드*/
-    public static Map<String, String> DIRECT_USIM_MAIN_BANNER_CD;
+    public static final Map<String, String> DIRECT_USIM_MAIN_BANNER_CD;
 
     static {
         DIRECT_USIM_MAIN_BANNER_CD = new HashMap<String, String>();
@@ -877,7 +877,7 @@ public final class Constants {
     }
 
     /**  오프라인 유심 판매점별 FAQ코드*/
-    public static Map<String, String> DIRECT_USIM_FAQ_CTG_CD;
+    public static final Map<String, String> DIRECT_USIM_FAQ_CTG_CD;
 
     static {
         DIRECT_USIM_FAQ_CTG_CD = new HashMap<String, String>();
@@ -891,7 +891,7 @@ public final class Constants {
     }
 
     /**  모바일 오프라인 유심 판매점별 매인 롤링 배너 코드*/
-    public static Map<String, String> DIRECT_USIM_MOBILE_MAIN_BANNER_CD;
+    public static final Map<String, String> DIRECT_USIM_MOBILE_MAIN_BANNER_CD;
 
     static {
         DIRECT_USIM_MOBILE_MAIN_BANNER_CD = new HashMap<String, String>();
@@ -905,7 +905,7 @@ public final class Constants {
     }
 
     /** MSTORE 가입 가능 여부 코드  */
-    public static Map<String, String> MSTORE_JOIN_LIMIT_CD;
+    public static final Map<String, String> MSTORE_JOIN_LIMIT_CD;
 
     static {
         MSTORE_JOIN_LIMIT_CD = new HashMap<String, String>();
@@ -1128,7 +1128,7 @@ public final class Constants {
     /** 이벤트 참여 프로모션 코드  */
     public static final String EVENT_JOIN_CD = "EventJoinInfo";
 
-    public static final String Event_Category = "EventCategory";
+    public static final String EVENT_CATEGORY = "EventCategory";
 
     /** 회원가입 프로모션 코드  */
 
@@ -1242,7 +1242,7 @@ public final class Constants {
     public static final String EVENT_CODE_FATH_URL_RETV = "FS9";
     public static final String EVENT_CODE_FATH_SKIP = "FT1";
 
-    public static Map<String, String> FATH_RETV_CD_VAL;
+    public static final Map<String, String> FATH_RETV_CD_VAL;
 
     static {
         FATH_RETV_CD_VAL = new HashMap<>();
@@ -1254,7 +1254,7 @@ public final class Constants {
         FATH_RETV_CD_VAL.put("06", "FORGN");
     }
 
-    public static Map<String, String> FATH_SBSC_DIV_CD;
+    public static final Map<String, String> FATH_SBSC_DIV_CD;
 
     static {
         FATH_SBSC_DIV_CD = new HashMap<>();

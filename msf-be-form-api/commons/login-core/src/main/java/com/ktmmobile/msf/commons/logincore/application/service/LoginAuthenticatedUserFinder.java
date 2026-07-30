@@ -17,14 +17,29 @@ import com.ktmmobile.msf.commons.websecurity.security.auth.port.AuthenticatedUse
 @Component
 public class LoginAuthenticatedUserFinder implements AuthenticatedUserFinder {
 
+    private static final String ROLE_CODE_ATTRIBUTE = "roleCode";
+
     private final LoginUserInfoResolver loginUserInfoResolver;
 
+    /**
+     * 인증 사용자 정보 조회
+     *
+     * @param userType 사용자 유형
+     * @param userId 사용자 ID
+     * @return 인증 사용자
+     */
     @Override
     public Optional<MsfUser> findUser(UserType userType, String userId) {
         return loginUserInfoResolver.resolve(userType, userId)
             .flatMap(this::toUser);
     }
 
+    /**
+     * 로그인 사용자 정보 기준 인증 사용자 변환
+     *
+     * @param userInfo 로그인 사용자 정보
+     * @return 인증 사용자
+     */
     private Optional<MsfUser> toUser(LoginUserInfo userInfo) {
         UserOrganization organization = new UserOrganization(
             userInfo.organization().agentCode(),
@@ -37,7 +52,13 @@ public class LoginAuthenticatedUserFinder implements AuthenticatedUserFinder {
             return Optional.of(new FormUser(userInfo.userType(), userInfo.userId(), userInfo.userName(), organization));
         }
         if (userInfo.userType().isAdminUser()) {
-            return Optional.of(new AdminUser(userInfo.userType(), userInfo.userId(), userInfo.userName(), organization));
+            return Optional.of(new AdminUser(
+                userInfo.userType(),
+                userInfo.userId(),
+                userInfo.userName(),
+                organization,
+                userInfo.attributeAsString(ROLE_CODE_ATTRIBUTE)
+            ));
         }
         return Optional.empty();
     }

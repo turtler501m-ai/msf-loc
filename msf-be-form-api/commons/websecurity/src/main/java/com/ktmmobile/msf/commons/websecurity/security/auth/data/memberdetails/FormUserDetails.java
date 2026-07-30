@@ -16,7 +16,7 @@ public class FormUserDetails implements MsfUserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        GrantedAuthority authority = new SimpleGrantedAuthority(this.user.getUserType().getCode());
+        GrantedAuthority authority = new SimpleGrantedAuthority(MsfUserDetails.roleAuthority(this.user.getUserType()));
         return List.of(authority);
     }
 

@@ -13,6 +13,8 @@ import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+import com.ktmmobile.msf.commons.common.context.business.BusinessContextTaskDecorator;
+
 @EnableAsync
 @RequiredArgsConstructor
 @Configuration(proxyBeanMethods = false)
@@ -32,6 +34,7 @@ public class TaskExecutorConfig {
         threadPoolExecutor.setWaitForTasksToCompleteOnShutdown(taskExecutionProperties.getShutdown().isAwaitTermination());
         threadPoolExecutor.setAwaitTerminationSeconds((int) taskExecutionProperties.getShutdown().getAwaitTerminationPeriod().toSeconds());
         threadPoolExecutor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+        threadPoolExecutor.setTaskDecorator(new BusinessContextTaskDecorator());
         threadPoolExecutor.initialize();
         Tracer tracer = tracerProvider.getIfAvailable();
         if (tracer == null) {

@@ -8,7 +8,7 @@ public record FormLoginUserRow(
     String userSttusCd,
     String accessLimitYn,
     Integer loginChkCnt,
-    String pwdChgYn,
-    LocalDateTime pwdChgDt
+    LocalDateTime pwdChgDt,
+    String ip
 ) {
 }

@@ -1,6 +1,30 @@
 <script setup>
 import { post } from '@/libs/api/msf.api'
 import { ref, watch } from 'vue'
+import { format, parse, addDays } from 'date-fns'
+import { useMsfLoadingStore } from '@/stores/msf_loading'
+
+const loadingStore = useMsfLoadingStore()
+
+const formatToFullDate = (rangeStr) => {
+  if (!rangeStr || !rangeStr.includes('~')) return ''
+
+  const currentYear = new Date().getFullYear() // 2026
+  const [start, end] = rangeStr.split('~')
+
+  // 월(Month)과 일(Day) 추출
+  const startMonth = start.slice(0, 2)
+  const startDay = start.slice(2, 4)
+
+  const endMonth = end.slice(0, 2)
+  const endDay = end.slice(2, 4)
+
+  // 포맷팅
+  const startDate = `${currentYear}-${startMonth}-${startDay}`
+  const endDate = `${currentYear}-${endMonth}-${endDay}`
+
+  return `${startDate} ~ ${endDate}`
+}
 
 const props = defineProps({
   modelValue: Boolean,
@@ -27,6 +51,8 @@ const selectedRow = ref()
 const onSelected = (data) => {
   selectedRow.value = data
 }
+const dateRangeStr = ref('')
+const datePayNext = ref('')
 
 const getRealtimeChargePayload = () => {
   const formData = props.formData || {}
@@ -38,22 +64,30 @@ const getRealtimeChargePayload = () => {
     ncn: formData.ncn || formData.contractNum || '',
     ctn,
     custId: formData.custId || '',
-    cpPwdInsert1: formData.cpPwdInsert1 || '',
   }
 }
 
 const realtimeChargeInfoList = async () => {
+  loadingStore.showLoading()
   try {
+    chargeInfoDatas.value = []
+    datePayNext.value = ''
+    dateRangeStr.value = ''
+
     const payload = getRealtimeChargePayload()
     console.log('[서비스변경][실시간요금조회] 요청 시작', payload)
-    const res = await post('/api/form/real-time-charge/list', payload)
-    const data = res?.data || {}
-    const amntDto = Array.isArray(data?.amntDto)
-      ? data.amntDto
-      : data?.amntDto
-        ? [data.amntDto]
+    const res = await post('/api/msf/formServiceChange/realTimeCharge/list', payload, {
+      skipAlert: true,
+    })
+    const resData = res?.data || {}
+    const data = resData.resData?.outDto || {}
+    const amntDto = Array.isArray(data?.amntDtoList)
+      ? data.amntDtoList
+      : data?.amntDtoList
+        ? [data.amntDtoList]
         : []
 
+    console.log('resData', resData)
     console.log('[서비스변경][실시간요금조회] 응답 수신', {
       code: res?.code,
       message: res?.message,
@@ -61,9 +95,16 @@ const realtimeChargeInfoList = async () => {
       data,
     })
 
+    if (data.searchDay) {
+      const parsedDate = parse(data.searchDay, 'yyyyMMdd', new Date())
+      const nextDate = addDays(parsedDate, 1)
+      datePayNext.value = format(nextDate, 'yyyy-MM-dd')
+      dateRangeStr.value = formatToFullDate(data.searchTime)
+    }
+
     chargeInfoDatas.value = amntDto.map((obj) => ({
       make: obj?.gubun || '',
-      price: obj?.payMent || '',
+      price: obj.payment ? Number(obj.payment).toLocaleString() : 0,
     }))
   } catch (error) {
     console.error('[서비스변경][실시간요금조회] 예외 발생', {
@@ -72,6 +113,7 @@ const realtimeChargeInfoList = async () => {
     })
     chargeInfoDatas.value = []
   }
+  loadingStore.hideLoading()
 }
 
 watch(
@@ -113,11 +155,13 @@ watch(
     <!-- 팝업 내용 -->
     <MsfTitleArea level="2" color="primary" noline bold>
       <template #title>
-        <p><em class="ut-color-accent">2026-01-01 ~ 2026-01-17</em> 사용 요금 입니다.</p>
+        <p v-if="chargeInfoDatas.length > 0">
+          <em class="ut-color-accent">{{ dateRangeStr }}</em> 사용 요금 입니다.
+        </p>
       </template>
       <template #content>
-        <p class="ut-text-caution">
-          2026-01-18 부터는 변경 후 요금제 기준으로 사용요금이 부과 예정
+        <p class="ut-text-caution" v-if="chargeInfoDatas.length > 0">
+          {{ datePayNext }} 부터는 변경 후 요금제 기준으로 사용요금이 부과 예정
         </p>
       </template>
     </MsfTitleArea>
@@ -163,7 +207,7 @@ watch(
     <!-- 하단 고정 -->
     <template #footer>
       <MsfButtonGroup>
-        <MsfButton variant="primary">확인</MsfButton>
+        <MsfButton variant="primary" @click="onClose">확인</MsfButton>
       </MsfButtonGroup>
     </template>
   </MsfDialog>

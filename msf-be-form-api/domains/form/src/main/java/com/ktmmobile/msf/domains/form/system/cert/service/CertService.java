@@ -7,22 +7,22 @@ import com.ktmmobile.msf.domains.form.system.cert.dto.CertDto;
 public interface CertService {
 	
 	//세션의 crtSeq로 스탭개수 조회
-	public int getStepCnt();
+	int getStepCnt();
 	
 	//인증정보 비교해서 map으로 리턴
-	public Map<String, Object> getCertInfo(CertDto certDto);
+	Map<String, Object> getCertInfo(CertDto certDto);
 	
 	//인증 개선 대상 url인지 검사
-	public Map<String, String> isAuthStepApplyUrl(HttpServletRequest request);
+	Map<String, String> isAuthStepApplyUrl(HttpServletRequest request);
 	
 	//eSim/eSimWatch에서 새로고침해서 appForm.do로 돌아갔을 때 일정 스텝 이상 삭제
-	public int delStepInfo(int step);
+	int delStepInfo(int step);
 
 	//한 스텝의 referer update
-	public int updateCrtReferer();
+	int updateCrtReferer();
 
 	//메인스텝
-	public int getModuTypeStepCnt(String moduType, String ncType);
+	int getModuTypeStepCnt(String moduType, String ncType);
 
 	/**
 	 * cert 비교 공통 함수

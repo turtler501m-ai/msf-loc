@@ -10,6 +10,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 public class TerminationRemainChargeResVO {
+    private String requestKey;
     private String searchDay;   // 조회 날짜
     private String searchTime;  // 조회 기간
     private String sumAmt;      // 당월요금계

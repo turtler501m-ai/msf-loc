@@ -1,6 +1,5 @@
 package com.ktmmobile.msf.domains.form.common.util;
 
-import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.COMMON_EXCEPTION;
 
 import java.text.DateFormat;
 import java.text.DecimalFormat;
@@ -14,15 +13,20 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import com.ktmmobile.msf.domains.form.common.exception.McpCommonException;
 
+import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.COMMON_EXCEPTION;
+
+@Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class DateTimeUtil {
 
-    @Deprecated
-    private static final Logger logger = LoggerFactory.getLogger(DateTimeUtil.class);
+    private static final String DEFAULT_DATE_FORMAT = "yyyyMMdd";
+    private static final String DEFAULT_TIME_FORMAT = "HH:mm";
 
     /**
      * <pre>
@@ -31,6 +35,7 @@ public class DateTimeUtil {
      * @return
      * </pre>
      */
+    @Deprecated
     public static Date getDateToCurrent(int day) {
         Calendar cal = Calendar.getInstance();
         if (day != 0){
@@ -41,51 +46,42 @@ public class DateTimeUtil {
 
     /**
      * check date string validation with the default format "yyyyMMdd".
-     * @param s date string you want to check with default format "yyyyMMdd".
+     * @param s date string you want to check with the default format "yyyyMMdd".
      * @return date Date
      * @exception ParseException 잘못된 날짜이거나. 날짜를 표현하는 문자열이 format 에 맞지 않는 경우.
      **/
     public static Date check(String s)
             throws ParseException {
-        return check(s, "yyyyMMdd");
+        return check(s, DEFAULT_DATE_FORMAT);
     }
 
     /**
      *날짜를 표현하는 형식을 변경하여 변경된 문자열을 리턴한다.
      * @param s 날짜를 나타내는 문자열
      * @param format 소스(s) 날짜의 형식을 설명하는 문자열 ,예) "yyyy-MM-dd"
-     * @param toformat 변경될 날짜의 형식을 설명하는 문자열 ,예) "yyyy-MM-dd"
-     *  @return toformat형태로 변경된 날짜를 표시하는 문자열
+     * @param toFormat 변경될 날짜의 형식을 설명하는 문자열 ,예) "yyyy-MM-dd"
+     * @return toFormat 형태로 변경된 날짜를 표시하는 문자열
      * @exception ParseException 잘못된 날짜이거나. 날짜를 표현하는 문자열이 format 에 맞지 않는 경우.
      */
-    public static String changeFormat(String s, String format, String toformat)
+    public static String changeFormat(String s, String format, String toFormat)
             throws ParseException {
         Date date = check(s, format);
-        SimpleDateFormat formatter =
-                new SimpleDateFormat(toformat, Locale.KOREA);
-        String dateString = formatter.format(date);
-        return dateString;
-
+        return changeFormat(date, toFormat);
     }
 
     /**
      *날짜를 표현하는 형식을 변경하여 변경된 문자열을 리턴한다.
      * @param date 날짜를 나타내는 Date객체
-     * @param toformat 변경될 날짜의 형식을 설명하는 문자열 ,예) "yyyy-MM-dd"
-     *  @return toformat형태로 변경된 날짜를 표시하는 문자열
+     * @param toFormat 변경될 날짜의 형식을 설명하는 문자열 ,예) "yyyy-MM-dd"
+     * @return toFormat 형태로 변경된 날짜를 표시하는 문자열
      */
-    public static String changeFormat(Date date,  String toformat)
-    {
-
-        SimpleDateFormat formatter =
-                new SimpleDateFormat(toformat, Locale.KOREA);
-        String dateString = formatter.format(date);
-        return dateString;
-
+    public static String changeFormat(Date date, String toFormat) {
+        SimpleDateFormat formatter = new SimpleDateFormat(toFormat, Locale.ROOT);
+        return formatter.format(date);
     }
 
     /**
-     * check date string validation with an user defined format.
+     * check date string validation with a user-defined format.
      * @param s date string you want to check.
      * @param format string representation of the date format. For example, "yyyy-MM-dd".
      * @return date Date
@@ -93,21 +89,22 @@ public class DateTimeUtil {
      */
     public static Date check(String s, String format)
             throws ParseException {
-        if (s == null)
+        if (s == null) {
             throw new ParseException(
                     "date string to check is null",
                     0);
-        if (format == null)
+        }
+        if (format == null) {
             throw new ParseException(
                     "format string to check date is null",
                     0);
+        }
 
-        SimpleDateFormat formatter =
-                new SimpleDateFormat(format, Locale.KOREA);
-        Date date = null;
+        SimpleDateFormat formatter = new SimpleDateFormat(format, Locale.ROOT);
+        Date date;
         try {
             date = formatter.parse(s);
-        } catch (ParseException e) {
+        } catch (ParseException _) {
             /*
             throw new ParseException(
                 e.getMessage() + " with format \"" + format + "\"",
@@ -119,7 +116,7 @@ public class DateTimeUtil {
                     0);
         }
 
-        if (!formatter.format(date).equals(s))
+        if (!formatter.format(date).equals(s)) {
             throw new ParseException(
                     "Out of bound date:\""
                             + s
@@ -127,12 +124,13 @@ public class DateTimeUtil {
                             + format
                             + "\"",
                             0);
+        }
         return date;
     }
 
     /**
      * check date string validation with the default format "HH:mm:ss".
-     * @param s date string you want to check with default format "HH:mm:ss"
+     * @param s date string you want to check with the default format "HH:mm:ss"
      * @return <tt>true</tt> 날짜 형식이 맞고, 존재하는 날짜일 때.
      *                 <tt>false</tt> 날짜 형식이 맞지 않거나, 존재하지 않는 날짜일 때
      */
@@ -148,9 +146,9 @@ public class DateTimeUtil {
      */
     public static Date getDateInstance(String s)
             throws ParseException {
-        String format = "HH:mm";
+        String format = DEFAULT_TIME_FORMAT;
 
-        if (!isValid(s, "HH:mm")) {
+        if (!isValid(s, DEFAULT_TIME_FORMAT)) {
             if (isValid(s, "HH/mm")) {
                 format = "HH/mm";
             } else {
@@ -161,7 +159,7 @@ public class DateTimeUtil {
     }
 
     /**
-     * check date string validation with an user defined format.
+     * check date string validation with a user-defined format.
      * @param s date string you want to check.
      * @param format string representation of the date format. For example, "yyyy-MM-dd".
      * @return <tt>true</tt> 날짜 형식이 맞고, 존재하는 날짜일 때.
@@ -169,35 +167,30 @@ public class DateTimeUtil {
      */
     public static boolean isValid(String s, String format) {
         /*
-                if ( s == null )
+        if ( s == null ) {
                     throw new NullPointerException("date string to check is null");
-                if ( format == null )
+        }
+        if ( format == null ) {
                     throw new NullPointerException("format string to check date is null");
+        }
          */
-        SimpleDateFormat formatter =
-                new SimpleDateFormat(format, Locale.KOREA);
-        Date date = null;
+        SimpleDateFormat formatter = new SimpleDateFormat(format, Locale.ROOT);
+        Date date;
         try {
             date = formatter.parse(s);
-        } catch (ParseException e) {
+        } catch (ParseException _) {
             return false;
         }
 
-        if (!formatter.format(date).equals(s))
-            return false;
-
-        return true;
+        return formatter.format(date).equals(s);
     }
 
     /**
      * 현재 날짜를 "yyyy-MM-dd" 형태의 포멧으로 표현하는 문자열을 리턴한다.
-     * @return formatted string representation of current day with  "yyyy-MM-dd".
+     * @return formatted string representation of the current day with "yyyy-MM-dd".
      */
     public static String getDateString() {
-        SimpleDateFormat formatter =
-                new SimpleDateFormat(
-                        "yyyy-MM-dd",
-                        Locale.KOREA);
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd", Locale.ROOT);
         return formatter.format(new Date());
     }
 
@@ -217,7 +210,6 @@ public class DateTimeUtil {
      * 오늘 날짜를 숫자로 리턴한다.
      *<code>getNumberByPattern("dd");</code>
      * @return 오늘 날짜.(1~31)
-     * @throws ParseException
      * @see #getNumberByPattern(String)
      */
     public static int getDay(String dates, String spattern) throws ParseException {
@@ -245,6 +237,7 @@ public class DateTimeUtil {
     public static int getMonth() {
         return getNumberByPattern("MM");
     }
+
     /**
      *
      * 현재 시간을 리턴한다.
@@ -270,7 +263,7 @@ public class DateTimeUtil {
     /**
      *
      *인자로 전달된 패턴에 해당하는 값을 숫자로 리턴한다.
-     *
+     * <p>
      * 코드 사용예:
      * 	<p><blockquote><pre>
      *  int currentYearValue = DateTimeUtil.getNumberByPattern("yyyy");
@@ -281,15 +274,13 @@ public class DateTimeUtil {
      * @return 현재의 날짜,달,연,시간,분,초 등을 나타내는 숫자값
      */
     public static int getNumberByPattern(String pattern) {
-        SimpleDateFormat formatter =
-                new SimpleDateFormat(pattern, Locale.KOREA);
-        String dateString = formatter.format(new Date());
+        String dateString = getFormatString(pattern);
         return Integer.parseInt(dateString);
     }
 
     /**
      *인자로 전달된 시각을 표현하는 문자열에서 특정 부분의(년도 or 시 or 분 or 초 ...) 값을 숫자로 리턴한다.
-     *
+     * <p>
      *시각을 표현하는 문자열 2005/01/21 12:45:31 에서 초 부분을 나타내는 값을 얻어오려면 아래와 같이 코딩하면 된다.
      * <p>코드 사용예:
      * 	<p><blockquote><pre>
@@ -297,17 +288,17 @@ public class DateTimeUtil {
      * </pre></blockquote>
      * @param dates 기준 시각
      * @param spattern <code>dates</code> 시각을 표현하는 날짜 포멧
-     * @param pattern  "yyyy, MM, dd, HH, mm, ss and more"
-     * @return formatted string representation of current day and time with  your pattern.
+     * @param pattern  "yyyy, MM, dd, HH, mm, ss, and more"
+     * @return formatted string representation of the current day and time with your pattern.
      * @exception ParseException 잘못된 날짜이거나. 날짜를 표현하는 문자열이 spattern format 에 맞지 않는 경우.
      */
     public static int getNumberByPattern(
             String dates,
             String spattern,
-            String pattern)
+        String pattern
+    )
                     throws ParseException {
-        SimpleDateFormat formatter =
-                new SimpleDateFormat(pattern, Locale.KOREA);
+        SimpleDateFormat formatter = new SimpleDateFormat(pattern, Locale.ROOT);
         String dateString = formatter.format(check(dates, spattern));
         return Integer.parseInt(dateString);
     }
@@ -319,14 +310,12 @@ public class DateTimeUtil {
      * String time = DateTime.getFormatString("yyyy-MM-dd HH:mm:ss:SSS");
      * </pre></blockquote>
      *
-     * @param  pattern  "yyyy, MM, dd, HH, mm, ss and more"
-     * @return formatted string representation of current day and time with  your pattern.
+     * @param  pattern  "yyyy, MM, dd, HH, mm, ss, and more"
+     * @return formatted string representation of the current day and time with your pattern.
      */
     public static String getFormatString(String pattern) {
-        SimpleDateFormat formatter =
-                new SimpleDateFormat(pattern, Locale.KOREA);
-        String dateString = formatter.format(new Date());
-        return dateString;
+        SimpleDateFormat formatter = new SimpleDateFormat(pattern, Locale.ROOT);
+        return formatter.format(new Date());
     }
 
     /**
@@ -336,49 +325,45 @@ public class DateTimeUtil {
      * String time = DateTime.getFormatString("yyyy-MM-dd HH:mm:ss:SSS");
      * </pre></blockquote>
      *
-     * @param  pattern  "yyyy, MM, dd, HH, mm, ss and more"
-     * @return formatted string representation of current day and time with  your pattern.
+     * @return formatted string representation of the current day and time with your pattern.
      */
     public static String getFormatString(String param, String paramPattern, String returnPattern) {
-        SimpleDateFormat parmFormatter = new SimpleDateFormat(paramPattern, Locale.KOREA);
-        Date date = new Date();
+        SimpleDateFormat parmFormatter = new SimpleDateFormat(paramPattern, Locale.ROOT);
+        Date date;
         try {
             date = parmFormatter.parse(param);
-        } catch (ParseException e) {
+        } catch (ParseException _) {
             throw new McpCommonException(COMMON_EXCEPTION);
         }
 
-        SimpleDateFormat formatter = new SimpleDateFormat(returnPattern, Locale.KOREA);
-        String dateString = formatter.format(date);
-        return dateString;
+        return changeFormat(date, returnPattern);
     }
 
     /**
      * 현재 시각을 "yyyyMMdd" 형태의 문자열로 표현하여 리턴한다.
      * 예) "20040205"
      * <code>getFormatString("yyyyMMdd");</code>
-     * @return formatted string representation of current day with  "yyyyMMdd".
+     * @return formatted string representation of the current day with "yyyyMMdd".
      * @see #getFormatString(String)
      */
     public static String getShortDateString() {
-        return getFormatString("yyyyMMdd");
+        return getFormatString(DEFAULT_DATE_FORMAT);
     }
 
     /**
      * 현재 시각을 "HHmmss" 형태의 문자열로 표현하여 리턴한다.
      * <code>getFormatString("HHmmss");</code>
-     * @return formatted string representation of current time with  "HHmmss".
+     * @return formatted string representation of the current time with "HHmmss".
      * 	 @see #getFormatString(String)
      */
     public static String getShortTimeString() {
-
         return getFormatString("HHmmss");
     }
 
     /**
      * 현재 시각을 "yyyy-MM-dd-HH:mm:ss:SSS" 형태의 문자열로 표현하여 리턴한다.
      * <code>getFormatString("yyyy-MM-dd-HH:mm:ss:SSS");</code>
-     * @return formatted string representation of current time with  "yyyy-MM-dd-HH:mm:ss".
+     * @return formatted string representation of the current time with "yyyy-MM-dd-HH:mm:ss".
      * @see #getFormatString(String)
      */
     public static String getTimeStampString() {
@@ -392,7 +377,7 @@ public class DateTimeUtil {
      * 	<p><blockquote><pre>
      * String timeString= getFormatString("HH:mm:ss");
      * </pre></blockquote>
-     * @return formatted string representation of current time with  "HH:mm:ss".
+     * @return formatted string representation of the current time with "HH:mm:ss".
      *	@see #getFormatString(String)
      */
     public static String getTimeString() {
@@ -402,7 +387,7 @@ public class DateTimeUtil {
     /**
      * 인자로 전달된 "yyyyMMdd" 형태의 날짜가 무슨 요일 인지 리턴한다.
      * 요일에 해당하는 값은 숫자로 리턴되고 이 값은 1~7에 해당한다.
-     *
+     * <p>
      * 사용예:
      * <p><blockquote><pre>
      * String s = "20000529";
@@ -428,12 +413,12 @@ public class DateTimeUtil {
      *
      */
     public static int whichDay(String s) throws ParseException {
-        return whichDay(s, "yyyyMMdd");
+        return whichDay(s, DEFAULT_DATE_FORMAT);
     }
 
     public static String whichDay(String s, int expStyle) throws ParseException {
         String returnStr = "";
-        int whichDay = whichDay(s, "yyyyMMdd");
+        int whichDay = whichDay(s, DEFAULT_DATE_FORMAT);
 
         if(expStyle == 0){	//영대소문자 3글자 표기
             if(whichDay == 1){
@@ -458,7 +443,7 @@ public class DateTimeUtil {
     /**
      * 인자로 전달된 <code>format</code>형태의 날짜 <code>s</code>가 무슨 요일 인지 리턴한다.
      * 요일에 해당하는 값은 숫자로 리턴되고 이 값은 1~7에 해당한다.
-     *
+     * <p>
      * 사용예:
      * <p><blockquote><pre>
      * String s = "2000-05-29";
@@ -482,10 +467,8 @@ public class DateTimeUtil {
      * </pre>
      * @exception ParseException 잘못된 날짜이거나. 날짜를 표현하는 문자열이  format 형식에 맞지 않는 경우.
      */
-    public static int whichDay(String s, String format)
-            throws ParseException {
-        SimpleDateFormat formatter =
-                new SimpleDateFormat(format, Locale.KOREA);
+    public static int whichDay(String s, String format) throws ParseException {
+        SimpleDateFormat formatter = new SimpleDateFormat(format, Locale.ROOT);
         Date date = check(s, format);
 
         Calendar calendar = formatter.getCalendar();
@@ -506,9 +489,8 @@ public class DateTimeUtil {
      * @return  두 날짜 사이의 '날(day)'의 차이.
      * @exception ParseException 잘못된 날짜이거나. 날짜를 표현하는 문자열이 "yyyyMMdd" 형식에 맞지 않는 경우.
      */
-    public static int daysBetween(String from, String to)
-            throws ParseException {
-        return daysBetween(from, to, "yyyyMMdd");
+    public static int daysBetween(String from, String to) throws ParseException {
+        return daysBetween(from, to, DEFAULT_DATE_FORMAT);
     }
 
     /**
@@ -523,8 +505,7 @@ public class DateTimeUtil {
      * @return  두 시각 사이의 '날(day)'의 차이.
      * @exception ParseException 잘못된 날짜이거나. 날짜를 표현하는 문자열이  format 형식에 맞지 않는 경우.
      */
-    public static int daysBetween(String from, String to, String format)
-            throws ParseException {
+    public static int daysBetween(String from, String to, String format) throws ParseException {
         Date d1 = check(from, format);
         Date d2 = check(to, format);
 
@@ -537,7 +518,7 @@ public class DateTimeUtil {
     /**
      * 인자로 전달된 date 값이 현재 시간 이후 여부
      * @param d1 date
-     * @return */
+     */
     public static boolean chcekToAfterDate(Date d1) {
         return d1.compareTo(new Date()) > 0 ;
     }
@@ -553,9 +534,8 @@ public class DateTimeUtil {
      * @return  두 시각 사이의 '시간(time)'의 차이.
      * @exception ParseException 잘못된 날짜이거나. 날짜를 표현하는 문자열이 "yyyyMMdd" 형식에 맞지 않는 경우.
      */
-    public static int timesBetween(String from, String to)
-            throws ParseException {
-        return timesBetween(from, to, "yyyyMMdd");
+    public static int timesBetween(String from, String to) throws ParseException {
+        return timesBetween(from, to, DEFAULT_DATE_FORMAT);
     }
 
     /**
@@ -570,9 +550,7 @@ public class DateTimeUtil {
      * @return  두 시각 사이의 '시간(time)'의 차이.
      * @exception ParseException 잘못된 날짜이거나. 날짜를 표현하는 문자열이 <code>format</code> 형식에 맞지 않는 경우.
      */
-    public static int timesBetween(String from, String to, String format)
-            throws ParseException {
-
+    public static int timesBetween(String from, String to, String format) throws ParseException {
         Date d1 = check(from, format);
         Date d2 = check(to, format);
 
@@ -581,6 +559,7 @@ public class DateTimeUtil {
         return (int) (duration / (1000 * 60 * 60));
         // seconds in 1 day
     }
+
     /**
      * 인자로 전달된 <code>from</code> 시각과  <code>to</code> 시각 사이의 '분(minute)'차이를 리턴한다.  두 시간의 표현포멧은 <code>format</code>을 사용한다.
      * <p<2005년 1월1일 11시 10분 부터 2005년3월25일 23시 59분 사이의 '분'을 구하는 코드:
@@ -593,8 +572,7 @@ public class DateTimeUtil {
      * @return  두 시각  사이의 '시간(time)'의 차이.
      * @exception ParseException 잘못된 날짜이거나. 날짜를 표현하는 문자열이 <code>format</code> 형식에 맞지 않는 경우.
      */
-    public static int minsBetween(String from, String to, String format)
-            throws ParseException {
+    public static int minsBetween(String from, String to, String format) throws ParseException {
 
         Date d1 = check(from, format);
         Date d2 = check(to, format);
@@ -617,10 +595,10 @@ public class DateTimeUtil {
      * @return  두 날짜 사이의 개월수 차이
      * @exception ParseException 잘못된 날짜이거나. 날짜를 표현하는 문자열이 <code>"yyyyMMdd"</code> 형식에 맞지 않는 경우.
      */
-    public static int monthsBetween(String from, String to)
-            throws ParseException {
-        return monthsBetween(from, to, "yyyyMMdd");
+    public static int monthsBetween(String from, String to) throws ParseException {
+        return monthsBetween(from, to, DEFAULT_DATE_FORMAT);
     }
+
     /**
      * 인자로 전달된 <code>from</code> 시각과  <code>to</code> 시각 사이의 개월수 차이를  리턴한다.  두 시각의 표현 포멧은 <code>format</code>을 사용한다.
      * 2005년 1월1일 11시 10분 부터 2005년3월25일 23시 59분 사이의 개월수 차 를 표현하는 문자열을 구하는 코드:
@@ -633,21 +611,18 @@ public class DateTimeUtil {
      * @return  두 날짜 사이의 개월수 차이
      * @exception ParseException 잘못된 날짜이거나. 날짜를 표현하는 문자열이 <code>format</code> 형식에 맞지 않는 경우.
      */
-    public static int monthsBetween(String from, String to, String format)
-            throws ParseException {
+    public static int monthsBetween(String from, String to, String format) throws ParseException {
         Date fromDate = check(from, format);
         Date toDate = check(to, format);
 
-        // if two date are same, return 0.
-        if (fromDate.compareTo(toDate) == 0)
+        // if two dates are same, return 0.
+        if (fromDate.compareTo(toDate) == 0) {
             return 0;
+        }
 
-        SimpleDateFormat yearFormat =
-                new SimpleDateFormat("yyyy", Locale.KOREA);
-        SimpleDateFormat monthFormat =
-                new SimpleDateFormat("MM", Locale.KOREA);
-        SimpleDateFormat dayFormat =
-                new SimpleDateFormat("dd", Locale.KOREA);
+        SimpleDateFormat yearFormat = new SimpleDateFormat("yyyy", Locale.ROOT);
+        SimpleDateFormat monthFormat = new SimpleDateFormat("MM", Locale.ROOT);
+        SimpleDateFormat dayFormat = new SimpleDateFormat("dd", Locale.ROOT);
 
         int fromYear = Integer.parseInt(yearFormat.format(fromDate));
         int toYear = Integer.parseInt(yearFormat.format(toDate));
@@ -662,15 +637,15 @@ public class DateTimeUtil {
 
         //        if (((toDay - fromDay) < 0) ) result += fromDate.compareTo(toDate);
         // ceil과 floor의 효과
-        if ( toDay - fromDay > 0 )
+        if (toDay - fromDay > 0) {
             result += toDate.compareTo(fromDate);
+        }
 
         return result;
     }
 
     /**
      * 인자로 전달된 <code>from</code> 시각과  <code>to</code> 시각 사이의 년도 차이를 리턴한다. 두 시각의 표현 포멧은 "yyyyMMdd"이다.
-
      * <p> 1975년 2월 5일 태어난 사람의 현재 만 나이를 구하는 코드:
      *  <p><blockquote><pre>
      * int age=DateTimeUtil.ageBetween("19750205",getFormatString("yyyyMMdd"));
@@ -680,9 +655,8 @@ public class DateTimeUtil {
      * @return 두 날짜 사이의 년도 차이(나이)를 리턴한다.
      * @exception ParseException 잘못된 날짜이거나. 날짜를 표현하는 문자열이 <code>"yyyyMMdd"</code> 형식에 맞지 않는 경우.
      */
-    public static int ageBetween(String from, String to)
-            throws ParseException {
-        return ageBetween(from, to, "yyyyMMdd");
+    public static int ageBetween(String from, String to) throws ParseException {
+        return ageBetween(from, to, DEFAULT_DATE_FORMAT);
     }
 
     /**
@@ -698,7 +672,7 @@ public class DateTimeUtil {
      * @see #ageBetween(String, String)
      */
     public static int age(String birth) throws ParseException {
-        return ageBetween(birth, getFormatString("yyyyMMdd"), "yyyyMMdd");
+        return ageBetween(birth, getFormatString(DEFAULT_DATE_FORMAT), DEFAULT_DATE_FORMAT);
     }
 
     /**
@@ -713,8 +687,7 @@ public class DateTimeUtil {
      * @return 두 날짜 사이의 년도 차이를 리턴한다.
      * @exception ParseException 잘못된 날짜이거나. 날짜를 표현하는 문자열이 <code>format</code> 형식에 맞지 않는 경우.
      */
-    public static int ageBetween(String from, String to, String format)
-            throws ParseException {
+    public static int ageBetween(String from, String to, String format) throws ParseException {
         return (daysBetween(from, to, format) / 365);
     }
 
@@ -729,9 +702,8 @@ public class DateTimeUtil {
      * @return 더해진 날짜를 표현하는 문자열
      * @exception ParseException 잘못된 날짜이거나. 날짜를 표현하는 문자열이 <code>"yyyyMMdd"</code> 형식에 맞지 않는 경우.
      */
-    public static String addDays(String s, int day)
-            throws ParseException {
-        return addDays(s, day, "yyyyMMdd");
+    public static String addDays(String s, int day) throws ParseException {
+        return addDays(s, day, DEFAULT_DATE_FORMAT);
     }
 
     /**
@@ -745,7 +717,7 @@ public class DateTimeUtil {
      * @exception ParseException 잘못된 날짜이거나. 날짜를 표현하는 문자열이 <code>"yyyyMMdd"</code> 형식에 맞지 않는 경우.
      */
     public static String addDays(int day) throws ParseException {
-        return addDays(getShortDateString(), day, "yyyyMMdd");
+        return addDays(getShortDateString(), day, DEFAULT_DATE_FORMAT);
     }
 
     /**
@@ -759,11 +731,10 @@ public class DateTimeUtil {
      * @return 더해진 날짜를 표현하는 문자열
      * @exception ParseException 잘못된 날짜이거나. 날짜를 표현하는 문자열이 <code>"yyyyMMdd"</code> 형식에 맞지 않는 경우.
      */
-    public static String addDays(int day, String format)
-            throws ParseException {
+    public static String addDays(int day, String format) throws ParseException {
         String today = getShortDateString();
-        String tmp = addDays(today, day, "yyyyMMdd");
-        return changeFormat(tmp, "yyyyMMdd", format);
+        String tmp = addDays(today, day, DEFAULT_DATE_FORMAT);
+        return changeFormat(tmp, DEFAULT_DATE_FORMAT, format);
     }
 
     /**
@@ -778,16 +749,15 @@ public class DateTimeUtil {
      * @return 더해진 날짜를 표현하는 문자열
      * @exception ParseException 잘못된 날짜이거나. 날짜를 표현하는 문자열이 <code>format</code> 형식에 맞지 않는 경우.
      */
-    public static String addDays(String s, int day, String format)
-            throws ParseException {
-        SimpleDateFormat formatter =
-                new SimpleDateFormat(format, Locale.KOREA);
+    public static String addDays(String s, int day, String format) throws ParseException {
+        SimpleDateFormat formatter = new SimpleDateFormat(format, Locale.ROOT);
         Date date = check(s, format);
 
         long tempTime = (long) day * 1000 * 60 * 60 * 24;
         date.setTime( date.getTime() + tempTime);
         return formatter.format(date);
     }
+
     /**
      * 인자로 전달된 시각 <code>s</code> 에서  특정 시간(time)을  더한 시각을  인자로 전달된 <code>format</code> 형식으로 표현하는 문자열을 리턴한다.
      * <p>2005년 2월 25일에서 일주일(7일) 후의 날짜를 표현하는 문자열 얻어오는  코드 사용예:
@@ -800,15 +770,14 @@ public class DateTimeUtil {
      * @return 더해진 시각을 표현하는 문자열
      * @exception ParseException 잘못된 날짜이거나. 날짜를 표현하는 문자열이 <code>format</code> 형식에 맞지 않는 경우.
      */
-    public static String addTimes(String s, int time, String format)
-            throws ParseException {
-        SimpleDateFormat formatter =
-                new SimpleDateFormat(format, Locale.KOREA);
+    public static String addTimes(String s, int time, String format) throws ParseException {
+        SimpleDateFormat formatter = new SimpleDateFormat(format, Locale.ROOT);
         Date date = check(s, format);
 
         date.setTime(date.getTime() + (long)  1000 * 60 * 60 * time );
         return formatter.format(date);
     }
+
     /**
      * 현재시각 에서  특정 시간(time)을  더한 시각을  인자로 전달된 <code>format</code> 형식으로 표현하는 문자열을 리턴한다.
      * <p>현재시각에서 23시간 후를 표현하는 문자열 얻어오는  코드 사용예:
@@ -820,32 +789,30 @@ public class DateTimeUtil {
      * @return 더해진 시각을 표현하는 문자열
      * @exception ParseException 잘못된 날짜이거나. 날짜를 표현하는 문자열이 <code>format</code> 형식에 맞지 않는 경우.
      */
-    public static String addTimes( int time, String format)
-            throws ParseException {
-        String fomatted=		getFormatString(format);
-        return addTimes(fomatted,time,format);
+    public static String addTimes(int time, String format) throws ParseException {
+        String formatted = getFormatString(format);
+        return addTimes(formatted, time, format);
     }
 
     /**
      * 세계표준시(Universal Time Coordinated)를 "yyyy-MM-ddTHH:mm:ss:SSSZ" 형태의 포멧으로 리턴한다.
      * @return UTC time
      */
-    public static String getUTCTimeString()
-    {
-        String ret="";
+    public static String getUTCTimeString() {
+        String ret;
         try{
             ret=addTimes(-9,"yyyy-MM-dd HH:mm:ss:SSS ");
-            char rets[]=ret.toCharArray();
+            char[] rets = ret.toCharArray();
             rets[10]='T';
             rets[23]='Z';
             ret=new String(rets);
 
-        }catch(ParseException e)
-        {
+        } catch (ParseException _) {
             throw new McpCommonException(COMMON_EXCEPTION);
         }
         return ret;
     }
+
     /**
      * 인자로 전달된 날짜 <code>s</code>를 기준으로 특정 개월(month) 수를 더한 날짜를 표현하는 문자열을 리턴한다. 날짜의 포현 포멧은 "yyyyMMdd"를 사용한다.
      * <p>2005년 2월 25일에서 7개월 전의 날짜를 표현하는 문자열을 얻어오는 코드 사용예:
@@ -858,7 +825,7 @@ public class DateTimeUtil {
      * @exception ParseException 잘못된 날짜이거나. 날짜를 표현하는 문자열이 <code>"yyyyMMdd"</code> 형식에 맞지 않는 경우.
      */
     public static String addMonths(String s, int month) throws ParseException {
-        return addMonths(s, month, "yyyyMMdd");
+        return addMonths(s, month, DEFAULT_DATE_FORMAT);
     }
 
     /**
@@ -873,18 +840,17 @@ public class DateTimeUtil {
      * @return 더해진 시각을 표현하는 문자열
      * @exception ParseException 잘못된 날짜이거나. 날짜를 표현하는 문자열이 <code>format</code> 형식에 맞지 않는 경우.
      */
-    public static String addMonths(String s, int addMonth, String format)
-            throws ParseException {
+    public static String addMonths(String s, int addMonth, String format) throws ParseException {
         SimpleDateFormat formatter =
-                new SimpleDateFormat(format, Locale.KOREA);
+            new SimpleDateFormat(format, Locale.ROOT);
         Date date = check(s, format);
 
         SimpleDateFormat yearFormat =
-                new SimpleDateFormat("yyyy", Locale.KOREA);
+            new SimpleDateFormat("yyyy", Locale.ROOT);
         SimpleDateFormat monthFormat =
-                new SimpleDateFormat("MM", Locale.KOREA);
+            new SimpleDateFormat("MM", Locale.ROOT);
         SimpleDateFormat dayFormat =
-                new SimpleDateFormat("dd", Locale.KOREA);
+            new SimpleDateFormat("dd", Locale.ROOT);
         int year = Integer.parseInt(yearFormat.format(date));
         int month = Integer.parseInt(monthFormat.format(date));
         int day = Integer.parseInt(dayFormat.format(date));
@@ -904,19 +870,20 @@ public class DateTimeUtil {
         DecimalFormat fourDf = new DecimalFormat("0000");
         DecimalFormat twoDf = new DecimalFormat("00");
         String tempDate = fourDf.format(year) + twoDf.format(month) + twoDf.format(day);
-        Date targetDate = null;
+        Date targetDate;
 
         try {
-            targetDate = check(tempDate, "yyyyMMdd");
-        } catch (ParseException pe) {
+            targetDate = check(tempDate, DEFAULT_DATE_FORMAT);
+        } catch (ParseException _) {
             day = lastDay(year, month);
             tempDate =
                     fourDf.format(year) + twoDf.format(month) + twoDf.format(day);
-            targetDate = check(tempDate, "yyyyMMdd");
+            targetDate = check(tempDate, DEFAULT_DATE_FORMAT);
         }
 
         return formatter.format(targetDate);
     }
+
     /**
      * 인자로 전달된 날짜 <code>s</code>를 기준으로 특정 연도(year) 수를 더한 날짜를 표현하는 문자열을 리턴한다. 날짜의 포현 포멧은 "yyyyMMdd"를 사용한다.
      * <p>2005년 2월 28일에서 3년 전의 날짜를 표현하는 문자열을 얻어오는 코드 사용예:
@@ -928,10 +895,10 @@ public class DateTimeUtil {
      * @return 더해진 날짜를 표현하는 문자열
      * @exception ParseException 잘못된 날짜이거나. 날짜를 표현하는 문자열이 <code>"yyyyMMdd"</code> 형식에 맞지 않는 경우.
      */
-    public static String addYears(String s, int year)
-            throws ParseException {
-        return addYears(s, year, "yyyyMMdd");
+    public static String addYears(String s, int year) throws ParseException {
+        return addYears(s, year, DEFAULT_DATE_FORMAT);
     }
+
     /**
      * 인자로 전달된 날짜 <code>s</code>를 기준으로 특정 연도(year) 수를 더한 날짜를 표현하는 문자열을 리턴한다. 날짜의 포현 포멧은 <code>format</code>를 사용한다.
      * <p>2005년 2월 28일에서 3년 전의 날짜를 표현하는 문자열을 얻어오는 코드 사용예:
@@ -944,10 +911,8 @@ public class DateTimeUtil {
      * @return 더해진 날짜를 표현하는 문자열
      * @exception ParseException 잘못된 날짜이거나. 날짜를 표현하는 문자열이 <code>format</code> 형식에 맞지 않는 경우.
      */
-    public static String addYears(String s, int year, String format)
-            throws ParseException {
-        SimpleDateFormat formatter =
-                new SimpleDateFormat(format, Locale.KOREA);
+    public static String addYears(String s, int year, String format) throws ParseException {
+        SimpleDateFormat formatter = new SimpleDateFormat(format, Locale.ROOT);
         Date date = check(s, format);
         date.setTime(
                 date.getTime() + (long) year * 1000 * 60 * 60 * 24 * (365 + 1) );
@@ -968,8 +933,9 @@ public class DateTimeUtil {
 
     public static String lastDayOfMonth(String src)
             throws ParseException {
-        return lastDayOfMonth(src, "yyyyMMdd");
+        return lastDayOfMonth(src, DEFAULT_DATE_FORMAT);
     }
+
     /**
      * 인자로 전달된 날짜 <code>src</code>에 해당하는 달의 마지막 날을 표현하는 날짜를 리턴한다. 날짜 표시 포멧으로 <code>format</code>을 사용한다.
      *  코드 사용예:
@@ -982,16 +948,12 @@ public class DateTimeUtil {
      * @return src에 날짜중 그 달의 마지막 날을 표시하는 문자열
      * @exception ParseException 잘못된 날짜이거나. 날짜를 표현하는 문자열이 <code>format</code> 형식에 맞지 않는 경우.
      */
-    public static String lastDayOfMonth(String src, String format)
-            throws ParseException {
-        SimpleDateFormat formatter =
-                new SimpleDateFormat(format, Locale.KOREA);
+    public static String lastDayOfMonth(String src, String format) throws ParseException {
+        SimpleDateFormat formatter = new SimpleDateFormat(format, Locale.ROOT);
         Date date = check(src, format);
 
-        SimpleDateFormat yearFormat =
-                new SimpleDateFormat("yyyy", Locale.KOREA);
-        SimpleDateFormat monthFormat =
-                new SimpleDateFormat("MM", Locale.KOREA);
+        SimpleDateFormat yearFormat = new SimpleDateFormat("yyyy", Locale.ROOT);
+        SimpleDateFormat monthFormat = new SimpleDateFormat("MM", Locale.ROOT);
 
         int year = Integer.parseInt(yearFormat.format(date));
         int month = Integer.parseInt(monthFormat.format(date));
@@ -1016,15 +978,9 @@ public class DateTimeUtil {
      * @return 마지막 일자(일 수)
      */
     private static int lastDay(int year, int month) {
-        int day = 0;
+        int day;
         switch (month) {
-        case 1 :
-        case 3 :
-        case 5 :
-        case 7 :
-        case 8 :
-        case 10 :
-        case 12 :
+            case 1, 3, 5, 7, 8, 10, 12:
             day = 31;
             break;
         case 2 :
@@ -1043,6 +999,7 @@ public class DateTimeUtil {
         }
         return day;
     }
+
     /**
      * 인자로 전달된 날짜를 나타내는 <code>s</code> 문자열이 "yyyy/MM/dd HH:mm" 형식에 맞는지 확인한다.
      * @param s 확인하려는 날짜를 나타내는 문자열
@@ -1070,7 +1027,8 @@ public class DateTimeUtil {
     public static boolean isMiddleTime(
             String startTime,
             String endTime,
-            String checkTime)
+        String checkTime
+    )
                     throws ParseException {
         Date a = getDateInstance(startTime);
         Date b = getDateInstance(endTime);
@@ -1078,6 +1036,7 @@ public class DateTimeUtil {
         return isMiddleTime(a, b, c);
 
     }
+
     /**
      * 기준 시각 (<code>checkTime</code>)이 시작시각(<code>startTime</code>) 과 종료시각(<code>endTime</code>) 사이에 위치하는지 여부를 리턴한다.
      * @param startTime 시작 시각
@@ -1088,18 +1047,14 @@ public class DateTimeUtil {
     public static boolean isMiddleTime(
             Date startTime,
             Date endTime,
-            Date checkTime) {
-
+        Date checkTime
+    ) {
         if (startTime.before(endTime)) {
-            if (endTime.after(checkTime) && startTime.before(checkTime))
-                return true;
-        } else {
-            if (endTime.after(checkTime) || startTime.before(checkTime)) {
-                return true;
+            return endTime.after(checkTime) && startTime.before(checkTime);
             }
+        return endTime.after(checkTime) || startTime.before(checkTime);
         }
-        return false;
-    }
+
     /**
      * 현재 시각이 시작시각(<code>startTime</code>) 과 종료시각(<code>endTime</code>) 사이에 위치하는지 여부를 리턴한다.
      * 인자로 전달되는 시각들은 "HH:mm" 또는  "HH/mm" 형태의 포멧이어야 한다.
@@ -1113,38 +1068,31 @@ public class DateTimeUtil {
      * @throws ParseException 인자로 전달된 시각이 지정된 포멧("HH:mm" or "HH/mm" 에) 맞지 않거나 올바른 시간이 아닐경우 발생.
      */
     public static boolean isMiddleTime(String startTime,String endTime) throws ParseException {
-
-        String curTime=getFormatString("HH:mm");
+        String curTime = getFormatString(DEFAULT_TIME_FORMAT);
         return isMiddleTime(startTime,endTime,curTime);
-
-
     }
 
     public static int getWeek(String inDate) throws ParseException {
-        Date date = null;
-        DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd",Locale.KOREA);
+        Date date;
+        DateFormat dateFormat = new SimpleDateFormat(DEFAULT_DATE_FORMAT, Locale.ROOT);
         date = dateFormat.parse(inDate);
 
         Calendar cal = Calendar.getInstance();
         cal.setTime(date);
 
-        int week = cal.get(Calendar.DAY_OF_WEEK);
-        return week;
-
+        return cal.get(Calendar.DAY_OF_WEEK);
     }
 
 
     public static int getWeekMonth(String inDate) throws ParseException {
-        Date date = null;
-        DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd",Locale.KOREA);
+        Date date;
+        DateFormat dateFormat = new SimpleDateFormat(DEFAULT_DATE_FORMAT, Locale.ROOT);
         date = dateFormat.parse(inDate);
 
         Calendar cal = Calendar.getInstance();
         cal.setTime(date);
 
-        int week = cal.get(Calendar.DAY_OF_WEEK_IN_MONTH);
-        return week;
-
+        return cal.get(Calendar.DAY_OF_WEEK_IN_MONTH);
     }
 
     public static long getCurrentTime(){
@@ -1155,15 +1103,13 @@ public class DateTimeUtil {
     /**
      * 현재 월의 마지막 일자를 String 형태로 return
      * @return String lastDay ("dd") 형태
-     * @throws ParseException
      */
     public static String getLastDayOfThisMonth() throws ParseException {
-        SimpleDateFormat formatter = new SimpleDateFormat ( "yyyyMMdd", Locale.KOREA );
+        SimpleDateFormat formatter = new SimpleDateFormat(DEFAULT_DATE_FORMAT, Locale.ROOT);
         Date currentTime = new Date ( );
         String toDay = formatter.format ( currentTime );
         String lastDay = DateTimeUtil.lastDayOfMonth(toDay);
-        lastDay = lastDay.substring(6);
-        return lastDay;
+        return lastDay.substring(6);
     }
 
 
@@ -1171,26 +1117,20 @@ public class DateTimeUtil {
      * 현재 일자,시간 기준으로 시작일 <= 현재 <= 종료일 을 boolean 형태로 return
      * @param startDate 년 월 일 시 분 초 , 14자리
      * @param endDate 년 월 일 시 분 초 , 14자리
-     * @return
      */
     public static boolean checkValidDate(String startDate, String endDate) {
-
         boolean retBool = false;
 
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss", Locale.KOREA);
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss", Locale.ROOT);
         String today = formatter.format(new Date());
 
         long todayLong = Long.parseLong(today);
 
-        if(startDate != null && !"".equals(startDate) && startDate.length() == 14
-                && endDate != null && !"".equals(endDate) && endDate.length() == 14) {
-
-            if((Long.parseLong(startDate) <= todayLong) && (todayLong <= Long.parseLong(endDate))) {
-                retBool = true;
-            }
-
+        if (startDate != null && startDate.length() == 14
+            && endDate != null && endDate.length() == 14
+            && (Long.parseLong(startDate) <= todayLong) && (todayLong <= Long.parseLong(endDate))) {
+            retBool = true;
         }
-
         return retBool;
     }
 
@@ -1198,10 +1138,8 @@ public class DateTimeUtil {
      * 현재일이 시작일과 종료일사이의 날자인지 비교
      * @param pstngStartDate
      * @param pstngEndDate
-     * @return
-     * @throws ParseException
      */
-    public static boolean isMiddleDate(String pstngStartDate, String pstngEndDate) throws ParseException {
+    public static boolean isMiddleDate(String pstngStartDate, String pstngEndDate) {
         LocalDate localdate = LocalDate.now();
         LocalDate startLocalDate = LocalDate.parse(pstngStartDate);
         LocalDate endLocalDate = LocalDate.parse(pstngEndDate);
@@ -1215,11 +1153,8 @@ public class DateTimeUtil {
      * 현재일시간이 시작일시간과 종료일시간사이의 날자인지 비교
      * @param pstngStartDateTime : 2022-01-31 00:00:00
      * @param pstngEndDateTime : 9999-12-31 23:59:59
-     * @return
-     * @throws ParseException
      */
-    public static boolean isMiddleDateTime(String pstngStartDateTime, String pstngEndDateTime) throws ParseException {
-
+    public static boolean isMiddleDateTime(String pstngStartDateTime, String pstngEndDateTime) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
         LocalDateTime localdatetime = LocalDateTime.now();
@@ -1233,11 +1168,8 @@ public class DateTimeUtil {
      * 현재일시간이 시작일시간과 종료일시간사이의 날자인지 비교
      * @param pstngStartDateTime : 20220101000000
      * @param pstngEndDateTime : 20241231235959
-     * @return
-     * @throws ParseException
      */
-    public static boolean isMiddleDateTime2(String pstngStartDateTime, String pstngEndDateTime) throws ParseException {
-
+    public static boolean isMiddleDateTime2(String pstngStartDateTime, String pstngEndDateTime) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
         LocalDateTime localdatetime = LocalDateTime.now();
@@ -1255,7 +1187,6 @@ public class DateTimeUtil {
    * @return boolean
    */
   public static boolean isMiddleDateTime(String startDateTime, String endDateTime, String middleDateTime){
-
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     LocalDateTime startDttm = LocalDateTime.parse(startDateTime, formatter);
@@ -1270,7 +1201,7 @@ public class DateTimeUtil {
         return DateTimeUtil.getMin();
     }
 
-    public static LocalDateTime getLocalDateTime(String dateTime, String format) throws ParseException {
+    public static LocalDateTime getLocalDateTime(String dateTime, String format) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
         return LocalDateTime.parse(dateTime, formatter);
     }
@@ -1288,19 +1219,13 @@ public class DateTimeUtil {
      * @return boolean
      */
     public static boolean isBlocked(String openingDate, int moreDay) {
-
-        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyyMMdd");
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern(DEFAULT_DATE_FORMAT);
         LocalDate openLocalDate = LocalDate.parse(openingDate, fmt);
         LocalDate blockUntilDate = openLocalDate.plusDays(moreDay);
         LocalDate today = LocalDate.now();
 
         // today가 blockUntilDate보다 이전이면 불가
-        boolean isBlocked = today.isBefore(blockUntilDate);
-
-        if(isBlocked) {
-            return true;
-        }
-        return false;
+        return today.isBefore(blockUntilDate);
     }
 
 }

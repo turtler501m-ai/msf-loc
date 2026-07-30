@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.externalclient.mspprx.adapter.repository.mybatis.smartform.mapper.ServiceAlterTraceMapper">
+
+  <select id="insert"
+          parameterType="com.ktmmobile.msf.domains.externalclient.mspprx.domain.entity.ServiceAlterTrace"
+          resultType="com.ktmmobile.msf.domains.externalclient.mspprx.application.dto.ServiceAlterTraceId">
+    WITH trace_lock AS (
+      SELECT pg_advisory_xact_lock(hashtext(concat(#{ncn}, ':', to_char(now(), 'YYYYMMDD'))))
+    ),
+    next_trace AS (
+      SELECT coalesce(max(trace_seq), 0) + 1 AS trace_seq
+      FROM smartform.msf_service_alter_trace
+      WHERE ncn = #{ncn}
+        AND reg_date = to_char(now(), 'YYYYMMDD')
+    )
+    INSERT INTO smartform.msf_service_alter_trace (
+      ncn,
+      trace_seq,
+      cret_ip,
+      cret_dt,
+      cret_id,
+      amd_ip,
+      amd_dt,
+      amd_id,
+      global_no,
+      contract_num,
+      subscriber_no,
+      event_cd,
+      prcs_mdl_div_cd,
+      trtm_rslt_sbst,
+      prcs_sbst,
+      rslt_cd,
+      a_soc_code,
+      t_soc_code,
+      a_soc_amt,
+      t_soc_amt,
+      parameter,
+      access_ip,
+      access_url_adr,
+      user_id,
+      reg_date
+    )
+    SELECT
+      #{ncn},
+      next_trace.trace_seq,
+      #{accessIp},
+      now(),
+      #{userId},
+      #{accessIp},
+      now(),
+      #{userId},
+      #{globalNo},
+      #{contractNum},
+      #{subscriberNo},
+      #{eventCd},
+      #{prcsMdlDivCd},
+      #{trtmRsltSbst},
+      #{prcsSbst},
+      #{rsltCd},
+      #{aSocCode},
+      #{tSocCode},
+      #{aSocAmt},
+      #{tSocAmt},
+      #{parameter},
+      #{accessIp},
+      #{accessUrlAdr},
+      #{userId},
+      to_char(now(), 'YYYYMMDD')
+    FROM next_trace, trace_lock
+    RETURNING ncn, reg_date AS regDate, trace_seq AS traceSeq
+  </select>
+
+  <select id="countRecentSuccessfulPlanChange" resultType="java.lang.Integer">
+    SELECT count(1)
+    FROM smartform.msf_service_alter_trace
+    WHERE ncn = #{ncn}
+      AND t_soc_code = #{targetSocCode}
+      AND cret_dt > now() - INTERVAL '1 hour'
+      AND reg_date = to_char(now(), 'YYYYMMDD')
+      AND event_cd = 'FIN'
+      AND trtm_rslt_sbst = 'SUCCESS'
+  </select>
+
+</mapper>

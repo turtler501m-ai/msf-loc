@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.form.form.newchange.repository.msp.McpRequestStateWriteMapper">
+  <insert id="insertMcpRequestState" parameterType="com.ktmmobile.msf.domains.form.form.common.vo.McpRequestStateVo">
+    INSERT INTO MCP_REQUEST_STATE@DL_MCP
+    (
+          REQUEST_STATE_KEY
+        , RIP
+        , SYS_RDATE
+        , RID
+        , RVISN_DTTM
+        , RVISN_ID
+        , REQUEST_KEY
+        , RES_NO
+        , REQUEST_STATE_CODE
+        , OPEN_NO
+        , TB_CD
+        , DLVRY_NO
+        , MEMO
+        , VIEW_FLAG
+    )
+    VALUES
+    (
+          #{requestStateKey}
+        , #{rip}
+        , #{sysRdate}
+        , #{rid}
+        , #{rvisnDttm}
+        , #{rvisnId}
+        , #{requestKey}
+        , #{resNo}
+        , #{requestStateCode}
+        , #{openNo}
+        , #{tbCd}
+        , #{dlvryNo}
+        , #{memo}
+        , #{viewFlag}
+    )
+  </insert>
+
+  <update id="updateMcpRequestState" parameterType="com.ktmmobile.msf.domains.form.form.common.vo.McpRequestStateVo">
+    UPDATE MCP_REQUEST_STATE@DL_MCP
+    SET
+          RIP	= #{rip}
+        ,	SYS_RDATE	= #{sysRdate}
+        ,	RID	= #{rid}
+        ,	RVISN_DTTM	= #{rvisnDttm}
+        ,	RVISN_ID	= #{rvisnId}
+        ,	REQUEST_KEY	= #{requestKey}
+        ,	RES_NO	= #{resNo}
+        ,	REQUEST_STATE_CODE	= #{requestStateCode}
+        ,	OPEN_NO	= #{openNo}
+        ,	TB_CD	= #{tbCd}
+        ,	DLVRY_NO	= #{dlvryNo}
+        ,	MEMO	= #{memo}
+        ,	VIEW_FLAG	= #{viewFlag}
+    WHERE REQUEST_KEY = #{requestKey}
+  </update>
+
+</mapper>

@@ -1,0 +1,36 @@
+#### LOCAL Profile
+spring:
+  config.activate.on-profile: local
+
+  ## Security
+  security:
+    jwt:
+      secret-key: ENC(peB8Z1gpdde6RFV2gPM4xmq+AamVsosvePPhuvJDdCtJNR2YHfgM5BUoCDwY7ZJkwe19LgNam8tD9J8LOoh51+kbQkN7K/BxjcxCzJQvrGU=)
+
+
+## 외부 서비스 인증 (Inbound)
+external-service-auth:
+  services:
+    eformsign: ## eFormSign
+      api-key: ENC(+WEP/BvEVcflYQdjBH4UwvuIII0U4++RRq88kgvADnivvQh/Xn0BoRGFc+y2dCpr6GWBYb4q5gwBDfJ1R7sOj/3ruTaaz1TvkGHpstD8If4DhmLtDn5vvhal9jlR6zWByf0E7AiNDSPXjcqCfuehrw==)
+      allowed-ip-addresses: ## 허용 IP 목록 (단일 IP, CIDR 가능)
+        - 127.0.0.1
+    koi-idcard: ## KOI 모바일신분증 인증
+      api-key: ENC(EAHW/nf7f/4Kx8tGKqEzSdBdzs21Ohc7JljeCxOVdXn/6Znj7cpiRubzaCe+y6/kSSQMR8zoJ39vpppbTNKKS1/rYJDd574i2ZW+Jly6Qht36jNORUu88AEVen44nXpbl0KnBH4y8plc0K9RIvwS8A==)
+      allowed-ip-addresses: ## 허용 IP 목록 (단일 IP, CIDR 가능)
+        - 127.0.0.1
+
+
+## Response Handling
+response-handling:
+  exception:
+    className: false
+    message: true
+
+
+## Actuator
+management:
+  tracing:
+    export:
+      otlp:
+        enabled: false

@@ -20,7 +20,7 @@
     <template #footer>
       <MsfButtonGroup>
         <MsfButton variant="secondary" @click="onClose">취소</MsfButton>
-        <MsfButton v-if="props.settingData?.addSvcSettingCompleted" variant="tertiary" @click="onReset">초기화</MsfButton>
+        <MsfButton v-if="props.settingData?.showChangeCancel" variant="tertiary" @click="onReset">변경취소</MsfButton>
         <MsfButton variant="primary" @click="onConfirm">확인</MsfButton>
       </MsfButtonGroup>
     </template>
@@ -28,13 +28,14 @@
 </template>
 
 <script setup>
-import { reactive, ref, watch } from 'vue'
+import { reactive, watch } from 'vue'
 import { showAlert } from '@/libs/utils/comp.utils'
 import { normalizePhone, isValidMobileNumber } from '@/libs/utils/string.utils'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
   settingData: { type: Object, default: () => ({}) },
+  initialSettingData: { type: Object, default: () => ({}) },
 })
 
 const emit = defineEmits(['update:modelValue', 'open', 'close', 'confirm'])
@@ -45,8 +46,8 @@ const formData = reactive({
 })
 
 // 기존 설정값에서 초기값 복원
-const initializeFromSettingData = () => {
-  const { ftrNewParam, phoneNumber } = props.settingData
+const initializeFromSettingData = (settingData = props.settingData) => {
+  const { ftrNewParam, phoneNumber } = settingData
 
   if (ftrNewParam) {
     formData.phoneNumber = normalizePhone(ftrNewParam)
@@ -57,11 +58,8 @@ const initializeFromSettingData = () => {
   }
 }
 
-const isFormReset = ref(false)
-
 watch(() => props.modelValue, (isOpen) => {
   if (isOpen) {
-    isFormReset.value = false
     initializeFromSettingData()
   }
 }, { immediate: true })
@@ -75,17 +73,13 @@ const onClose = () => {
 }
 
 const onReset = () => {
-  isFormReset.value = true
-  formData.phoneNumber = ''
+  initializeFromSettingData(
+    Object.keys(props.initialSettingData).length ? props.initialSettingData : props.settingData,
+  )
 }
 
 // 확인 버튼 클릭
 const onConfirm = () => {
-  if (isFormReset.value) {
-    emit('confirm', { isReset: true })
-    onClose()
-    return
-  }
   const phoneNumber = normalizePhone(formData.phoneNumber)
 
   if (!phoneNumber) {

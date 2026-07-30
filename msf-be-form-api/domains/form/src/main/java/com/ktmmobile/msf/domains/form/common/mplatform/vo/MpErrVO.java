@@ -6,6 +6,7 @@ public class MpErrVO implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    private long seq;
     private String resNo;             // 예약번호
     private String prgrStatCd;        // 진행상태코드
     private String prntsContractNo;   // 모회선
@@ -19,6 +20,14 @@ public class MpErrVO implements Serializable {
     public MpErrVO(String resNo, String prgrStatCd) {
         this.resNo = resNo;
         this.prgrStatCd = prgrStatCd;
+    }
+
+    public long getSeq() {
+        return seq;
+    }
+
+    public void setSeq(long seq) {
+        this.seq = seq;
     }
 
     public String getResNo() {

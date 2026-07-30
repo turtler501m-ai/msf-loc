@@ -12,6 +12,7 @@ import com.ktmmobile.msf.commons.common.commonenum.core.CommonEnumConstant;
 public enum UserType implements CommonEnum {
     FORM_USER("USER", "F", "일반 사용자"),
     ADMIN_USER("ADMIN", "A", "관리자"),
+    EXTERNAL_SERVICE_USER("EXTERNAL_SERVICE", "E", "외부 서비스"),
 
     @Deprecated
     UNDEFINED(CommonEnumConstant.UNDEFINED_CODE, "-", "Invalid User Type");

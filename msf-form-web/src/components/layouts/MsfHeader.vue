@@ -1,24 +1,21 @@
 <template>
   <div class="header-wrap">
     <header class="header-inner">
-      <h1 class="logo"><img src="@/assets/images/logo.svg" alt="kt mobile" /></h1>
+      <div class="header-logo-wrap">
+        <h1 class="logo"><img src="@/assets/images/logo.svg" alt="kt mobile" /></h1>
+        <span v-if="envName" class="env-badge" :class="`env-badge--${envMode}`">{{ envName }}</span>
+      </div>
       <div class="side-wrap">
         <div class="user-info">
           <router-link to="/setting">
             <p class="name"><span class="avatar"></span>{{ msfUserStore.userInfo?.userName }}</p>
           </router-link>
-          <ul class="infos">
-            <li>
-              {{
-                msfUserStore.userInfo?.organization?.shopCode ||
-                msfUserStore.userInfo?.organization?.agentCode
-              }}
+          <ul v-if="displayCode || displayName" class="infos">
+            <li v-if="displayCode">
+              {{ displayCode }}
             </li>
-            <li>
-              {{
-                msfUserStore.userInfo?.organization?.shopName ||
-                msfUserStore.userInfo?.organization?.agentName
-              }}
+            <li v-if="displayName">
+              {{ displayName }}
             </li>
           </ul>
         </div>
@@ -28,17 +25,19 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { computed } from 'vue'
 import { useMsfUserStore } from '@/stores/msf_user'
+import { getEnvMode, getEnvName } from '@/libs/utils/env.utils'
 
 const msfUserStore = useMsfUserStore()
+const envName = getEnvName()
+const envMode = getEnvMode()
 
-onMounted(async () => {
-  const userInfo = msfUserStore.getUserInfo()
-  if (!userInfo) {
-    msfUserStore.loadUserInfo()
-  }
-})
+// 조직 정보
+const org = computed(() => msfUserStore.userInfo?.organization)
+// 출력 내용
+const displayCode = computed(() => org.value?.shopCode || org.value?.agentCode)
+const displayName = computed(() => org.value?.shopName || org.value?.agentName)
 </script>
 
 <style lang="scss" scoped>
@@ -69,13 +68,18 @@ onMounted(async () => {
       font-weight: var(--font-weight-bold);
       text-align: center;
     }
-    h1.logo {
+    .header-logo-wrap {
       flex-shrink: 0;
       flex-grow: 0;
+      @include flex($v: center) {
+        gap: rem(8px);
+      }
+    }
+    h1.logo {
       margin: 0;
       padding: 0;
       height: auto;
-      font-size: inherit;
+      @include flex($v: center);
     }
     .side-wrap {
       @include flex($v: center) {
@@ -131,4 +135,5 @@ onMounted(async () => {
     }
   }
 }
+
 </style>

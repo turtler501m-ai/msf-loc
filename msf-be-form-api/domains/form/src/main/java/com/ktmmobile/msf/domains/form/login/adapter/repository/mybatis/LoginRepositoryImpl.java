@@ -21,28 +21,28 @@ public class LoginRepositoryImpl implements LoginRepository {
     }
 
     @Override
-    public LoginResponse getUserAppInfo(LoginRequest request) {
-        return loginMapper.selectUserAppInfo(request);
-    }
-
-    @Override public Integer updateLoginFail(LoginRequest request) {
-        return loginMapper.updateLoginFail(request);
-    }
-
-    @Override public Integer updateLoginSucc(LoginRequest request) {
-        return loginMapper.updateLoginSucc(request);
-    }
-
-    @Override public Integer insertUserHistory(String userId) {
+    public Integer insertUserHistory(String userId) {
         return loginMapper.insertUserHistory(userId);
     }
 
-    @Override public Integer updateBioLoginSucc(LoginRequest request) {
-        return loginMapper.updateBioLoginSucc(request);
+    @Override
+    public Integer modifyPass(PassChangeRequest request) {
+        return loginMapper.updateUserPass(request);
     }
 
-    @Override public Integer modifyPass(PassChangeRequest request) {
-        return loginMapper.updateUserPass(request);
+    @Override
+    public LoginResponse getUserHstInfo(LoginRequest loginRequest) {
+        return loginMapper.selectUserHstInfo(loginRequest);
+    }
+
+    @Override
+    public Integer insertAdminUserHistory(String userId) {
+        return loginMapper.insertAdminUserHistory(userId);
+    }
+
+    @Override
+    public Integer modifyAdminPass(PassChangeRequest request) {
+        return loginMapper.updateAdminUserPass(request);
     }
 
 }

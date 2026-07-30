@@ -8,7 +8,7 @@
       <slot></slot>
     </div>
 
-    <div class="code-area">
+    <div class="code-area" v-if="!props.hideCode">
       <div class="code-header">
         <span>SOURCE CODE</span>
         <button class="copy-btn" @click="handleCopy">
@@ -29,6 +29,7 @@ const props = defineProps({
   // 소스박스 타이틀 설정시
   title: { type: String, default: '' },
   description: { type: String, default: '' },
+  hideCode: { type: Boolean, default: false }, // 코드박스 숨김여부
 })
 
 // 1. 현재 컴포넌트의 태그 이름을 자동으로 가져오기
@@ -152,5 +153,6 @@ pre {
   font-size: 14px;
   color: #6b7280;
   line-height: 1.5;
+  white-space: pre-line;
 }
 </style>

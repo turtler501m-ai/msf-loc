@@ -51,7 +51,7 @@
     <template #footer>
       <MsfButtonGroup>
         <MsfButton variant="secondary" @click="onClose">취소</MsfButton>
-        <MsfButton v-if="props.settingData?.addSvcSettingCompleted" variant="tertiary" @click="onReset">초기화</MsfButton>
+        <MsfButton v-if="props.settingData?.showChangeCancel" variant="tertiary" @click="onReset">변경취소</MsfButton>
         <MsfButton variant="primary" @click="onConfirm">확인</MsfButton>
       </MsfButtonGroup>
     </template>
@@ -69,6 +69,10 @@ const props = defineProps({
   variant: { type: String, default: 'date8' }, // 'date8' | 'dateTimeRange'
   serviceName: { type: String, default: '' },
   settingData: {
+    type: Object,
+    default: () => ({}),
+  },
+  initialSettingData: {
     type: Object,
     default: () => ({}),
   },
@@ -92,9 +96,33 @@ const today = () => {
   return date
 }
 
+const parseKeyValueParam = (param = '') =>
+  String(param || '')
+    .split('|')
+    .map((item) => item.split('='))
+    .reduce((result, [key, value]) => {
+      if (key) result[String(key).trim()] = String(value || '').trim()
+      return result
+    }, {})
+
+const formatYmd = (value = '') => {
+  const digits = String(value || '').replace(/\D/g, '')
+  if (digits.length < 8) return ''
+  return `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6, 8)}`
+}
+
+const getSavedRoamingParams = (settingData = props.settingData) => {
+  const params = parseKeyValueParam(settingData.paramSbst || settingData.paramSbstCtt || '')
+  return {
+    start: params.STRT_DT || settingData.strtDt || settingData.startDt || settingData.startDateTime || '',
+    end: params.END_DT || settingData.endDt || settingData.endDateTime || '',
+  }
+}
+
 // 기존 설정값에서 초기값 복원
-const initializeFromSettingData = () => {
-  const { ftrNewParam, startDate: savedStartDate, startHour: savedStartHour, endDate: savedEndDate } = props.settingData
+const initializeFromSettingData = (settingData = props.settingData) => {
+  const { ftrNewParam, startDate: savedStartDate, startHour: savedStartHour, endDate: savedEndDate } = settingData
+  const savedRoamingParams = getSavedRoamingParams(settingData)
   startDate.value = undefined
   startHour.value = '00'
   endDate.value = undefined
@@ -106,6 +134,8 @@ const initializeFromSettingData = () => {
       if (digits.length === 8) {
         startDate.value = `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6, 8)}`
       }
+    } else if (savedRoamingParams.start) {
+      startDate.value = formatYmd(savedRoamingParams.start)
     } else if (savedStartDate) {
       startDate.value = savedStartDate
     }
@@ -131,6 +161,11 @@ const initializeFromSettingData = () => {
         const day = endPart.slice(6, 8)
         endDate.value = `${year}-${month}-${day}`
       }
+    } else if (savedRoamingParams.start || savedRoamingParams.end) {
+      const startDigits = String(savedRoamingParams.start || '').replace(/\D/g, '')
+      startDate.value = formatYmd(startDigits)
+      startHour.value = startDigits.length >= 10 ? startDigits.slice(8, 10) : '00'
+      endDate.value = formatYmd(savedRoamingParams.end)
     } else if (savedStartDate && savedEndDate) {
       startDate.value = savedStartDate
       startHour.value = savedStartHour || '00'
@@ -139,11 +174,8 @@ const initializeFromSettingData = () => {
   }
 }
 
-const isFormReset = ref(false)
-
 watch(() => props.modelValue, (isOpen) => {
   if (isOpen) {
-    isFormReset.value = false
     initializeFromSettingData()
   }
 }, { immediate: true })
@@ -183,10 +215,9 @@ const onClose = () => {
 }
 
 const onReset = () => {
-  isFormReset.value = true
-  startDate.value = undefined
-  startHour.value = '00'
-  endDate.value = undefined
+  initializeFromSettingData(
+    Object.keys(props.initialSettingData).length ? props.initialSettingData : props.settingData,
+  )
 }
 
 const validateDate8 = () => {
@@ -203,6 +234,14 @@ const validateDate8 = () => {
   return ''
 }
 
+const toStartDateTime = () => {
+  const start = toDate(startDate.value)
+  if (!start) return null
+  const hour = Number.parseInt(startHour.value || '00', 10)
+  start.setHours(Number.isNaN(hour) ? 0 : hour, 0, 0, 0)
+  return start
+}
+
 const validateDateTimeRange = () => {
   const start = toDate(startDate.value)
   const end = toDate(endDate.value)
@@ -213,6 +252,10 @@ const validateDateTimeRange = () => {
     return '종료일을 선택해 주세요.'
   }
   validateHour()
+  const startDateTime = toStartDateTime()
+  if (!startDateTime || isBefore(startDateTime, new Date())) {
+    return '시작시간은 현재 시간 이후로 선택해 주세요.'
+  }
   if (isBefore(start, today())) {
     return '시작일은 오늘 이후로 선택해 주세요.'
   }
@@ -229,11 +272,6 @@ const validateDateTimeRange = () => {
 }
 
 const onConfirm = () => {
-  if (isFormReset.value) {
-    emit('confirm', { isReset: true })
-    onClose()
-    return
-  }
   const validationMessage =
     props.variant === 'date8' ? validateDate8() : validateDateTimeRange()
 

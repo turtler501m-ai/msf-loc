@@ -72,7 +72,8 @@ const validate = () => {
   if (!formData.cstmrBillSendTypeCd) return false
   if (!formData.reqPayTypeCd) return false
 
-  if (formData.reqPayTypeCd === 'payMtd1') {
+  // D: 자동이체, C: 신용카드, 0: 통합청구 정식 코드 매핑
+  if (formData.reqPayTypeCd === 'D') {
     if (!formData.autoPayerType || !formData.reqBankCd || !formData.reqAccountNo) return false
     if (formData.autoPayerType === 'autoPayerType2') {
       if (!formData.reqAccountNm || !formData.reqAccountRrn || !formData.reqAccountRelTypeCd)
@@ -80,7 +81,7 @@ const validate = () => {
       if (formData.othersPaymentAgrYn !== 'Y') return false
     }
     if (!formData.isAutoAgree) return false
-  } else if (formData.reqPayTypeCd === 'payMtd2') {
+  } else if (formData.reqPayTypeCd === 'C') {
     if (!formData.cardPayerType || !formData.reqCardCompanyCd || !formData.reqCardNo) return false
     if (formData.cardPayerType === 'cardPayerType2') {
       if (
@@ -93,7 +94,7 @@ const validate = () => {
         return false
       if (formData.othersPaymentAgrYn !== 'Y') return false
     }
-  } else if (formData.reqPayTypeCd === 'payMtd3') {
+  } else if (formData.reqPayTypeCd === '0') {
     if (!formData.combId) return false
     if (!formData.combAgree) return false
   }
@@ -114,7 +115,7 @@ defineExpose({ validate })
     <MsfFormGroup label="요금 납부 방법" tag="div" required>
       <MsfChip v-model="formData.reqPayTypeCd" name="inp-payMtd" groupCode="PAYM" />
       <!-- 자동이체 -->
-      <template v-if="formData.reqPayTypeCd === 'payMtd1'">
+      <template v-if="formData.reqPayTypeCd === 'D'">
         <hr class="ut-line" />
         <MsfStack type="field" class="ut-w100p">
           <MsfChip
@@ -143,8 +144,8 @@ defineExpose({ validate })
             placeholder="계좌번호 입력"
             class="ut-w-200"
           />
-          <MsfButton variant="toggle">계좌번호 유효성 체크</MsfButton>
-          <MsfButton variant="toggle" active>계좌번호 유효성 체크 완료</MsfButton>
+          <MsfButton variant="validation">유효성 체크</MsfButton>
+          <MsfButton variant="validation" active>유효성 체크 완료</MsfButton>
         </MsfStack>
         <MsfStack type="field" v-if="formData.autoPayerType === 'autoPayerType2'">
           <MsfInput
@@ -152,6 +153,7 @@ defineExpose({ validate })
             id="inp-autoPayerName"
             placeholder="납부 고객명"
             class="ut-w-300"
+            maxlength="100"
           />
           <MsfBirthdayInput
             v-model="formData.reqAccountRrn"
@@ -187,7 +189,7 @@ defineExpose({ validate })
       </template>
       <!-- // 자동이체 -->
       <!-- 신용카드 -->
-      <template v-if="formData.reqPayTypeCd === 'payMtd2'">
+      <template v-if="formData.reqPayTypeCd === 'C'">
         <hr class="ut-line" />
         <MsfStack type="field" class="ut-w100p">
           <MsfChip
@@ -216,8 +218,8 @@ defineExpose({ validate })
             placeholder="카드번호 입력"
             class="ut-w-200"
           />
-          <MsfButton variant="toggle">신용카드 유효성 체크</MsfButton>
-          <MsfButton variant="toggle" active>신용카드 유효성 체크 완료</MsfButton>
+          <MsfButton variant="validation">유효성 체크</MsfButton>
+          <MsfButton variant="validation" active>유효성 체크 완료</MsfButton>
         </MsfStack>
         <MsfStack type="field">
           <MsfSelect
@@ -260,6 +262,7 @@ defineExpose({ validate })
             id="inp-cardPayerName"
             placeholder="납부 고객명"
             class="ut-w-300"
+            maxlength="100"
           />
           <MsfBirthdayInput
             v-model="formData.reqCardRrn"
@@ -289,7 +292,7 @@ defineExpose({ validate })
       </template>
       <!-- // 신용카드 -->
       <!-- 통합청구 -->
-      <template v-if="formData.reqPayTypeCd === 'payMtd3'">
+      <template v-if="formData.reqPayTypeCd === '0'">
         <MsfStack type="field">
           <MsfInput
             v-model="formData.combId"
@@ -297,8 +300,8 @@ defineExpose({ validate })
             placeholder="청구계정ID 입력"
             class="ut-w-300"
           />
-          <MsfButton variant="toggle">청구계정 체크</MsfButton>
-          <MsfButton variant="toggle" active>청구계정 체크 완료</MsfButton>
+          <MsfButton variant="validation">청구계정 체크</MsfButton>
+          <MsfButton variant="validation" active>청구계정 체크 완료</MsfButton>
         </MsfStack>
         <MsfCheckbox
           v-model="formData.combAgree"

@@ -15,4 +15,12 @@ public class AgentInfoResponse {
     private String ktOrgId;
     private String orgnId;
     private String orgnNm;
+    private String shopOrgnId;
+    private String shopNm;
+    private String realShopNm;
+    private String managerNm;
+    private String telephone;
+    private String representativeTelephone;
+
+    private String canBulkCorporateOpenYn; //대량 개통 가능여부
 }

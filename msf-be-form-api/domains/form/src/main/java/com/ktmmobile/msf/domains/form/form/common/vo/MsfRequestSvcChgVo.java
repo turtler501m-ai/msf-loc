@@ -31,9 +31,9 @@ public class MsfRequestSvcChgVo {
     String chgMobileNo;
     String chgContractNum;
     String memo;
-    String regDate;
+    String openReqDt;
     String regstId;
-    String regDt;
+    String reqInDt;
     String procDt;
     String procCd;
     String recYn;
@@ -45,5 +45,7 @@ public class MsfRequestSvcChgVo {
     String appFormXmlYn;
     String fileNm;
     String fileMaskNm;
+    String parentScanId;
+    String signTgtSbst;
 
 }

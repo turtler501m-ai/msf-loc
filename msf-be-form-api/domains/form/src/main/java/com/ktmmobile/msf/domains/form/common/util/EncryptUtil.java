@@ -1,7 +1,6 @@
 package com.ktmmobile.msf.domains.form.common.util;
 
-import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.ACE_256_ENC_EXCEPTION;
-import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.COMMON_EXCEPTION;
+
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -13,13 +12,17 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+
+import com.ktds.crypto.exception.CryptoException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import com.ktmmobile.msf.domains.form.common.exception.McpCommonException;
-import com.ktds.crypto.exception.CryptoException;
+
+import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.ACE_256_ENC_EXCEPTION;
+import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.COMMON_EXCEPTION;
 
 
 /**
@@ -31,16 +34,14 @@ import com.ktds.crypto.exception.CryptoException;
  *        -SHA-256(단방향 암호화 처리 ,복호화처리안됨),주로 패스워드 암호화에 이용
  * </pre>
  */
+@Slf4j
 public class EncryptUtil {
 
-    private static final Logger logger = LoggerFactory.getLogger(EncryptUtil.class);
     private static final String SALT_KEY = "2013070198765432";
 
     /** aes256Key */
     private static final String AEC_256_KEY ="S3QxMTQ2NTQ1MDExNElTMzc3NjQ5NDkwMTBNb2JpbGU=";
     private static final String AEC_256__SALT_KEY ="AAAAAAAAAAAAAAAAAAAAAA==";
-
-
 
 
     /**
@@ -58,7 +59,6 @@ public class EncryptUtil {
         }
         return encMsg ;
     }
-
 
 
     /**
@@ -158,6 +158,7 @@ public class EncryptUtil {
         }
         return data;
     }
+
     public static String ace256NoPaddingEnc(String key, String iv, String textStr)  {
         byte[] ivArry = Base64.decodeBase64(iv);
         byte[] keyArry = Base64.decodeBase64(key);
@@ -169,7 +170,7 @@ public class EncryptUtil {
             aes.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(keyArry, "AES"), ivSpec);
             dataText = aes.doFinal(textStr.getBytes("utf-8"));
         }catch (Exception e){
-            logger.error("Exception e : {}", e.getMessage());
+            log.error("Exception e : {}", e.getMessage());
             dataText = null;
         }
         String encodeText = null;
@@ -181,8 +182,8 @@ public class EncryptUtil {
 
     public static String ace256NoPaddingDec(String key, String iv, String textStr) throws InvalidAlgorithmParameterException, InvalidKeyException {
 
-        byte[] ivArry = Base64.decodeBase64(iv);
-        byte[] keyArry = Base64.decodeBase64(key);
+        //byte[] ivArry = Base64.decodeBase64(iv);
+        //byte[] keyArry = Base64.decodeBase64(key);
 
         byte[] data = Base64.decodeBase64(textStr.getBytes());
         String plainText = "";

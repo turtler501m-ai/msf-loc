@@ -22,6 +22,13 @@
   </span>
 </template>
 
+<script>
+export const RADIO_VARIANTS = [
+  'default', // 기본스타일
+  'type2', // 체크박스모양과 동일한 스타일
+]
+</script>
+
 <script setup>
 import { computed, useId, useAttrs } from 'vue'
 
@@ -47,10 +54,11 @@ const props = defineProps({
     type: [String, Number, Boolean, null],
     default: '',
   },
+  // 스타일 (default: 기본, type2: 체크박스모양)
   variant: {
     type: String,
     default: 'default',
-    validator: (v) => ['default'].includes(v),
+    validator: (v) => RADIO_VARIANTS.includes(v),
   },
   size: {
     type: String,
@@ -83,7 +91,7 @@ const handleChange = (event) => {
 // 스타일 클래스
 const rootClasses = computed(() => [
   'radio-root', // 전달주신 스타일의 .root 역할
-  props.variant !== 'default' && props.variant, // .filter 등
+  props.variant !== 'default' && props.variant, // type2 등
   props.size !== 'medium' && props.size,
   {
     'is-error': props.error,
@@ -107,6 +115,11 @@ const rootClasses = computed(() => [
   --radio-label-gap: var(--spacing-x2);
   --radio-border-color: var(--color-gray-400);
   --radio-background-color: var(--color-white);
+
+  // type2 : 체크박스모양 사용시 사용되는 아이콘
+  --radio-check-icon: var(--icon-checkbox-set);
+  --radio-check-icon-color: var(--color-white);
+  --radio-check-icon-position: 50% 0;
 
   position: relative;
   display: inline-flex;
@@ -182,6 +195,56 @@ const rootClasses = computed(() => [
     // .radio-label {
     //   color: var(--color-accent-alert, #f56c6c);
     // }
+  }
+
+  // variant : 스타일 지정
+  // type2 : MsfCheckbox와 동일한 모양
+  &.type2 {
+    .radio-input {
+      // 기본 모양
+      & + .radio-label {
+        .radio-icon {
+          --radio-check-icon-color: var(--color-gray-500);
+          box-shadow: none;
+          flex: 0 0 auto;
+          display: inline-flex;
+          position: relative;
+          &::before {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            mask-image: var(--radio-check-icon);
+            mask-position: var(--radio-check-icon-position);
+            mask-repeat: no-repeat;
+            mask-size: contain;
+            background-color: var(--radio-check-icon-color);
+          }
+        }
+      }
+      // type2 선택
+      &:checked + .radio-label {
+        .radio-icon {
+          --radio-background-color: var(--color-primary-base);
+          --radio-check-icon-color: var(--color-white);
+        }
+      }
+      // type2 비활성화
+      &:disabled + .radio-label {
+        .radio-icon {
+          --radio-border-color: var(--color-line-disabled);
+          --radio-background-color: var(--color-bg-disabled);
+          --radio-check-icon-color: var(--color-text-disabled);
+        }
+      }
+      // type2 비활성화 + 체크
+      &:checked:disabled + .radio-label {
+        .radio-icon {
+          --radio-border-color: var(--color-bg-disabled);
+          --radio-background-color: var(--color-bg-disabled);
+          --radio-check-icon-color: var(--color-text-disabled);
+        }
+      }
+    }
   }
 }
 </style>

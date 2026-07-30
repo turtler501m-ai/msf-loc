@@ -8,4 +8,5 @@ dependencies {
     implementation(project(":commons:mybatis"))
     implementation(project(":commons:auditing"))
     implementation(project(":commons:login-core"))
+    implementation(project(":domains:login"))
 }

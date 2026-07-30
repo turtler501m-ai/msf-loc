@@ -5,7 +5,13 @@ import { useMsfUserStore } from '@/stores/msf_user'
  *
  * @returns
  */
-export const getLoginId = () => useMsfUserStore().getUserInfo()?.id
+export const getLoginId = () => useMsfUserStore().getUserInfo()?.userId
+
+/**
+ * 로그인 사용자 이름 조회
+ * @returns
+ */
+export const getLoginName = () => useMsfUserStore().getUserInfo()?.userName
 
 /**
  * 사용자 인증 토큰 파싱

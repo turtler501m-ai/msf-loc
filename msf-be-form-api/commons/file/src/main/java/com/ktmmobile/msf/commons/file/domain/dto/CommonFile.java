@@ -7,7 +7,7 @@ import com.ktmmobile.msf.commons.file.domain.vo.RawFile;
 
 @Builder
 public record CommonFile(
-    String pathFileName,
+    String filePath,
     RawFile rawFile,
     @With String signedUrl
 ) {

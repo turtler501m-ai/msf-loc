@@ -1,0 +1,60 @@
+## Common
+common:
+  public-url:
+    form-service: https://d-smartform.ktmmobile.com
+    admin-service: https://d-smartform-admin.ktmmobile.com
+
+
+
+## Spring
+spring:
+  ## DataSource
+  datasource:
+    groups:
+      ## 스마트서식지
+      smartform:
+        writer:
+          url: jdbc:postgresql://172.28.32.73:5432/msf_core?currentSchema=smartform
+          username: ENC(f44tZmqdWZwSnjDD9aJSovGHrqyty9swgwYLJPfT9os9FUJwkCEajCsCKeYPzbqD)
+          password: ENC(1S3SnsYfpdJ+d36e8ovYBIc2nfOMsobhm2Fpv+BjmlPYtGzokJSsFmGlR17gZxt/2+eeCQ7clxz1gXBP3z2M7g==)
+
+      ## M전산
+      msp:
+        standalone:
+          url: jdbc:oracle:thin:@10.21.28.28:1521:MSPDEV
+          username: ENC(QlO7YmpuULQfDnv9wXarjOn10sMzQttHKCnbC/A5sbEmJLfjv1uL3EDN+mH9d7Ph)
+          password: ENC(Pcfr9Z1s8jaKZRJ1Z6c99tgwWh6rymcBm4mpvApZSLv1Tj7GiDIENMNthHNSikoe)
+
+  ## Spring Data
+  data:
+    ## Redis
+    redis:
+      host: 172.28.32.8
+      port: 6379
+      password: ENC(14Y4GRWM72+tJwXV/WGcHBTkvU6I3hj3FuOw847XxaQbkrev1UqZ54FcWsMk2R0SY2oCCOwMyY4UzNdXNzKT9SHUR9iPX8wCfEYtU01s2uY=)
+
+
+
+## 메시지 발송
+message-sender:
+  kakao:
+    sender-key: ENC(cqAuBYmxOD6HXTVP56i3PkODmM0zw4NwI+qqElPonzEx5lu5KUE1ln5VeXyjCHXJk8HPSbQLRO9ljjbmzlnmqxuCqc5VOpXC+vAL5AV3RZc=)
+
+
+
+## Scheduling
+scheduling:
+  enabled: false
+
+
+
+logging:
+  level:
+    com.ktmmobile.msf: debug
+    jdbc:
+      sqlonly: off
+      sqltiming: off
+      resultsettable: debug
+      audit: off
+      resultset: off
+      connection: off

@@ -1,65 +1,66 @@
 package com.ktmmobile.msf.domains.form.common.mplatform;
 
+
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.SocketTimeoutException;
-import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import jakarta.servlet.http.HttpServletRequest;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import org.apache.commons.httpclient.NameValuePair;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jdom.Element;
 import org.jdom.JDOMException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.dataformat.xml.XmlMapper;
 
 import com.ktmmobile.msf.commons.websecurity.web.util.RequestUtils;
+import com.ktmmobile.msf.domains.externalclient.common.property.ExternalServiceProperties;
+import com.ktmmobile.msf.domains.externalclient.mspprx.application.dto.MspPrxFormRequest;
+import com.ktmmobile.msf.domains.externalclient.mspprx.application.dto.MspPrxSoapResponse;
+import com.ktmmobile.msf.domains.externalclient.mspprx.application.port.out.MspPrxClient;
 import com.ktmmobile.msf.domains.form.common.exception.McpMplatFormException;
 import com.ktmmobile.msf.domains.form.common.exception.SelfServiceException;
 import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpBaseRequestSpec;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.CommonXmlNoSelfServiceException;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.CommonXmlVO;
 import com.ktmmobile.msf.domains.form.common.service.IpStatisticService;
-import com.ktmmobile.msf.domains.form.common.util.HttpClientUtil;
+import com.ktmmobile.msf.domains.form.common.util.NmcpServiceUtils;
 import com.ktmmobile.msf.domains.form.common.util.XmlParse;
 
+import static com.ktmmobile.msf.domains.externalclient.common.code.ClientConst.SERVICE_NAME_MSP_PRX;
 import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.MPLATFORM_RESPONEXML_EMPTY_EXCEPTION;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class MsfMplatFormServerAdapter {
 
-    private static final Logger logger = LoggerFactory.getLogger(MsfMplatFormServerAdapter.class);
+    //20260526 PRX 호출 URL 변경
+    private static final String MSP_PRX_SERVICE_CALL_PATH = "/mPlatform/serviceCall.do";
+    private static final String MSP_PRX_SERVICE_CALL_JSON_PATH = "/mPlatform/serviceCallJson.do";
 
-    @Value("${juice.url}")
-    private String propertiesService;
-    // @Value("${juice.json.url}")
-    // private String mplatformJsonUrl;
+    protected static final String HEADER = "commHeader";
+    protected static final String GLOBAL_NO = "globalNo";
+    protected static final String RESPONSE_TYPE = "responseType";
+    protected static final String RESPONSE_CODE = "responseCode";
+    protected static final String RESPONSE_BASIC = "responseBasic";
 
-    protected final static String HEADER = "commHeader";
-    protected final static String GLOBAL_NO = "globalNo";
-    protected final static String RESPONSE_TYPE = "responseType";
-    protected final static String RESPONSE_CODE = "responseCode";
-    protected final static String RESPONSE_BASIC = "responseBasic";
+    private final IpStatisticService ipStatisticService;
+    private final MspPrxClient mspPrxClient;
+    private final ExternalServiceProperties externalServiceProperties;
 
-    @Autowired
-    private IpStatisticService ipStatisticService;
-
-    @Value("${api.interface.server}")
+    @Value("${api.interface.server:}")
     private String apiInterfaceServer;
 
     public boolean callService(HashMap<String, String> param, CommonXmlVO vo) throws SelfServiceException, SocketTimeoutException {
@@ -69,26 +70,36 @@ public class MsfMplatFormServerAdapter {
     public boolean callService(HashMap<String, String> param, CommonXmlVO vo, int timeout) throws SelfServiceException, SocketTimeoutException {
         boolean result = true;
         String responseXml = "";
+        String callUrl = "";
+        String eventCd = param == null ? "" : param.get("appEventCd");
         try {
 
             //엠플렛폼 로그 저장
             HashMap<String, String> pMplatform = this.saveMplateSvcLog(param);
+            logMplatformRequestParameters("callService", pMplatform, timeout);
 
-            String getURL = this.getURL(pMplatform);
+            callUrl = getMspPrxServiceCallUrl();
 
-            String callUrl = propertiesService;
+            log.info("*** M-PlatForm Connect Start ***");
+            log.info("*** callUrl *** " + callUrl);
+            log.info("*** eventCd *** " + eventCd);
+            log.info("*** M-Platform parameter count *** " + pMplatform.size());
+            // Use TOBE PRX client; keep raw XML so existing VO parsers continue to work.
+            MspPrxSoapResponse response = mspPrxClient.callService(MspPrxFormRequest.builder()
+                .parameters(pMplatform)
+                .build());
+            responseXml = response.rawXml();
+            // AS-IS: 직접 getURL 생성 후 전송하던 방식. getURL 생성은 MspPrxClient에서 공통 처리한다.
+            // String getURL = this.getURL(pMplatform);
+            // NameValuePair[] data = { new NameValuePair("getURL", getURL) };
+            // MspPrxSoapResponse response = mspPrxClient.callService(MspPrxFormRequest.builder()
+            //     .parameter("getURL", getURL)
+            //     .build());
+            //responseXml = HttpClientUtil.post(callUrl, data, "UTF-8", timeout);
+            log.info("*** M-PlatForm response length *** " + (responseXml == null ? 0 : responseXml.length()));
+            log.info("responseXml : " + responseXml);
 
-            //CommonHttpClient client = new CommonHttpClient(callUrl);
-            NameValuePair[] data = {
-                new NameValuePair("getURL", getURL)
-            };
-            logger.info("*** M-PlatForm Connect Start ***");
-            logger.info("*** callUrl *** " + callUrl);
-            logger.info("*** data *** " + data);
-            responseXml = HttpClientUtil.post(callUrl, data, "UTF-8", timeout);
-            logger.info("responseXml : " + responseXml);
-
-            if (responseXml.isEmpty()) {
+            if (responseXml == null || responseXml.isEmpty()) {
                 result = false;
                 throw new McpMplatFormException(MPLATFORM_RESPONEXML_EMPTY_EXCEPTION);
             } else {
@@ -106,6 +117,9 @@ public class MsfMplatFormServerAdapter {
             throw e;
         } catch (Exception e) {
             result = false;
+            log.error("[callService] M-Platform call failed: eventCd={}, callUrl={}, timeout={}, message={}",
+                eventCd, callUrl, timeout, e.getMessage(), e);
+            throw new McpMplatFormException(e);
         }
 
         return result;
@@ -115,36 +129,41 @@ public class MsfMplatFormServerAdapter {
         throws SelfServiceException, IOException {
         XmlMapper mapper = new XmlMapper();
         JsonNode root = mapper.readTree(callService2(param, 30000).getBytes());
-        JsonNode outDtoNode = root.findValue("outDto");
-
+        JsonNode outDtoNode = root.findValue("return");
         return mapper.treeToValue(outDtoNode, clazz);
     }
 
     public String callService2(HashMap<String, String> param, int timeout)
         throws SelfServiceException, SocketTimeoutException {
-        boolean result = true;
+        //boolean result = true;
         String responseXml = "";
 
         //엠플렛폼 로그 저장
         HashMap<String, String> pMplatform = this.saveMplateSvcLog(param);
+        logMplatformRequestParameters("callService2", pMplatform, timeout);
 
-        String getURL = this.getURL(pMplatform);
+        //String callUrl = getMspPrxServiceCallUrl();
 
-        String callUrl = propertiesService;
-
-        //CommonHttpClient client = new CommonHttpClient(callUrl);
-        NameValuePair[] data = {
-            new NameValuePair("getURL", getURL)
-        };
-        logger.info("*** M-PlatForm Connect Start ***");
-        responseXml = HttpClientUtil.post(callUrl, data, "UTF-8", timeout);
-        logger.info("responseXml : " + responseXml);
+        log.info("*** M-PlatForm Connect Start ***");
+        // Use TOBE PRX client; keep raw XML so existing DTO conversion remains unchanged.
+        MspPrxSoapResponse response = mspPrxClient.callService(MspPrxFormRequest.builder()
+            .parameters(pMplatform)
+            .build());
+        responseXml = response.rawXml();
+        // AS-IS: 직접 getURL 생성 후 전송하던 방식. getURL 생성은 MspPrxClient에서 공통 처리한다.
+        // String getURL = this.getURL(pMplatform);
+        // NameValuePair[] data = { new NameValuePair("getURL", getURL) };
+        // MspPrxSoapResponse response = mspPrxClient.callService(MspPrxFormRequest.builder()
+        //     .parameter("getURL", getURL)
+        //     .build());
+        //responseXml = HttpClientUtil.post(callUrl, data, "UTF-8", timeout);
+        log.info("responseXml : " + responseXml);
 
         if (responseXml.isEmpty()) {
             throw new McpMplatFormException(MPLATFORM_RESPONEXML_EMPTY_EXCEPTION);
         }
 
-        XmlMapper xmlMapper = new XmlMapper();
+        //XmlMapper xmlMapper = new XmlMapper();
         return responseXml;
     }
 
@@ -157,18 +176,24 @@ public class MsfMplatFormServerAdapter {
 
             //엠플렛폼 로그 저장
             HashMap<String, String> pMplatform = this.saveMplateSvcLog(param);
+            logMplatformRequestParameters("callServiceNe", pMplatform, timeout);
 
-            String getURL = this.getURL(pMplatform);
+            //String callUrl = getMspPrxServiceCallUrl();
 
-            String callUrl = propertiesService;
-
-            //CommonHttpClient client = new CommonHttpClient(callUrl);
-            NameValuePair[] data = {
-                new NameValuePair("getURL", getURL)
-            };
-            logger.info("*** M-PlatForm Connect Start ***");
-            responseXml = HttpClientUtil.post(callUrl, data, "UTF-8", timeout);
-            logger.info("responseXml : " + responseXml);
+            log.info("*** M-PlatForm Connect Start ***");
+            // Use TOBE PRX client; keep raw XML so existing VO parsers continue to work.
+            MspPrxSoapResponse response = mspPrxClient.callService(MspPrxFormRequest.builder()
+                .parameters(pMplatform)
+                .build());
+            responseXml = response.rawXml();
+            // AS-IS: 직접 getURL 생성 후 전송하던 방식. getURL 생성은 MspPrxClient에서 공통 처리한다.
+            // String getURL = this.getURL(pMplatform);
+            // NameValuePair[] data = { new NameValuePair("getURL", getURL) };
+            // MspPrxSoapResponse response = mspPrxClient.callService(MspPrxFormRequest.builder()
+            //     .parameter("getURL", getURL)
+            //     .build());
+            //responseXml = HttpClientUtil.post(callUrl, data, "UTF-8", timeout);
+            log.info("responseXml : " + responseXml);
 
             if (responseXml.isEmpty()) {
                 result = false;
@@ -206,11 +231,10 @@ public class MsfMplatFormServerAdapter {
             headers.set("Accept", "text/plain; charset=UTF-8");
             HttpEntity<MpBaseRequestSpec> entity = new HttpEntity<>(baseRequest, headers);
 
-            // 임시 하드코딩
-            String mplatformJsonUrl = "http://10.110.150.59:18080/mPlatform/serviceCallJson.do";
+            // TOBE PRX base URL is used instead of the old hard-coded PRX host.
+            String mplatformJsonUrl = getMspPrxServiceCallJsonUrl();
 
-            byte[] responseBtye = restTemplate.exchange(mplatformJsonUrl, HttpMethod.POST, entity, byte[].class).getBody();
-            String responseXml = new String(responseBtye, "UTF-8");
+            String responseXml = restTemplate.exchange(mplatformJsonUrl, HttpMethod.POST, entity, String.class).getBody();
 
             if (responseXml == null || responseXml.isEmpty()) {
                 resultMap.put("code", "9998");
@@ -297,22 +321,52 @@ public class MsfMplatFormServerAdapter {
     }
 
 
-    private String getURL(HashMap<String, String> param) {
-        String result = "";
-        Set<String> keySet = param.keySet();
-        for (String key: keySet) {
-            if (!result.equals("")) {
-                result = result.concat("&");
-            }
+    //private String getURL(HashMap<String, String> param) {
+    //    String result = "";
+    //    Set<String> keySet = param.keySet();
+    //    for (String key: keySet) {
+    //        if (!result.equals("")) {
+    //            result = result.concat("&");
+    //        }
+    //
+    //        result = result.concat(key + "=" + param.get(key));
+    //    }
+    //    try {
+    //        result = URLEncoder.encode(result, "UTF-8");
+    //    } catch (UnsupportedEncodingException e) {
+    //        log.error(e.getMessage());
+    //    }
+    //    return result;
+    //}
 
-            result = result.concat(key + "=" + param.get(key));
+    private void logMplatformRequestParameters(String caller, HashMap<String, String> param, int timeout) {
+        if (param == null) {
+            log.info("[{}] M-Platform request params: null, timeout={}", caller, timeout);
+            return;
         }
-        try {
-            result = URLEncoder.encode(result, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            logger.error(e.getMessage());
-        }
-        return result;
+
+        // PRX로 전달되는 최종 입력값 확인용 로그. 장애 분석에 필요한 값만 펼쳐서 남긴다.
+        log.info("[{}] M-Platform request params: eventCd={}, ncn={}, ctn={}, custId={}, userid={}, ip={}, mdlInd={}, url={}, timeout={}",
+            caller,
+            param.get("appEventCd"),
+            param.get("ncn"),
+            param.get("ctn"),
+            param.get("custId"),
+            param.get("userid"),
+            param.get("ip"),
+            param.get("mdlInd"),
+            param.get("url"),
+            timeout);
+    }
+
+    private String getMspPrxServiceCallUrl() {
+        String baseUrl = externalServiceProperties.service(SERVICE_NAME_MSP_PRX).baseUrl();
+        return StringUtils.trimTrailingCharacter(baseUrl, '/') + MSP_PRX_SERVICE_CALL_PATH;
+    }
+
+    private String getMspPrxServiceCallJsonUrl() {
+        String baseUrl = externalServiceProperties.service(SERVICE_NAME_MSP_PRX).baseUrl();
+        return StringUtils.trimTrailingCharacter(baseUrl, '/') + MSP_PRX_SERVICE_CALL_JSON_PATH;
     }
 
     /**
@@ -328,30 +382,15 @@ public class MsfMplatFormServerAdapter {
 
             tmpParm.put("ip", RequestUtils.getClientIp());
             tmpParm.put("url", request.getRequestURI());
-            //tmpParm.put("mdlInd", NmcpServiceUtils.getDeviceType());
-            tmpParm.put("mdlInd", "ttt");
+            tmpParm.put("mdlInd", NmcpServiceUtils.getDeviceType());
+            //20260618 tmpParm.put("mdlInd", "ttt");
 
-            //logger.info("userid:{}", StringUtil.NVL(tmpParm.get("userid").toString(), ""));
+            //log.info("userid:{}", StringUtil.NVL(tmpParm.get("userid").toString(), ""));
 
         } catch (Exception e) {
-            logger.debug("엠플렛폼 연동 정보 저장 오류 : " + e.getMessage());
+            log.debug("엠플렛폼 연동 정보 저장 오류 : " + e.getMessage());
         }
         return tmpParm;
     }
 
-    /**
-     * 당일 X35 로그 Count
-     *
-     * @param userId
-     * @param eventCd
-     * @return
-     */
-    public int checkMpCallEventCount(String userId, String eventCd) {
-
-        RestTemplate restTemplate = new RestTemplate();
-        Map<String, String> reMap = new HashMap<>();
-        reMap.put("userId", userId);
-        reMap.put("eventCd", eventCd);
-        return restTemplate.postForObject(apiInterfaceServer + "/mPlatform/checkMpCallCount", reMap, Integer.class);
-    }
 }

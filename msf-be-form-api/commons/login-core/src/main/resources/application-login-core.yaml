@@ -1,25 +1,49 @@
 #### Common Profile
+spring:
+  ## Request Log
+  request-log:
+    ## 바디(JSON, form-urlencoded, form-data) 필드 마스킹
+    body-masked-fields:
+      additional-include:
+        login:
+          - bioKey
+          - nonce
+
+
 login-core:
+  ## 로그인 실패 정책에서 사용할 공통 실패 제한 횟수
   failure:
     max-count: 3
+  ## 2FA 인증번호 수명과 토큰 발급 전 로그인 세션 수명
   two-factor:
     challenge-time-to-live: 3m
     session-time-to-live: 10m
+
+  ## 생체인증
   biometric:
     challenge-time-to-live: 3m
+    ## 앱에서 AES/CBC/PKCS5Padding으로 암호화한 nonce 복호화 설정
+    ## key는 16/24/32 bytes, iv는 16 bytes여야 하며 Base64 인코딩 값도 지원
+    challenge-crypto:
+      key: ## 각 환경별 설정
+      iv:  ## 각 환경별 설정
+
+  ## JWT Access/Refresh Token 수명
   token:
     access-time-to-live: 10m
     refresh-time-to-live: 1h
+  ## 사용자 정보 캐시와 스탬피드 방지용 stale/lock 설정
   user-info-cache:
-    time-to-live: 1d
-    stale-time-to-live: 1h
+    time-to-live: 10m
+    stale-time-to-live: 5m
     lock-time-to-live: 3s
     lock-wait-time: 1s
     lock-retry-interval: 100ms
+  ## Refresh Token Cookie 기본 속성
   cookie:
     refresh-token-name: refreshToken
     same-site: Strict
-    path: /
+    path: /api/n/auth/refresh
     secure: true
 
 
@@ -29,6 +53,12 @@ login-core:
 spring:
   config.activate.on-profile: prd
 
+login-core:
+  biometric:
+    challenge-crypto:
+      key: ENC(RMWMyWGQNmECebRb5U0TlTyb3J7DCqBPnX13xM/2XfSPDj+wvI7E2AOMDSRqV5xw1eYFn8K0KoIQtjZY7bC5ZS48ADz1oOeB28ETqds1RTw=)
+      iv: ENC(hghPnAQRx8Plwwj3OQKsNSQSjS2Kx1jVjcDoRxkwTyVgqNH2Kq/L26gEQMXj696pQ6URQ1nHODvCCN6c3Lnm6Q==)
+
 
 
 ---
@@ -36,12 +66,29 @@ spring:
 spring:
   config.activate.on-profile: stg
 
+login-core:
+  biometric:
+    challenge-crypto:
+      key: ENC(REzYiGv/cwETck33DYdGoDNH0pPr6NTYzZTW9Kl70qJsNh7wUo4+Cij7uRv28AHwf2G5nBVJt6TPCGzQ5QqnjjeUCK9JXVJJedentpWMeOY=)
+      iv: ENC(KsO86BKeJcw56xUJSGm3jfuhYpgBeqj6mP0lqX+tS3K8qGyOnjqcKPhIc6HFXGq3feCk1NZRTaT+5eqLP06Dpg==)
+
 
 
 ---
 #### DEV Profile
 spring:
   config.activate.on-profile: dev
+
+login-core:
+  biometric:
+    challenge-crypto:
+      key: ENC(eoUG0BKGan5/CkYstSBDVPf/Yjde3NQFq5rCwf40kd33glKmUTHaxU0Goj5fvatRUclteu5ARDqlaYhptuxfuEcM4XhgHakmcvZxQm0nLso=)
+      iv: ENC(8u9CSsm24jYbhgP1QzYmTl+OodR8nwyctZSiTwZUXzSOiCBp/mfiZ3QYN/6NqunQQKoAjN38AF8kXAwxpQdpYw==)
+  token:
+    access-time-to-live: 3h
+    refresh-time-to-live: 6h
+  cookie:
+    same-site: None  # 로컬 환경 프론트엔드에서 DEV 환경 API를 사용하기 위해 설정 필요
 
 
 
@@ -51,6 +98,10 @@ spring:
   config.activate.on-profile: local
 
 login-core:
+  biometric:
+    challenge-crypto:
+      key: ENC(eoUG0BKGan5/CkYstSBDVPf/Yjde3NQFq5rCwf40kd33glKmUTHaxU0Goj5fvatRUclteu5ARDqlaYhptuxfuEcM4XhgHakmcvZxQm0nLso=)
+      iv: ENC(8u9CSsm24jYbhgP1QzYmTl+OodR8nwyctZSiTwZUXzSOiCBp/mfiZ3QYN/6NqunQQKoAjN38AF8kXAwxpQdpYw==)
   token:
     access-time-to-live: 3h
     refresh-time-to-live: 6h

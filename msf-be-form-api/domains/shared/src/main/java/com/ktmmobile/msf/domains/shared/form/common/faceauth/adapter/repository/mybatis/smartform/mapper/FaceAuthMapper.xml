@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.shared.form.common.faceauth.adapter.repository.mybatis.smartform.mapper.FaceAuthMapper">
+
+  <insert id="insertMsfRequestOsst" parameterType="com.ktmmobile.msf.domains.shared.form.common.faceauth.domain.entity.MsfRequestOsst">
+    insert into msf_request_osst (
+      mvno_ord_no,
+      seq,
+      osst_ord_no,
+      prgr_stat_cd,
+      svc_cntr_no,
+      rslt_cd,
+      rslt_msg,
+      rslt_date,
+      nstep_global_id,
+      prdc_chk_noti_msg,
+      if_type_cd,
+      reg_dt
+    ) values (
+      #{mvnoOrdNo},
+      #{seq},
+      #{osstOrdNo},
+      #{prgrStatCd},
+      '0',
+      #{rsltCd},
+      #{rsltMsg},
+      #{rsltDate},
+      #{nstepGlobalId},
+      #{prdcChkNotiMsg},
+      #{ifTypeCd},
+      #{regDt}
+    )
+  </insert>
+
+  <select id="selectMsfFathResultPush" resultType="com.ktmmobile.msf.domains.shared.form.common.faceauth.domain.entity.MsfFathResultPush">
+    select a.*
+      from msf_fath_reslt_push a
+         , msf_fath_self_url b
+     where a.fath_transac_id = b.fath_key
+       and b.res_no = #{value}
+       and a.seq = (select coalesce(max(seq), 0) + 1 from msf_fath_reslt_push where fath_transac_id = a.fath_transac_id)
+  </select>
+
+  <insert id="insertMsfFathResultPush" parameterType="com.ktmmobile.msf.domains.shared.form.common.faceauth.domain.entity.MsfFathResultPush">
+    insert into msf_fath_reslt_push (
+      fath_transac_id,
+      seq,
+      sls_cmpc_cd,
+      identity_cd,
+      cust_nm,
+      cust_idfy_no,
+      issue_date,
+      drive_licns_no,
+      idcard_photo_img_nm,
+      idcard_copies_img_nm,
+      mbl_idcard_qr_img_nm,
+      idcard_conf_way_cd,
+      dist_rsrtn_yn,
+      fath_progr_step_cd,
+      fath_cmplt_ntfy_date,
+      fath_url_rqt_date,
+      fath_reslt_cd,
+      fath_reslt_sbst,
+      fath_rqtr_id,
+      skip_psbl_yb
+    ) values (
+      #{fathTransacId},
+    <choose>
+      <when test="seq != null and seq > 0">
+        #{seq},
+      </when>
+      <otherwise>
+        (select coalesce(max(seq), 0) + 1 from msf_fath_reslt_push where fath_transac_id = #{fathTransacId}),
+      </otherwise>
+    </choose>
+      #{slsCmpcCd},
+      #{identityCd},
+      #{custNm},
+      #{custIdfyNo},
+      #{issueDate},
+      #{driveLicnsNo},
+      #{idcardPhotoImgNm},
+      #{idcardCopiesImgNm},
+      #{mblIdcardQrImgNm},
+      #{idcardConfWayCd},
+      #{distRsrtnYn},
+      #{fathProgrStepCd},
+      #{fathCmpltNtfyDate},
+      #{fathUrlRqtDate},
+      #{fathResltCd},
+      #{fathResltSbst},
+      #{fathRqtrId},
+      #{skipPsblYn}
+    )
+    on conflict (fath_transac_id, seq)
+    do update
+          set sls_cmpc_cd = EXCLUDED.sls_cmpc_cd
+            , identity_cd = EXCLUDED.identity_cd
+            , cust_nm = EXCLUDED.cust_nm
+            , cust_idfy_no = EXCLUDED.cust_idfy_no
+            , issue_date = EXCLUDED.issue_date
+            , drive_licns_no = EXCLUDED.drive_licns_no
+            , idcard_photo_img_nm = EXCLUDED.idcard_photo_img_nm
+            , idcard_copies_img_nm = EXCLUDED.idcard_copies_img_nm
+            , mbl_idcard_qr_img_nm = EXCLUDED.mbl_idcard_qr_img_nm
+            , idcard_conf_way_cd = EXCLUDED.idcard_conf_way_cd
+            , dist_rsrtn_yn = EXCLUDED.dist_rsrtn_yn
+            , fath_progr_step_cd = EXCLUDED.fath_progr_step_cd
+            , fath_cmplt_ntfy_date = EXCLUDED.fath_cmplt_ntfy_date
+            , fath_url_rqt_date = EXCLUDED.fath_url_rqt_date
+            , fath_reslt_cd = EXCLUDED.fath_reslt_cd
+            , fath_reslt_sbst = EXCLUDED.fath_reslt_sbst
+            , fath_rqtr_id = EXCLUDED.fath_rqtr_id
+            , skip_psbl_yb = EXCLUDED.skip_psbl_yb
+  </insert>
+
+  <insert id="insertMsfFathSelfUrl" parameterType="com.ktmmobile.msf.domains.shared.form.common.faceauth.domain.entity.MsfFathSelfUrl">
+    insert into msf_fath_self_url (
+      fath_key,
+      res_no,
+      url_adr,
+      expire_dt
+    ) values (
+      #{fathKey},
+      #{resNo},
+      #{urlAdr},
+      now() + INTERVAL '10 minute'
+    )
+  </insert>
+</mapper>

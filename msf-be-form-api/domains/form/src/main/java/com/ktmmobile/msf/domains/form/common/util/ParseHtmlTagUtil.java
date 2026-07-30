@@ -3,9 +3,9 @@ package com.ktmmobile.msf.domains.form.common.util;
 import java.text.Normalizer;
 import java.text.Normalizer.Form;
 import java.util.regex.Pattern;
-import org.apache.commons.lang3.StringEscapeUtils;
 
 public class ParseHtmlTagUtil {
+
     public static String parseTag(String str) {
         String value = str;
         if (value != null) {
@@ -62,10 +62,12 @@ public class ParseHtmlTagUtil {
         int begin = 0;
         pos = original.indexOf(oldstr);
 
-        if (pos == -1) { return original;}
+        if (pos == -1) {
+            return original;
+        }
 
         while (pos != -1) {
-            convert.append(original.substring(begin, pos) );
+            convert.append(original, begin, pos);
             convert.append(newstr);
             begin = pos + oldstr.length();
             pos = original.indexOf(oldstr, begin);
@@ -87,7 +89,9 @@ public class ParseHtmlTagUtil {
 
 
     public static String percentToEscape(String percent) {
-        if(percent == null) return null;
+        if (percent == null) {
+            return null;
+        }
         String convert = "";
         convert = replace(percent, "!", "!!");
         convert = replace(convert, "%", "!%");
@@ -97,7 +101,9 @@ public class ParseHtmlTagUtil {
     }
 
     public static String escapeToPercent(String percent) {
-        if(percent == null) return null;
+        if (percent == null) {
+            return null;
+        }
         String convert = "";
         convert = replace(percent, "!_", "_");
         convert = replace(convert, "!%", "%");

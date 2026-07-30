@@ -12,6 +12,7 @@ public class AdditionApplyResVO {
     private String soc;
     private String mtProdHstSeq; // 대표상품 일련번호 (로밍 서브 신청 시)
     private String mtNcn;        // 대표 계약번호 (로밍 서브 신청 시)
+    private String joinPhone;
 
     public static AdditionApplyResVO of(String soc) {
         AdditionApplyResVO response = new AdditionApplyResVO();

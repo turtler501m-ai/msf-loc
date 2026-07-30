@@ -1,20 +1,21 @@
 package com.ktmmobile.msf.domains.form.common.mspservice.dao;
 
+
 import java.util.Arrays;
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.client.RestTemplate;
-import com.ktmmobile.msf.domains.form.common.dto.PhoneMspDto;
-import com.ktmmobile.msf.domains.form.common.mspservice.dto.CmnGrpCdMst;
-import com.ktmmobile.msf.domains.form.common.mspservice.dto.MspNoticSupportMstDto;
+
 import com.ktmmobile.msf.domains.form.common.dto.MspRateMstDto;
 import com.ktmmobile.msf.domains.form.common.dto.MspSaleAgrmMst;
 import com.ktmmobile.msf.domains.form.common.dto.MspSalePlcyMstDto;
 import com.ktmmobile.msf.domains.form.common.dto.MspSalePrdtMstDto;
 import com.ktmmobile.msf.domains.form.common.dto.MspSaleSubsdMstDto;
+import com.ktmmobile.msf.domains.form.common.dto.PhoneMspDto;
+import com.ktmmobile.msf.domains.form.common.mspservice.dto.CmnGrpCdMst;
+import com.ktmmobile.msf.domains.form.common.mspservice.dto.MspNoticSupportMstDto;
 
 
 /**
@@ -27,9 +28,7 @@ import com.ktmmobile.msf.domains.form.common.dto.MspSaleSubsdMstDto;
 @Repository
 public class MspDaoImpl implements MspDao {
 
-    private static final Logger logger = LoggerFactory.getLogger(MspDaoImpl.class);
-
-    @Value("${api.interface.server}")
+    @Value("${api.interface.server:}")
     private String apiInterfaceServer;
 
     /* (non-Javadoc)

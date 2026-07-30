@@ -7,23 +7,18 @@ package com.ktmmobile.msf.commons.common.exception;
 public abstract class DomainException extends CommonException {
 
     protected DomainException(String message) {
-        super(message);
+        super(message, (Throwable) null, false);
     }
 
     protected DomainException(String message, Throwable cause) {
-        super(message, cause);
+        super(message, cause, false);
     }
 
     protected DomainException(CustomErrorCode code) {
-        super(code);
+        super(null, code, false);
     }
 
     protected DomainException(String message, CustomErrorCode code) {
-        super(message, code);
-    }
-
-    @Override
-    public synchronized Throwable fillInStackTrace() {
-        return this;
+        super(message, code, false);
     }
 }

@@ -101,3 +101,83 @@ export const hideAlert = (id) => {
 export const showConfirm = (message, onConfirm, subMessage, onCancel) => {
   return useMsfAlertStore().openConfirm(message, onConfirm, subMessage, onCancel)
 }
+
+/**
+ * Promise 기반한 확인창 (Confirm) 표시
+ *
+ * @param {string} message 표시할 메세지 (필수)
+ * @param {string} subMessage 하위에 표시할 메세지
+ * @returns {Promise<boolean>} 확인 클릭 시 true, 취소 클릭 시 false 반환
+ */
+export const showConfirmAsync = (message, subMessage) => {
+  return new Promise((resolve) => {
+    useMsfAlertStore().openConfirm(
+      message,
+      () => resolve(true), // 확인 버튼 클릭 시 resolve(true)
+      subMessage,
+      () => resolve(false), // 취소 버튼 클릭 시 resolve(false)
+    )
+  })
+}
+
+/**
+ * 중복 방지 알림창 (Alert With ID) 표시
+ * @description 동일한 customId 알림창이 이미 있다면 추가로 띄우지 않음 (API Alert 폭탄 방지)
+ *
+ * @param {string} customId 중복을 막기 위한 고유 키값 (필수)
+ * @param {string} message 표시할 메세지 (필수)
+ * @param {Function} onConfirm 확인 버튼 클릭 콜백함수
+ * @param {string} subMessage 하위에 표시할 메세지
+ */
+export const showAlertWithId = (customId, message, onConfirm, subMessage) => {
+  return useMsfAlertStore().openAlert(message, onConfirm, subMessage, customId)
+}
+
+/**
+ * 중복 방지 확인창 (Confirm With ID) 표시
+ * @description 동일한 customId 확인창이 이미 있다면 추가로 띄우지 않음 (API Alert 폭탄 방지)
+ *
+ * @param {string} customId 중복을 막기 위한 고유 키값 (필수)
+ * @param {string} message 표시할 메세지 (필수)
+ * @param {Function} onConfirm 확인 버튼 클릭 콜백함수
+ * @param {string} subMessage 하위에 표시할 메세지
+ * @param {Function} onCancel 취소 버튼 클릭 콜백함수
+ */
+export const showConfirmWithId = (
+  customId,
+  message,
+  onConfirm,
+  subMessage,
+  onCancel,
+  labelProps,
+) => {
+  return useMsfAlertStore().openConfirm(
+    message,
+    onConfirm,
+    subMessage,
+    onCancel,
+    customId,
+    labelProps,
+  )
+}
+
+/**
+ * Promise 기반한 중복 방지 확인창 (Confirm With ID) 표시
+ * @description 동일한 customId 확인창이 이미 있다면 추가로 띄우지 않음 (API Alert 폭탄 방지)
+ *
+ * @param {string} customId 중복을 막기 위한 고유 키값 (필수)
+ * @param {string} message 표시할 메세지 (필수)
+ * @param {string} subMessage 하위에 표시할 메세지
+ * @returns {Promise<boolean>} 확인 클릭 시 true, 취소 클릭 시 false 반환
+ */
+export const showConfirmAsyncWithId = (customId, message, subMessage) => {
+  return new Promise((resolve) => {
+    useMsfAlertStore().openConfirm(
+      message,
+      () => resolve(true), // 확인 버튼 클릭 시 resolve(true)
+      subMessage,
+      () => resolve(false), // 취소 버튼 클릭 시 resolve(false)
+      customId,
+    )
+  })
+}

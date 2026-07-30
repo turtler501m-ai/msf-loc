@@ -1,0 +1,678 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.form.form.servicechange.repository.smartform.SvcAppformMapper">
+
+  <select id="selectMsfRequestMpRequest"
+          parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeRequest"
+          resultType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeMpPC0Response">
+    SELECT
+        A.REQUEST_KEY
+      , A.REQ_BUY_TYPE_CD
+      , A.OPER_TYPE_CD
+      , LPAD(A.RES_NO, 14, '0') AS MVNO_ORD_NO
+      , 'KIS' AS SLS_CMPN_CD
+      , 'I' AS CUST_TYPE_CD
+      , '01' AS CUST_IDNT_NO_IND_CD
+      , B.CSTMR_NATIVE_RRN AS CUST_IDNT_NO
+      , B.CSTMR_JURIDICAL_RRN AS CRPR_NO
+      , B.CSTMR_NM AS CUST_NM
+      , 'R' AS CNTR_USE_CD
+      , 'N' AS INST_YN
+      , 'N' AS SCNHND_PHON_INST_YN
+      , 'Y' AS MYSL_AGRE_YN
+      , 'REGID' AS NATIVE_RLNAM_ATHN_EVDN_PPR_CD
+      , B.CSTMR_MOBILE_FN_NO || B.CSTMR_MOBILE_MN_NO || B.CSTMR_MOBILE_RN_NO AS ATHN_RQSTCUST_CNTPLC_NO
+      , A.IDENTITY_ISSU_DATE AS RSDCRT_ISSU_DATE
+      , '' AS LCNS_NO
+      , '' AS LCNS_RGN_CD
+      , '' AS MRTR_PRSN_NO
+      , '' AS NATIONALITY_CD
+      , '' AS FORN_BRTH_DATE
+      , 'Y' AS CRDT_INFO_AGRE_YN
+      , 'Y' AS INDV_INFO_INER_PRCUSE_AGRE_YN
+      , 'N' AS CNSG_INFO_ADVR_RCV_AGRE_YN
+      , 'N' AS OTHCMP_INFO_ADVR_RCV_AGRE_YN
+      , 'N' AS OTHCMP_INFO_ADVR_CNSG_AGRE_YN
+      , 'N' AS GRP_AGNT_BIND_SVC_SBSC_AGRE_YN
+      , 'N' AS CARD_INSR_PRDC_AGRE_YN
+      , 'N' AS OLNG_DSCN_HYNMTR_AGRE_YN
+      , 'N' AS WLFR_DSCN_APLY_AGRE_YN
+      , 'N' AS SPAM_PRVD_AGRE_YN
+      , 'N' AS PRTTLP_STLM_USE_AGRE_YN
+      , 'N' AS PRTTLP_STLM_PWD_USE_AGRE_YN
+      , B.CSTMR_TEL_FN_NO || B.CSTMR_TEL_MN_NO || B.CSTMR_TEL_RN_NO AS WRLN_TLPH_NO
+      , B.CSTMR_JURIDICAL_REP_NM AS RPRS_PRSN_NM
+      , B.UPJN_CD
+      , B.BCU_SBST
+      , B.CSTMR_ZIPCD AS ZIP_NO
+      , B.CSTMR_ADR AS FNDT_CNTPLC_SBST
+      , B.CSTMR_ADR_DTL AS MNT_CNTPLC_SBST
+      , B.CSTMR_NATIVE_BIRTH AS BRTH_DATE
+      , '' AS BRTH_NNP_IND_CD
+      , '' AS JOB_CD
+      , B.CSTMR_EMAIL_ADR AS EML_ADRS_NM
+      , '' AS LSTD_IND_CD
+      , '' AS EMPL_CNT
+      , '' AS SLNG_AMT
+      , '' AS CPTL_AMNT
+      , '' AS CRPR_UPJN_CD
+      , '' AS CRPR_BCU_SBST
+      , '' AS CRPR_ZIP_NO
+      , '' AS CRPR_FNDT_CNTPLC_SBST
+      , '' AS CRPR_MNT_CNTPLC_SBST
+      , 'N' AS CUST_INFO_CHNG_YN
+      , 'N' AS M2M_HNDSET_YN
+      , '' AS AGNT_CUST_NM
+      , '' AS AGNT_CUST_IDFY_NO_TYPE
+      , '' AS AGNT_IDFY_NO_VAL
+      , '' AS AGNT_PERSON_SEX_DIV
+      , '' AS AGNT_AGRE_YN
+      , '' AS AGNT_TEL_ATHN
+      , '' AS AGNT_TEL_NO
+      , '' AS AGNT_TYPE_CD
+      , '' AS AGNT_RSDCRT_ISSU_DATE
+      , '' AS AGNT_RLNAM_ATHN_EVDN_PPR_CD
+      , '' AS AGNT_LICNS_RGN_CD
+      , '' AS AGNT_LICNS_NO
+      , '' AS AGNT_NATIONALITY_CD
+      , SUBSTRING(A.OPER_TYPE_CD, 1, 3) AS ODER_TYPE_CD
+      , '' AS NP_TLPH_NO
+      , '' AS INDV_BIZR_YN
+      , '' AS BCHNG_NP_COMM_CMPN_CD
+      , '' AS NP_RSTRTN_CONT_YN
+      , '' AS YTRPAY_SOFF_AGRE_YN
+      , '' AS ATM_SEQ_NO
+      , A.AGENT_CD AS MNGM_AGNC_ID
+      , A.CPNT_ID AS CNTPNT_CD
+      , A.SCAN_ID AS FRMPAP_ID
+      , 'Y' AS FRMPAP_USE_YN
+      , 'N' AS FNNC_DEAL_AGREE_YN
+      , '' AS INDV_LO_INFO_PRV_AGREE_YN
+    FROM MSF_REQUEST A, MSF_REQUEST_CSTMR B, MSF_REQUEST_SALE D
+    WHERE A.REQUEST_KEY = B.REQUEST_KEY
+      AND A.REQUEST_KEY = D.REQUEST_KEY
+      AND A.REQUEST_KEY = #{requestKey}
+  </select>
+
+  <select id="selectDataSharingOp0Appform"
+          parameterType="java.lang.Long"
+          resultType="com.ktmmobile.msf.domains.form.common.dto.AppformReqDto">
+    SELECT
+        A.REQUEST_KEY
+      , A.RES_NO
+      , A.REQ_USIM_SN
+      , A.AGENT_CD AS AGENT_CODE
+      , A.CNTPNT_SHOP_CD AS CNTPNT_SHOP_ID
+      , A.ON_OFF_TYPE_CD AS ON_OFF_TYPE
+      , A.IDENTITY_CERT_TYPE_CD AS ONLINE_AUTH_TYPE
+      , A.REQ_BUY_TYPE_CD AS REQ_BUY_TYPE
+      , A.SERVICE_TYPE_CD AS SERVICE_TYPE
+      , A.OPER_TYPE_CD AS OPER_TYPE
+      , A.USIM_KINDS_CD
+      , TRIM(B.CSTMR_ZIPCD) AS CSTMR_POST
+      , B.CSTMR_ADR AS CSTMR_ADDR
+      , B.CSTMR_ADR_DTL AS CSTMR_ADDR_DTL
+      , COALESCE(D.CSTMR_EMAIL_ADR, B.CSTMR_EMAIL_ADR) AS CSTMR_MAIL
+      , D.CSTMR_BILL_SEND_TYPE_CD AS CSTMR_BILL_SEND_CODE
+      , D.REQ_PAY_TYPE_CD AS REQ_PAY_TYPE
+      , C.MODEL_DISCOUNT3
+      , C.SPRT_TYPE_CD AS SPRT_TP
+      , C.ENGG_MNTH_CNT
+      , C.USIM_PAY_MTHD_CD
+      , C.JOIN_PAY_MTHD_CD
+      , C.SOC_CODE
+    FROM MSF_REQUEST A
+    LEFT JOIN MSF_REQUEST_CSTMR B ON A.REQUEST_KEY = B.REQUEST_KEY
+    LEFT JOIN MSF_REQUEST_SALE C ON A.REQUEST_KEY = C.REQUEST_KEY
+    LEFT JOIN MSF_REQUEST_BILL_REQ D ON A.REQUEST_KEY = D.REQUEST_KEY
+    WHERE A.REQUEST_KEY = #{requestKey}
+  </select>
+
+  <update id="updateMsfRequestWantNumber" parameterType="com.ktmmobile.msf.domains.form.common.dto.McpRequestDto">
+    UPDATE MSF_REQUEST
+    SET REQ_WANT_FN_NO = #{reqWantNumber}
+    WHERE REQUEST_KEY = #{requestKey}
+      AND RES_NO = #{resNo}
+  </update>
+
+  <insert id="insertMsfRequest" parameterType="com.ktmmobile.msf.domains.form.common.dto.AppformReqDto">
+    INSERT INTO MSF_REQUEST (
+        REQUEST_KEY
+      , IDENTITY_CERT_TYPE_CD
+      , MANAGER_CD
+      , AGENT_CD
+      , CPNT_ID
+      , CNTPNT_SHOP_CD
+      , REQ_BUY_TYPE_CD
+      , SERVICE_TYPE_CD
+      , OPER_TYPE_CD
+      , CSTMR_TYPE_CD
+      , OPEN_NO
+      , CONTRACT_NUM
+      , PROD_TYPE_CD
+      , PROD_ID
+      , PROD_NM
+      , REQ_PHONE_SN
+      , REQ_MODEL_NM
+      , SNTY_CAPAC_CD
+      , SNTY_COLOR_CD
+      , REQ_MODEL_COLOR
+      , SHOP_USM_ID
+      , USIM_KINDS_CD
+      , REQ_USIM_SN
+      , REQ_USIM_NM
+      , EID
+      , IMEI1
+      , IMEI2
+      , ESIM_PHONE_ID
+      , UPLOAD_PHONE_SRL_NO
+      , REQ_WANT_FN_NO
+      , REQ_WANT_MN_NO
+      , REQ_WANT_RN_NO
+      , INSR_CD
+      , INSR_PROD_CD
+      , CLAUSE_INSURANCE_YN
+      , CLAUSE_INSR_PROD_YN
+      , INSR_AUTH_INFO
+      , PRNTS_CONTRACT_NUM
+      , JEHU_PROD_TYPE_CD
+      , REQ_ADDITION_LIST_NM
+      , REQ_ADDITION_PRICE
+      , PHONE_PAYMENT_YN
+      , ON_OFF_TYPE_CD
+      , SO_CD
+      , OPEN_REQ_DT
+      , REQ_IN_DT
+      , CLAUSE_PRI_COLLECT_YN
+      , CLAUSE_PRI_OFFER_YN
+      , CLAUSE_ESS_COLLECT_YN
+      , CLAUSE_PRI_TRUST_YN
+      , CLAUSE_PRI_AD_YN
+      , CLAUSE_CONFIDENCE_YN
+      , CLAUSE_FATH_YN
+      , NW_BLCK_AGRM_YN
+      , APP_BLCK_AGRM_YN
+      , BLCK_APP_DIV_CD
+      , SO_TRNS_AGRM_YN
+      , CLAUSE_JEHU_YN
+      , CLAUSE_RENTAL_MODEL_CP_YN
+      , CLAUSE_RENTAL_MODEL_CP_PR_YN
+      , CLAUSE_RENTAL_SERVICE_YN
+      , CLAUSE_MPPS35_YN
+      , CLAUSE_FINANCE_YN
+      , CLAUSE_5G_COVERAGE_YN
+      , PERSONAL_INFO_COLLECT_AGREE_YN
+      , OTHERS_TRNS_AGREE_YN
+      , CLAUSE_PARTNER_OFFER_YN
+      , OTHERS_TRNS_KT_AGREE_YN
+      , OTHERS_AD_RECEIVE_AGREE_YN
+      , KT_COUNSEL_AGREE_YN
+      , COMBINE_SOLO_TYPE_YN
+      , COMBINE_SOLO_YN
+      , ETC_SPECIAL_SBST
+      , MEMO
+      , REC_YN
+      , RES_CD
+      , RES_MSG
+      , RES_NO
+      , PROC_DT
+      , PROC_CD
+      , PRO_STTUS_CD
+      , SBSC_PRO_CD
+      , SCAN_ID
+      , APP_FORM_YN
+      , APP_FORM_XML_YN
+      , FILE_NM
+      , FILE_MASK_NM
+      , FAX_YN
+      , FAX_NO
+      , FATH_TRG_YN
+      , FATH_TRANSAC_ID
+      , FATH_CMPLT_NTFY_DATE
+      , FATH_MOBILE_FN_NO
+      , FATH_MOBILE_MN_NO
+      , FATH_MOBILE_RN_NO
+      , AUTH_INFO
+      , IDENTITY_TYPE_CD
+      , IDENTITY_ISSU_DATE
+      , IDENTITY_ISSU_REGION
+      , SELF_ISSU_NO
+      , DRIVE_LICNS_NO
+    ) VALUES (
+        #{requestKey}
+      , COALESCE(#{onlineAuthType}, 'S')
+      , #{managerCode}
+      , #{agentCode}
+      , #{cpntId}
+      , #{cntpntShopId}
+      , #{reqBuyType}
+      , #{serviceType}
+      , #{operType}
+      , #{cstmrType}
+      , #{openNo}
+      , #{contractNum}
+      , #{prodType}
+      , #{prodId}
+      , #{prodNm}
+      , #{reqPhoneSn}
+      , #{reqModelName}
+      , #{sntyCapacCd}
+      , #{sntyColorCd}
+      , #{reqModelColor}
+      , #{shopUsmId}
+      , #{usimKindsCd}
+      , #{reqUsimSn}
+      , #{reqUsimName}
+      , #{eid}
+      , #{imei1}
+      , #{imei2}
+      , #{esimPhoneId}
+      , #{uploadPhoneSrlNo}
+      , #{reqWantNumber}
+      , #{reqWantNumber2}
+      , #{reqWantNumber3}
+      , #{insrCd}
+      , #{insrProdCd}
+      , COALESCE(#{clauseInsuranceFlag}, 'N')
+      , COALESCE(#{clauseInsrProdFlag}, 'N')
+      , #{insrAuthInfo}
+      , #{prntsContractNo}
+      , #{jehuProdType}
+      , #{reqAddition}
+      , #{reqAdditionPrice}
+      , COALESCE(#{phonePayment}, 'N')
+      , #{onOffType}
+      , #{soCd}
+      , NOW()
+      , NOW()
+      , COALESCE(#{clausePriCollectFlag}, 'N')
+      , COALESCE(#{clausePriOfferFlag}, 'N')
+      , COALESCE(#{clauseEssCollectFlag}, 'N')
+      , COALESCE(#{clausePriTrustFlag}, 'N')
+      , COALESCE(#{clausePriAdFlag}, 'N')
+      , COALESCE(#{clauseConfidenceFlag}, 'N')
+      , COALESCE(#{clauseFathFlag}, 'N')
+      , COALESCE(#{nwBlckAgrmYn}, 'N')
+      , COALESCE(#{appBlckAgrmYn}, 'N')
+      , #{appCd}
+      , COALESCE(#{soTrnsAgrmYn}, 'N')
+      , COALESCE(#{clauseJehuFlag}, 'N')
+      , COALESCE(#{clauseRentalModelCp}, 'N')
+      , COALESCE(#{clauseRentalModelCpPr}, 'N')
+      , COALESCE(#{clauseRentalService}, 'N')
+      , COALESCE(#{clauseMpps35Flag}, 'N')
+      , COALESCE(#{clauseFinanceFlag}, 'N')
+      , COALESCE(#{clause5gCoverageFlag}, 'N')
+      , COALESCE(#{personalInfoCollectAgree}, 'N')
+      , COALESCE(#{othersTrnsAgree}, 'N')
+      , COALESCE(#{clausePartnerOfferFlag}, 'N')
+      , COALESCE(#{othersTrnsKtAgree}, 'N')
+      , COALESCE(#{othersAdReceiveAgree}, 'N')
+      , COALESCE(#{ktCounselAgree}, 'N')
+      , COALESCE(#{combineSoloType}, 'N')
+      , COALESCE(#{combineSoloFlag}, 'N')
+      , #{etcSpecial}
+      , #{memo}
+      , COALESCE(#{recYn}, 'N')
+      , #{resCode}
+      , #{resMsg}
+      , #{resNo}
+      , NOW()
+      , COALESCE(#{pstate}, '00')
+      , COALESCE(#{pstate}, '00')
+      , COALESCE(#{requestStateCode}, '00')
+      , #{scanId}
+      , COALESCE(#{appFormYn}, 'N')
+      , COALESCE(#{appFormXmlYn}, 'N')
+      , #{file01}
+      , #{file01Mask}
+      , COALESCE(#{faxyn}, 'N')
+      , #{faxnum}
+      , COALESCE(#{fathTrgYn}, 'N')
+      , #{fathTransacId}
+      , #{fathCmpltNtfyDt}
+      , #{fathMobileFn}
+      , #{fathMobileMn}
+      , #{fathMobileRn}
+      , #{onlineAuthInfo}
+      , #{selfCertType}
+      , #{selfIssuExprDt}
+      , NULL
+      , #{selfIssuNum}
+      , NULL
+    )
+  </insert>
+
+  <insert id="insertMsfRequestCstmr" parameterType="com.ktmmobile.msf.domains.form.common.dto.AppformReqDto">
+    INSERT INTO MSF_REQUEST_CSTMR (
+        REQUEST_KEY
+      , CSTMR_NM
+      , CSTMR_NATIVE_RRN
+      , CSTMR_PRIVATE_CNAME
+      , CSTMR_PRIVATE_BIZ_NO
+      , CSTMR_FOREIGNER_RRN
+      , CSTMR_FOREIGNER_BIRTH
+      , CSTMR_FOREIGNER_PN
+      , CSTMR_FOREIGNER_NATION
+      , CSTMR_FOREIGNER_VDATE_START_DATE
+      , CSTMR_FOREIGNER_VDATE_END_DATE
+      , CSTMR_JURIDICAL_CNAME
+      , CSTMR_JURIDICAL_RRN
+      , CSTMR_JURIDICAL_BIZ_NO
+      , CSTMR_VISIT_TYPE_CD
+      , CSTMR_TEL_FN_NO
+      , CSTMR_TEL_MN_NO
+      , CSTMR_TEL_RN_NO
+      , CSTMR_MOBILE_FN_NO
+      , CSTMR_MOBILE_MN_NO
+      , CSTMR_MOBILE_RN_NO
+      , CSTMR_ZIPCD
+      , CSTMR_ADR
+      , CSTMR_ADR_DTL
+      , CSTMR_ADR_BJD
+      , CSTMR_EMAIL_ADR
+      , CSTMR_EMAIL_RECEIVE_YN
+      , CSTMR_RECEIVE_TEL_FN_NO
+      , CSTMR_RECEIVE_TEL_NM_NO
+      , CSTMR_RECEIVE_TEL_RN_NO
+    ) VALUES (
+        #{requestKey}
+      , #{cstmrName}
+      , #{cstmrNativeRrn}
+      , #{cstmrPrivateCname}
+      , #{cstmrPrivateNumber}
+      , #{cstmrForeignerRrn}
+      , #{cstmrForeignerBirth}
+      , #{cstmrForeignerPn}
+      , #{cstmrForeignerNation}
+      , #{cstmrForeignerSdate}
+      , #{cstmrForeignerEdate}
+      , #{cstmrJuridicalCname}
+      , #{cstmrJuridicalRrn}
+      , #{cstmrJuridicalNumber}
+      , #{cstmrVisitType}
+      , #{cstmrTelFn}
+      , #{cstmrTelMn}
+      , #{cstmrTelRn}
+      , #{cstmrMobileFn}
+      , #{cstmrMobileMn}
+      , #{cstmrMobileRn}
+      , #{cstmrPost}
+      , #{cstmrAddr}
+      , #{cstmrAddrDtl}
+      , #{cstmrAddrBjd}
+      , #{cstmrMail}
+      , COALESCE(#{cstmrMailReceiveFlag}, 'N')
+      , #{cstmrReceiveTelFn}
+      , #{cstmrReceiveTelNm}
+      , #{cstmrReceiveTelRn}
+    )
+  </insert>
+
+  <insert id="insertMsfRequestAgent" parameterType="com.ktmmobile.msf.domains.form.common.dto.AppformReqDto">
+    INSERT INTO MSF_REQUEST_AGENT (
+        REQUEST_KEY
+      , MINOR_AGENT_NM
+      , MINOR_AGENT_RRN
+      , MINOR_AGENT_REL_TYPE_CD
+      , MINOR_AGENT_TEL_FN_NO
+      , MINOR_AGENT_TEL_MN_NO
+      , MINOR_AGENT_TEL_RN_NO
+      , MINOR_AGENT_AGRM_YN
+      , MINOR_AGENT_SELF_CERT_TYPE_CD
+      , MINOR_AGENT_CI_INFO
+      , JRDCL_AGENT_NM
+      , JRDCL_AGENT_RRN
+      , JRDCL_AGENT_REL_TYPE_CD
+      , JRDCL_AGENT_TEL_FN_NO
+      , JRDCL_AGENT_TEL_MN_NO
+      , JRDCL_AGENT_TEL_RN_NO
+    ) VALUES (
+        #{requestKey}
+      , #{minorAgentName}
+      , #{minorAgentRrn}
+      , #{minorAgentRelation}
+      , #{minorAgentTelFn}
+      , #{minorAgentTelMn}
+      , #{minorAgentTelRn}
+      , COALESCE(#{minorAgentAgrmYn}, 'N')
+      , #{onlineAuthType}
+      , #{selfCstmrCi}
+      , #{jrdclAgentName}
+      , #{jrdclAgentRrn}
+      , NULL
+      , #{jrdclAgentTelFn}
+      , #{jrdclAgentTelMn}
+      , #{jrdclAgentTelRn}
+    )
+  </insert>
+
+  <insert id="insertMsfRequestMove" parameterType="com.ktmmobile.msf.domains.form.common.dto.AppformReqDto">
+    INSERT INTO MSF_REQUEST_MOVE (
+        REQUEST_KEY
+      , MOVE_COMPANY_CD
+      , MOVE_MOBILE_FN_NO
+      , MOVE_MOBILE_MN_NO
+      , MOVE_MOBILE_RN_NO
+      , MOVE_AUTH_TYPE_CD
+      , MOVE_AUTH_NO
+      , MOVE_THISMONTH_PAY_TYPE_CD
+      , MOVE_ALLOTMENT_STTUS_CD
+      , MOVE_REFUND_AGREE_YN
+      , REQ_GUIDE_YN
+      , REQ_GUIDE_FN_NO
+      , REQ_GUIDE_RN_NO
+      , REQ_GUIDE_MN_NO
+    ) VALUES (
+        #{requestKey}
+      , #{moveCompany}
+      , #{moveMobileFn}
+      , #{moveMobileMn}
+      , #{moveMobileRn}
+      , #{moveAuthType}
+      , #{moveAuthNumber}
+      , #{moveThismonthPayType}
+      , #{moveAllotmentStat}
+      , COALESCE(#{moveRefundAgreeFlag}, 'N')
+      , COALESCE(#{reqGuideFlag}, 'N')
+      , #{reqGuideFn}
+      , #{reqGuideRn}
+      , #{reqGuideMn}
+    )
+  </insert>
+
+  <insert id="insertMsfRequestSale" parameterType="com.ktmmobile.msf.domains.form.common.dto.AppformReqDto">
+    INSERT INTO MSF_REQUEST_SALE (
+        REQUEST_KEY
+      , MODEL_ID
+      , MODEL_MONTHLY
+      , MODEL_INSTAMT
+      , MODEL_SALE_POLICY_CD
+      , MODEL_PRICE_VAT
+      , MODEL_DISCOUNT1
+      , MODEL_SPRT
+      , MODEL_PRICE
+      , MODEL_DISCOUNT3
+      , REAL_MDL_INSTAMT
+      , HNDSET_SALE_PRICE
+      , SPRT_TYPE_CD
+      , DC_AMT
+      , MAX_APD_SPRT
+      , ADD_DC_AMT
+      , ENGG_MNTH_CNT
+      , RECYCLE_YN
+      , USIM_PRICE_TYPE_CD
+      , USIM_PRICE
+      , USIM_PAY_MTHD_CD
+      , SESPLS_YN
+      , JOIN_PRICE_TYPE_CD
+      , JOIN_PAY_MTHD_CD
+      , JOIN_PRICE
+      , SOC_CODE
+    ) VALUES (
+        #{requestKey}
+      , #{modelId}
+      , #{modelMonthly}
+      , #{modelInstallment}
+      , #{modelSalePolicyCode}
+      , #{modelPriceVat}
+      , #{modelDiscount1}
+      , #{modelDiscount2}
+      , #{modelPrice}
+      , #{modelDiscount3}
+      , #{realMdlInstamt}
+      , #{hndsetSalePrice}
+      , #{sprtTp}
+      , #{dcAmt}
+      , #{maxDiscount3}
+      , #{addDcAmt}
+      , #{enggMnthCnt}
+      , COALESCE(#{recycleYn}, 'N')
+      , #{usimPriceType}
+      , #{usimPrice}
+      , #{usimPayMthdCd}
+      , COALESCE(#{sesplsYn}, 'N')
+      , #{joinPriceType}
+      , #{joinPayMthdCd}
+      , #{joinPrice}
+      , #{socCode}
+    )
+  </insert>
+
+  <insert id="insertMsfRequestBillReq" parameterType="com.ktmmobile.msf.domains.form.common.dto.AppformReqDto">
+    INSERT INTO MSF_REQUEST_BILL_REQ (
+        REQUEST_KEY
+      , REQ_PAY_TYPE_CD
+      , REQ_BANK_CD
+      , REQ_ACCOUNT_NM
+      , REQ_ACCOUNT_RRN
+      , REQ_ACCOUNT_REL_TYPE_CD
+      , REQ_ACCOUNT_NO
+      , REQ_CARD_NM
+      , REQ_CARD_RRN
+      , REQ_CARD_COMPANY_CD
+      , REQ_CARD_NO
+      , REQ_CARD_YY
+      , REQ_CARD_MM
+      , REQ_WIRE_TYPE_CD
+      , OTHERS_PAYMENT_YN
+      , OTHERS_PAYMENT_TEL_FN_NO
+      , OTHERS_PAYMENT_TEL_MN_NO
+      , OTHERS_PAYMENT_TEL_RN_NO
+      , PRNTS_BILL_NO
+      , CSTMR_BILL_SEND_TYPE_CD
+      , CSTMR_EMAIL_ADR
+    ) VALUES (
+        #{requestKey}
+      , #{reqPayType}
+      , #{reqBank}
+      , #{reqAccountName}
+      , #{reqAccountRrn}
+      , #{reqAccountRelation}
+      , #{reqAccountNumber}
+      , #{reqCardName}
+      , #{reqCardRrn}
+      , #{reqCardCompany}
+      , #{reqCardNo}
+      , #{reqCardYy}
+      , #{reqCardMm}
+      , #{reqWireType}
+      , COALESCE(#{reqPayOtherFlag}, 'N')
+      , #{reqPayOtherTelFn}
+      , #{reqPayOtherTelMn}
+      , #{reqPayOtherTelRn}
+      , #{prntsBillNo}
+      , #{cstmrBillSendCode}
+      , #{cstmrMail}
+    )
+  </insert>
+
+  <insert id="insertMsfRequestDvcChg" parameterType="com.ktmmobile.msf.domains.form.common.dto.AppformReqDto">
+    INSERT INTO MSF_REQUEST_DVC_CHG (
+        REQUEST_KEY
+      , REG_DT
+      , DVC_CHG_TYPE_CD
+      , DVC_CHG_RSN_CD
+      , DVC_CHG_RSN_DTL_CD
+      , INSTAMT_PAY_MTHD_CD
+    ) VALUES (
+        #{requestKey}
+      , NOW()
+      , NULL
+      , NULL
+      , NULL
+      , NULL
+    )
+  </insert>
+
+  <!-- [ASIS] MCP_ADDITION 테이블이 같은 DB에 있을 때 사용 — TOBE DEV DB에 MCP_ADDITION 없으므로 insertMsfRequestAdditionItem 사용 -->
+  <insert id="insertMsfRequestAddition" parameterType="com.ktmmobile.msf.domains.form.common.dto.AppformReqDto">
+    INSERT INTO MSF_REQUEST_ADDITION (
+        REQUEST_KEY
+      , REQUEST_SVC_CHG_DTL_SEQ
+      , SVC_CHG_TYPE_CD
+      , ADDITION_KEY
+      , ADDITION_ID
+      , ADDITION_NM
+      , RANTAL
+      , PROC_YN
+    )
+    SELECT
+        #{requestKey}
+      , 0
+      , 'A'
+      , ADDITION_KEY
+      , ADDITION_KEY
+      , ADDITION_NAME
+      , COALESCE(RANTAL, 0)
+      , 'N'
+    FROM MCP_ADDITION
+    WHERE ADDITION_KEY IN
+    <foreach item="item" collection="additionKeyList" open="(" separator="," close=")">
+      #{item}
+    </foreach>
+  </insert>
+
+  <insert id="insertMsfRequestAdditionItem" parameterType="java.util.HashMap">
+    INSERT INTO MSF_REQUEST_ADDITION (
+        REQUEST_KEY
+      , REQUEST_SVC_CHG_DTL_SEQ
+      , SVC_CHG_TYPE_CD
+      , ADDITION_KEY
+      , ADDITION_ID
+      , ADDITION_NM
+      , RANTAL
+      , PROC_YN
+    ) VALUES (
+        #{requestKey}
+      , 0
+      , 'A'
+      , #{additionKey}
+      , #{additionKey}
+      , #{additionNm}
+      , #{rantal}
+      , 'N'
+    )
+  </insert>
+
+  <insert id="insertMsfRequestState" parameterType="com.ktmmobile.msf.domains.form.common.dto.AppformReqDto">
+    INSERT INTO MSF_REQUEST_STATE (
+        REQUEST_STATE_KEY
+      , REQUEST_KEY
+      , RES_NO
+      , SBSC_PRO_CD
+      , OPEN_NO
+      , MEMO
+      , VIEW_YN
+    ) VALUES (
+        nextval('sq_request_state_seq')
+      , #{requestKey}
+      , #{resNo}
+      , COALESCE(#{requestStateCode}, '00')
+      , #{openNo}
+      , #{memo}
+      , COALESCE(#{viewFlag}, 'N')
+    )
+  </insert>
+
+</mapper>

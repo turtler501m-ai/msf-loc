@@ -25,19 +25,27 @@ import { GuideUnit } from '@/views/guide/components'
 // 1. 컨트롤러에 나타날 옵션 정의
 const componentConfig = {
   id: undefined,
-  btnLabel: undefined,
+  btnLabel: {
+    description: '엑셀업로드',
+    default: undefined,
+  },
   accept: '*',
   // multiple: false,
   disabled: false,
+  loading: {
+    description: '로딩표시 여부',
+    default: false,
+  },
 }
 
 // 2. 초기값 정의
 const componentState = {
   id: undefined,
-  btnLabel: undefined,
+  btnLabel: '엑셀업로드',
   accept: '*',
   // multiple: false,
   disabled: false,
+  loading: false,
 }
 
 // 파일첨부버튼

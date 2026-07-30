@@ -678,7 +678,7 @@
     MSP_SALE_SUBSD_MST SU
     , MSP_RATE_MST RA
     , (
-    SELECT * FROM MCP_USIM_PROD_SORT
+    SELECT RATE_CD, PRDT_ID, SALE_PLCY_CD FROM MCP_USIM_PROD_SORT
     WHERE 1=1
     <choose>
       <when test="salePlcyCd != null and salePlcyCd != ''">

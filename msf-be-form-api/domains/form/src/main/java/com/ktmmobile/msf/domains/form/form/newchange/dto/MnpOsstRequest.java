@@ -1,0 +1,36 @@
+package com.ktmmobile.msf.domains.form.form.newchange.dto;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@NoArgsConstructor
+public class MnpOsstRequest {
+
+    private Long requestKey;
+    private String slsCmpnCd; // 판매회사코드	3	M
+    private String npTlphNo; // 번호이동 전화번호	11	M	번호이동할 전화번호
+    private String bchngNpCommCmpnCd; // 변경전번호이동사업자코드	3	M	* 코드정의서 참조
+    //private String custTypeCd; // 고객유형코드	2	M	* 코드정의서 참조
+    private String cstmrTypeCd; //스마트에 있는 코드로 보내면 - custTypeCd 변경해서 연동
+    private String custIdntNoIndCd; // 고객식별번호구분코드	2	M	* 코드정의서 참조
+    private String custIdntNo; // 고객식별번호	20	C
+    private String custNm; // 고객명	60	M	법인인 경우 법인명
+    private String crprNo; //법인번호
+    private String indvBizrYn; // 개인사업자 여부	1	M	개인사업자인 경우 Y, defult N
+    private String fornBrthDate; //외국인생년월일
+    private String agentCd; //대리점코드 선택한 값
+
+
+    //번호이동 납부주장요청
+    private String osstOrdNo;
+    //private String slsCmpnCd;  //위와 중복
+    //private String npTlphNo;  //위와 중복
+    private String payAsertDt;
+    private String payAsertAmt;
+    private String payMethCd;
+
+
+}

@@ -10,12 +10,21 @@ import com.ktmmobile.msf.commons.logincore.domain.policy.LoginPolicyLogUtils;
 import com.ktmmobile.msf.commons.logincore.domain.policy.LoginPolicySelector;
 import com.ktmmobile.msf.commons.logincore.domain.policy.LoginPolicyType;
 
+/**
+ * 로그인 완료 정책을 YAML whitelist 순서대로 실행하는 Composite
+ */
 @Slf4j
 @Component
 public class LoginCompletionPolicyComposite {
 
     private final List<SelectedCompletionPolicy> policies;
 
+    /**
+     * 로그인 완료 정책 Composite 생성
+     *
+     * @param policies 로그인 완료 정책 Bean Map
+     * @param policySelector 로그인 정책 선택기
+     */
     public LoginCompletionPolicyComposite(Map<String, LoginCompletionPolicy> policies, LoginPolicySelector policySelector) {
         List<String> missingPolicies = policySelector.missing(LoginPolicyType.COMPLETION, policies);
         if (!missingPolicies.isEmpty()) {
@@ -28,12 +37,23 @@ public class LoginCompletionPolicyComposite {
         logSelectedPolicies(LoginPolicyLogUtils.names(policies, selectedNames));
     }
 
+    /**
+     * 로그인 완료 정책 검증
+     *
+     * @param context 로그인 완료 컨텍스트
+     */
     public void verify(LoginCompletionContext<?> context) {
         for (SelectedCompletionPolicy selected: policies) {
             verify(selected, context);
         }
     }
 
+    /**
+     * 단일 로그인 완료 정책 검증
+     *
+     * @param selected 선택 정책
+     * @param context 로그인 완료 컨텍스트
+     */
     private void verify(SelectedCompletionPolicy selected, LoginCompletionContext<?> context) {
         boolean supported = selected.policy().supports(context);
         log.info(
@@ -63,6 +83,11 @@ public class LoginCompletionPolicyComposite {
         }
     }
 
+    /**
+     * 선택된 로그인 완료 정책 로그 출력
+     *
+     * @param policyNames 정책 이름 목록 문자열
+     */
     private void logSelectedPolicies(String policyNames) {
         if (LoginPolicyLogUtils.NONE.equals(policyNames)) {
             log.warn("LoginCompletionPolicy: {}", policyNames);

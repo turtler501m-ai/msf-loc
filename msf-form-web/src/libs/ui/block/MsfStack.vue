@@ -91,6 +91,9 @@ const rootClasses = computed(() => [
   &.gap-0 {
     gap: 0;
   }
+  &.gap-small {
+    gap: rem(4px);
+  }
   &.gap-1 {
     gap: rem(8px);
   }

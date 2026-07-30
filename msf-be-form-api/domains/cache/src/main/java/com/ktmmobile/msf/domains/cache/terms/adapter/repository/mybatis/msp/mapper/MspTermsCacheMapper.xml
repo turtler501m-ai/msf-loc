@@ -64,6 +64,9 @@
              FROM NMCP_FORM_DTL@DL_MCP
             WHERE CD_GROUP_ID1 = #{item.cdGroupId1}
               AND CD_GROUP_ID2 = #{item.cdGroupId2}
+              AND USE_YN = 'Y'
+              AND TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN TO_CHAR(EVENT_START_DT, 'YYYYMMDDHH24MISS') AND TO_CHAR(EVENT_END_DT, 'YYYYMMDDHH24MISS')
+              AND TO_CHAR(SYSDATE, 'HH24') BETWEEN NVL(START_HOUR, '00') AND NVL('END_HOUR', '23')
     </foreach>
   </select>
 </mapper>

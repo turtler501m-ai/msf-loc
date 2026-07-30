@@ -1,5 +1,5 @@
 import { post } from '@/libs/api/msf.api'
-import { showAlert } from '@/libs/utils/comp.utils'
+import { showAlertWithId } from '@/libs/utils/comp.utils'
 
 /**
  * 공통코드 그룹별 공통코드 목록 조회
@@ -45,19 +45,45 @@ export const getCommonCodeListWithUseAll = async (groupIds, includeDetail = fals
  * @param {boolean} includeAll 미사용 공통코드 포함 여부
  * @returns {Object | Array} groupIds가 단일 String 값일 경우, 공통코드 목록 반환, groupIds가 다수 그룹ID 배열일 경우, 그룹ID별 공통코드 목록 반환
  */
+const commonCodeCache = {}
+
 export const getCommonCodeList = async (groupIds, includeDetail = false, includeAll = false) => {
   const isArray = Array.isArray(groupIds)
-  const res = await post('/api/shared/common/common-codes/list', {
-    groupIds: isArray ? groupIds : [groupIds],
-    includeAll,
-    includeDetail,
-  })
-  if (res.code !== '0000') {
-    return showAlert(
-      res.message || groupIds + ' 그룹코드에 대한 공통코드 목록 조회에 실패했습니다.',
-    )
+  const reqIds = isArray ? groupIds : [groupIds]
+
+  // 캐시에 없는 것만 필터링
+  // 파라미터 조합별로 캐시 존재 여부 검사 (꼬임 방지)
+  const missingIds = reqIds.filter((id) => !commonCodeCache[`${id}_${includeDetail}_${includeAll}`])
+
+  if (missingIds.length > 0) {
+    const res = await post('/api/shared/common/common-codes/list', {
+      groupIds: missingIds,
+      includeAll,
+      includeDetail,
+    })
+    if (res.code !== '0000') {
+      console.warn(res.message || groupIds + ' 그룹코드에 대한 공통코드 목록 조회에 실패했습니다.')
+      return showAlertWithId(
+        'msf-api-alert',
+        res.message || groupIds + ' 그룹코드에 대한 공통코드 목록 조회에 실패했습니다.',
+      )
+    }
+    // 동일 ID라도 파라미터가 다르면 캐시에 독립적으로 분리 저장
+    if (res.data) {
+      Object.keys(res.data).forEach((id) => {
+        commonCodeCache[`${id}_${includeDetail}_${includeAll}`] = res.data[id]
+      })
+    }
   }
-  return isArray ? res.data : res.data?.[groupIds] || []
+
+  // 데이터 추출 및 리턴
+  const resultData = {}
+  reqIds.forEach((id) => {
+    // 꺼낼 땐 파라미터 키로 조회하고, 반환은 화면에서 쓰는 기존 ID 키로 매핑
+    const cacheData = commonCodeCache[`${id}_${includeDetail}_${includeAll}`]
+    if (cacheData) resultData[id] = cacheData
+  })
+  return isArray ? resultData : resultData?.[groupIds] || []
 }
 
 /**

@@ -1,5 +1,6 @@
 package com.ktmmobile.msf.domains.form.form.termination.repository;
 
+import com.ktmmobile.msf.domains.form.form.newchange.repository.msp.FormCommReadMapper;
 import com.ktmmobile.msf.domains.form.form.termination.repository.msp.MspCancelPageMapper;
 import com.ktmmobile.msf.domains.form.form.termination.repository.smartform.CancelPageMapper;
 import lombok.RequiredArgsConstructor;
@@ -11,9 +12,10 @@ public class CancelPageRepositoryImpl {
 
     private final CancelPageMapper cancelPageMapper;
     private final MspCancelPageMapper mspCancelPageMapper;
+    private final FormCommReadMapper formCommReadMapper;
 
     public Long nextRequestKey() {
-        return cancelPageMapper.nextRequestKey();
+        return formCommReadMapper.generateRequestKey();
     }
 
     public boolean existsInProgressApplicationByMobileNo(String mobileNo) {

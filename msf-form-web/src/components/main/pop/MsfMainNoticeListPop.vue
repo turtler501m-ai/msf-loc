@@ -42,7 +42,7 @@
       <template #label="{ item }">
         <div :id="`notice-item-${item.id}`" class="custom-label">
           <span class="text">{{ item.title }}</span>
-          <span v-if="diffDays(Date.now(), item.writeDate) <= 3" class="flag-new">
+          <span v-if="diffDays(new Date(), item.writeDate) <= 3" class="flag-new">
             <MsfFlag data="NEW" color="accent2" size="small" />
           </span>
           <span v-if="item.status === 'done'" class="flag-done">

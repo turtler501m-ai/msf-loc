@@ -5,7 +5,6 @@ import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.session.RowBounds;
 
-import com.ktmmobile.msf.domains.form.common.mspservice.dto.MspNoticSupportMstDto;
 import com.ktmmobile.msf.domains.form.common.dto.OrderDto;
 
 @Mapper
@@ -42,7 +41,6 @@ public interface OrderMapper {
 	 * @throws Exception
 	 */
 	int selectOrderListCount(OrderDto orderDto);
-
 
 
 	/**

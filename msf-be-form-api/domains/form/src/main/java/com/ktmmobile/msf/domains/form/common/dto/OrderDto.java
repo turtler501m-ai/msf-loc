@@ -1,21 +1,22 @@
 package com.ktmmobile.msf.domains.form.common.dto;
 
+
+import java.io.Serial;
 import java.io.Serializable;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+@Slf4j
 @Getter
 @Setter
 @NoArgsConstructor
 public class OrderDto implements Serializable {
 
-    private static final long serialVersionUID = 1L;
-    private static final Logger logger = LoggerFactory.getLogger(OrderDto.class);
+    @Serial private static final long serialVersionUID = 1L;
 
     private String searchStart;
     private String searchEnd;
@@ -96,7 +97,7 @@ public class OrderDto implements Serializable {
         try {
             result = Integer.parseInt(modelPrice);
         } catch (Exception e) {
-            logger.debug("must be subclass of java.lang.Number ");
+            log.debug("must be subclass of java.lang.Number ");
         }
         return result;
     }
@@ -106,7 +107,7 @@ public class OrderDto implements Serializable {
         try {
             result = Integer.parseInt(modelDiscount2);
         } catch (Exception e) {
-            logger.debug("must be subclass of java.lang.Number ");
+            log.debug("must be subclass of java.lang.Number ");
         }
         return result;
     }
@@ -116,7 +117,7 @@ public class OrderDto implements Serializable {
         try {
             result = Integer.parseInt(modelMonthly);
         } catch (Exception e) {
-            logger.debug("must be subclass of java.lang.Number ");
+            log.debug("must be subclass of java.lang.Number ");
         }
         return result;
     }
@@ -126,7 +127,7 @@ public class OrderDto implements Serializable {
         try {
             result = Integer.parseInt(baseAmt);
         } catch (Exception e) {
-            logger.debug("must be subclass of java.lang.Number ");
+            log.debug("must be subclass of java.lang.Number ");
         }
         return result;
     }
@@ -136,7 +137,7 @@ public class OrderDto implements Serializable {
         try {
             result = Integer.parseInt(dcAmt);
         } catch (Exception e) {
-            logger.debug("must be subclass of java.lang.Number ");
+            log.debug("must be subclass of java.lang.Number ");
         }
         return result;
     }
@@ -146,7 +147,7 @@ public class OrderDto implements Serializable {
         try {
             result = Integer.parseInt(addDcAmt);
         } catch (Exception e) {
-            logger.debug("must be subclass of java.lang.Number ");
+            log.debug("must be subclass of java.lang.Number ");
         }
         return result;
     }
@@ -156,7 +157,7 @@ public class OrderDto implements Serializable {
         try {
             result = Integer.parseInt(maxDiscount3);
         } catch (Exception e) {
-            logger.debug("must be subclass of java.lang.Number ");
+            log.debug("must be subclass of java.lang.Number ");
         }
         return result;
     }
@@ -166,7 +167,7 @@ public class OrderDto implements Serializable {
         try {
             result = Integer.parseInt(modelPriceVat);
         } catch (Exception e) {
-            logger.debug("must be subclass of java.lang.Number ");
+            log.debug("must be subclass of java.lang.Number ");
         }
         return result;
     }
@@ -189,12 +190,16 @@ public class OrderDto implements Serializable {
     }
 
     public String getTbCd() {
-        if (StringUtils.isBlank(dlvryNo) || StringUtils.isBlank(tbCd)) return "";
+        if (StringUtils.isBlank(dlvryNo) || StringUtils.isBlank(tbCd)) {
+            return "";
+        }
         return tbCd;
     }
 
     public String getDlvryNo() {
-        if (StringUtils.isBlank(dlvryNo) || StringUtils.isBlank(tbCd)) return "";
+        if (StringUtils.isBlank(dlvryNo) || StringUtils.isBlank(tbCd)) {
+            return "";
+        }
         return dlvryNo;
     }
 

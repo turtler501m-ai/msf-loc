@@ -3,10 +3,12 @@
     <div class="item-header" @click="handleToggle">
       <div class="checkbox-area" @click.stop>
         <MsfCheckbox
+          ref="agreementItemRef"
           :variant="props.type"
           :model-value="modelValue"
           :label="name || label || title"
           @update:model-value="handleUpdateModel"
+          :disabled="props.disabled"
         >
           <template #label-prepend>
             <em
@@ -25,6 +27,7 @@
           class="detail-btn"
           @click.stop="showDialog = true"
           iconOnly="agreeArrowRight"
+          :disabled="props.disabled"
           >약관 상세보기 팝업 열기
         </MsfButton>
         <MsfButton
@@ -60,8 +63,13 @@
             :key="idx"
             v-model="child.checked"
             v-bind="child"
-            :spec-terms="child.code ? props.specTerms?.find?.(v => v.code === child.code) || props.specTerms : props.specTerms"
+            :spec-terms="
+              child.code
+                ? props.specTerms?.find?.((v) => v.code === child.code) || props.specTerms
+                : props.specTerms
+            "
             :only-required="onlyRequired"
+            :disabled="props.disabled"
             @change="(checked) => emit('change', checked)"
           />
         </div>
@@ -100,18 +108,28 @@ const props = defineProps({
     default: 'lined', // 기본값
     validator: (value) => ['default', 'lined'].includes(value),
   },
+  disabled: { type: Boolean, required: false }, // 비활성화 처리필요시 사용
 })
 
 const emit = defineEmits(['update:modelValue', 'change'])
+
+const agreementItemRef = ref(null)
 
 const isExpanded = ref(false)
 const showDialog = ref(false)
 
 // 아코디언 토글 함수
 const handleToggle = () => {
+  // 하위 항목이 있으면 무조건 토글 (disabled와 상관없이 작동)
   if (props.children?.length) {
     isExpanded.value = !isExpanded.value
-  } else if (props.version || props.content || (props.termsGroupCd && props.termsItemCd)) {
+    return
+  }
+  // 하위 항목이 없고, disabled가 아닐 때만 팝업 열기
+  if (
+    !props.disabled &&
+    (props.version || props.content || (props.termsGroupCd && props.termsItemCd))
+  ) {
     showDialog.value = true
   }
 }
@@ -122,16 +140,8 @@ watch(
   (newChildren) => {
     if (!newChildren?.length) return
 
-    let isTargetAllChecked
-    if (props.onlyRequired) {
-      const requiredItems = newChildren.filter(
-        (child) => child.required === 'Y' || child.required === '2',
-      )
-      isTargetAllChecked =
-        requiredItems.length > 0 ? requiredItems.every((child) => child.checked) : props.modelValue
-    } else {
-      isTargetAllChecked = newChildren.every((child) => child.checked)
-    }
+    //  자식이 존재하면, 필수/선택 여부와 관계없이 하위 자식들이 '모두' 체크되었을 때만 부모가 체크 상태가 됨
+    const isTargetAllChecked = newChildren.every((child) => child.checked)
 
     if (isTargetAllChecked !== props.modelValue) {
       emit('update:modelValue', isTargetAllChecked)
@@ -156,6 +166,12 @@ const handleUpdateModel = (value) => {
 const onConfirmDetail = (result) => {
   handleUpdateModel(result)
 }
+
+defineExpose({
+  focus: () => {
+    agreementItemRef.value?.focus()
+  },
+})
 </script>
 
 <style lang="scss" scoped>
@@ -183,6 +199,9 @@ const onConfirmDetail = (result) => {
     .detail-btn {
       color: var(--color-gray-400);
       font-size: var(--font-size-24);
+      &:disabled {
+        background-color: transparent !important;
+      }
     }
     .arrow-btn {
       transition: transform var(--transition-base);

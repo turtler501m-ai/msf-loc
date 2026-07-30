@@ -26,7 +26,8 @@ public record ReceiptPageResponse(
     String shopNm,
     String cretId,
     @Masked(type = MaskingType.NAME)
-    String cretNm
+    String cretNm,
+    String scanId
 ) {
 
     public static ReceiptPageResponse of(
@@ -49,7 +50,8 @@ public record ReceiptPageResponse(
             entity.getShopCd(),
             entity.getShopNm(),
             entity.getCretId(),
-            entity.getCretNm()
+            entity.getCretNm(),
+            entity.getScanId()
         );
     }
 

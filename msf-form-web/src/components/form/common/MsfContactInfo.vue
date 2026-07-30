@@ -4,13 +4,19 @@
     <MsfStack vertical type="formgroups">
       <MsfFormGroup label="휴대폰번호" required helpText="※ 신청서 발송 요청시 추가로 발송">
         <MsfStack type="field">
-          <MsfNumberInput
+          <MsfMobileInput
+            ref="mobileNoRef"
+            v-model:number1="model.mobileNo1"
+            v-model:number2="model.mobileNo2"
+            v-model:number3="model.mobileNo3"
+            :readonly="props.disabled"
+          />
+          <!-- <MsfNumberInput
             ref="mobileNo1Ref"
             v-model="model.mobileNo1"
             id="inp-mobileNo1"
             placeholder="앞자리"
             maxlength="3"
-            :readonly="model.isSaved"
             :disabled="true"
             @maxlength="mobileNo2Ref?.focus()"
           />
@@ -21,7 +27,7 @@
             id="inp-mobileNo2"
             placeholder="가운데 4자리"
             maxlength="4"
-            :readonly="model.isSaved"
+            :readonly="props.disabled"
             @maxlength="mobileNo3Ref?.focus()"
           />
           <span class="unit-sep">-</span>
@@ -31,62 +37,63 @@
             id="inp-mobileNo3"
             placeholder="뒤 4자리"
             maxlength="4"
-            :readonly="model.isSaved"
-          />
+            :readonly="props.disabled"
+          /> -->
         </MsfStack>
       </MsfFormGroup>
-      <MsfFormGroup label="전화번호">
+      <MsfFormGroup
+        v-if="showTelNo"
+        label="전화번호"
+        :required="['JP', 'GO'].includes(model.cstmrTypeCd)"
+      >
         <MsfStack type="field">
-          <MsfNumberInput
-            ref="telNo1Ref"
-            v-model="model.telNo1"
-            id="inp-telNo1"
-            placeholder="앞 3자리"
-            maxlength="3"
-            :readonly="model.isSaved"
-            @maxlength="telNo2Ref?.focus()"
-          />
-          <span class="unit-sep">-</span>
-          <MsfNumberInput
-            ref="telNo2Ref"
-            v-model="model.telNo2"
-            id="inp-telNo2"
-            placeholder="가운데 4자리"
-            maxlength="4"
-            :readonly="model.isSaved"
-            @maxlength="telNo3Ref?.focus()"
-          />
-          <span class="unit-sep">-</span>
-          <MsfNumberInput
-            ref="telNo3Ref"
-            v-model="model.telNo3"
-            id="inp-telNo3"
-            placeholder="뒤 4자리"
-            maxlength="4"
-            :readonly="model.isSaved"
+          <MsfTelInput
+            ref="telNoRef"
+            v-model:telNo1="model.telNo1"
+            v-model:telNo2="model.telNo2"
+            v-model:telNo3="model.telNo3"
+            :disabled="props.disabled"
           />
         </MsfStack>
       </MsfFormGroup>
-      <MsfFormGroup label="이메일주소" required>
+      <MsfFormGroup
+        v-if="props.cstmrBillSendTypeCd === 'CB' || model?.cstmrBillSendTypeCd === 'CB'"
+        label="이메일주소"
+        helpText="※ 청구서를 이메일로 수신하기를 원하는경우 반드시 입력"
+      >
         <MsfStack id="inp-emailAddr" type="field">
           <MsfEmailInput
+            ref="emailAddrRef"
             v-model:emailId="model.emailAddr1"
             v-model:emailDomain="model.emailAddr2"
-            :readonly="model.isSaved"
-            :email-id-maxlength="emailIdMaxlength"
-            :email-domain-maxlength="emailDomainMaxlength"
+            :email-id-maxlength="100"
+            :email-domain-maxlength="100"
+            :disabled="false"
           />
         </MsfStack>
       </MsfFormGroup>
-      <MsfFormGroup label="주소" tag="div" required>
-        <MsfStack type="field">
+      <MsfFormGroup
+        v-if="showAddress && model.joinType !== 'HDN3' && model.joinType !== 'HCN3'"
+        label="주소"
+        tag="div"
+        required
+      >
+        <MsfAddressInput
+          ref="addressRef"
+          v-model:address1="model.zipNo"
+          v-model:address2="model.address"
+          v-model:address3="model.detailAddress"
+          :readonly="props.disabled"
+          @search="onClickSearchAddressBtn"
+        />
+        <!-- <MsfStack type="field">
           <MsfInput
             v-model="model.zipNo"
             placeholder="우편번호"
             ariaLabel="우편번호 입력"
             disabled
           />
-          <MsfButton variant="subtle" @click="onClickSearchAddressBtn" :disabled="model.isSaved"
+          <MsfButton variant="subtle" :disabled="props.disabled" @click="onClickSearchAddressBtn"
             >우편번호 찾기</MsfButton
           >
         </MsfStack>
@@ -103,63 +110,99 @@
           placeholder="상세주소"
           ariaLabel="상세주소 입력"
           class="ut-w100p"
-          :readonly="model.isSaved"
-        />
+          maxlength="100"
+          :readonly="props.disabled"
+        /> -->
       </MsfFormGroup>
-      <MsfFormGroup v-if="['FN', 'FM'].includes(model.cstmrTypeCd)" label="국가" tag="div" required>
+      <MsfFormGroup
+        v-if="showForeignerInfo && ['FN', 'FM'].includes(model.cstmrTypeCd)"
+        label="국가"
+        tag="div"
+        required
+      >
         <MsfSelect
+          ref="countryRef"
           title="국가"
           v-model="model.country"
           groupCode="NATIONLIST"
           placeholder="국가"
           class="ut-w-300"
-          :disabled="model.isSaved"
+          selectPopYn
         />
       </MsfFormGroup>
       <MsfFormGroup
-        v-if="['FN', 'FM'].includes(model.cstmrTypeCd)"
+        v-if="
+          showForeignerInfo &&
+          ['FN', 'FM'].includes(model.cstmrTypeCd) &&
+          !(model.productType === 'MM' && ['HDN3', 'HCN3'].includes(model.joinType))
+        "
         label="체류기간"
         tag="div"
         required
       >
         <MsfDateRange
-          v-model:from="rangeDatePickerValue.start"
-          v-model:to="rangeDatePickerValue.end"
-          :disabled="model.isSaved"
+          ref="cstmrForeignerVdateRef"
+          v-model:from="model.cstmrForeignerVdateStartDate"
+          v-model:to="model.cstmrForeignerVdateEndDate"
+          :disabled="props.disabled"
         />
       </MsfFormGroup>
-      <MsfFormGroup v-if="['FN', 'FM'].includes(model.cstmrTypeCd)" label="비자" required>
+      <MsfFormGroup
+        v-if="showForeignerInfo && ['FN', 'FM'].includes(model.cstmrTypeCd)"
+        label="비자"
+        required
+      >
         <MsfInput
+          ref="visaTypeRef"
           v-model="model.visaType"
           placeholder="비자 입력"
           class="ut-w-300"
           maxlength="16"
-          :readonly="model.isSaved"
+          :readonly="props.disabled"
         />
       </MsfFormGroup>
     </MsfStack>
 
     <!-- 주소 검색 모달 -->
-    <MsfAddressSearchPop v-model="showAddressSearchPop" @confirm="onConfirmAddressSearchPop" />
+    <MsfAddressSearchPop
+      v-model="showAddressSearchPop"
+      :detail-address-required="props.detailAddressRequired"
+      :address1="model.address"
+      :address2="model.detailAddress"
+      @confirm="onConfirmAddressSearchPop"
+    />
   </div>
 </template>
 <script setup>
-import { defineModel, defineProps, ref, watch } from 'vue'
+import { defineModel, defineProps, ref, watch, computed, onMounted } from 'vue'
+import { getCommonCodeList } from '@/libs/utils/comn.utils'
+import { showAlert } from '@/libs/utils/comp.utils'
 
 const props = defineProps({
-  emailIdMaxlength: { type: [Number, String], default: 13 },
-  emailDomainMaxlength: { type: [Number, String], default: 20 },
+  emailIdMaxlength: { type: [Number, String], default: 100 },
+  emailDomainMaxlength: { type: [Number, String], default: 100 },
   title: { type: String, default: '가입자 연락처' },
+  cstmrBillSendTypeCd: { type: String, default: '' },
+  detailAddressRequired: { type: Boolean, default: true },
+  showTelNo: { type: Boolean, default: true },
+  showAddress: { type: Boolean, default: true },
+  showForeignerInfo: { type: Boolean, default: true },
+  disabled: { type: Boolean, default: false },
 })
 const model = defineModel({ type: Object, required: true })
-const rangeDatePickerValue = ref({ start: '', end: '' })
 
-const mobileNo1Ref = ref(null)
-const mobileNo2Ref = ref(null)
-const mobileNo3Ref = ref(null)
-const telNo1Ref = ref(null)
-const telNo2Ref = ref(null)
-const telNo3Ref = ref(null)
+// isEmailRequired computed 프로퍼티는 다음버튼 전용 검증 분기로 대체되어 제거되었습니다.
+
+// const mobileNo1Ref = ref(null)
+// const mobileNo2Ref = ref(null)
+// const mobileNo3Ref = ref(null)
+const mobileNoRef = ref(null)
+const telNoRef = ref(null)
+const emailAddrRef = ref(null)
+const addressRef = ref(null)
+const countryRef = ref(null)
+const cstmrForeignerVdateRef = ref(null)
+const visaTypeRef = ref(null)
 
 const showAddressSearchPop = ref(false)
 const onClickSearchAddressBtn = () => {
@@ -182,16 +225,118 @@ watch(
   { immediate: true },
 )
 
+const nationList = ref([])
+onMounted(async () => {
+  if (props.showForeignerInfo && ['FN', 'FM'].includes(model.value.cstmrTypeCd)) {
+    nationList.value = await getCommonCodeList('NATIONLIST')
+  }
+})
+
+watch(
+  () => model.value.country,
+  (newVal) => {
+    if (!newVal) return
+    model.value.cstmrForeignerCountryCd = newVal
+    const nation = nationList.value.find((item) => item.code === newVal)
+    if (nation) {
+      model.value.cstmrForeignerNation = nation.title
+    } else {
+      model.value.cstmrForeignerNation = newVal
+    }
+  },
+)
+
+watch(
+  () => model.value.visaType,
+  (newVal) => {
+    model.value.cstmrForeignerVisaNo = newVal
+  },
+)
+
 const validate = () => {
   if (!model.value.mobileNo1 || !model.value.mobileNo2 || !model.value.mobileNo3) return false
-  if (!model.value.emailAddr1 || !model.value.emailAddr2) return false
-  if (!model.value.zipNo || !model.value.address || !model.value.detailAddress) return false
-  if (['FN', 'FM'].includes(model.value.cstmrTypeCd)) {
+  if (
+    model.value.mobileNo1.length < 3 ||
+    model.value.mobileNo2.length < 3 ||
+    model.value.mobileNo3.length !== 4
+  ) {
+    return false
+  }
+  if (props.showTelNo && ['JP', 'GO'].includes(model.value.cstmrTypeCd)) {
+    if (!model.value.telNo1 || !model.value.telNo2 || !model.value.telNo3) return false
+  }
+  if (props.showAddress && model.value.joinType !== 'HDN3' && model.value.joinType !== 'HCN3') {
+    if (!model.value.zipNo || !model.value.address) return false
+    if (props.detailAddressRequired && !model.value.detailAddress) return false
+  }
+
+  if (props.showForeignerInfo && ['FN', 'FM'].includes(model.value.cstmrTypeCd)) {
     if (!model.value.country || !model.value.visaType) return false
-    if (!rangeDatePickerValue.value.start || !rangeDatePickerValue.value.end) return false
+    const isMobileDeviceChange =
+      model.value.productType === 'MM' && ['HDN3', 'HCN3'].includes(model.value.joinType)
+    if (!isMobileDeviceChange) {
+      if (!model.value.cstmrForeignerVdateStartDate || !model.value.cstmrForeignerVdateEndDate)
+        return false
+    }
   }
   return true
 }
 
-defineExpose({ validate })
+const checkValidation = (preCheck = false) => {
+  if (!mobileNoRef.value?.isValid) {
+    showAlert(`${props.title} 휴대폰번호를 입력하세요`, () => {
+      mobileNoRef.value?.focus()
+    })
+    return false
+  }
+  const telNoValid = telNoRef.value?.isValid
+  if (props.showTelNo && ['JP', 'GO'].includes(model.value.cstmrTypeCd) && !telNoValid) {
+    showAlert(`${props.title} 전화번호를 입력하세요`, () => {
+      telNoRef.value?.focus()
+    })
+    return false
+  }
+
+  if (props.showAddress && model.value.joinType !== 'HDN3' && model.value.joinType !== 'HCN3') {
+    if (!model.value.zipNo || !model.value.address) {
+      showAlert(`${props.title} 주소를 입력하세요`, () => {
+        addressRef.value?.focus()
+      })
+      return false
+    }
+    if (props.detailAddressRequired && !model.value.detailAddress) {
+      showAlert(`${props.title} 주소 상세정보를 입력하세요`, () => {
+        addressRef.value?.focus()
+      })
+      return false
+    }
+  }
+  if (props.showForeignerInfo && ['FN', 'FM'].includes(model.value.cstmrTypeCd)) {
+    if (!model.value.country) {
+      showAlert(`${props.title} 국가를 선택하세요`, () => {
+        countryRef.value?.focus()
+      })
+      return false
+    }
+    if (
+      !(model.value.productType === 'MM' && ['HDN3', 'HCN3'].includes(model.value.joinType)) &&
+      (!model.value.cstmrForeignerVdateStartDate || !model.value.cstmrForeignerVdateEndDate)
+    ) {
+      showAlert(`${props.title} 체류기간을 입력하세요`, () => {
+        cstmrForeignerVdateRef.value?.focus()
+      })
+      return false
+    }
+    if (!model.value.visaType) {
+      showAlert(`${props.title} 비자를 입력하세요`, () => {
+        visaTypeRef.value?.focus()
+      })
+      return false
+    }
+  }
+
+  return true
+}
+
+defineExpose({ validate, checkValidation })
 </script>

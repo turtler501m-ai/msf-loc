@@ -201,51 +201,53 @@
   <!-- /mypage/cntrListNmChg - 현재요금제정보 가져오기 (명의변경)  (SELECT : MCP_USER_CNTR_MNG, MSP_JUO_SUB_INFO, MSP_REQUEST_DTL, MSP_JUO_BAN_INFO) -->
   <select id="selectCntrListNmChg" parameterType="java.util.HashMap" resultType="com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto">
     SELECT /* /mypage/cntrListNmChg : McpMypageMapper.selectCntrListNmChg 현재요금제정보 가져오기 (명의변경) */
-    B.SVC_CNTR_NO
+      B.SVC_CNTR_NO
     , B.CONTRACT_NUM
+    , B.IMEI
     , B.CUSTOMER_ID AS CUST_ID
     , B.MODEL_NAME
     , B.MODEL_ID
     , B.SUB_STATUS
     , B.SUBSCRIBER_NO
     , B.USER_SSN AS unUserSSn
-    , C.CSTMR_TYPE
-    , C.FST_ESIM_YN
     , (SELECT CUSTOMER_TYPE FROM MSP_JUO_CUS_INFO WHERE CUSTOMER_ID = B.CUSTOMER_ID AND ROWNUM = 1) AS CUSTOMER_TYPE
     , (SELECT CUSTOMER_LINK_NAME FROM MSP_JUO_CUS_INFO WHERE CUSTOMER_ID = B.CUSTOMER_ID AND ROWNUM = 1) AS userName
     , B.OPEN_AGNT_CD
-    , C.LST_RATE_CD AS SOC
-    , C.LST_RATE_NM AS SOC_NM
-    , NVL((SELECT FREE_DATA_CNT FROM MSP_RATE_MST WHERE RATE_CD = C.LST_RATE_CD),'0') AS FREE_DATA_CNT
-    , NVL((SELECT FREE_CALL_CNT FROM MSP_RATE_MST WHERE RATE_CD = C.LST_RATE_CD),'0') AS FREE_CALL_CNT
-    , NVL((SELECT FREE_SMS_CNT FROM MSP_RATE_MST WHERE RATE_CD = C.LST_RATE_CD),'0') AS FREE_SMS_CNT
     , B.ON_OFF_TYPE
     , D.COL_DELINQ_STATUS
     , D.BAN_ADR_ZIP
     , D.BAN_ADR_PRIMARY_LN
     , D.BAN_ADR_SECONDARY_LN
-    FROM MSP_JUO_SUB_INFO B
-    , MSP_REQUEST_DTL C
-    , MSP_JUO_BAN_INFO D
-    WHERE  B.CONTRACT_NUM = C.CONTRACT_NUM(+)
-    AND B.BAN = D.BAN(+)
+    , D.BL_BILLING_METHOD
+    , CASE WHEN B.USIM_TYPE = 'E' THEN 'Y' ELSE 'N' END AS ESIM_YN
+    FROM MSP_JUO_CUS_INFO A
+    INNER JOIN MSP_JUO_SUB_INFO B
+      ON A.CUSTOMER_ID = B.CUSTOMER_ID
+    LEFT OUTER JOIN MSP_JUO_BAN_INFO D
+      ON B.BAN = D.BAN
+    WHERE 1=1
     AND B.SUB_STATUS <![CDATA[<>]]> 'C'
-    AND UPPER(B.SUB_LINK_NAME) = UPPER(#{userNm})
-    <if test="customerId != null and customerId != ''">
+    AND UPPER(A.CUSTOMER_LINK_NAME) = UPPER(#{userNm})
+    AND B.SUBSCRIBER_NO = #{ctn}
+    <if test="@org.springframework.util.StringUtils@hasText(customerId)">
       AND B.CUSTOMER_ID = #{customerId}
     </if>
-    <if test="contractNum != null and contractNum != ''">
+    <if test="@org.springframework.util.StringUtils@hasText(contractNum)">
       AND B.CONTRACT_NUM = #{contractNum}
     </if>
-    <if test="@org.springframework.util.StringUtils@hasText(ctn)">
-      AND B.SUBSCRIBER_NO = #{ctn}
-    </if>
-    ORDER BY B.LST_DEV_CHG_DATE DESC
+    <choose>
+      <when test='{"JP", "GO"}.contains(cstmrType)'>
+        AND DRIVR_LICNS_NO = #{cstmrJuridicalRrn1} || #{cstmrJuridicalRrn2}
+      </when>
+      <otherwise>
+        AND substr(#{userBirth}, 3) = substr(CRYPTO_AES256.DEC_AES(CUSTOMER_SSN),1 , 6)
+      </otherwise>
+    </choose>
   </select>
 
 
   <!-- /mypage/cntrListNoLogin - 계약 현행화 정보 (SELECT(MSP) : MSP_JUO_SUB_INFO, MSP_JUO_CUS_INFO) -->
-  <select id="selectCntrListNoLogin" parameterType="com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto" resultType="com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto">
+  <select id="selectCntrListNoLogin" parameterType="java.util.HashMap" resultType="com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto">
     SELECT /* /mypage/cntrListNoLogin : McpMypageMapper.selectCntrListNoLogin 계약 현행화 정보  */
     A.SVC_CNTR_NO
     , A.CONTRACT_NUM
@@ -261,8 +263,10 @@
     , B.CUSTOMER_ID
     , B.CUSTOMER_TYPE
     , A.PPPO
-    FROM MSP_JUO_SUB_INFO A, MSP_JUO_CUS_INFO B
+    , C.COL_DELINQ_STATUS
+    FROM MSP_JUO_SUB_INFO A, MSP_JUO_CUS_INFO B, MSP_JUO_BAN_INFO C
     WHERE A.CUSTOMER_ID = B.CUSTOMER_ID
+      AND A.BAN = C.BAN(+)
     <if test="svcCntrNo != null and svcCntrNo != ''">
       AND A.SVC_CNTR_NO = #{svcCntrNo}
     </if>
@@ -404,6 +408,7 @@
   <select id="selectInsrInfo" parameterType="java.lang.String" resultType="java.util.Map">
         SELECT /* /mypage/getInsrInfo : McpMypageMapper.selectInsrInfo 안심보험가입여부조회 */
             A.CONTRACT_NUM,
+            A.CSTMR_TYPE,
             A.REQ_BUY_TYPE,
             B.INSR_STAT_CD,
             C.INSR_PROD_CD AS ORDER_EXIST,
@@ -412,16 +417,16 @@
             MSP_REQUEST_DTL A,
             MSP_INTM_INSR_MEMBER B,
             (SELECT CONTRACT_NUM, INSR_PROD_CD FROM MSP_INTM_INSR_ORDER WHERE 1 = 1
-                AND CONTRACT_NUM = #{CONTRACTNUM} AND IF_TRGT_CD NOT IN ('C', 'F')
+                AND CONTRACT_NUM = #{ncn} AND IF_TRGT_CD NOT IN ('C', 'F')
                 AND TO_DATE(STRT_DTTM, 'YYYYMMDDHH24MISS') <![CDATA[>]]> TRUNC(SYSDATE)
                 AND ROWNUM = 1) C,
-            (SELECT CONTRACT_NUM FROM NMCP_CUST_REQUEST_MST WHERE 1 = 1
+            (SELECT CONTRACT_NUM FROM NMCP_CUST_REQUEST_MST@DL_MCP WHERE 1 = 1
                 AND REQ_TYPE = 'IS'
-                AND CONTRACT_NUM = #{CONTRACTNUM}
+                AND CONTRACT_NUM = #{ncn}
                 AND TO_CHAR(SYS_RDATE, 'YYYYMMDD') BETWEEN TO_CHAR(SYSDATE - 1, 'YYYYMMDD') AND TO_CHAR(SYSDATE, 'YYYYMMDD')
                 AND ROWNUM = 1) D
         WHERE 1 = 1
-            AND A.CONTRACT_NUM = #{CONTRACTNUM}
+            AND A.CONTRACT_NUM = #{ncn}
               AND A.CONTRACT_NUM = B.CONTRACT_NUM(+)
               AND A.CONTRACT_NUM = C.CONTRACT_NUM(+)
               AND A.CONTRACT_NUM = D.CONTRACT_NUM(+)
@@ -452,7 +457,8 @@
              , B.APP_START_DD --적용일시
              , NVL(A.BASE_AMT,0)+(NVL(A.BASE_AMT,0)*0.1) AS BASE_VAT_AMT
         FROM MSP_RATE_MST A
-           , (SELECT *
+           , (SELECT SOC,
+                      APP_START_DD
               FROM MSP_JUO_FEATURE_INFO
               WHERE CONTRACT_NUM = #{ncn}
                 AND APP_END_DATE = '99991231000000'
@@ -807,5 +813,27 @@
             )
         ORDER BY A.BASE_AMT DESC, A.APPL_STRT_DT DESC
     </select>
+
+  <!-- /mypage/sharingRateSocList - 쉐어링 가능 요금제 SOC 목록 (SELECT(MCP) : NMCP_CD_DTL@DL_MCP) -->
+  <select id="selectSharingRateSocList" resultType="java.lang.String">
+    SELECT /* McpMyPageMapper.selectSharingRateSocList */
+        DTL_CD
+    FROM NMCP_CD_DTL@DL_MCP
+    WHERE CD_GROUP_ID = 'SHARINGRATE'
+      AND USE_YN = 'Y'
+      AND TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN PSTNG_START_DATE AND PSTNG_END_DATE
+    ORDER BY INDC_ODRG
+  </select>
+
+  <!-- /mypage/isSharingRateSoc - 특정 SOC가 쉐어링 가능 요금제인지 여부 (SELECT(MCP) : NMCP_CD_DTL@DL_MCP) -->
+  <select id="selectIsSharingRateSoc" parameterType="java.lang.String" resultType="java.lang.Integer">
+    SELECT /* McpMyPageMapper.selectIsSharingRateSoc */
+        COUNT(*)
+    FROM NMCP_CD_DTL@DL_MCP
+    WHERE CD_GROUP_ID = 'SHARINGRATE'
+      AND DTL_CD = #{soc}
+      AND USE_YN = 'Y'
+      AND TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN PSTNG_START_DATE AND PSTNG_END_DATE
+  </select>
 
 </mapper>

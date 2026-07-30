@@ -22,6 +22,7 @@
       :disabled="disabled"
       :readonly="readonly"
       :aria-invalid="error"
+      :aria-label="computedAriaLabel"
       @input="onInput"
     ></textarea>
 
@@ -45,6 +46,7 @@ import {
   useAttrs,
   computed,
 } from 'vue'
+import { useMsfFormGroupLabelContext, useMsfFormControlLabel } from '@/hooks/useMsfFormGroupLabel'
 
 // 부모(root)에 바로 상속되지 않도록 설정
 defineOptions({
@@ -63,6 +65,7 @@ const props = defineProps({
   disabled: Boolean,
   readonly: Boolean,
   error: Boolean,
+  ariaLabel: { type: String, default: undefined },
 })
 
 // 부모가 사용할 이벤트선언
@@ -89,8 +92,23 @@ const textareaAttrs = computed(() => {
 })
 
 const textareaRef = ref(null)
+
+// ID 결정
 const injectedId = inject('form-group-id', null)
-const inputId = computed(() => props.id || injectedId || useId())
+const fallbackId = useId() // 자동 id는 computed 밖에서 1번만 생성
+
+// FormGroup label 연결 context
+const formGroupLabelContext = useMsfFormGroupLabelContext()
+
+// 1순위: 직접 전달한 id
+// 2순위: 새 label context가 없는 경우에만 기존 injectedId 사용
+// 3순위: textarea 자체 자동 id
+const inputId = computed(() => {
+  return props.id || (!formGroupLabelContext ? injectedId : null) || fallbackId
+})
+
+// FormGroup에 실제 textarea id 등록
+useMsfFormControlLabel(inputId, formGroupLabelContext)
 
 const adjustHeight = () => {
   if (!props.resize || !textareaRef.value) return
@@ -98,6 +116,13 @@ const adjustHeight = () => {
   el.style.height = 'auto'
   el.style.height = `${el.scrollHeight}px`
 }
+
+// FormGroup label 연결이 없을 때 사용할 textarea 접근성 레이블
+const computedAriaLabel = computed(() => {
+  if (props.ariaLabel) return props.ariaLabel
+  if (formGroupLabelContext?.labelFor?.value === inputId.value) return undefined
+  return props.placeholder || undefined
+})
 
 const onInput = (event) => {
   emit('update:modelValue', event.target.value)
@@ -123,6 +148,12 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', adjustHeight)
+})
+
+defineExpose({
+  focus: () => {
+    textareaRef.value?.focus()
+  },
 })
 </script>
 
@@ -166,10 +197,12 @@ onUnmounted(() => {
   }
   &.is-disabled {
     background-color: var(--color-bg-disabled);
+    border-color: var(--color-line-disabled);
     color: var(--color-text-disabled);
     cursor: not-allowed;
     .textarea-inner {
       cursor: not-allowed;
+      color: var(--color-text-disabled);
     }
   }
   &.is-readonly {

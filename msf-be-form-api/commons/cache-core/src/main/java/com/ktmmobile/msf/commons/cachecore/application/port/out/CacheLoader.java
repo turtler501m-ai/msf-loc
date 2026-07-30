@@ -1,6 +1,8 @@
 package com.ktmmobile.msf.commons.cachecore.application.port.out;
 
 import java.time.Duration;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -36,6 +38,15 @@ public interface CacheLoader<V> {
      * @return 캐시 데이터
      */
     Map<String, V> load();
+
+    /**
+     * 원천 데이터 기반 확장 캐시 로더 목록 반환
+     *
+     * @return 확장 캐시 로더 목록
+     */
+    default Collection<CacheExtensionLoader<V, ?>> extensionLoaders() {
+        return List.of();
+    }
 
     /**
      * 단일 키 캐시 데이터 적재
@@ -81,5 +92,14 @@ public interface CacheLoader<V> {
      */
     default StartupCacheLoadMode startupLoadMode() {
         return StartupCacheLoadMode.LOAD_IF_ABSENT;
+    }
+
+    /**
+     * 애플리케이션 시작 시 강제 재적재 기준 시간 반환
+     *
+     * @return 강제 재적재 기준 시간
+     */
+    default Optional<Duration> startupReloadAfter() {
+        return Optional.empty();
     }
 }

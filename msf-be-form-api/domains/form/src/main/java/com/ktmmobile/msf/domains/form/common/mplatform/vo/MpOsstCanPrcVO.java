@@ -5,6 +5,8 @@ import com.ktmmobile.msf.domains.form.common.util.XmlParse;
 import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 
+import org.jdom.Element;
+
 public class MpOsstCanPrcVO extends CommonXmlVO {
 
     private String osstOrdNo;
@@ -13,9 +15,10 @@ public class MpOsstCanPrcVO extends CommonXmlVO {
 
     @Override
     public void parse() throws UnsupportedEncodingException, ParseException {
-        this.osstOrdNo = XmlParse.getChildValue(this.body, "osstOrdNo");
-        this.rslt = XmlParse.getChildValue(this.body, "rslt");
-        this.rsltMsg = XmlParse.getChildValue(this.body, "rsltMsg");
+        Element resultBody = this.body != null ? this.body : this.root;
+        this.osstOrdNo = XmlParse.getChildValue(resultBody, "osstOrdNo");
+        this.rslt = XmlParse.getChildValue(resultBody, "rsltCd");
+        this.rsltMsg = XmlParse.getChildValue(resultBody, "rsltMsg");
     }
 
     public String getOsstOrdNo() {

@@ -17,5 +17,20 @@ public interface McpRequestReadMapper {
     // 명의변경 예약번호 조회
     String generateResNo();
 
+    int selectMcpRequest(Long requestKey);
+
+    int selectMcpRequestCstmr(Long requestKey);
+
+    int selectMcpRequestAgent(Long requestKey);
+
+    int selectMcpRequestReq(Long requestKey);
+
+    int selectMcpRequestSaleinfo(Long requestKey);
+
+    int selectMcpRequestMove(Long requestKey);
+
+    int selectMcpRequestDvcChg(Long requestKey);
+
+    int selectMcpRequestAddition(Long requestKey);
 }
 

@@ -19,13 +19,13 @@ public class AddressMaskingProcessor implements MaskingProcessor {
     private static final int LOT_NUMBER_DETAIL_MASK_LENGTH = 10;
 
     /** 도로명 주소는 도로명 뒤에 건물번호가 이어지는 경우 도로명까지 노출 */
-    private static final Pattern ROAD_NAME_ADDRESS = Pattern.compile("^(.+?\\s[^\\s,]+(?:대로|로|길))((?:\\s+\\d.*)?)$");
+    private static final Pattern ROAD_NAME_ADDRESS = Pattern.compile("^(.+?\\s[^\\s,]+(?:대로|로|길))((?:\\s+\\d.*)?)$", Pattern.CANON_EQ);
 
     /** 번지 또는 산번지 시작 여부 판단 */
-    private static final Pattern ADDRESS_NUMBER = Pattern.compile("^(?:산\\s*)?\\d+(?:-\\d+)?.*$");
+    private static final Pattern ADDRESS_NUMBER = Pattern.compile("^(?:산\\s*)?\\d+(?:-\\d+)?.*$", Pattern.CANON_EQ);
 
     /** 상세주소와 구분할 건물번호 또는 번지 조회 */
-    private static final Pattern ADDRESS_NUMBER_AT_START = Pattern.compile("^(?:산\\s*)?\\d+(?:-\\d+)?");
+    private static final Pattern ADDRESS_NUMBER_AT_START = Pattern.compile("^(?:산\\s*)?\\d+(?:-\\d+)?", Pattern.CANON_EQ);
 
     /** 공백으로 구분된 주소 토큰 조회 */
     private static final Pattern ADDRESS_TOKEN = Pattern.compile("\\S+");
@@ -51,7 +51,7 @@ public class AddressMaskingProcessor implements MaskingProcessor {
             return lotNumberAddress;
         }
 
-        return MaskingTextUtils.maskMiddle(value, 0, 0);
+        return MaskingProcessorUtils.maskMiddle(value, 0, 0);
     }
 
     private String maskAddressDetail(Matcher matcher, int detailMaskLength) {
@@ -66,7 +66,7 @@ public class AddressMaskingProcessor implements MaskingProcessor {
     /** 지번 주소를 법정동·가·리까지 노출하고 번지 이후 마스킹 */
     private String maskLotNumberAddress(String value) {
         Token previousToken = null;
-        for (Token token : Token.findAll(value)) {
+        for (Token token: Token.findAll(value)) {
             if (previousToken != null && isLegalDistrictToken(previousToken.value()) && isAddressNumberToken(token.value())) {
                 return value.substring(0, previousToken.end())
                     + maskDetailPart(value.substring(previousToken.end()), LOT_NUMBER_DETAIL_MASK_LENGTH);
@@ -88,7 +88,7 @@ public class AddressMaskingProcessor implements MaskingProcessor {
                 + maskEveryNonWhitespace(addressNumberPart)
                 + ","
                 + leadingWhitespace(detailedAddressPart)
-                + String.valueOf(MaskingTextUtils.MASK).repeat(detailMaskLength);
+                + String.valueOf(MaskingProcessorUtils.MASK).repeat(detailMaskLength);
         }
 
         int detailSeparatorIndex = addressNumberEndIndex(detail);
@@ -105,7 +105,7 @@ public class AddressMaskingProcessor implements MaskingProcessor {
         return leadingWhitespace
             + maskEveryNonWhitespace(addressNumberPart)
             + leadingWhitespace(detailedAddressPart)
-            + String.valueOf(MaskingTextUtils.MASK).repeat(detailMaskLength);
+            + String.valueOf(MaskingProcessorUtils.MASK).repeat(detailMaskLength);
     }
 
     /** 법정동·가·리 토큰 여부 판단 */
@@ -134,11 +134,11 @@ public class AddressMaskingProcessor implements MaskingProcessor {
     /** 공백을 제외한 모든 문자를 마스킹 */
     private String maskEveryNonWhitespace(String value) {
         StringBuilder masked = new StringBuilder(value.length());
-        for (int codePoint : value.codePoints().toArray()) {
+        for (int codePoint: value.codePoints().toArray()) {
             if (Character.isWhitespace(codePoint)) {
                 masked.appendCodePoint(codePoint);
             } else {
-                masked.append(MaskingTextUtils.MASK);
+                masked.append(MaskingProcessorUtils.MASK);
             }
         }
         return masked.toString();
@@ -147,7 +147,7 @@ public class AddressMaskingProcessor implements MaskingProcessor {
     /** 문자열 앞쪽의 공백 추출 */
     private String leadingWhitespace(String value) {
         StringBuilder whitespaces = new StringBuilder();
-        for (int codePoint : value.codePoints().toArray()) {
+        for (int codePoint: value.codePoints().toArray()) {
             if (Character.isWhitespace(codePoint)) {
                 whitespaces.appendCodePoint(codePoint);
             } else {

@@ -43,7 +43,14 @@ out/
 ### Project ###
 application*-private.yaml
 tools/docker/data
-/AGENTS.md
-.gradle-user-home/
-bootrun-check.err
-bootrun-check.out
+tools/pmd/report/
+*.log
+**/*.log
+
+### AI Tools ###
+AGENTS.md
+nul
+.agentic*/
+.opencode/
+.ignore
+/session*.md

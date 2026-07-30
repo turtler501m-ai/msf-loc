@@ -145,15 +145,15 @@ public class MspSaleSubsdMstDto implements Serializable {
         BigDecimal bgInstAmt = new BigDecimal(getInstAmt() + "");
         BigDecimal bgModelMonthly = new BigDecimal(getModelMonthly() + "");
         BigDecimal bgMonth = new BigDecimal("12");
-        BigDecimal bgTemp = new BigDecimal("1");
+        BigDecimal bgTemp = BigDecimal.ONE;
         BigDecimal bgPow;
-        BigDecimal bgTemp2 = bgYearRate.divide(bgMonth, 38, BigDecimal.ROUND_HALF_UP).add(bgTemp);
-        bgPow = bgTemp2.pow(getModelMonthly()).setScale(38, BigDecimal.ROUND_HALF_UP);
+        BigDecimal bgTemp2 = bgYearRate.divide(bgMonth, 38, RoundingMode.HALF_UP).add(bgTemp);
+        bgPow = bgTemp2.pow(getModelMonthly()).setScale(38, RoundingMode.HALF_UP);
         BigDecimal bgPow2 = bgPow.subtract(bgTemp);
 
-        BigDecimal bgRound1 = bgInstAmt.multiply(bgYearRate).divide(bgMonth, 38, BigDecimal.ROUND_HALF_UP).multiply(bgPow)
-            .divide(bgPow2, 38, BigDecimal.ROUND_HALF_UP).setScale(0, BigDecimal.ROUND_DOWN);
-        BigDecimal bgRound2 = bgInstAmt.divide(bgModelMonthly, 0, BigDecimal.ROUND_DOWN);
+        BigDecimal bgRound1 = bgInstAmt.multiply(bgYearRate).divide(bgMonth, 38, RoundingMode.HALF_UP).multiply(bgPow)
+            .divide(bgPow2, 38, RoundingMode.HALF_UP).setScale(0, RoundingMode.DOWN);
+        BigDecimal bgRound2 = bgInstAmt.divide(bgModelMonthly, 0, RoundingMode.DOWN);
         instCmsn = bgRound1.subtract(bgRound2).intValue();
         return instCmsn;
     }
@@ -181,7 +181,7 @@ public class MspSaleSubsdMstDto implements Serializable {
     public int getPayMnthAmt() {
         BigDecimal bgTotal = new BigDecimal(getInstAmt() + getTotalInstCmsn() + "");
         BigDecimal bgModelMonthly = new BigDecimal(getModelMonthly() + "");
-        payMnthAmt = bgTotal.divide(bgModelMonthly, 0, BigDecimal.ROUND_HALF_UP).intValue();
+        payMnthAmt = bgTotal.divide(bgModelMonthly, 0, RoundingMode.HALF_UP).intValue();
         return payMnthAmt;
     }
 
@@ -300,14 +300,14 @@ public class MspSaleSubsdMstDto implements Serializable {
             BigDecimal bgInstAmt = new BigDecimal(getInstAmt() + "");
             BigDecimal bgModelMonthly = new BigDecimal(getModelMonthly() + "");
             BigDecimal bgMonth = new BigDecimal("12");
-            BigDecimal bgTemp = new BigDecimal("1");
+            BigDecimal bgTemp = BigDecimal.ONE;
             BigDecimal bgPow;
-            BigDecimal bgTemp2 = bgYearRate.divide(bgMonth, 38, BigDecimal.ROUND_HALF_UP).add(bgTemp);
-            bgPow = bgTemp2.pow(getModelMonthly()).setScale(38, BigDecimal.ROUND_HALF_UP);
+            BigDecimal bgTemp2 = bgYearRate.divide(bgMonth, 38, RoundingMode.HALF_UP).add(bgTemp);
+            bgPow = bgTemp2.pow(getModelMonthly()).setScale(38, RoundingMode.HALF_UP);
             BigDecimal bgPow2 = bgPow.subtract(bgTemp);
 
-            BigDecimal bgRound1 = bgInstAmt.multiply(bgYearRate).divide(bgMonth, 38, BigDecimal.ROUND_HALF_UP).multiply(bgPow)
-                .divide(bgPow2, 0, BigDecimal.ROUND_DOWN);
+            BigDecimal bgRound1 = bgInstAmt.multiply(bgYearRate).divide(bgMonth, 38, RoundingMode.HALF_UP).multiply(bgPow)
+                .divide(bgPow2, 0, RoundingMode.DOWN);
 
             totalInstCmsn = bgRound1.multiply(bgModelMonthly).subtract(bgInstAmt).intValue();
         } else {
@@ -375,7 +375,7 @@ public class MspSaleSubsdMstDto implements Serializable {
                 return "0MB";
             }
             if (castData.intValue() >= 1024) {
-                return castData.divide(new BigDecimal("1024"), 1, BigDecimal.ROUND_DOWN).stripTrailingZeros().toPlainString() + "GB";
+                return castData.divide(new BigDecimal("1024"), 1, RoundingMode.DOWN).stripTrailingZeros().toPlainString() + "GB";
             }
             return castData.intValue() + "MB";
         } catch (NumberFormatException nfe) {

@@ -107,19 +107,26 @@
         v-model:address1="formData.zipCode"
         v-model:address2="formData.baseAddr"
         v-model:address3="formData.detailAddr"
-        @search="console.log('우편번호 찾기 클릭!')"
+        @search="showAddressSearchPop = true"
       />
       <p class="guide-item-result-txt">
         MsfAddressInput : <br />우편번호: {{ formData.zipCode }}<br />주소: {{ formData.baseAddr
         }}<br />상세주소: {{ formData.detailAddr }}
       </p>
     </div>
+    <MsfAddressSearchPop
+      v-model="showAddressSearchPop"
+      :detail-address-required="detailAddressRequired"
+      :address1="formData.baseAddr"
+      :address2="formData.detailAddr"
+      @confirm="onConfirmAddressSearchPop"
+    />
     <!-- // MsfAddressInput : 주소 -->
   </div>
 </template>
 
 <script setup>
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 
 // 휴대폰번호
 const userPhone = reactive({
@@ -141,7 +148,7 @@ const formData = reactive({
   emailId: '', //이메일 아이디
   emailDomain: '', //이메일 도메인
   // MsfAddressInput
-  zipCode: '123-456', //우편번호
+  zipCode: '12356', //우편번호
   baseAddr: '서울특별시 관악구', //주소
   detailAddr: '', //상세주소
   // MsfRegNoInput
@@ -149,6 +156,15 @@ const formData = reactive({
   rrn2: '',
   authCode: '',
 })
+
+const showAddressSearchPop = ref(false)
+const detailAddressRequired = ref(true)
+
+const onConfirmAddressSearchPop = (result) => {
+  formData.zipCode = result.zipNo
+  formData.baseAddr = result.address
+  formData.detailAddr = result.detailAddress
+}
 </script>
 
 <style lang="scss" scoped>

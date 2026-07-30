@@ -1,7 +1,8 @@
 <template>
-  <div class="time-input-root msf-time-input-container">
+  <div :class="rootClasses" v-bind="rootAttrs">
     <VueDatePicker
-      v-bind="$attrs"
+      ref="datePickerRef"
+      v-bind="inputAttrs"
       :model-value="parsedTime"
       :model-type="props.showSeconds ? 'HH:mm:ss' : 'HH:mm'"
       teleport="body"
@@ -29,14 +30,39 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, useAttrs } from 'vue'
 import { VueDatePicker } from '@vuepic/vue-datepicker'
 import { ko } from 'date-fns/locale'
 import { formatTime } from '@/libs/utils/date.utils'
 
-defineOptions({
-  inheritAttrs: false,
+const datePickerRef = ref(null)
+
+// 속성에 접근
+const attrs = useAttrs()
+// 부모(root)에 바로 상속되지 않도록 설정
+defineOptions({ inheritAttrs: false })
+
+// root에 부여할 속성
+const rootAttrs = computed(() => ({
+  class: attrs.class,
+  style: attrs.style,
+}))
+// input에 부여할 속성
+const inputAttrs = computed(() => {
+  const rest = { ...attrs }
+  delete rest.class
+  delete rest.style
+  return rest
 })
+
+// 스타일 클래스
+const rootClasses = computed(() => [
+  'time-input-root',
+  'msf-time-input-container',
+  {
+    'is-error': props.error,
+  },
+])
 
 const props = defineProps({
   modelValue: String,
@@ -44,6 +70,8 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  /** 에러 */
+  error: Boolean,
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -59,6 +87,15 @@ const onTimePickerSelect = (selectedTime /*, maskRef*/) => {
   }
   emit('update:modelValue', formatTime(selectedTime, props.showSeconds))
 }
+
+defineExpose({
+  focus: () => {
+    const inputElement = datePickerRef.value?.$el?.querySelector('input')
+    if (inputElement) {
+      inputElement.focus()
+    }
+  },
+})
 </script>
 
 <style lang="scss" scoped>
@@ -74,6 +111,7 @@ const onTimePickerSelect = (selectedTime /*, maskRef*/) => {
     --dp-input-side-padding: #{rem(16px)};
     --dp-input-side-icon-size: #{rem(24px)}; // 캘린더 디테일 사이즈
     --dp-cell-size: #{rem(40px)};
+    --dp-text-color: var(--color-gray-900);
   }
   :deep(.dp__input_wrap) {
     // max-width: rem(132px);
@@ -89,8 +127,29 @@ const onTimePickerSelect = (selectedTime /*, maskRef*/) => {
     height: rem(52px);
     // padding-left: rem(28px);
     font-size: var(--font-size-16);
+    font-weight: var(--font-weight-medium);
     &.dp__input_focus {
-      border-color: var(--color-primary);
+      border-color: var(--color-primary-base);
+      box-shadow: inset 0 0 0 1px var(--color-foreground);
+    }
+    &.dp__disabled {
+      border: 1px solid var(--color-line-disabled);
+      color: var(--color-text-disabled);
+      + div {
+        .msf-icon {
+          color: var(--color-text-disabled);
+        }
+      }
+    }
+    &[readonly] {
+      border: 1px solid var(--color-gray-400);
+      color: var(--color-text-readonly);
+      background-color: var(--color-bg-disabled);
+      + div {
+        .msf-icon {
+          color: var(--color-text-readonly);
+        }
+      }
     }
   }
   /* 아이콘의 여백 조정 */
@@ -109,6 +168,12 @@ const onTimePickerSelect = (selectedTime /*, maskRef*/) => {
     height: var(--dp-input-side-icon-size);
     // right: calc(var(--dp-input-side-padding) + calc(var(--dp-input-side-icon-size) + rem(4px)));
     right: var(--dp-input-side-padding);
+  }
+  &.is-error {
+    &:deep(.dp__input) {
+      border-color: var(--color-accent1-base);
+      box-shadow: inset 0 0 0 1px var(--color-accent1-base);
+    }
   }
 }
 </style>

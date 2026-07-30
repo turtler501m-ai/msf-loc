@@ -15,8 +15,8 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 
 /**
- * 기본 쿼리 스트링을 공통 방식으로 주입하는 재사용 interceptor다.
- * 같은 이름의 파라미터가 이미 있으면 기본값은 유지하고, overrideExisting=true일 때만 덮어쓴다.
+ * 기본 쿼리 파라미터 주입용 재사용 interceptor
+ * 같은 이름의 파라미터가 이미 있으면 기본값 유지, overrideExisting=true일 때만 덮어쓰기
  */
 public class QueryParamHttpClientInterceptor implements ClientHttpRequestInterceptor {
 
@@ -24,6 +24,9 @@ public class QueryParamHttpClientInterceptor implements ClientHttpRequestInterce
     private final Supplier<String> queryParamValueSupplier;
     private final boolean overrideExisting;
 
+    /**
+     * 기존 쿼리 파라미터 값 유지 방식의 동적 쿼리 파라미터 interceptor 생성
+     */
     public QueryParamHttpClientInterceptor(
         String queryParamName,
         Supplier<String> queryParamValueSupplier
@@ -31,6 +34,9 @@ public class QueryParamHttpClientInterceptor implements ClientHttpRequestInterce
         this(queryParamName, queryParamValueSupplier, false);
     }
 
+    /**
+     * 기존 쿼리 파라미터 값 덮어쓰기 여부를 지정하는 동적 쿼리 파라미터 interceptor 생성
+     */
     public QueryParamHttpClientInterceptor(
         String queryParamName,
         Supplier<String> queryParamValueSupplier,

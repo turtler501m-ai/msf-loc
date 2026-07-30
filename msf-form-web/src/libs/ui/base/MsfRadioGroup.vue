@@ -1,6 +1,7 @@
 <template>
   <div :class="rootClasses" role="radiogroup">
     <MsfRadio
+      :variant="props.variant"
       v-for="option in optionList"
       :key="option.value"
       :model-value="props.modelValue"
@@ -24,6 +25,11 @@ const props = defineProps({
   modelValue: {
     type: [String, Number, Boolean, null],
     default: '',
+  },
+  /** 스타일 */
+  variant: {
+    type: String,
+    default: 'default', // MsfRadio에 지정된 RADIO_VARIANTS 사용
   },
   /** 라디오 그룹명 (생략 시 자동 생성) */
   name: { type: String, default: () => `radio-group-${useId()}` },

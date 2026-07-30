@@ -7,6 +7,8 @@ public interface CommonSmsWriter {
 
     Boolean sendSms(CommonSmsRequest request);
 
+    Boolean sendKakao(CommonSmsRequest request);
+
     CommonSmsResponse sendOtpSms(CommonSmsRequest request);
 
     Boolean verifyOtpSms(CommonSmsRequest request);

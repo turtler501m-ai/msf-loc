@@ -5,10 +5,25 @@
     title="신청서 열람"
     @open="emit('open')"
     @close="onClose"
+    size="xlarge"
   >
     <!-- 팝업 내용 -->
-    <MsfTitleArea title="신청서" level="2" noline />
-    <div class="img-area" style="height: 436px">신청서 이미지</div>
+    <div class="eformsign-flex-layout">
+      <MsfTitleArea title="신청서" level="2" bold noline />
+      <!-- 신청서 이미지 퍼블 샘플 -->
+      <div class="eformsign-frame">
+        <div class="iframe-sample" style="width: 100%; height: 100%; border: 0; overflow-y: auto">
+          <img
+            src="@/assets/images/dummy/@sample_form.png"
+            alt="신청서 이미지 샘플"
+            style="width: 100%"
+          />
+        </div>
+      </div>
+      <!-- // 신청서 이미지 퍼블 샘플 -->
+      <!-- 개발에서 사용하는 컴퍼넌트-->
+      <!-- <MsfEformPreview ref="eformImgRef" class="eform-frame" :document-id="props.documentId" /> -->
+    </div>
     <!-- 하단 고정 -->
     <template #footer>
       <MsfButtonGroup>
@@ -36,6 +51,8 @@ const onClose = () => {
 
 <style lang="scss" scoped>
 .img-area {
+  height: calc(100vh - 320px);
+  overflow-y: auto;
   background-color: var(--color-gray-75); //임시(불필요시삭제)
 }
 </style>

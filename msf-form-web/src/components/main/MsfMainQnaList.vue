@@ -34,16 +34,26 @@
         1024: { visibleCount: 3.2, slidesPerGroup: 3 }, // 1024px 이상 (PC)
       }"
     >
-      <div
-        v-for="item in displayList"
-        :key="item.id"
-        class="qna-card"
-        @click="openPopupWithId(item.id)"
-      >
-        <div class="status-icon" :class="`is-${item.answer?.status?.code || 'progress'}`">
+      <div v-for="item in list" :key="item.id" class="qna-card" @click="openPopupWithItem(item)">
+        <div
+          class="status-icon"
+          :class="
+            item.answer?.status?.code === 'E'
+              ? 'is-complete'
+              : item.answer?.status?.code === 'C'
+                ? 'is-pending'
+                : 'is-progress'
+          "
+        >
           <span class="status-mark"><MsfIcon name="qnaCheck" size="small" /></span>
-          <img :src="getIconUrl(item.answer?.status?.code)" :alt="item.answer?.status?.title" />
-          <span class="status-txt">{{ item.answer?.status?.title }}</span>
+          <img
+            :src="getIconUrl(item.answer?.status?.code)"
+            :alt="item.answer?.status?.title"
+            aria-hidden="true"
+          />
+          <span v-if="item.answer?.status?.title" class="status-txt">{{
+            item.answer?.status?.title
+          }}</span>
         </div>
         <div class="card-content">
           <p class="card-tit">{{ item.title }}</p>
@@ -54,12 +64,7 @@
   </div>
   <MsfMainQnaListPop
     v-model="qnaPopupOpen"
-    :search="searchData"
-    :targetId="activeQnaId"
-    :data="popList"
-    :total="popTotal"
-    :currentPage="currentPage"
-    :itemsPerPage="itemsPerPage"
+    :target="selectedTarget"
     @regist="openQnaRegistPopup"
   /><!-- Q&A 팝업 -->
   <MsfMainQnaRegistPop
@@ -69,10 +74,9 @@
 </template>
 
 <script setup>
-import { computed, onBeforeMount, ref, watch } from 'vue'
-import { addMonths } from 'date-fns'
+import { onBeforeMount, ref, watch } from 'vue'
 import { post } from '@/libs/api/msf.api'
-import { formatDate, formatDatetimeMinutes } from '@/libs/utils/date.utils'
+import { formatDatetimeMinutes } from '@/libs/utils/date.utils'
 import qnaCSvg from '@/assets/images/qna_C.svg'
 import qnaESvg from '@/assets/images/qna_E.svg'
 import qnaRSvg from '@/assets/images/qna_R.svg'
@@ -80,22 +84,11 @@ import qnaRSvg from '@/assets/images/qna_R.svg'
 const qnaPopupOpen = ref(false) // Q&A 팝업 상태
 const qnaAddPopupOpen = ref(false) // Q&A 등록 팝업 상태
 
-const searchData = ref({
-  category: '',
-  value: '',
-  startDate: formatDate(addMonths(new Date(), -1)),
-  endDate: formatDate(new Date()),
-})
+const selectedTarget = ref(null)
 const currentPage = ref(1)
-const itemsPerPage = ref(10)
-const totalCount = ref(0)
+const itemsPerPage = ref(5)
 // Q&A 슬라이더 데이터
 const list = ref([])
-const popList = ref([])
-const popTotal = ref(0)
-const displayList = computed(() =>
-  list.value?.length > 0 ? list.value.slice(0, list.value.length > 5 ? 5 : list.value.length) : [],
-)
 
 // const list = computed(() => QNA_DATA.value.slice(0, 5)) // 최근 다섯개 자르기
 const iconList = {
@@ -117,37 +110,28 @@ const getIconUrl = (status) => {
 /**
  * Q&A 관련
  */
-// Q&A IDasync
-const activeQnaId = ref('')
-
 const searchQna = async () => {
-  // list.value = []
+  selectedTarget.value = null
   const data = await post('/api/main/qna/list', {
     page: {
       pageNum: currentPage.value,
       rowSize: itemsPerPage.value,
     },
-    ...searchData.value,
   })
   if (data.code !== '0000') {
     return false
   }
-  totalCount.value = data.meta.page.totalCount
   list.value = data.data
 }
 
 const openQnaPopup = () => {
-  popList.value = []
-  popTotal.value = 0
-  activeQnaId.value = null // 열고 싶은 아코디언 ID 세팅
+  selectedTarget.value = null
   qnaPopupOpen.value = true // Q&A 팝업열기
 }
 
 // Q&A 슬라이더 클릭시 팝업 열기
-const openPopupWithId = (id) => {
-  popList.value = list.value
-  popTotal.value = totalCount.value
-  activeQnaId.value = id // 열고 싶은 아코디언 ID 세팅
+const openPopupWithItem = (item) => {
+  selectedTarget.value = item
   qnaPopupOpen.value = true // Q&A 팝업열기
 }
 
@@ -164,7 +148,7 @@ const onCloseRegistPopup = async (result) => {
 // 팝업 닫힘 감시 및 qna, notice 열렸던 ID 초기화
 watch(qnaPopupOpen, (newVal) => {
   if (!newVal) {
-    activeQnaId.value = ''
+    selectedTarget.value = null
   }
 })
 

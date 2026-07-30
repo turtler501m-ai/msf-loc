@@ -1,157 +1,157 @@
 package com.ktmmobile.msf.domains.form.form.servicechange.service;
 
+
+import java.io.IOException;
 import java.net.SocketTimeoutException;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import jakarta.servlet.http.HttpServletRequest;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import com.ktmmobile.msf.commons.common.datasource.msp.MspDataSourceConfig;
+import com.ktmmobile.msf.commons.websecurity.security.auth.util.AuthenticationUtils;
 import com.ktmmobile.msf.commons.websecurity.web.util.RequestUtils;
+import com.ktmmobile.msf.domains.cache.agency.application.port.in.AgencyCacheReader;
+import com.ktmmobile.msf.domains.cache.agency.domain.dto.AgencyCache;
+import com.ktmmobile.msf.domains.cache.commoncode.application.dto.CommonCodesRequest;
+import com.ktmmobile.msf.domains.cache.commoncode.application.port.in.CommonCodeReader;
+import com.ktmmobile.msf.domains.cache.commoncode.domain.dto.CommonCodeData;
+import com.ktmmobile.msf.domains.cache.commoncode.domain.dto.CommonCodeGroups;
+import com.ktmmobile.msf.domains.externalclient.imagesystem.application.dto.ImageSystemFileUploadRequest;
+import com.ktmmobile.msf.domains.externalclient.imagesystem.application.dto.ImageSystemPdfUploadResponse;
+import com.ktmmobile.msf.domains.externalclient.imagesystem.application.port.in.ImageSystemUploader;
+import com.ktmmobile.msf.domains.externalclient.mspprx.application.dto.MspPrxSoapResponse;
+import com.ktmmobile.msf.domains.externalclient.mspprx.domain.code.MplatformServiceType;
+import com.ktmmobile.msf.domains.externalclient.mspprx.support.util.XmlConvertUtils;
 import com.ktmmobile.msf.domains.form.common.code.ResSvcChgMessage;
+import com.ktmmobile.msf.domains.form.common.dto.AppformReqDto;
 import com.ktmmobile.msf.domains.form.common.dto.McpFarPriceDto;
 import com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto;
+import com.ktmmobile.msf.domains.form.common.dto.MplatFormXmlSelfcareRequest;
 import com.ktmmobile.msf.domains.form.common.dto.MspRateMstDto;
-import com.ktmmobile.msf.domains.form.common.dto.UserSessionDto;
 import com.ktmmobile.msf.domains.form.common.dto.response.FormResponse;
 import com.ktmmobile.msf.domains.form.common.exception.McpCommonException;
 import com.ktmmobile.msf.domains.form.common.exception.SelfServiceException;
+import com.ktmmobile.msf.domains.form.common.mplatform.MsfMcpOsstPrxService;
 import com.ktmmobile.msf.domains.form.common.mplatform.MsfMplatFormService;
 import com.ktmmobile.msf.domains.form.common.mplatform.dto.MoscDataSharingResDto;
+import com.ktmmobile.msf.domains.form.common.mplatform.dto.MplatformBase;
 import com.ktmmobile.msf.domains.form.common.mplatform.dto.OutDataSharingDto;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpFarChangewayInfoVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpMoscBilEmailInfoInVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpPerMyktfInfoVO;
 import com.ktmmobile.msf.domains.form.common.repository.McpApiClient;
-import com.ktmmobile.msf.domains.form.common.util.SessionUtils;
+import com.ktmmobile.msf.domains.form.common.repository.MspApiDirectRepository;
+import com.ktmmobile.msf.domains.form.common.util.DateTimeUtil;
+import com.ktmmobile.msf.domains.form.common.util.NmcpServiceUtils;
 import com.ktmmobile.msf.domains.form.common.util.StringMakerUtil;
 import com.ktmmobile.msf.domains.form.common.util.StringUtil;
+import com.ktmmobile.msf.domains.form.form.common.dto.PriceJoinUsimResponse;
+import com.ktmmobile.msf.domains.form.form.common.repository.McpRequestRepositoryImpl;
 import com.ktmmobile.msf.domains.form.form.common.repository.MsfRequestRepositoryImpl;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestAgentVo;
-import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestClauseVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestCstmrVo;
-import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestMstVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestSvcChgDtlVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestSvcChgVo;
+import com.ktmmobile.msf.domains.form.form.newchange.service.ProductInfoService;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionApplyReqDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionApplyResVO;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.ChangInfoViewResDto;
-import com.ktmmobile.msf.domains.form.form.servicechange.dto.FarPricePlanResDto;
-import com.ktmmobile.msf.domains.form.form.servicechange.dto.MaskingDto;
-import com.ktmmobile.msf.domains.form.form.servicechange.dto.MspJuoAddInfoDto;
+import com.ktmmobile.msf.domains.form.form.servicechange.dto.CombineSelfRequest;
+import com.ktmmobile.msf.domains.form.form.servicechange.dto.CombineSelfResponse;
+import com.ktmmobile.msf.domains.form.form.servicechange.dto.ImageSystemUploadReqDto;
+import com.ktmmobile.msf.domains.form.form.servicechange.dto.InsuranceProcessRequest;
+import com.ktmmobile.msf.domains.form.form.servicechange.dto.InsuranceProcessResponse;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.MyPageSearchDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.MyShareDataReqDto;
+import com.ktmmobile.msf.domains.form.form.servicechange.dto.NumberChgeProcessRequest;
+import com.ktmmobile.msf.domains.form.form.servicechange.dto.NumberChgeProcessResponse;
+import com.ktmmobile.msf.domains.form.form.servicechange.dto.PossibleStateCheckRequest;
+import com.ktmmobile.msf.domains.form.form.servicechange.dto.PossibleStateCheckResponse;
+import com.ktmmobile.msf.domains.form.form.servicechange.dto.PricePlanY02ResDto;
+import com.ktmmobile.msf.domains.form.form.servicechange.dto.ScanIdUpdateReqDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.ServiceChangeCompleteReqDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.ServiceChangeCompleteResVO;
+import com.ktmmobile.msf.domains.form.form.servicechange.dto.UnpauseProcessRequest;
+import com.ktmmobile.msf.domains.form.form.servicechange.dto.UnpauseProcessResponse;
+import com.ktmmobile.msf.domains.form.form.servicechange.dto.UsimChangeUC0Request;
+import com.ktmmobile.msf.domains.form.form.servicechange.dto.UsimChangeUC0Response;
+import com.ktmmobile.msf.domains.form.form.servicechange.field.ServiceChangeFieldMapper;
 import com.ktmmobile.msf.domains.form.form.servicechange.repository.SvcChgPageRepositoryImpl;
 import com.ktmmobile.msf.domains.shared.common.address.application.dto.SearchAddressCondition;
 import com.ktmmobile.msf.domains.shared.common.address.application.dto.SearchAddressResponse;
 import com.ktmmobile.msf.domains.shared.common.address.application.port.in.AddressReader;
+import com.ktmmobile.msf.domains.shared.form.common.generate.application.port.out.GenerateKeyRepository;
 
+import static com.ktmmobile.msf.domains.form.common.constants.Constants.CONTPNT_SHOP_ID_MSHOP;
+import static com.ktmmobile.msf.domains.form.common.constants.Constants.OPER_TYPE_NEW;
 import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.F_BIND_EXCEPTION;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class MsfSvcChgPageServiceImpl {
 
-    private static final Logger logger = LoggerFactory.getLogger(MsfSvcChgPageServiceImpl.class);
+    private static final String REJOB_X70_MEMO_PREFIX = "REJOB_X70_";
+    private static final int SVC_CHG_RES_MSG_MAX_LENGTH = 100;
+    private final SvcChgPageRepositoryImpl svcChgPageRepositoryImpl;
+    private final MsfMplatFormService msfMplatFormService;
+    private final MsfRegSvcServiceImpl msfRegSvcServiceImpl;
+    private final MsfSvcMyShareDataSvcImpl msfSvcMyShareDataSvcImpl;
+    private final MsfSvcDataSharingSvcImpl msfSvcDataSharingSvcImpl;
+    private final MsfMcpOsstPrxService msfMcpOsstPrxService;
 
-    @Autowired
-    private SvcChgPageRepositoryImpl svcChgPageRepositoryImpl;
-
-    @Autowired
-    private MsfMplatFormService msfMplatFormService;
-
-    @Autowired
-    private MsfRegSvcServiceImpl msfRegSvcServiceImpl;
-
-    @Autowired
-    private MsfMypageSvc msfMypageSvc;
-
-    @Autowired
-    private MsfFarPricePlanService farPricePlanService;
-
-    @Autowired
-    private McpApiClient mcpApiClient;
-
-    @Autowired
-    private MsfMaskingSvc maskingSvc;
-
-    @Autowired
-    private AddressReader addressReader;
-
-    @Autowired
-    private MsfRequestRepositoryImpl msfRequestRepository;
-
-    @Autowired
-    private TransactionTemplate transactionTemplate;
-
-    public MspJuoAddInfoDto selectMspAddInfo(String svcCntrNo) {
-        logger.debug("[MsfChangPage][selectMspAddInfo] start: ncn={}, queryId={}",
-            svcCntrNo, "MspMyPageMapper.selectMspAddInfo");
-        try {
-            // 기존 interface 호출 소스 보관
-            // String callUrl = apiInterfaceServer + "/mypage/mspAddInfo";
-            // RestTemplate restTemplate = new RestTemplate();
-            // MspJuoAddInfoDto response = restTemplate.postForObject(callUrl, svcCntrNo, MspJuoAddInfoDto.class);
-            MspJuoAddInfoDto response = svcChgPageRepositoryImpl.selectMspAddInfo(svcCntrNo);
-            logger.debug("[MsfChangPage][selectMspAddInfo] response: ncn={}, hasBody={}, remainPay={}, remainMonth={}",
-                svcCntrNo, response != null, response != null ? response.getRemainPay() : null, response != null ? response.getRemainMonth() : null);
-            return response;
-        } catch (Exception e) {
-            logger.error("[MsfChangPage][selectMspAddInfo] error: ncn={}, queryId={}",
-                svcCntrNo, "MspMyPageMapper.selectMspAddInfo", e);
-            throw e;
-        }
-    }
-
-    public List<McpUserCntrMngDto> selectCntrList(String userId) {
-        Map<String, String> params = new HashMap<>();
-        params.put("userId", userId);
-        UserSessionDto userSessionDto = SessionUtils.getUserCookieBean();
-        if (userSessionDto != null) {
-            params.put("customerId", userSessionDto.getCustomerId());
-        }
-
-        // [ASIS] interface 호출 소스 보관
-        // RestTemplate restTemplate = new RestTemplate();
-        // McpUserCntrMngDto[] resultList = restTemplate.postForObject(apiInterfaceServer + "/changePage/cntrList", params, McpUserCntrMngDto[].class);
-        // List<McpUserCntrMngDto> list = Optional.ofNullable(resultList).filter(r -> r.length != 0)
-        //     .map(Arrays::asList).orElse(null);
-        List<McpUserCntrMngDto> list = svcChgPageRepositoryImpl.selectCntrList(params);
-
-        if (list != null) {
-            for (McpUserCntrMngDto dto : list) {
-                String strUnUserSSn = dto.getUnUserSSn();
-                dto.setAge(Integer.toString(getAge(strUnUserSSn)));
-                if (strUnUserSSn != null && strUnUserSSn.length() > 5) {
-                    dto.setBirth(strUnUserSSn.substring(0, 6));
-                } else if (strUnUserSSn != null) {
-                    dto.setBirth(strUnUserSSn);
-                }
-            }
-        }
-        return list;
-    }
+    private final McpApiClient mcpApiClient;
+    private final MspApiDirectRepository mspApiDirectRepository;
+    private final AddressReader addressReader;
+    private final MsfRequestRepositoryImpl msfRequestRepository;
+    private final McpRequestRepositoryImpl mcpRequestRepository;
+    private final TransactionTemplate transactionTemplate;
+    @Qualifier(MspDataSourceConfig.MSP_TX_MANAGER)
+    private final PlatformTransactionManager mspTransactionManager;
+    private final ServiceChangeFieldMapper serviceChangeFieldMapper;
+    private final AgencyCacheReader agencyCacheReader;
+    private final MsfSvgChargePlanChangeService chargePlanChangeService;
+    private final MsfPricePlanServiceImpl msfPricePlanService;
+    private final MsfCombineSvcServiceImpl msfCombineSvcService;
+    private final MsfInsuranceSvcServiceImpl msfInsuranceSvcService;
+    private final MsfUsimChangeSvcServiceImpl msfUsimChangeSvcService;
+    private final MsfSvgNumChgeService msfSvgNumChgeService;
+    private final MsfSvgUnpauseService msfSvgUnpauseService;
+    private final ImageSystemUploader imageSystemUploader;
+    private final GenerateKeyRepository generateKeyRepository;
+    private final CommonCodeReader commonCodeReader;  // 공통코드 조회 서비스 인터페이스 주입
+    private final ProductInfoService productInfoService;
 
     public McpUserCntrMngDto selectCntrListNoLogin(String contractNum) {
+        return selectCntrListNoLogin(contractNum, true);
+    }
+
+    public McpUserCntrMngDto selectCntrListNoLogin(String contractNum, boolean roadAddrChk) {
         if (contractNum == null || "".equals(contractNum)) {
             throw new McpCommonException(F_BIND_EXCEPTION);
         }
         McpUserCntrMngDto userCntrMngDto = new McpUserCntrMngDto();
         userCntrMngDto.setSvcCntrNo(contractNum);
-        return selectCntrListNoLogin(userCntrMngDto);
+        return selectCntrListNoLogin(userCntrMngDto, roadAddrChk);
     }
 
     public McpUserCntrMngDto selectCntrListNoLogin(McpUserCntrMngDto userCntrMngDto) {
+        return selectCntrListNoLogin(userCntrMngDto, true);
+    }
+
+    public McpUserCntrMngDto selectCntrListNoLogin(McpUserCntrMngDto userCntrMngDto, boolean roadAddrChk) {
         if (userCntrMngDto.getSvcCntrNo() == null && userCntrMngDto.getCntrMobileNo() == null) {
             throw new McpCommonException(F_BIND_EXCEPTION);
         }
@@ -159,7 +159,10 @@ public class MsfSvcChgPageServiceImpl {
         // RestTemplate restTemplate = new RestTemplate();
         // return restTemplate.postForObject(apiInterfaceServer + "/mypage/cntrListNoLogin", userCntrMngDto, McpUserCntrMngDto.class);
         McpUserCntrMngDto cntrInfo = svcChgPageRepositoryImpl.selectCntrListNoLogin(userCntrMngDto);
-        applyRoadAddress(cntrInfo);
+        // 서비스변경 주소 표출 제외에 따라 도로명 주소 변환 기능 미사용
+        // if (roadAddrChk) {
+        //     applyRoadAddress(cntrInfo);
+        // }
         return cntrInfo;
     }
 
@@ -168,36 +171,152 @@ public class MsfSvcChgPageServiceImpl {
         return mcpApiClient.post("/msp/mspRateMst", rateCd, MspRateMstDto.class);
     }
 
+    @SuppressWarnings("PMD.UnusedPrivateMethod")
     private void applyRoadAddress(McpUserCntrMngDto cntrInfo) {
         if (cntrInfo == null || StringUtils.isBlank(cntrInfo.getBanAdrPrimaryLn())) {
             return;
         }
 
         try {
-            SearchAddressResponse response = addressReader.getListAddress(
-                    new SearchAddressCondition(1, 5, cntrInfo.getBanAdrPrimaryLn()));
-            if (response == null || response.list() == null || response.list().isEmpty()) {
-                return;
+            SearchAddressResponse.JusoResponse roadAddress = null;
+            for (String keyword: buildRoadAddressSearchKeywords(cntrInfo)) {
+                SearchAddressResponse response = addressReader.getListAddress(new SearchAddressCondition(1, 5, keyword));
+                if (response == null || response.list() == null || response.list().isEmpty()) {
+                    continue;
+                }
+
+                roadAddress = selectRoadAddress(cntrInfo, response.list());
+                if (roadAddress != null) {
+                    break;
+                }
             }
 
-            String currentZip = StringUtil.NVL(cntrInfo.getBanAdrZip(), "");
-            SearchAddressResponse.JusoResponse roadAddress = response.list().stream()
-                    .filter(item -> StringUtils.equals(currentZip, item.zipNo()))
-                    .findFirst()
-                    .orElse(response.list().get(0));
-            if (StringUtils.isBlank(roadAddress.roadAddress1())) {
+            if (roadAddress == null || StringUtils.isBlank(roadAddress.roadAddress1())) {
                 return;
             }
 
             cntrInfo.setBanAdrZip(StringUtil.NVL(roadAddress.zipNo(), cntrInfo.getBanAdrZip()));
             cntrInfo.setBanAdrPrimaryLn(roadAddress.roadAddress1());
 
-            String roadReference = StringUtil.NVL(roadAddress.roadAddress2(), "");
-            String detailAddress = StringUtil.NVL(cntrInfo.getBanAdrSecondaryLn(), "");
-            cntrInfo.setBanAdrSecondaryLn(StringUtils.normalizeSpace((roadReference + " " + detailAddress).trim()));
+            cntrInfo.setBanAdrSecondaryLn(buildRoadDetailAddress(roadAddress, cntrInfo.getBanAdrSecondaryLn()));
         } catch (Exception e) {
-            logger.info("[서비스변경] selectCntrListNoLogin 도로명주소 보정 실패: {}", e.getMessage());
+            log.info("[selectCntrListNoLogin] 도로명주소 보정 실패: {}", e.getMessage());
         }
+    }
+
+    private static List<String> buildRoadAddressSearchKeywords(McpUserCntrMngDto cntrInfo) {
+        String primaryAddress = StringUtils.normalizeSpace(StringUtil.NVL(cntrInfo.getBanAdrPrimaryLn(), ""));
+        String detailAddress = StringUtils.normalizeSpace(StringUtil.NVL(cntrInfo.getBanAdrSecondaryLn(), ""));
+        String fullKeyword = StringUtils.normalizeSpace((primaryAddress + " " + detailAddress).trim());
+        String shortKeyword = StringUtils.normalizeSpace((primaryAddress + " " + removeLastAddressToken(detailAddress)).trim());
+
+        return List.of(fullKeyword, shortKeyword).stream()
+            .filter(StringUtils::isNotBlank)
+            .distinct()
+            .toList();
+    }
+
+    private static String removeLastAddressToken(String address) {
+        String normalizedAddress = StringUtils.normalizeSpace(StringUtil.NVL(address, ""));
+        int lastSpaceIndex = normalizedAddress.lastIndexOf(' ');
+        if (lastSpaceIndex < 0) {
+            return "";
+        }
+        return normalizedAddress.substring(0, lastSpaceIndex);
+    }
+
+    private static SearchAddressResponse.JusoResponse selectRoadAddress(
+        McpUserCntrMngDto cntrInfo,
+        List<SearchAddressResponse.JusoResponse> roadAddresses
+    ) {
+        List<SearchAddressResponse.JusoResponse> usableAddresses = roadAddresses.stream()
+            .filter(item -> StringUtils.isNotBlank(item.roadAddress1()))
+            .toList();
+        if (usableAddresses.size() == 1) {
+            return usableAddresses.get(0);
+        }
+
+        String currentZip = StringUtil.NVL(cntrInfo.getBanAdrZip(), "");
+        List<SearchAddressResponse.JusoResponse> zipMatches = usableAddresses.stream()
+            .filter(item -> StringUtils.isNotBlank(currentZip))
+            .filter(item -> StringUtils.equals(currentZip, item.zipNo()))
+            .toList();
+        if (zipMatches.size() == 1) {
+            return zipMatches.get(0);
+        }
+
+        SearchAddressResponse.JusoResponse detailMatchedAddress = selectDetailMatchedRoadAddress(
+            cntrInfo,
+            zipMatches.isEmpty() ? usableAddresses : zipMatches
+        );
+        if (detailMatchedAddress != null) {
+            return detailMatchedAddress;
+        }
+
+        boolean sameRoadAddress = usableAddresses.stream()
+            .map(item -> StringUtils.normalizeSpace(item.roadAddress1()))
+            .distinct()
+            .count() == 1;
+        return sameRoadAddress ? usableAddresses.get(0) : null;
+    }
+
+    private static SearchAddressResponse.JusoResponse selectDetailMatchedRoadAddress(
+        McpUserCntrMngDto cntrInfo,
+        List<SearchAddressResponse.JusoResponse> roadAddresses
+    ) {
+        List<SearchAddressResponse.JusoResponse> detailMatches = roadAddresses.stream()
+            .filter(item -> containsAnyDetailToken(item, cntrInfo.getBanAdrSecondaryLn()))
+            .toList();
+        return detailMatches.size() == 1 ? detailMatches.get(0) : null;
+    }
+
+    private static boolean containsAnyDetailToken(SearchAddressResponse.JusoResponse roadAddress, String detailAddress) {
+        String addressText = StringUtils.normalizeSpace(String.join(" ",
+            StringUtil.NVL(roadAddress.roadAddress1(), ""),
+            StringUtil.NVL(roadAddress.roadAddress2(), ""),
+            StringUtil.NVL(roadAddress.roadAddress(), "")));
+        for (String token: StringUtils.normalizeSpace(StringUtil.NVL(detailAddress, "")).split(" ")) {
+            if (StringUtils.isNotBlank(token) && StringUtils.containsIgnoreCase(addressText, token)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static String buildRoadDetailAddress(SearchAddressResponse.JusoResponse roadAddress, String detailAddress) {
+        String roadReference = StringUtil.NVL(roadAddress.roadAddress2(), "");
+        String remainingDetail = removeIncludedDetailTokens(roadAddress, detailAddress);
+        return StringUtils.normalizeSpace((roadReference + " " + remainingDetail).trim());
+    }
+
+    private static String removeIncludedDetailTokens(SearchAddressResponse.JusoResponse roadAddress, String detailAddress) {
+        String normalizedDetail = StringUtils.normalizeSpace(StringUtil.NVL(detailAddress, ""));
+        String addressText = StringUtils.normalizeSpace(String.join(" ",
+            StringUtil.NVL(roadAddress.roadAddress2(), ""),
+            StringUtil.NVL(roadAddress.roadAddress(), ""),
+            StringUtil.NVL(roadAddress.jibunAddress(), "")));
+
+        List<String> remainingTokens = new ArrayList<>();
+        for (String token: normalizedDetail.split(" ")) {
+            if (isIncludedDetailToken(addressText, token)) {
+                continue;
+            }
+            remainingTokens.add(token);
+        }
+        return StringUtils.normalizeSpace(String.join(" ", remainingTokens));
+    }
+
+    private static boolean isIncludedDetailToken(String addressText, String token) {
+        if (StringUtils.isBlank(token)) {
+            return false;
+        }
+
+        if (StringUtils.containsIgnoreCase(addressText, token)) {
+            return true;
+        }
+
+        return token.endsWith("번지")
+            && StringUtils.contains(addressText, StringUtils.removeEnd(token, "번지"));
     }
 
     public FormResponse<ChangInfoViewResDto> getChangInfoView(HttpServletRequest request, MyPageSearchDto searchVO) {
@@ -205,9 +324,8 @@ public class MsfSvcChgPageServiceImpl {
             return FormResponse.of(ResSvcChgMessage.CHANGE_REQUEST_INVALID);
         }
 
-        logger.info("[서비스변경] getChangInfoView 조회 시작 — ncn={}, ctn={}, custId={}", searchVO.getNcn(), searchVO.getCtn(), searchVO.getCustId());
+        log.info("[getChangInfoView] 조회 시작 — ncn={}, ctn={}, custId={}", searchVO.getNcn(), searchVO.getCtn(), searchVO.getCustId());
 
-        UserSessionDto userSession = SessionUtils.getUserCookieBean();
         List<McpUserCntrMngDto> cntrList = new ArrayList<>();
 
         if (StringUtils.isBlank(StringUtil.NVL(searchVO.getNcn(), searchVO.getContractNum()))) {
@@ -218,10 +336,10 @@ public class MsfSvcChgPageServiceImpl {
         try {
             cntrInfo = resolveContractInfo(searchVO);
         } catch (McpCommonException e) {
-            logger.warn("[MsfChangPage][getChangInfoView] contract info not found: {}", e.getMessage());
+            log.warn("[MsfChangPage][getChangInfoView] contract info not found: {}", e.getMessage());
             return FormResponse.of(ResSvcChgMessage.CHANGE_CONTRACT_NOT_FOUND);
         } catch (Exception e) {
-            logger.warn("[MsfChangPage][getChangInfoView] contract info lookup error", e);
+            log.warn("[MsfChangPage][getChangInfoView] contract info lookup error", e);
             return FormResponse.of(ResSvcChgMessage.CHANGE_INFO_ERROR);
         }
         cntrList.add(cntrInfo);
@@ -232,6 +350,15 @@ public class MsfSvcChgPageServiceImpl {
         String ctn = searchVO.getCtn();
         String contractNum = searchVO.getContractNum();
         String modelName = StringUtil.NVL(searchVO.getModelName(), "-");
+        String rprsPrdtId = StringUtil.NVL(searchVO.getRprsPrdtId(), "");
+        if (StringUtils.isBlank(rprsPrdtId)) {
+            // 서비스변경 ASIS는 계약조회 결과의 trgtModelId를 보험상품 조회 조건으로 사용한다.
+            // TOBE에서는 계약정보의 modelId가 같은 역할을 하므로 요청값이 없을 때 보정한다.
+            rprsPrdtId = StringUtil.NVL(cntrInfo.getModelId(), "");
+        }
+
+        Map<String, String> insrInfo = getStringMap(mcpApiClient.post("/mypage/getInsrInfo", ncn, Map.class));
+        String reqBuyType = insrInfo != null ? (String) insrInfo.get("REQ_BUY_TYPE") : null; //구매유형코드(UU:유심, MM:단말)
 
         McpFarPriceDto mcpFarPriceDto = null;
         String prvRateGrpNm = "-";
@@ -240,21 +367,21 @@ public class MsfSvcChgPageServiceImpl {
         String rateAdsvcSmsDesc = "- 건";
 
         try {
-            logger.info("[서비스변경] 요금제 정보 조회 — contractNum={}", contractNum);
-            mcpFarPriceDto = msfMypageSvc.selectFarPricePlan(contractNum);
+            log.info("[getChangInfoView] 요금제 정보 조회 — contractNum={}", contractNum);
+            mcpFarPriceDto = mspApiDirectRepository.query("/mypage/farPricePlan", contractNum, McpFarPriceDto.class);
             if (mcpFarPriceDto != null) {
                 prvRateGrpNm = mcpFarPriceDto.getPrvRateGrpNm();
-                logger.info("[서비스변경] 요금제 정보 조회 완료 — prvRateGrpNm={}", prvRateGrpNm);
+                log.info("[getChangInfoView] 요금제 정보 조회 완료 — prvRateGrpNm={}", prvRateGrpNm);
 
-                FarPricePlanResDto farPricePlanResDto = farPricePlanService.getFarPricePlanWrapper(mcpFarPriceDto);
-                rateAdsvcLteDesc = StringUtil.NVL(farPricePlanResDto.getRateAdsvcLteDesc(), "- MB");
-                rateAdsvcCallDesc = StringUtil.NVL(farPricePlanResDto.getRateAdsvcCallDesc(), "- 분");
-                rateAdsvcSmsDesc = StringUtil.NVL(farPricePlanResDto.getRateAdsvcSmsDesc(), "- 건");
+                //FarPricePlanResDto farPricePlanResDto = farPricePlanService.getFarPricePlanWrapper(mcpFarPriceDto);
+                //rateAdsvcLteDesc = StringUtil.NVL(farPricePlanResDto.getRateAdsvcLteDesc(), "- MB");
+                //rateAdsvcCallDesc = StringUtil.NVL(farPricePlanResDto.getRateAdsvcCallDesc(), "- 분");
+                //rateAdsvcSmsDesc = StringUtil.NVL(farPricePlanResDto.getRateAdsvcSmsDesc(), "- 건");
             }
         } catch (SelfServiceException e) {
-            logger.info("[서비스변경][getChangInfoView] SelfServiceException: {}", e.getMessage());
+            log.info("[getChangInfoView] SelfServiceException: {}", e.getMessage());
         } catch (Exception e) {
-            logger.info("[서비스변경][getChangInfoView] 요금제 상세 조회 실패: {}", e.getMessage());
+            log.info("[getChangInfoView] 요금제 상세 조회 실패: {}", e.getMessage());
         }
 
         String addr = "-";
@@ -265,78 +392,67 @@ public class MsfSvcChgPageServiceImpl {
         String homeTel = "";
         String email = "";
         Map<String, Object> combinePayData = new HashMap<>();
+        boolean skipMplatformLookup = Boolean.TRUE.equals(searchVO.getSkipPerMyktfInfo());
 
-        try {
-            logger.info("[서비스변경] perMyktfInfo(X01) 조회 — ncn={}, ctn={}, custId={}", ncn, ctn, custId);
-            MpPerMyktfInfoVO perMyktfInfo = msfMplatFormService.perMyktfInfo(ncn, ctn, custId);
-            if (perMyktfInfo != null) {
-                logger.info("[서비스변경] perMyktfInfo(X01) 조회 결과 — addr={}, initActivationDate={}, homeTel={}, email={}",
-                    perMyktfInfo.getAddr(), perMyktfInfo.getInitActivationDate(), perMyktfInfo.getHomeTel(), perMyktfInfo.getEmail());
-                addr = StringUtil.NVL(perMyktfInfo.getAddr(), "-");
-                initActivationDate = StringUtil.NVL(perMyktfInfo.getInitActivationDate(), "-");
-                homeTel = StringUtil.NVL(perMyktfInfo.getHomeTel(), "");
-                email = StringUtil.NVL(perMyktfInfo.getEmail(), "");
-            } else {
-                logger.info("[서비스변경] perMyktfInfo(X01) 조회 결과 — null");
-            }
-        } catch (SocketTimeoutException | SelfServiceException e) {
-            logger.warn("[서비스변경][getChangInfoView] perMyktfInfo 조회 실패: {}", e.getMessage());
-        }
-
-        try {
-            logger.info("[서비스변경] 납부방법/명세서 조회 시작 — ncn={}, ctn={}", ncn, ctn);
-            MpFarChangewayInfoVO farChgWayInfo = msfMplatFormService.farChangewayInfo(ncn, ctn, custId);
-            MpMoscBilEmailInfoInVO bilEmailInfo = null;
-            if (farChgWayInfo != null) {
-                bilEmailInfo = msfMplatFormService.kosMoscBillInfo(ncn, ctn, custId);
-            }
-            combinePayData = combinePayData(farChgWayInfo, bilEmailInfo);
-            logger.info("[서비스변경] combinePayData 결과 — payData={}, billData={}",
-                    combinePayData.get("payData") != null, combinePayData.get("billData") != null);
-        } catch (SelfServiceException e) {
-            logger.warn("[서비스변경][getChangInfoView] 납부방법/명세서 조회 실패: {}", e.getMessage());
-            combinePayData = combinePayData(null, null);
-        } catch (Exception e) {
-            logger.warn("[서비스변경][getChangInfoView] 납부방법/명세서 조회 오류", e);
-            combinePayData = combinePayData(null, null);
-        }
-
-        String maskingSession = "";
-        if (userSession != null) {
-            maskingSession = SessionUtils.getMaskingSession() > 0 ? "Y" : "";
-        }
-        if ("Y".equals(maskingSession)) {
-            searchVO.setUserName(userSession.getName());
-
-            String clientIp = RequestUtils.getClientIp();
-            MaskingDto maskingDto = new MaskingDto();
-            long maskingRelSeq = SessionUtils.getMaskingSession();
-            maskingDto.setMaskingReleaseSeq(maskingRelSeq);
-            maskingDto.setUnmaskingInfo("이름,휴대폰번호,납부정보");
-            maskingDto.setAccessIp(clientIp);
-            maskingDto.setAccessUrl(request.getRequestURI());
-            maskingDto.setUserId(userSession.getUserId());
-            maskingDto.setCretId(userSession.getUserId());
-            maskingDto.setAmdId(userSession.getUserId());
-            maskingSvc.insertMaskingReleaseHist(maskingDto);
+        if (skipMplatformLookup) {
+            log.info("[getChangInfoView] mplatform lookup skip: ncn={}", ncn);
         } else {
-            searchVO.setUserName(StringMakerUtil.getName(userName));
+            try {
+                log.info("[getChangInfoView] perMyktfInfo(X01) 조회 — ncn={}, ctn={}, custId={}", ncn, ctn, custId);
+                MpPerMyktfInfoVO perMyktfInfo = msfMplatFormService.perMyktfInfo(ncn, ctn, custId);
+                if (perMyktfInfo != null) {
+                    log.info("[getChangInfoView] perMyktfInfo(X01) 조회 결과 — addr={}, initActivationDate={}, homeTel={}, email={}",
+                        perMyktfInfo.getAddr(), perMyktfInfo.getInitActivationDate(), perMyktfInfo.getHomeTel(), perMyktfInfo.getEmail());
+                    addr = StringUtil.NVL(perMyktfInfo.getAddr(), "-");
+                    initActivationDate = StringUtil.NVL(perMyktfInfo.getInitActivationDate(), "-");
+                    homeTel = StringUtil.NVL(perMyktfInfo.getHomeTel(), "");
+                    email = StringUtil.NVL(perMyktfInfo.getEmail(), "");
+                } else {
+                    log.info("[getChangInfoView] perMyktfInfo(X01) 조회 결과 — null");
+                }
+            } catch (SocketTimeoutException | SelfServiceException e) {
+                log.error("[getChangInfoView] perMyktfInfo 조회 실패: {}", e.getMessage());
+                return FormResponse.of(ResSvcChgMessage.CHANGE_INFO_ERROR, e.getMessage(), null);
+            }
+
+            try {
+                log.info("[getChangInfoView] 납부방법/명세서 조회 시작 — ncn={}, ctn={}", ncn, ctn);
+                MpFarChangewayInfoVO farChgWayInfo = msfMplatFormService.farChangewayInfo(ncn, ctn, custId);
+                MpMoscBilEmailInfoInVO bilEmailInfo = null;
+                if (farChgWayInfo != null) {
+                    bilEmailInfo = msfMplatFormService.kosMoscBillInfo(ncn, ctn, custId);
+                }
+                combinePayData = combinePayData(farChgWayInfo, bilEmailInfo);
+                log.info("[getChangInfoView] combinePayData 결과 — payData={}, billData={}",
+                    combinePayData.get("payData") != null, combinePayData.get("billData") != null);
+            } catch (SelfServiceException e) {
+                log.warn("[getChangInfoView] 납부방법/명세서 조회 실패: {}", e.getMessage());
+                combinePayData = combinePayData(null, null);
+            } catch (Exception e) {
+                log.warn("[getChangInfoView] 납부방법/명세서 조회 오류", e);
+                combinePayData = combinePayData(null, null);
+            }
         }
+
+        // JVM 로컬 HttpSession의 마스킹 해제 상태에 의존하지 않고 기본 마스킹을 적용한다.
+        searchVO.setUserName(StringMakerUtil.getName(userName));
 
         String remindBlckYn = "";
-        try {
-            McpUserCntrMngDto selectSocDesc = msfMypageSvc.selectSocDesc(contractNum);
-            if (selectSocDesc != null
+        if (!skipMplatformLookup) {
+            try {
+                McpUserCntrMngDto selectSocDesc = mspApiDirectRepository.query("/mypage/socDesc", contractNum, McpUserCntrMngDto.class);
+                if (selectSocDesc != null
                     && "Y".equals(selectSocDesc.getRemindYn())
                     && !StringUtils.isEmpty(selectSocDesc.getRemindProdType())) {
-                remindBlckYn = "Y";
-            }
-            logger.info("[서비스변경] selectSocDesc 결과 — remindYn={}, remindProdType={}, remindBlckYn={}",
+                    remindBlckYn = "Y";
+                }
+                log.info("[getChangInfoView] selectSocDesc 결과 — remindYn={}, remindProdType={}, remindBlckYn={}",
                     selectSocDesc != null ? selectSocDesc.getRemindYn() : "null",
                     selectSocDesc != null ? selectSocDesc.getRemindProdType() : "null",
                     remindBlckYn);
-        } catch (Exception e) {
-            logger.warn("[서비스변경][getChangInfoView] socDesc 조회 실패: {}", e.getMessage());
+            } catch (Exception e) {
+                log.warn("[getChangInfoView] socDesc 조회 실패: {}", e.getMessage());
+            }
         }
 
         ChangInfoViewResDto response = new ChangInfoViewResDto();
@@ -347,6 +463,7 @@ public class MsfSvcChgPageServiceImpl {
         response.setCtn(ctn);
         response.setCustId(custId);
         response.setModelName(modelName);
+        response.setRprsPrdtId(rprsPrdtId);
         response.setPrvRateGrpNm(prvRateGrpNm);
         response.setRateAdsvcLteDesc(rateAdsvcLteDesc);
         response.setRateAdsvcCallDesc(rateAdsvcCallDesc);
@@ -361,13 +478,25 @@ public class MsfSvcChgPageServiceImpl {
         response.setPayData(getStringMap(combinePayData, "payData"));
         response.setBillData(getStringMap(combinePayData, "billData"));
         response.setMaskingBtn("Y");
-        response.setMaskingSession(maskingSession);
+        response.setMaskingSession("");
         response.setRemindBlckYn(remindBlckYn);
         response.setSubStatus(StringUtil.NVL(cntrInfo.getSubStatus(), searchVO.getSubStatus()));
-        logger.info("[서비스변경] getChangInfoView 화면 셋팅값 — prvRateGrpNm={}, initActivationDate={}, zipNo={}, address={}, detailAddress={}, addr={}, homeTel={}, email={}, remindBlckYn={}, payData={}, billData={}, maskingSession={}",
-                prvRateGrpNm, initActivationDate, zipNo, address, detailAddress, addr, homeTel, email, remindBlckYn,
-                combinePayData.get("payData") != null, combinePayData.get("billData") != null, maskingSession);
-        logger.info("[서비스변경] getChangInfoView 조회 완료 — ncn={}, ctn={}, prvRateGrpNm={}, remindBlckYn={}", ncn, ctn, prvRateGrpNm, remindBlckYn);
+        response.setReqBuyType(reqBuyType);
+        log.info(
+            "[getChangInfoView] 화면 셋팅값 — prvRateGrpNm={}, initActivationDate={}, zipNo={}, address={}, detailAddress={}, addr={}, homeTel={}, email={}, remindBlckYn={}, payData={}, billData={}, maskingSession={}",
+            prvRateGrpNm,
+            initActivationDate,
+            zipNo,
+            address,
+            detailAddress,
+            addr,
+            homeTel,
+            email,
+            remindBlckYn,
+            combinePayData.get("payData") != null,
+            combinePayData.get("billData") != null,
+            "");
+        log.info("[getChangInfoView] 조회 완료 — ncn={}, ctn={}, prvRateGrpNm={}, remindBlckYn={}", ncn, ctn, prvRateGrpNm, remindBlckYn);
         return FormResponse.of(ResSvcChgMessage.SUCCESS, response);
     }
 
@@ -377,10 +506,19 @@ public class MsfSvcChgPageServiceImpl {
             throw new McpCommonException(F_BIND_EXCEPTION);
         }
 
-        McpUserCntrMngDto cntrInfo = selectCntrListNoLogin(lookupNcn);
+        boolean roadAddrChk = searchVO.getRoadAddrChk() == null || searchVO.getRoadAddrChk();
+        McpUserCntrMngDto cntrInfo = selectCntrListNoLogin(lookupNcn, roadAddrChk);
         if (cntrInfo == null) {
             throw new McpCommonException(F_BIND_EXCEPTION);
         }
+        McpUserCntrMngDto prdtInfo = svcChgPageRepositoryImpl.selectRprsPrdtInfo(cntrInfo);
+
+        String resolvedRprsPrdtId = prdtInfo != null ? prdtInfo.getRprsPrdtId() : "";
+        if (StringUtils.isBlank(resolvedRprsPrdtId)) {
+            // 대표단말 매핑 조회가 실패해도 ASIS trgtModelId 기준으로 보험 조회가 가능하도록 계약 modelId를 유지한다.
+            resolvedRprsPrdtId = cntrInfo.getModelId();
+        }
+        searchVO.setRprsPrdtId(StringUtil.NVL(resolvedRprsPrdtId, ""));
 
         searchVO.setNcn(StringUtil.NVL(cntrInfo.getSvcCntrNo(), lookupNcn));
         searchVO.setContractNum(StringUtil.NVL(cntrInfo.getContractNum(), searchVO.getNcn()));
@@ -389,14 +527,14 @@ public class MsfSvcChgPageServiceImpl {
         searchVO.setModelName(StringUtil.NVL(cntrInfo.getModelName(), searchVO.getModelName()));
         searchVO.setSubStatus(StringUtil.NVL(cntrInfo.getSubStatus(), searchVO.getSubStatus()));
 
-        logger.info("[서비스변경] 계약정보 보강 완료 — ncn={}, contractNum={}, ctnPresent={}, custIdPresent={}",
-                searchVO.getNcn(), searchVO.getContractNum(), !StringUtils.isEmpty(searchVO.getCtn()), !StringUtils.isEmpty(searchVO.getCustId()));
+        log.info("[resolveContractInfo] 계약정보 보강 완료 — ncn={}, contractNum={}, ctnPresent={}, custIdPresent={}",
+            searchVO.getNcn(), searchVO.getContractNum(), !StringUtils.isEmpty(searchVO.getCtn()), !StringUtils.isEmpty(searchVO.getCustId()));
         return cntrInfo;
     }
 
     private Map<String, Object> combinePayData(
-            MpFarChangewayInfoVO farChgWayInfo,
-            MpMoscBilEmailInfoInVO bilEmailInfo
+        MpFarChangewayInfoVO farChgWayInfo,
+        MpMoscBilEmailInfoInVO bilEmailInfo
     ) {
         Map<String, Object> rtnMap = new HashMap<>();
         Map<String, String> payData = new HashMap<>();
@@ -485,31 +623,25 @@ public class MsfSvcChgPageServiceImpl {
         return rtnMap;
     }
 
-    @SuppressWarnings("unchecked")
     private Map<String, String> getStringMap(Map<String, Object> source, String key) {
-        Object value = source.get(key);
+        return getStringMap(source.get(key));
+    }
+
+    private Map<String, String> getStringMap(Object value) {
         if (value instanceof Map<?, ?>) {
-            return (Map<String, String>) value;
+            Map<String, String> stringMap = new HashMap<>();
+            for (Map.Entry<?, ?> entry: ((Map<?, ?>) value).entrySet()) {
+                if (entry.getKey() instanceof String && entry.getValue() instanceof String) {
+                    stringMap.put((String) entry.getKey(), (String) entry.getValue());
+                }
+            }
+            return stringMap;
         }
         return null;
     }
 
-    private static int getAge(String idNum) {
-        if (idNum == null || idNum.trim().length() != 13) return 0;
-        char g = idNum.charAt(6);
-        if (g == '*') return -1;
-        String century = (g == '1' || g == '2' || g == '5' || g == '6') ? "19" : "20";
-        String today = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE);
-        String birthday = century + idNum.substring(0, 6);
-        int age = Integer.parseInt(today.substring(0, 4)) - Integer.parseInt(birthday.substring(0, 4));
-        if (Integer.parseInt(today.substring(4)) < Integer.parseInt(birthday.substring(4))) age--;
-        return age;
-    }
 
-
-
-
-    public FormResponse<ServiceChangeCompleteResVO> complete(String applicationKey, ServiceChangeCompleteReqDto req) {
+    public FormResponse<ServiceChangeCompleteResVO> complete(ServiceChangeCompleteReqDto req) throws IOException {
         long startedAt = System.currentTimeMillis();
         String ncn = req != null ? StringUtil.NVL(req.getNcn(), "") : "";
         List<String> serviceSelect = req != null && req.getServiceSelect() != null
@@ -518,103 +650,55 @@ public class MsfSvcChgPageServiceImpl {
             ? req.getAdditionCancelList() : new ArrayList<>();
         List<AdditionApplyReqDto> addList = req != null && req.getAdditionList() != null
             ? req.getAdditionList() : new ArrayList<>();
+        String requestMemo = normalizeLogMemo(req != null ? req.getMemo() : "");
 
-        logger.info("[serviceChangeComplete] request: applicationKey={}, ncn={}, serviceSelect={}, addCount={}, cancelCount={}",
-            applicationKey, ncn, serviceSelect, addList.size(), cancelList.size());
+        log.info("[serviceChangeComplete] request: ncn={}, agentCd={}, serviceSelect={}, addCount={}, cancelCount={}, memoPresent={}, memo={}",
+            ncn, req == null ? "" : req.getAgentCd(), serviceSelect, addList.size(), cancelList.size(),
+            StringUtils.isNotBlank(requestMemo), requestMemo);
+
+        ServiceChangeCompleteResVO completeRes = ServiceChangeCompleteResVO.of("", addList.size(), cancelList.size());
+        InsuranceProcessRequest completedInsuranceRequest = null;
 
         if (req == null || "".equals(StringUtil.NVL(req.getNcn(), "")) || "".equals(StringUtil.NVL(req.getCtn(), ""))) {
-            logger.warn("[serviceChangeComplete] invalid request: applicationKey={}, ncn={}, ctn={}",
-                applicationKey, ncn, req != null ? req.getCtn() : "");
+            log.warn("[serviceChangeComplete] invalid request: ncn={}, ctn={}",
+                ncn, req != null ? req.getCtn() : "");
             return FormResponse.of(ResSvcChgMessage.CHANGE_REQUEST_INVALID);
         }
-
-        // R11(부가서비스) / R12(무선데이터차단): 해지 처리
-        for (AdditionApplyReqDto cancelReq : cancelList) {
-            fillCommonAdditionFields(cancelReq, req);
-            FormResponse<AdditionApplyResVO> cancelRes = msfRegSvcServiceImpl.moscRegSvcCanChg(cancelReq);
-            if (!ResSvcChgMessage.SUCCESS.getCode().equals(cancelRes.resCode())) {
-                logger.warn("[serviceChangeComplete] cancel failed: applicationKey={}, ncn={}, soc={}, resCode={}, resMessage={}",
-                    applicationKey, ncn, cancelReq.getSoc(), cancelRes.resCode(), cancelRes.resMessage());
-                return FormResponse.of(ResSvcChgMessage.ADDITION_SELF_SERVICE_ERROR, cancelRes.resMessage(), null);
-            }
+        List<String> missingChangeServices = findMissingChangeServices(req, serviceSelect, addList, cancelList);
+        if (!missingChangeServices.isEmpty()) {
+            log.warn("[serviceChangeComplete] no change data: ncn={}, serviceSelect={}, missingServices={}",
+                ncn, serviceSelect, missingChangeServices);
+            return FormResponse.of(
+                ResSvcChgMessage.CHANGE_REQUEST_INVALID,
+                "선택한 서비스의 변경사항이 없습니다.",
+                null);
         }
 
-        // R11(부가서비스) / R12(무선데이터차단): 신청 처리
-        for (AdditionApplyReqDto addReq : addList) {
-            fillCommonAdditionFields(addReq, req);
-            FormResponse<AdditionApplyResVO> addRes = msfRegSvcServiceImpl.regSvcChg(addReq);
-            if (!ResSvcChgMessage.SUCCESS.getCode().equals(addRes.resCode())) {
-                logger.warn("[serviceChangeComplete] reg failed: applicationKey={}, ncn={}, soc={}, resCode={}, resMessage={}",
-                    applicationKey, ncn, addReq.getSoc(), addRes.resCode(), addRes.resMessage());
-                return FormResponse.of(ResSvcChgMessage.ADDITION_SELF_SERVICE_ERROR, addRes.resMessage(), null);
-            }
+        if (req.getRequestKey() != null && msfRequestRepository.existsMsfRequestSvcChg(req.getRequestKey())) {
+            log.warn("[serviceChangeComplete] duplicate request blocked: requestKey={}, ncn={}",
+                req.getRequestKey(), ncn);
+            return FormResponse.of(
+                ResSvcChgMessage.CHANGE_REQUEST_INVALID,
+                "이미 작성완료 처리된 신청입니다. 잠시 후 처리 결과를 확인해 주세요.", /* 20260722 작성완료 방어로직 메시지 수정 */
+                null);
         }
 
-        // P11(요금제변경)
-        if (serviceSelect.contains("P11")) {
-            logger.info("[serviceChangeComplete] P11 요금제변경 처리: applicationKey={}, ncn={}", applicationKey, ncn);
-            // TODO: M플랫폼 요금제변경 API 호출 구현 필요
-        }
-
-        // O11(번호변경)
-        if (serviceSelect.contains("O11")) {
-            logger.info("[serviceChangeComplete] O11 번호변경 처리: applicationKey={}, ncn={}", applicationKey, ncn);
-            // TODO: M플랫폼 번호변경 API 호출 구현 필요
-        }
-
-        // O12(분실복구/일시정지해제)
-        if (serviceSelect.contains("O12")) {
-            logger.info("[serviceChangeComplete] O12 분실복구/일시정지해제 처리: applicationKey={}, ncn={}", applicationKey, ncn);
-            // TODO: M플랫폼 분실복구 API 호출 구현 필요
-        }
-
-        // R14(단말보험)
-        if (serviceSelect.contains("R14")) {
-            logger.info("[serviceChangeComplete] R14 단말보험 처리: applicationKey={}, ncn={}", applicationKey, ncn);
-            // TODO: 단말보험 가입/미가입 처리 구현 필요
-        }
-
-        // O13(SIM정보)
-        if (serviceSelect.contains("O13")) {
-            logger.info("[serviceChangeComplete] O13 SIM정보 처리: applicationKey={}, ncn={}", applicationKey, ncn);
-            // TODO: SIM 정보 처리 구현 필요
-        }
-
-        // R15(데이터쉐어링)
-        if (serviceSelect.contains("R15")) {
-            logger.info("[serviceChangeComplete] R15 데이터쉐어링 처리: applicationKey={}, ncn={}", applicationKey, ncn);
-            FormResponse<Void> dataSharingRes = processDataSharing(applicationKey, req);
-            if (!ResSvcChgMessage.SUCCESS.getCode().equals(dataSharingRes.resCode())) {
-                return FormResponse.of(ResSvcChgMessage.ADDITION_SELF_SERVICE_ERROR, dataSharingRes.resMessage(), null);
-            }
-        }
-
-        // R16(결합Solo)
-        if (serviceSelect.contains("R16")) {
-            logger.info("[serviceChangeComplete] R16 결합Solo 처리: applicationKey={}, ncn={}", applicationKey, ncn);
-            // TODO: 결합Solo 처리 구현 필요
-        }
-
-        long elapsed = System.currentTimeMillis() - startedAt;
-        logger.info("[serviceChangeComplete] mplatform success: applicationKey={}, ncn={}, serviceSelect={}, addCount={}, cancelCount={}, elapsedMs={}",
-            applicationKey, ncn, serviceSelect, addList.size(), cancelList.size(), elapsed);
-
+        Long requestKey;
         try {
-            Long requestKey = transactionTemplate.execute(status ->
-                saveSvcChgRequest(applicationKey, ncn, req, cancelList, addList));
-            logger.info("[serviceChangeComplete] DB transaction committed: requestKey={}, applicationKey={}, ncn={}",
-                requestKey, applicationKey, ncn);
+            requestKey = transactionTemplate.execute(status ->
+                saveSvcChgRequest(ncn, req, cancelList, addList));
+            completeRes.setRequestKey(requestKey == null ? "" : String.valueOf(requestKey));
+            log.info("[serviceChangeComplete] DB pre-saved: requestKey={}, ncn={}, serviceSelect={}",
+                requestKey, ncn, serviceSelect);
         } catch (ServiceChangeSaveFailureException e) {
-            logger.warn("[serviceChangeComplete] DB save failed after mplatform success: applicationKey={}, ncn={}",
-                applicationKey, ncn, e);
+            log.warn("[serviceChangeComplete] DB pre-save failed: ncn={}", ncn, e);
             return FormResponse.of(
                 ResSvcChgMessage.ADDITION_SELF_SERVICE_ERROR,
                 "서비스변경 작성완료 저장 중 오류가 발생했습니다.",
                 null
             );
         } catch (Exception e) {
-            logger.error("[serviceChangeComplete] DB save unexpected error after mplatform success: applicationKey={}, ncn={}",
-                applicationKey, ncn, e);
+            log.error("[serviceChangeComplete] DB pre-save unexpected error: ncn={}", ncn, e);
             return FormResponse.of(
                 ResSvcChgMessage.ADDITION_SELF_SERVICE_ERROR,
                 "서비스변경 작성완료 저장 중 오류가 발생했습니다.",
@@ -622,10 +706,1055 @@ public class MsfSvcChgPageServiceImpl {
             );
         }
 
-        return FormResponse.of(
-            ResSvcChgMessage.SUCCESS,
-            ServiceChangeCompleteResVO.of(applicationKey, addList.size(), cancelList.size())
+        // MCP 이관은 MSF 커밋 이후 별도 MSP 트랜잭션으로 처리한다.
+        FormResponse<Void> transferResponse = transferToMcp(requestKey);
+        if (!ResSvcChgMessage.SUCCESS.getCode().equals(transferResponse.resCode())) {
+            return failWithSvcChgProcCd(
+                requestKey,
+                ResSvcChgMessage.APPLY_MCP_TRANSFER_ERROR,
+                transferResponse.resMessage(),
+                completeRes);
+        }
+
+        updateSvcChgProcCdQuietly(requestKey, "RQ", "", "", "");
+
+        // R11(부가서비스) / R12(무선데이터차단): 해지 처리
+        for (AdditionApplyReqDto cancelReq: cancelList) {
+            fillCommonAdditionFields(cancelReq, req);
+            FormResponse<AdditionApplyResVO> cancelRes = msfRegSvcServiceImpl.moscRegSvcCanChg(cancelReq);
+            if (!ResSvcChgMessage.SUCCESS.getCode().equals(cancelRes.resCode())) {
+                completeRes.addResult(toProcessResult("CANCEL", cancelReq, cancelRes));
+                log.warn("[serviceChangeComplete] cancel failed: ncn={}, soc={}, agentCd={}, selfCareUnavailable={}, resCode={}, resMessage={}",
+                    ncn, cancelReq.getSoc(), cancelReq.getAgentCd(), cancelReq.getSelfCareUnavailable(), cancelRes.resCode(), cancelRes.resMessage());
+                continue;
+            }
+            completeRes.addResult(toProcessResult("CANCEL", cancelReq, cancelRes));
+        }
+
+        // R11(부가서비스) / R12(무선데이터차단): 신청 처리
+        for (AdditionApplyReqDto addReq: addList) {
+            fillCommonAdditionFields(addReq, req);
+            FormResponse<AdditionApplyResVO> addRes = msfRegSvcServiceImpl.regSvcChg(addReq);
+            if (!ResSvcChgMessage.SUCCESS.getCode().equals(addRes.resCode())) {
+                completeRes.addResult(toProcessResult("ADD", addReq, addRes));
+                log.warn("[serviceChangeComplete] reg failed: ncn={}, soc={}, agentCd={}, selfCareUnavailable={}, resCode={}, resMessage={}",
+                    ncn, addReq.getSoc(), addReq.getAgentCd(), addReq.getSelfCareUnavailable(), addRes.resCode(), addRes.resMessage());
+                continue;
+            }
+            completeRes.addResult(toProcessResult("ADD", addReq, addRes));
+        }
+        if (hasAdditionFailure(completeRes)) {
+            log.info("[serviceChangeComplete] partial success: ncn={}, {}",
+                ncn, buildAdditionProcessMessage("addition partial success", completeRes));
+        }
+
+        // P11(요금제변경)
+        if (serviceSelect.contains("P11")) {
+
+            String actCode = Optional.ofNullable(req).map(ServiceChangeCompleteReqDto::getPlanChange)
+                .map(ServiceChangeCompleteReqDto.PlanChange::getActCode).orElse("");
+            log.info("[serviceChangeComplete] P11 요금제변경 처리: ncn={}, actCode={}", ncn, actCode);
+
+            if (actCode.equals("PCN")) {
+                // 즉시 요금 변경
+                PossibleStateCheckRequest chkReq = new PossibleStateCheckRequest();
+                chkReq.setActCode(req.getPlanChange().getActCode());
+                chkReq.setContractNum(StringUtil.NVL(req.getContractNum(), req.getNcn()));
+                chkReq.setCustId(req.getCustId());
+                chkReq.setNcn(req.getNcn());
+                chkReq.setCtn(req.getCtn());
+                chkReq.setCustomerSsn(req.getUserBirthDate());
+                chkReq.setParentScanId(req.getParentScanId());
+                chkReq.setOpeningDate(req.getPlanChange().getOpeningDate());
+                chkReq.setPlanSoc(req.getPlanChange().getPlanSoc());
+                chkReq.setBeforePlanSoc(req.getPlanChange().getBeforePlanSoc());
+                chkReq.setBeforePlanAmt(req.getPlanChange().getBeforePlanAmt());
+
+                PossibleStateCheckRequest.ProductInfo productInfo = new PossibleStateCheckRequest.ProductInfo();
+                List<PossibleStateCheckRequest.ProductInfo> productInfoList = new ArrayList<>();
+                productInfo.setPrdcCd(req.getPlanChange().getPlanSoc());
+                productInfo.setFtrNewParam(req.getPlanChange().getPlanFtrNewParam());
+                productInfoList.add(productInfo);
+                chkReq.setPrdcList(productInfoList);
+                FormResponse<PossibleStateCheckResponse> resDtoFormResponse = chargePlanChangeService.possibleStateChange(chkReq);
+
+                boolean success = ResSvcChgMessage.SUCCESS.getCode().equals(resDtoFormResponse.resCode());
+                addProcessResult(
+                    completeRes,
+                    "PLANCHG",
+                    "",
+                    "요금제 변경",
+                    "",
+                    success,
+                    resDtoFormResponse.resCode(),
+                    resolveMplatformResponseMessage(resDtoFormResponse));
+
+                if (!ResSvcChgMessage.SUCCESS.getCode().equals(resDtoFormResponse.resCode())) {
+                    log.warn("[serviceChangeComplete PCN] numberChge failed: ncn={}, resCode={}, resMessage={}",
+                        ncn, resDtoFormResponse.resCode(), resDtoFormResponse.resMessage());
+                }
+            } else {
+                // 예약 변경
+                PossibleStateCheckRequest chkReq = new PossibleStateCheckRequest();
+                chkReq.setActCode(req.getPlanChange().getActCode());
+                chkReq.setContractNum(StringUtil.NVL(req.getContractNum(), req.getNcn()));
+                chkReq.setCustId(req.getCustId());
+                chkReq.setNcn(req.getNcn());
+                chkReq.setCtn(req.getCtn());
+                chkReq.setCustomerSsn(req.getUserBirthDate());
+                chkReq.setParentScanId(req.getParentScanId());
+                chkReq.setOpeningDate(req.getPlanChange().getOpeningDate());
+                chkReq.setPlanSoc(req.getPlanChange().getPlanSoc());
+                chkReq.setBeforePlanSoc(req.getPlanChange().getBeforePlanSoc());
+                chkReq.setBeforePlanAmt(req.getPlanChange().getBeforePlanAmt());
+
+                PossibleStateCheckRequest.ProductInfo productInfo = new PossibleStateCheckRequest.ProductInfo();
+                List<PossibleStateCheckRequest.ProductInfo> productInfoList = new ArrayList<>();
+                productInfo.setPrdcCd(req.getPlanChange().getPlanSoc());
+                productInfo.setFtrNewParam(req.getPlanChange().getPlanFtrNewParam());
+                productInfoList.add(productInfo);
+                chkReq.setPrdcList(productInfoList);
+                FormResponse<PossibleStateCheckResponse> resDtoFormResponse = chargePlanChangeService.reservedPriceChange(chkReq);
+
+                boolean success = ResSvcChgMessage.SUCCESS.getCode().equals(resDtoFormResponse.resCode());
+                addProcessResult(
+                    completeRes,
+                    "PLANRESERVECHG",
+                    "",
+                    "요금제 변경 예약",
+                    "",
+                    success,
+                    resDtoFormResponse.resCode(),
+                    resolveMplatformResponseMessage(resDtoFormResponse));
+
+                if (!ResSvcChgMessage.SUCCESS.getCode().equals(resDtoFormResponse.resCode())) {
+                    log.warn("[serviceChangeComplete RSV] numberChge failed: ncn={}, resCode={}, resMessage={}",
+                        ncn, resDtoFormResponse.resCode(), resDtoFormResponse.resMessage());
+                }
+            }
+        }
+
+        // O11(번호변경)
+        if (serviceSelect.contains("O11")) {
+            log.info("[serviceChangeComplete] O11 번호변경 처리: ncn={}", ncn);
+            //ServiceChangeCompleteReqDto.NumberChange numberChange = req.getNumberChange();
+            NumberChgeProcessRequest numberChgeProcessReq = serviceChangeFieldMapper.toNumberChgeProcessRequest(req);
+            FormResponse<NumberChgeProcessResponse> numberChgeProcessRes = msfSvgNumChgeService.numberChgeProcess(numberChgeProcessReq);
+
+            boolean success = ResSvcChgMessage.SUCCESS.getCode().equals(numberChgeProcessRes.resCode());
+            completeRes.addResult(
+                ServiceChangeCompleteResVO.ProcessResult.of(
+                    "NUMBERCHGE",
+                    "",
+                    "번호 변경",
+                    "",
+                    success,
+                    StringUtil.NVL(numberChgeProcessRes.resCode(), ""),
+                    resolveMplatformResponseMessage(numberChgeProcessRes)
+                )
+            );
+
+            if (!ResSvcChgMessage.SUCCESS.getCode().equals(numberChgeProcessRes.resCode())) {
+                log.warn("[serviceChangeComplete] numberChge failed: ncn={}, resCode={}, resMessage={}",
+                    ncn, numberChgeProcessRes.resCode(), numberChgeProcessRes.resMessage());
+            }
+
+            AdditionApplyReqDto insrDto = new AdditionApplyReqDto();
+            insrDto.setServiceName("번호 변경");
+            //successfulCancelList.add(
+            //
+            //);
+        }
+
+        // O12(분실복구/일시정지해제)
+        if (serviceSelect.contains("O12")) {
+            log.info("[serviceChangeComplete] O12 분실복구/일시정지해제 처리: ncn={}", ncn);
+            //ServiceChangeCompleteReqDto.Unpause unpause = req.getUnpause();
+            UnpauseProcessRequest unpauseProcessReq = serviceChangeFieldMapper.toUnpauseProcessRequest(req);
+            FormResponse<UnpauseProcessResponse> unpauseProcessRes = msfSvgUnpauseService.unpauseProcess(unpauseProcessReq);
+
+            boolean success = ResSvcChgMessage.SUCCESS.getCode().equals(unpauseProcessRes.resCode());
+            completeRes.addResult(
+                ServiceChangeCompleteResVO.ProcessResult.of(
+                    "UNPAUSE",
+                    "",
+                    "분실복구/일시정지해제",
+                    "",
+                    success,
+                    StringUtil.NVL(unpauseProcessRes.resCode(), ""),
+                    resolveMplatformResponseMessage(unpauseProcessRes)
+                )
+            );
+
+            if (!ResSvcChgMessage.SUCCESS.getCode().equals(unpauseProcessRes.resCode())) {
+                log.warn("[serviceChangeComplete] unpause failed: ncn={}, resCode={}, resMessage={}",
+                    ncn, unpauseProcessRes.resCode(), unpauseProcessRes.resMessage());
+            }
+
+            AdditionApplyReqDto cancelDto = new AdditionApplyReqDto();
+            cancelDto.setServiceName("분실복구/일시정지해제");
+            //successfulCancelList.add(
+            //
+            //);
+        }
+
+        // R14(단말보험)
+        if (serviceSelect.contains("R14")) {
+
+            log.info("[serviceChangeComplete] R14 단말보험 처리: ncn={}", ncn);
+            InsuranceProcessRequest insrReq = serviceChangeFieldMapper.toInsuranceProcessRequest(req);
+            FormResponse<InsuranceProcessResponse> insrRes = msfInsuranceSvcService.insurProcessForServiceChange(insrReq);
+            if ("IS".equals(insrReq.getReqType())) {
+                completedInsuranceRequest = insrReq;
+            }
+
+            if (!ResSvcChgMessage.SUCCESS.getCode().equals(insrRes.resCode())) {
+
+                log.warn("[serviceChangeComplete] insr failed: ncn={}, soc={}, resCode={}, resMessage={}",
+                    ncn, insrReq.getInsrProdCd(), insrRes.resCode(), insrRes.resMessage());
+
+                completeRes.addResult(
+                    ServiceChangeCompleteResVO.ProcessResult.of(
+                        "INSR",
+                        "",
+                        "단말보험",
+                        "",
+                        false,
+                        StringUtil.NVL(insrRes.resCode(), ""),
+                        StringUtil.NVL(insrRes.resMessage(), "")
+                    )
+                );
+            } else {
+                completeRes.addResult(
+                    ServiceChangeCompleteResVO.ProcessResult.of(
+                        "INSR",
+                        "",
+                        "단말보험",
+                        "",
+                        true,
+                        StringUtil.NVL(insrRes.resCode(), ""),
+                        StringUtil.NVL(insrRes.resMessage(), "")
+                    )
+                );
+            }
+            // completeRes.addResult(toProcessResult("INSR", cancelReq, cancelRes));
+        }
+
+        // O13(SIM정보) 유심변경 UC0
+        if (serviceSelect.contains("O13")) {
+            log.info("[serviceChangeComplete] O13 SIM정보 처리: ncn={}", ncn);
+            UsimChangeUC0Request usimChangeUC0Request = serviceChangeFieldMapper.toUsimChangeUC0Request(req);
+            usimChangeUC0Request.setRequestKey(req.getRequestKey());
+            usimChangeUC0Request.setAgentCd(firstNonBlank(req.getKtOrgId(), req.getAgentCd()));
+            FormResponse<UsimChangeUC0Response> uc0ResponseFormResponse = msfUsimChangeSvcService.usimChange(usimChangeUC0Request);
+            boolean usimChangeSuccess = ResSvcChgMessage.SUCCESS.getCode().equals(uc0ResponseFormResponse.resCode());
+
+
+            // 유심 변경 실패
+            if (!usimChangeSuccess) {
+                log.warn("[serviceChangeComplete] usimChange failed: ncn={}, ctn={}, resCode={}, resMessage={}",
+                    ncn, usimChangeUC0Request.getCtn(), uc0ResponseFormResponse.resCode(), uc0ResponseFormResponse.resMessage());
+
+                ServiceChangeCompleteResVO.ProcessResult result = ServiceChangeCompleteResVO.ProcessResult.of(
+                    "USIM",
+                    "",
+                    "유심변경",
+                    "",
+                    false,
+                    StringUtil.NVL(uc0ResponseFormResponse.resCode(), ""),
+                    StringUtil.NVL(uc0ResponseFormResponse.resMessage(), "")
+                );
+                result.setResNo(resolveUsimOsstOrdNo(uc0ResponseFormResponse));
+                completeRes.addResult(result);
+
+            }
+
+            if (usimChangeSuccess) {
+                // 성공시
+                ServiceChangeCompleteResVO.ProcessResult result = ServiceChangeCompleteResVO.ProcessResult.of(
+                    "USIM",
+                    "",
+                    "유심변경",
+                    "",
+                    true,
+                    StringUtil.NVL(uc0ResponseFormResponse.resCode(), ""),
+                    StringUtil.NVL(uc0ResponseFormResponse.resMessage(), "")
+                );
+                result.setResNo(resolveUsimOsstOrdNo(uc0ResponseFormResponse));
+                completeRes.addResult(result);
+            }
+
+        }
+
+        // R15(데이터쉐어링)
+        if (serviceSelect.contains("R15")) {
+            log.info("[serviceChangeComplete] R15 데이터쉐어링 처리: ncn={}", ncn);
+            boolean rejobX70 = isRejobX70Memo(req.getMemo());
+            String rejobX70OpmdSvcNo = extractRejobX70OpmdSvcNo(req.getMemo());
+            log.info("[serviceChangeComplete] R15 memo check: ncn={}, memoPresent={}, memo={}, rejobX70={}, extractedOpmdSvcNo={}",
+                req.getNcn(), StringUtils.isNotBlank(requestMemo), requestMemo, rejobX70, rejobX70OpmdSvcNo);
+            if (rejobX70) {
+                if (StringUtils.isBlank(rejobX70OpmdSvcNo)) {
+                    log.warn("[serviceChangeComplete] R15 REJOB_X70 invalid memo: ncn={}, memo={}",
+                        req.getNcn(), requestMemo);
+                    return failWithSvcChgProcCd(
+                        requestKey,
+                        ResSvcChgMessage.CHANGE_REQUEST_INVALID,
+                        "Invalid REJOB_X70 memo.",
+                        completeRes);
+                }
+                log.info("[serviceChangeComplete] R15 REJOB_X70 start: ncn={}, opmdSvcNo={}",
+                    req.getNcn(), rejobX70OpmdSvcNo);
+                FormResponse<Void> shareSaveRes = saveOpenedDataSharingRelation(req, rejobX70OpmdSvcNo);
+                if (!ResSvcChgMessage.SUCCESS.getCode().equals(shareSaveRes.resCode())) {
+                    addDataSharingProcessResult(completeRes, false, shareSaveRes.resCode(), shareSaveRes.resMessage());
+                } else {
+                    addDataSharingProcessResult(completeRes, true, shareSaveRes.resCode(), shareSaveRes.resMessage());
+                }
+            } else {
+                ServiceChangeCompleteReqDto.DataSharing dataSharing = req.getDataSharing();
+                if (dataSharing != null && "shareUseState1".equals(dataSharing.getShareUseState())) {
+                    AppformReqDto dataSharingReqDto = new AppformReqDto();
+                    dataSharingReqDto.setContractNum(req.getNcn());
+                    dataSharingReqDto.setReqUsimSn(dataSharing.getShareUsimNum());
+                    String mobileNo = StringUtil.NVL(req.getCtn(), "");
+                    if (StringUtils.isBlank(mobileNo)) {
+                        mobileNo = StringUtil.NVL(req.getMobileNo1(), "")
+                            + StringUtil.NVL(req.getMobileNo2(), "")
+                            + StringUtil.NVL(req.getMobileNo3(), "");
+                    }
+                    dataSharingReqDto.setMobileNo(mobileNo);
+                    dataSharingReqDto.setCstmrType(req.getCstmrTypeCd());
+                    dataSharingReqDto.setCstmrMobileFn(req.getMobileNo1());
+                    dataSharingReqDto.setCstmrMobileMn(req.getMobileNo2());
+                    dataSharingReqDto.setCstmrMobileRn(req.getMobileNo3());
+                    // 데이터쉐어링 신청서는 AS-IS NICE 세션을 직접 조회하지 않고 서식지 요청의 인증 결과를 전달한다.
+                    dataSharingReqDto.setOnlineAuthType(req.getOnlineAuthType());
+                    dataSharingReqDto.setOnlineAuthInfo(req.getOnlineAuthInfo());
+                    dataSharingReqDto.setSelfCstmrCi(req.getSelfCstmrCi());
+                    // 데이터쉐어링 PC0는 AS-IS와 달리 MP 사전체크를 직접 호출하므로 신분증 인증값을 전달한다.
+                    dataSharingReqDto.setSelfCertType(req.getSelfCertType());
+                    dataSharingReqDto.setSelfIssuExprDt(req.getSelfIssuExprDt());
+                    dataSharingReqDto.setSelfIssuNum(req.getSelfIssuNum());
+                    dataSharingReqDto.setFathTransacId(req.getFathTransacId());
+                    dataSharingReqDto.setOnOffType("Y".equals(NmcpServiceUtils.isMobile()) ? "7" : "5");
+                    dataSharingReqDto.setCntpntShopId(StringUtil.NVL(req.getCntpntShopCd(), CONTPNT_SHOP_ID_MSHOP));
+                    dataSharingReqDto.setAgentCode(req.getAgentCd());
+                    dataSharingReqDto.setManagerCode(req.getManagerCd());
+                    dataSharingReqDto.setCpntId(req.getCpntId());
+                    dataSharingReqDto.setPrdtSctnCd("LTE");
+                    dataSharingReqDto.setOperType(OPER_TYPE_NEW);
+                    String reqWantNumber = StringUtil.NVL(dataSharing.getSharePhoneNum(), "");
+                    if (StringUtils.isBlank(reqWantNumber)) {
+                        reqWantNumber = mobileNo;
+                    }
+                    dataSharingReqDto.setReqWantNumber(reqWantNumber.length() >= 4
+                        ? reqWantNumber.substring(reqWantNumber.length() - 4)
+                        : reqWantNumber);
+                    FormResponse<Map<String, Object>> dataSharingRes = msfSvcDataSharingSvcImpl.saveDataSharingSimple(dataSharingReqDto);
+                    if (!ResSvcChgMessage.SUCCESS.getCode().equals(dataSharingRes.resCode())) {
+                        addDataSharingProcessResult(completeRes, false, dataSharingRes.resCode(), dataSharingRes.resMessage());
+                    } else {
+                        String opmdSvcNo = extractDataSharingTlphNo(dataSharingRes.resData());
+                        if (StringUtils.isBlank(opmdSvcNo)) {
+                            log.warn("[serviceChangeComplete] R15 dataSharing join missing tlphNo: ncn={}", req.getNcn());
+                            addDataSharingProcessResult(
+                                completeRes,
+                                false,
+                                ResSvcChgMessage.ADDITION_SELF_SERVICE_ERROR.getCode(),
+                                dataSharingRes.resMessage());
+                        } else {
+                            FormResponse<Void> shareSaveRes = saveOpenedDataSharingRelation(req, opmdSvcNo);
+                            if (!ResSvcChgMessage.SUCCESS.getCode().equals(shareSaveRes.resCode())) {
+                                addDataSharingProcessResult(completeRes, false, shareSaveRes.resCode(), shareSaveRes.resMessage());
+                            } else {
+                                addDataSharingProcessResult(completeRes, true, shareSaveRes.resCode(), shareSaveRes.resMessage());
+                            }
+                        }
+                    }
+                } else {
+                    FormResponse<Void> dataSharingRes = msfSvcMyShareDataSvcImpl.processDataSharing(req);
+                    if (!ResSvcChgMessage.SUCCESS.getCode().equals(dataSharingRes.resCode())) {
+                        addDataSharingProcessResult(completeRes, false, dataSharingRes.resCode(), dataSharingRes.resMessage());
+                    } else {
+                        addDataSharingProcessResult(completeRes, true, dataSharingRes.resCode(), dataSharingRes.resMessage());
+                    }
+                }
+            }
+        }
+
+        // R16(결합Solo)
+        if (serviceSelect.contains("R16")) {
+            log.info("[serviceChangeComplete] R16 결합Solo 처리: ncn={}, ctn={}, custId={}", ncn, req.getCtn(), req.getCustId());
+            CombineSelfRequest combineSelfRequest = serviceChangeFieldMapper.toCombineSelfRequest(req);
+            FormResponse<CombineSelfResponse> combineSelfResponse = msfCombineSvcService.combineSelfProcess(combineSelfRequest);
+            if (!ResSvcChgMessage.SUCCESS.getCode().equals(combineSelfResponse.resCode())) {
+                log.warn("[serviceChangeComplete] combineSelf failed: ncn={}, ctn={}, resCode={}, resMessage={}",
+                    ncn, combineSelfRequest.getCtn(), combineSelfResponse.resCode(), combineSelfResponse.resMessage());
+
+                completeRes.addResult(
+                    ServiceChangeCompleteResVO.ProcessResult.of(
+                        "COMBINE",
+                        "",
+                        "아무나SOLO결합",
+                        "",
+                        false,
+                        StringUtil.NVL(combineSelfResponse.resCode(), ""),
+                        StringUtil.NVL(combineSelfResponse.resMessage(), "")
+                    )
+                );
+            } else {
+                completeRes.addResult(
+                    ServiceChangeCompleteResVO.ProcessResult.of(
+                        "COMBINE",
+                        "",
+                        "아무나SOLO결합",
+                        "",
+                        true,
+                        StringUtil.NVL(combineSelfResponse.resCode(), ""),
+                        StringUtil.NVL(combineSelfResponse.resMessage(), "")
+                    )
+                );
+            }
+
+        }
+
+        long elapsed = System.currentTimeMillis() - startedAt;
+        log.info("[serviceChangeComplete] mplatform completed: ncn={}, serviceSelect={}, addCount={}, cancelCount={}, elapsedMs={}",
+            ncn, serviceSelect, addList.size(), cancelList.size(), elapsed);
+
+        boolean hasProcessFailure = hasProcessFailure(completeRes);
+        boolean hasProcessSuccess = hasProcessSuccess(completeRes);
+        updateSvcChgDtlProcResultsQuietly(requestKey, completeRes);
+
+        try {
+            int inserted = mcpRequestRepository.insertMcpSvcChgCustRequestMst(requestKey, completedInsuranceRequest);
+            if (inserted != 1) {
+                throw new ServiceChangeSaveFailureException("service change MCP master source not found");
+            }
+        } catch (Exception e) {
+            log.error("[serviceChangeComplete] MCP master save failed: requestKey={}, ncn={}", requestKey, ncn, e);
+            return failWithSvcChgProcCd(
+                requestKey,
+                ResSvcChgMessage.ADDITION_SELF_SERVICE_ERROR,
+                "서비스변경 MCP 신청정보 저장 중 오류가 발생했습니다.",
+                completeRes);
+        }
+
+        if (hasProcessFailure && !hasProcessSuccess) {
+            return failWithSvcChgProcCd(
+                requestKey,
+                resolveProcessFailureCode(completeRes),
+                buildAdditionProcessMessage("service change failed", completeRes),
+                completeRes);
+        }
+
+        String responseMessage = hasProcessFailure
+            ? buildAdditionProcessMessage("partial success", completeRes)
+            : ResSvcChgMessage.SUCCESS.getMessage();
+
+        updateSvcChgProcCdQuietly(
+            requestKey,
+            "CP",
+            ResSvcChgMessage.SUCCESS.getCode(),
+            responseMessage,
+            "");
+
+        return FormResponse.of(ResSvcChgMessage.SUCCESS, responseMessage, completeRes);
+    }
+
+    public FormResponse<Void> transferToMcp(Long requestKey) {
+        if (requestKey == null) {
+            return FormResponse.of(ResSvcChgMessage.CHANGE_REQUEST_INVALID);
+        }
+        try {
+            new TransactionTemplate(mspTransactionManager).execute(status -> {
+                transferToMcpInTransaction(requestKey);
+                return null;
+            });
+            return FormResponse.of(ResSvcChgMessage.SUCCESS);
+        } catch (Exception e) {
+            log.error("[transferToMcp] service change MCP transfer failed: requestKey={}", requestKey, e);
+            return FormResponse.of(ResSvcChgMessage.APPLY_MCP_TRANSFER_ERROR);
+        }
+    }
+
+    private void transferToMcpInTransaction(Long requestKey) {
+        requireInserted(
+            mcpRequestRepository.insertMcpSvcChgRequestCstmr(requestKey),
+            "transfer service change customer to MCP",
+            requestKey);
+        mcpRequestRepository.insertMcpSvcChgRequestAgent(requestKey);
+    }
+
+    private FormResponse<ServiceChangeCompleteResVO> failWithSvcChgProcCd(
+        Long requestKey,
+        ResSvcChgMessage message,
+        String responseMessage,
+        ServiceChangeCompleteResVO completeRes
+    ) {
+        updateSvcChgFailProcCd(requestKey, message.getCode(), responseMessage);
+        return FormResponse.of(message, responseMessage, completeRes);
+    }
+
+    private void appendImageSystemFiles(
+        List<ImageSystemFileUploadRequest.UploadFile> target,
+        List<ServiceChangeCompleteReqDto.ImageSystemUploadFile> source,
+        boolean reportFile
+    ) {
+        if (source == null || source.isEmpty()) {
+            return;
+        }
+
+        for (ServiceChangeCompleteReqDto.ImageSystemUploadFile file: source) {
+            String pathFileName = resolveImageSystemPathFileName(file);
+            if (StringUtils.isBlank(pathFileName)) {
+                continue;
+            }
+            target.add(new ImageSystemFileUploadRequest.UploadFile(
+                pathFileName,
+                reportFile ? "" : safe(file.getFileTypeCd()),
+                file.getFilePageNo() == null ? 1 : file.getFilePageNo()
+            ));
+        }
+    }
+
+    private String resolveImageSystemPathFileName(ServiceChangeCompleteReqDto.ImageSystemUploadFile file) {
+        if (file == null) {
+            return "";
+        }
+        return firstNonBlank(file.getPathFileName(), file.getFilePathNm());
+    }
+
+    private FormResponse<ServiceChangeCompleteResVO> failWithSvcChgProcCd(
+        Long requestKey,
+        String responseCode,
+        String responseMessage,
+        ServiceChangeCompleteResVO completeRes
+    ) {
+        updateSvcChgFailProcCd(
+            requestKey,
+            responseCode,
+            resolveProcessFailureResultMessage(completeRes, responseCode, responseMessage));
+        return FormResponse.of(responseCode, responseMessage, completeRes);
+    }
+
+    private void updateSvcChgFailProcCd(Long requestKey, String responseCode, String responseMessage) {
+        updateSvcChgProcCdQuietly(requestKey, "BK", responseCode, responseMessage, "");
+    }
+
+    private void updateSvcChgProcCdQuietly(
+        Long requestKey,
+        String procCd,
+        String responseCode,
+        String responseMessage,
+        String responseNo
+    ) {
+        if (requestKey == null) {
+            return;
+        }
+        try {
+            MsfRequestSvcChgVo vo = new MsfRequestSvcChgVo();
+            vo.setRequestKey(requestKey);
+            vo.setProcCd(procCd);
+            vo.setResCd(resolveDbResultCode(responseCode));
+            vo.setResMsg(StringUtils.left(StringUtil.NVL(responseMessage, ""), SVC_CHG_RES_MSG_MAX_LENGTH));
+            vo.setResNo(StringUtil.NVL(responseNo, ""));
+            vo.setAmdIp(RequestUtils.getClientIp());
+            vo.setAmdId(resolveLoginUserId(null));
+            int updated = msfRequestRepository.updateMsfRequestSvcChgProcCd(vo);
+            if (updated <= 0) {
+                log.warn("[serviceChangeComplete] procCd update affected no rows: requestKey={}, procCd={}",
+                    requestKey, procCd);
+            }
+        } catch (Exception e) {
+            log.warn("[serviceChangeComplete] procCd update failed: requestKey={}, procCd={}",
+                requestKey, procCd, e);
+        }
+    }
+
+    private void updateSvcChgDtlProcResultsQuietly(Long requestKey, ServiceChangeCompleteResVO completeRes) {
+        if (requestKey == null || completeRes == null || completeRes.getProcessResults() == null) {
+            return;
+        }
+
+        for (ServiceChangeCompleteResVO.ProcessResult result: completeRes.getProcessResults()) {
+            if (result == null) {
+                continue;
+            }
+            String svcTgtCd = resolveProcessResultSvcTgtCd(result);
+            if (StringUtils.isBlank(svcTgtCd)) {
+                continue;
+            }
+
+            try {
+                MsfRequestSvcChgDtlVo vo = new MsfRequestSvcChgDtlVo();
+                vo.setRequestKey(requestKey);
+                vo.setSvcTgtCd(svcTgtCd);
+                vo.setProcTypeCd(StringUtil.NVL(result.getProcTypeCd(), ""));
+                vo.setSocCd(StringUtil.NVL(result.getSoc(), ""));
+                if (result.isSuccess()) {
+                    vo.setProcCd("USIM".equals(result.getAction()) ? "RC" : "CP");
+                } else {
+                    vo.setProcCd("BK");
+                }
+                vo.setResCd(resolveDbResultCode(result.getResCode()));
+                vo.setResMsg(resolveDtlResultMessage(result));
+                vo.setResNo(StringUtil.NVL(result.getResNo(), ""));
+                int updated = msfRequestRepository.updateMsfRequestSvcChgDtlProcResult(vo);
+                if (updated == 0) {
+                    log.warn("[serviceChangeComplete] dtl proc result update affected no rows: requestKey={}, svcTgtCd={}, soc={}, procTypeCd={}",
+                        requestKey, svcTgtCd, vo.getSocCd(), vo.getProcTypeCd());
+                }
+            } catch (Exception e) {
+                log.warn("[serviceChangeComplete] dtl proc result update failed: requestKey={}, svcTgtCd={}",
+                    requestKey, svcTgtCd, e);
+            }
+        }
+    }
+
+    private String resolveDbResultCode(String resCode) {
+        String safeResCode = StringUtil.NVL(resCode, "");
+        // DB RES_CD 자리수를 초과하는 외부 IF 오류코드만 뒤 4자리로 저장한다.
+        return safeResCode.length() > 10 ? StringUtils.right(safeResCode, 4) : safeResCode;
+    }
+
+    private String resolveProcessFailureResultMessage(
+        ServiceChangeCompleteResVO result,
+        String responseCode,
+        String fallbackMessage
+    ) {
+        if (result != null && result.getProcessResults() != null) {
+            Optional<ServiceChangeCompleteResVO.ProcessResult> failureResult = result.getProcessResults().stream()
+                .filter(processResult -> processResult != null && !processResult.isSuccess())
+                .findFirst();
+            if (failureResult.isPresent()) {
+                String resultCode = firstNonBlank(failureResult.get().getResCode(), responseCode);
+                String resultMessage = StringUtil.NVL(failureResult.get().getResMessage(), "");
+                return firstNonBlank(
+                    (resultCode + " " + resultMessage).trim(),
+                    resultCode,
+                    resultMessage,
+                    fallbackMessage);
+            }
+        }
+        return firstNonBlank(
+            (StringUtil.NVL(responseCode, "") + " " + StringUtil.NVL(fallbackMessage, "")).trim(),
+            responseCode,
+            fallbackMessage);
+    }
+
+    private String resolveDtlResultMessage(ServiceChangeCompleteResVO.ProcessResult result) {
+        if (result == null) {
+            return "";
+        }
+        String resCode = StringUtil.NVL(result.getResCode(), "");
+        String resMessage = StringUtil.NVL(result.getResMessage(), "");
+        String message = result.isSuccess() ? resMessage : firstNonBlank(resCode + " " + resMessage, resCode, resMessage);
+        return StringUtils.left(message.trim(), SVC_CHG_RES_MSG_MAX_LENGTH);
+    }
+
+    private String resolveProcessResultSvcTgtCd(ServiceChangeCompleteResVO.ProcessResult result) {
+        if (result == null) {
+            return "";
+        }
+        if (StringUtils.isNotBlank(result.getSvcTgtCd())) {
+            return result.getSvcTgtCd();
+        }
+        return switch (StringUtil.NVL(result.getAction(), "")) {
+            case "PLANCHG", "PLANRESERVECHG" -> "P11";
+            case "NUMBERCHGE" -> "O11";
+            case "UNPAUSE" -> "O12";
+            case "INSR" -> "R14";
+            case "USIM" -> "O13";
+            case "DATASHARING" -> "R15";
+            case "COMBINE" -> "R16";
+            default -> "";
+        };
+    }
+
+    private String resolveUsimOsstOrdNo(FormResponse<UsimChangeUC0Response> response) {
+        if (response == null || response.resData() == null || response.resData().getOutDto() == null) {
+            return "";
+        }
+        return StringUtil.NVL(response.resData().getOutDto().getOsstOrdNo(), "");
+    }
+
+    private ServiceChangeCompleteResVO.ProcessResult toProcessResult(
+        String action,
+        AdditionApplyReqDto req,
+        FormResponse<AdditionApplyResVO> response
+    ) {
+        boolean success = ResSvcChgMessage.SUCCESS.getCode().equals(response.resCode());
+        String soc = req == null ? "" : StringUtil.NVL(req.getSoc(), "");
+        String serviceName = resolveAdditionServiceName(req);
+        String prodHstSeq = req == null ? "" : StringUtil.NVL(req.getProdHstSeq(), "");
+        ServiceChangeCompleteResVO.ProcessResult result = ServiceChangeCompleteResVO.ProcessResult.of(
+            action,
+            soc,
+            serviceName,
+            prodHstSeq,
+            success,
+            StringUtil.NVL(response.resCode(), ""),
+            StringUtil.NVL(response.resMessage(), "")
         );
+        result.setSvcTgtCd(req == null ? "" : StringUtil.NVL(req.getSvcTgtCd(), ""));
+        if ("CANCEL".equals(action)) {
+            result.setProcTypeCd("C");
+        } else if ("ADD".equals(action)) {
+            result.setProcTypeCd(resolveSocAddProcTypeCd());
+        }
+        return result;
+    }
+
+    private void addDataSharingProcessResult(
+        ServiceChangeCompleteResVO completeRes,
+        boolean success,
+        String resCode,
+        String resMessage
+    ) {
+        addProcessResult(
+            completeRes,
+            "DATASHARING",
+            "R15",
+            "데이터쉐어링",
+            "",
+            success,
+            resCode,
+            resMessage);
+    }
+
+    private void addProcessResult(
+        ServiceChangeCompleteResVO completeRes,
+        String action,
+        String soc,
+        String serviceName,
+        String prodHstSeq,
+        boolean success,
+        String resCode,
+        String resMessage
+    ) {
+        if (completeRes == null) {
+            return;
+        }
+        completeRes.addResult(
+            ServiceChangeCompleteResVO.ProcessResult.of(
+                StringUtil.NVL(action, ""),
+                StringUtil.NVL(soc, ""),
+                StringUtil.NVL(serviceName, ""),
+                StringUtil.NVL(prodHstSeq, ""),
+                success,
+                StringUtil.NVL(resCode, ""),
+                StringUtil.NVL(resMessage, "")
+            )
+        );
+    }
+
+    private String resolveMplatformResponseMessage(FormResponse<? extends MplatformBase> response) {
+        if (response == null) {
+            return "";
+        }
+        String responseBasic = Optional.ofNullable(response.resData())
+            .map(MplatformBase::getCommHeader)
+            .map(MplatformBase.CommHeader::getResponseBasic)
+            .orElse("");
+        if (!"".equals(responseBasic)) {
+            return StringUtil.NVL(responseBasic, "");
+        }
+        return StringUtil.NVL(response.resMessage(), "");
+    }
+
+    private List<String> findMissingChangeServices(
+        ServiceChangeCompleteReqDto req,
+        List<String> serviceSelect,
+        List<AdditionApplyReqDto> addList,
+        List<AdditionApplyReqDto> cancelList
+    ) {
+        List<String> missing = new ArrayList<>();
+        if (serviceSelect == null || serviceSelect.isEmpty()) {
+            missing.add("serviceSelect");
+            return missing;
+        }
+        if (serviceSelect.contains("R11") && !hasAdditionChange("R11", addList, cancelList)) {
+            missing.add("R11");
+        }
+        if (serviceSelect.contains("R12") && !hasAdditionChange("R12", addList, cancelList)) {
+            missing.add("R12");
+        }
+        if (serviceSelect.contains("P11") && !hasPlanChangeData(req == null ? null : req.getPlanChange())) {
+            missing.add("P11");
+        }
+        if (serviceSelect.contains("O11") && !hasNumberChangeData(req == null ? null : req.getNumberChange())) {
+            missing.add("O11");
+        }
+        if (serviceSelect.contains("O12") && !hasUnpauseData(req == null ? null : req.getUnpause())) {
+            missing.add("O12");
+        }
+        if (serviceSelect.contains("R14") && !hasInsuranceData(req == null ? null : req.getInsurance())) {
+            missing.add("R14");
+        }
+        if (serviceSelect.contains("O13") && !hasSimInfoData(req == null ? null : req.getSimInfo())) {
+            missing.add("O13");
+        }
+        if (serviceSelect.contains("R15") && !hasDataSharingData(req == null ? null : req.getDataSharing())) {
+            missing.add("R15");
+        }
+        if (serviceSelect.contains("R16") && !hasCombineSoloData(req == null ? null : req.getCombineSolo())) {
+            missing.add("R16");
+        }
+        return missing;
+    }
+
+    private boolean hasAdditionChange(
+        String serviceCode,
+        List<AdditionApplyReqDto> addList,
+        List<AdditionApplyReqDto> cancelList
+    ) {
+        return hasAdditionChange(serviceCode, addList) || hasAdditionChange(serviceCode, cancelList);
+    }
+
+    private boolean hasAdditionChange(String serviceCode, List<AdditionApplyReqDto> changeList) {
+        if (changeList == null) {
+            return false;
+        }
+        for (AdditionApplyReqDto change: changeList) {
+            if (change == null || isBlank(change.getSoc())) {
+                continue;
+            }
+            String svcTgtCd = safe(change.getSvcTgtCd());
+            if (serviceCode.equals(svcTgtCd)) {
+                return true;
+            }
+            if (isBlank(svcTgtCd)) {
+                boolean wirelessDataBlock = isWirelessDataBlockSoc(change);
+                if (("R12".equals(serviceCode) && wirelessDataBlock)
+                    || ("R11".equals(serviceCode) && !wirelessDataBlock)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean hasPlanChangeData(ServiceChangeCompleteReqDto.PlanChange planChange) {
+        return planChange != null
+            && !isBlank(planChange.getActCode())
+            && !isBlank(planChange.getPlanSoc());
+    }
+
+    private boolean hasNumberChangeData(ServiceChangeCompleteReqDto.NumberChange numberChange) {
+        return numberChange != null
+            && (!isBlank(numberChange.getWishNo())
+            || !isBlank(joinParts(numberChange.getReqWantFnNo(), numberChange.getReqWantMnNo(), numberChange.getReqWantRnNo())));
+    }
+
+    private boolean hasUnpauseData(ServiceChangeCompleteReqDto.Unpause unpause) {
+        return unpause != null && !isBlank(unpause.getUnLockPw());
+    }
+
+    private boolean hasInsuranceData(ServiceChangeCompleteReqDto.Insurance insurance) {
+        return insurance != null && !isBlank(insurance.getInsrProdCd());
+    }
+
+    private boolean hasSimInfoData(ServiceChangeCompleteReqDto.SimInfo simInfo) {
+        return simInfo != null
+            && (!isBlank(simInfo.getReqUsimSn())
+            || !isBlank(simInfo.getSimTypeCd())
+            || !isBlank(simInfo.getEid())
+            || !isBlank(simInfo.getImei1())
+            || !isBlank(simInfo.getImei2()));
+    }
+
+    private boolean hasDataSharingData(ServiceChangeCompleteReqDto.DataSharing dataSharing) {
+        return dataSharing != null
+            && (!isBlank(dataSharing.getShareUseState())
+            || !isBlank(dataSharing.getSharePhoneNum())
+            || !isBlank(dataSharing.getShareUsimNum())
+            || !isBlank(dataSharing.getDataSharingTargetNo()));
+    }
+
+    private boolean hasCombineSoloData(ServiceChangeCompleteReqDto.CombineSolo combineSolo) {
+        return combineSolo != null && !isBlank(combineSolo.getSoloData());
+    }
+
+    private boolean hasAdditionFailure(ServiceChangeCompleteResVO result) {
+        if (result == null) {
+            return false;
+        }
+        return result.getCancelFailCount() + result.getAddFailCount() > 0;
+    }
+
+    private boolean hasProcessFailure(ServiceChangeCompleteResVO result) {
+        if (result == null || result.getProcessResults() == null) {
+            return false;
+        }
+        return result.getProcessResults().stream()
+            .anyMatch(processResult -> processResult != null && !processResult.isSuccess());
+    }
+
+    private boolean hasProcessSuccess(ServiceChangeCompleteResVO result) {
+        if (result == null || result.getProcessResults() == null) {
+            return false;
+        }
+        return result.getProcessResults().stream()
+            .anyMatch(processResult -> processResult != null && processResult.isSuccess());
+    }
+
+    private String resolveProcessFailureCode(ServiceChangeCompleteResVO result) {
+        if (result == null || result.getProcessResults() == null) {
+            return ResSvcChgMessage.ADDITION_SELF_SERVICE_ERROR.getCode();
+        }
+        return result.getProcessResults().stream()
+            .filter(processResult -> processResult != null && !processResult.isSuccess())
+            .map(ServiceChangeCompleteResVO.ProcessResult::getResCode)
+            .filter(StringUtils::isNotBlank)
+            .findFirst()
+            .orElse(ResSvcChgMessage.ADDITION_SELF_SERVICE_ERROR.getCode());
+    }
+
+    private String resolveAdditionServiceName(AdditionApplyReqDto req) {
+        if (req == null) {
+            return "";
+        }
+        String serviceName = StringUtil.NVL(req.getServiceName(), "");
+        if (!"".equals(serviceName)) {
+            return serviceName;
+        }
+        String soc = StringUtil.NVL(req.getSoc(), "");
+        if ("".equals(soc)) {
+            return "";
+        }
+        try {
+            MspRateMstDto mspRateMstDto = getMspRateMst(soc);
+            if (mspRateMstDto != null) {
+                return StringUtil.NVL(mspRateMstDto.getRateNm(), "");
+            }
+        } catch (Exception e) {
+            log.debug("[serviceChangeComplete] failed to resolve service name: soc={}, msg={}", soc, e.getMessage());
+        }
+        return "";
+    }
+
+    private String resolvePlanSocName(String planCd, String svcTgtCd) {
+        String safePlanCd = StringUtil.NVL(planCd, "");
+        if (!"".equals(safePlanCd)) {
+            try {
+                MspRateMstDto mspRateMstDto = getMspRateMst(safePlanCd);
+                if (mspRateMstDto != null) {
+                    String rateNm = StringUtil.NVL(mspRateMstDto.getRateNm(), "");
+                    if (!"".equals(rateNm)) {
+                        return rateNm;
+                    }
+                }
+            } catch (Exception e) {
+                log.debug("[serviceChangeComplete] failed to resolve plan SOC name: planCd={}, msg={}", safePlanCd, e.getMessage());
+            }
+        }
+        return resolveServiceTargetName(svcTgtCd);
+    }
+
+    private String resolveServiceTargetName(String svcTgtCd) {
+        String safeSvcTgtCd = StringUtil.NVL(svcTgtCd, "");
+        if ("".equals(safeSvcTgtCd)) {
+            return "";
+        }
+        try {
+            CommonCodeGroups commonCodeGroups = commonCodeReader.getCommonCodes(CommonCodesRequest.of("SVC_TGT_CD"));
+            return commonCodeGroups.getSingleGroup(safeSvcTgtCd)
+                .map(CommonCodeData::title)
+                .filter(StringUtils::isNotBlank)
+                .orElse("");
+        } catch (Exception e) {
+            log.debug("[serviceChangeComplete] failed to resolve service target name: svcTgtCd={}, msg={}", safeSvcTgtCd, e.getMessage());
+            return "";
+        }
+    }
+
+    private String resolveDataSharingSocName(ServiceChangeCompleteReqDto.DataSharing dataSharing) {
+        String actionName = dataSharing != null && "shareUseState2".equals(dataSharing.getShareUseState()) ? "해지" : "가입";
+        String serviceName = resolveServiceTargetName(dataSharing == null ? "" : dataSharing.getSvcTgtCd());
+        if (StringUtils.isNotBlank(serviceName)) {
+            return serviceName.replace("가입/해지", actionName);
+        }
+        return "데이터쉐어링 " + actionName;
+    }
+
+    private String buildAdditionProcessMessage(String title, ServiceChangeCompleteResVO result) {
+        if (result == null || result.getProcessResults() == null) {
+            return "서비스변경 처리에 실패했습니다.";
+        }
+        List<String> failedMessages = new ArrayList<>();
+        for (ServiceChangeCompleteResVO.ProcessResult processResult: result.getProcessResults()) {
+            if (processResult.isSuccess()) {
+                continue;
+            }
+            String message = StringUtil.NVL(processResult.getResMessage(), "");
+            String serviceLabel = buildAdditionServiceLabel(processResult);
+            String actionName = resolveProcessActionName(processResult.getAction());
+            failedMessages.add(serviceLabel + ("".equals(actionName) ? "" : " " + actionName) + " 실패"
+                + ("".equals(message) ? "" : ": " + message));
+        }
+        String titleMessage = title != null && title.contains("partial")
+            ? "일부 서비스만 처리되었습니다."
+            : "서비스변경 처리에 실패했습니다.";
+        int totalCount = result.getProcessResults().size();
+        int successCount = (int) result.getProcessResults().stream()
+            .filter(processResult -> processResult != null && processResult.isSuccess())
+            .count();
+        int failCount = (int) result.getProcessResults().stream()
+            .filter(processResult -> processResult != null && !processResult.isSuccess())
+            .count();
+        int processedCount = successCount + failCount;
+        int unprocessedCount = Math.max(0, totalCount - processedCount);
+        String countMessage = "총 " + totalCount + "건 중 처리 " + processedCount + "건"
+            + "(성공 " + successCount + "건/실패 " + failCount + "건), 미처리 " + unprocessedCount + "건";
+        if (!failedMessages.isEmpty()) {
+            List<String> distinctMessages = failedMessages.stream()
+                .distinct()
+                .collect(Collectors.toList());
+            return titleMessage + "\n"
+                + countMessage + "\n"
+                + distinctMessages.stream()
+                .map(message -> "- " + message)
+                .collect(Collectors.joining("\n"));
+        }
+        return titleMessage + "\n" + countMessage;
+    }
+
+    private String resolveProcessActionName(String action) {
+        if ("CANCEL".equals(action)) {
+            return "해지";
+        }
+        if ("ADD".equals(action) || "INSR".equals(action)) {
+            return "가입";
+        }
+        if ("PLANRESERVECHG".equals(action)) {
+            return "예약";
+        }
+        if ("PLANCHG".equals(action)
+            || "NUMBERCHGE".equals(action)
+            || "UNPAUSE".equals(action)
+            || "USIM".equals(action)
+            || "DATASHARING".equals(action)
+            || "COMBINE".equals(action)) {
+            return "처리";
+        }
+        return "";
+    }
+
+    private String buildAdditionServiceLabel(ServiceChangeCompleteResVO.ProcessResult processResult) {
+        String soc = StringUtil.NVL(processResult.getSoc(), "");
+        String serviceName = StringUtil.NVL(processResult.getServiceName(), "");
+        if (!"".equals(serviceName) && !"".equals(soc)) {
+            return serviceName + "(" + soc + ")";
+        }
+        if (!"".equals(serviceName)) {
+            return serviceName;
+        }
+        if (!"".equals(soc)) {
+            return soc;
+        }
+        return "부가서비스";
     }
 
     /**
@@ -651,90 +1780,381 @@ public class MsfSvcChgPageServiceImpl {
         if ("".equals(StringUtil.NVL(target.getCustId(), ""))) {
             target.setCustId(source.getCustId());
         }
+        if ("".equals(StringUtil.NVL(target.getAgentCd(), ""))) {
+            target.setAgentCd(source.getAgentCd());
+        }
+        target.setParentScanId(source.getParentScanId());
     }
 
-    private FormResponse<Void> processDataSharing(String applicationKey, ServiceChangeCompleteReqDto req) {
-        ServiceChangeCompleteReqDto.DataSharing dataSharing = req.getDataSharing();
-        if (dataSharing == null) {
-            logger.warn("[serviceChangeComplete] R15 dataSharing is empty: applicationKey={}, ncn={}",
-                applicationKey, req.getNcn());
-            return FormResponse.of(ResSvcChgMessage.CHANGE_REQUEST_INVALID);
+    private String extractDataSharingTlphNo(Map<String, Object> dataSharingResult) {
+        if (dataSharingResult == null || dataSharingResult.get("tlphNo") == null) {
+            return "";
         }
+        return String.valueOf(dataSharingResult.get("tlphNo")).trim();
+    }
 
-        String workDivCd = resolveDataSharingWorkDivCd(dataSharing.getShareUseState());
-        String opmdSvcNo = StringUtil.NVL(dataSharing.getSharePhoneNum(), "").replaceAll("-", "");
-        if ("".equals(workDivCd) || "".equals(opmdSvcNo)) {
-            logger.warn("[serviceChangeComplete] R15 invalid dataSharing: applicationKey={}, ncn={}, shareUseState={}, opmdSvcNo={}",
-                applicationKey, req.getNcn(), dataSharing.getShareUseState(), opmdSvcNo);
-            return FormResponse.of(ResSvcChgMessage.CHANGE_REQUEST_INVALID);
+    private String extractRejobX70OpmdSvcNo(String memo) {
+        String value = normalizeLogMemo(memo);
+        if (!value.startsWith(REJOB_X70_MEMO_PREFIX)) {
+            return "";
+        }
+        String opmdSvcNo = normalizePhone(value.substring(REJOB_X70_MEMO_PREFIX.length()));
+        return opmdSvcNo.length() >= 10 ? opmdSvcNo : "";
+    }
+
+    private boolean isRejobX70Memo(String memo) {
+        return normalizeLogMemo(memo).startsWith(REJOB_X70_MEMO_PREFIX);
+    }
+
+    private String normalizeLogMemo(String memo) {
+        return StringUtils.abbreviate(StringUtil.NVL(memo, "").replaceAll("[\\r\\n\\t]", " ").trim(), 500);
+    }
+
+    private FormResponse<Void> saveOpenedDataSharingRelation(ServiceChangeCompleteReqDto req, String opmdSvcNo) {
+        String ctn = StringUtil.NVL(req.getCtn(), "");
+        if (StringUtils.isBlank(ctn)) {
+            ctn = StringUtil.NVL(req.getMobileNo1(), "")
+                + StringUtil.NVL(req.getMobileNo2(), "")
+                + StringUtil.NVL(req.getMobileNo3(), "");
         }
 
         MyShareDataReqDto shareReq = new MyShareDataReqDto();
         shareReq.setCustId(req.getCustId());
         shareReq.setNcn(req.getNcn());
-        shareReq.setCtn(req.getCtn());
-        shareReq.setCrprCtn(req.getCtn());
-        shareReq.setOpmdSvcNo(opmdSvcNo);
-        shareReq.setOpmdWorkDivCd(workDivCd);
-        shareReq.setIccId(StringUtil.NVL(dataSharing.getShareUsimNum(), ""));
+        shareReq.setCtn(ctn);
+        shareReq.setCrprCtn("");
+        shareReq.setOpmdSvcNo("");
+        shareReq.setOpmdWorkDivCd("A");
 
         try {
-            if ("A".equals(workDivCd)) {
-                MoscDataSharingResDto chkRes = msfMplatFormService.moscDataSharingChk(
-                    shareReq.getCustId(), shareReq.getNcn(), shareReq.getCtn(), shareReq.getOpmdSvcNo());
-                if (!hasAvailableSharingTarget(chkRes)) {
-                    logger.warn("[serviceChangeComplete] R15 precheck failed: applicationKey={}, ncn={}, opmdSvcNo={}",
-                        applicationKey, req.getNcn(), opmdSvcNo);
-                    return FormResponse.of(ResSvcChgMessage.ADDITION_SELF_SERVICE_ERROR, "데이터쉐어링 가입 가능한 대상이 아닙니다.", null);
-                }
+            log.info("[serviceChangeComplete] R15 X69 precheck after open: ncn={}, crprCtnPresent={}, x70OpmdSvcNoPresent={}",
+                req.getNcn(), false, StringUtils.isNotBlank(opmdSvcNo));
+            MoscDataSharingResDto chkRes = msfSvcMyShareDataSvcImpl.moscDataSharingChk(shareReq);
+            boolean available = hasAvailableDataSharingTarget(chkRes);
+            if (!available) {
+                log.warn(
+                    "[serviceChangeComplete] R15 X69 precheck after open failed: ncn={}, opmdSvcNo={}, resultCode={}, itemCount={}, availableSvcNos={}",
+                    req.getNcn(),
+                    opmdSvcNo,
+                    chkRes != null ? chkRes.getResultCode() : "",
+                    chkRes != null && chkRes.getSharingList() != null ? chkRes.getSharingList().size() : 0,
+                    extractAvailableDataSharingSvcNos(chkRes));
+                return FormResponse.of(ResSvcChgMessage.ADDITION_SELF_SERVICE_ERROR, "Data sharing target is not available.", null);
             }
 
-            msfMplatFormService.moscDataSharingSave(
-                shareReq.getCustId(), shareReq.getNcn(), shareReq.getCtn(), shareReq.getOpmdSvcNo(), shareReq.getOpmdWorkDivCd());
+            // X69 응답에서 rsltInd=Y인 첫 번째 svcNo를 opmdSvcNo로 사용 (NU2 배정 번호 아님)
+            String x69SvcNo = chkRes.getSharingList().stream()
+                .filter(item -> "Y".equals(item.getRsltInd()))
+                .map(OutDataSharingDto::getSvcNo)
+                .map(this::normalizePhone)
+                .filter(StringUtils::isNotBlank)
+                .findFirst()
+                .orElse("");
+            String finalOpmdSvcNo = StringUtils.isNotBlank(x69SvcNo) ? x69SvcNo : opmdSvcNo;
+            shareReq.setOpmdSvcNo(finalOpmdSvcNo);  //일단 X69 결과번호 우선으로 셋팅
+            //20260623  ASIS myShareDataReqDto.setOpmdSvcNo(cntrList.getUnSvcNo()); //실제 셋팅X NULL은허용X
+
+            log.info("[serviceChangeComplete] R15 X70 save after open request: ncn={}, workDivCd=A, x69SvcNo={}, finalOpmdSvcNo={}",
+                req.getNcn(), x69SvcNo, finalOpmdSvcNo);
+            msfSvcMyShareDataSvcImpl.moscDataSharingSaveWithParentScanId(shareReq, req.getParentScanId());
+            log.info("[serviceChangeComplete] R15 X70 save after open success: ncn={}, workDivCd=A", req.getNcn());
             return FormResponse.of(ResSvcChgMessage.SUCCESS, null);
         } catch (McpCommonException e) {
-            logger.warn("[serviceChangeComplete] R15 failed: applicationKey={}, ncn={}, opmdSvcNo={}, workDivCd={}, message={}",
-                applicationKey, req.getNcn(), opmdSvcNo, workDivCd, e.getMessage());
+            log.warn("[serviceChangeComplete] R15 X70 save after open failed: ncn={}, opmdSvcNoPresent={}, message={}",
+                req.getNcn(), StringUtils.isNotBlank(opmdSvcNo), e.getMessage());
             return FormResponse.of(ResSvcChgMessage.ADDITION_SELF_SERVICE_ERROR, e.getMessage(), null);
         } catch (Exception e) {
-            logger.error("[serviceChangeComplete] R15 unexpected error: applicationKey={}, ncn={}, opmdSvcNo={}, workDivCd={}",
-                applicationKey, req.getNcn(), opmdSvcNo, workDivCd, e);
-            return FormResponse.of(ResSvcChgMessage.ADDITION_SELF_SERVICE_ERROR, "데이터쉐어링 처리 중 오류가 발생했습니다.", null);
+            log.error("[serviceChangeComplete] R15 X70 save after open unexpected error: ncn={}, opmdSvcNoPresent={}",
+                req.getNcn(), StringUtils.isNotBlank(opmdSvcNo), e);
+            return FormResponse.of(ResSvcChgMessage.ADDITION_SELF_SERVICE_ERROR, "Data sharing relation save failed.", null);
         }
     }
 
-    private String resolveDataSharingWorkDivCd(String shareUseState) {
-        if ("shareUseState1".equals(shareUseState)) {
-            return "A";
-        }
-        if ("shareUseState2".equals(shareUseState)) {
-            return "C";
-        }
-        return "";
+    private boolean hasAvailableDataSharingTarget(MoscDataSharingResDto chkRes) {
+        return chkRes != null
+            && chkRes.getSharingList() != null
+            && chkRes.getSharingList().stream()
+            .anyMatch(item -> "Y".equals(item.getRsltInd()));
     }
 
-    private boolean hasAvailableSharingTarget(MoscDataSharingResDto chkRes) {
+    private String extractAvailableDataSharingSvcNos(MoscDataSharingResDto chkRes) {
         if (chkRes == null || chkRes.getSharingList() == null) {
-            return false;
+            return "";
         }
-        for (OutDataSharingDto dto : chkRes.getSharingList()) {
-            if (dto != null && "Y".equals(dto.getRsltInd())) {
-                return true;
-            }
+        return chkRes.getSharingList().stream()
+            .filter(item -> "Y".equals(item.getRsltInd()))
+            .map(OutDataSharingDto::getSvcNo)
+            .map(this::normalizePhone)
+            .filter(StringUtils::isNotBlank)
+            .collect(Collectors.joining(","));
+    }
+
+    private String normalizePhone(String value) {
+        return StringUtil.NVL(value, "").replaceAll("[^0-9]", "");
+    }
+
+    /**
+     * 서비스변경 신청서키 사전 채번
+     * 고객 정보 입력 완료(다음 버튼) 시점에 eform에 전달할 requestKey를 미리 발급한다.
+     */
+    public FormResponse<ServiceChangeCompleteResVO> generateRequestKey() {
+        Long requestKey = generateKeyRepository.getGeneratedRequestKey();
+        if (requestKey == null) {
+            log.error("[generateRequestKey] request key generation failed");
+            return FormResponse.of(ResSvcChgMessage.ERROR, "신청서키 생성에 실패했습니다.", null);
         }
-        return false;
+        log.debug("[generateRequestKey] requestKey generated: {}", requestKey);
+        ServiceChangeCompleteResVO resVO = new ServiceChangeCompleteResVO();
+        resVO.setRequestKey(String.valueOf(requestKey));
+        return FormResponse.of(ResSvcChgMessage.SUCCESS, resVO);
+    }
+
+    /** 이폼서버 업로드 완료 후 SCAN_ID 후처리 업데이트 (서비스변경 전용) */
+    public FormResponse<Void> updateScanId(ScanIdUpdateReqDto req) {
+        if (req == null || req.getRequestKey() == null) {
+            return FormResponse.of(ResSvcChgMessage.CHANGE_REQUEST_INVALID, "필수 파라미터가 누락되었습니다.", null);
+        }
+        Long requestKey = req.getRequestKey();
+        List<ServiceChangeCompleteResVO.ProcessResult> successProcessResults = req.getSuccessProcessResults() != null
+            ? req.getSuccessProcessResults()
+            : new ArrayList<>();
+        List<String> ids = req.getDocumentId() != null
+            ? req.getDocumentId().stream().filter(StringUtils::isNotBlank).collect(Collectors.toList())
+            : new ArrayList<>();
+
+        String requestForm = !ids.isEmpty() ? ids.get(0) : "";
+        boolean hasDataSharingJoinForm = Boolean.TRUE.equals(req.getDataSharing());
+        String dataSharingForm = hasDataSharingJoinForm
+            ? firstNonBlank(ids.size() > 1 ? ids.get(1) : "", requestForm)
+            : requestForm;
+        int insuranceIndex = hasDataSharingJoinForm ? 2 : 1;
+        String insuranceForm = firstNonBlank(ids.size() > insuranceIndex ? ids.get(insuranceIndex) : "", requestForm);
+
+        log.info("[updateScanId] requestKey={}, requestForm={}, dataSharingForm={}, insuranceForm={}",
+            requestKey, requestForm, dataSharingForm, insuranceForm);
+
+        MsfRequestSvcChgVo chgVo = new MsfRequestSvcChgVo();
+        chgVo.setRequestKey(requestKey);
+        chgVo.setScanId(requestForm);
+        chgVo.setSignTgtSbst(StringUtil.NVL(req.getSignTgtSbst(), ""));
+        List<ServiceChangeCompleteReqDto.ImageSystemUploadFile> reportFiles = req.getReportFiles() != null
+            ? req.getReportFiles()
+            : new ArrayList<>();
+        ServiceChangeCompleteReqDto.ImageSystemUploadFile requestReportFile = findReportFile(
+            reportFiles, "servicechange", requestForm);
+        if (requestReportFile == null && !reportFiles.isEmpty()) {
+            requestReportFile = reportFiles.get(0);
+        }
+        ServiceChangeCompleteReqDto.ImageSystemUploadFile dataSharingReportFile = findReportFile(
+            reportFiles, "datasharing", dataSharingForm);
+        ServiceChangeCompleteReqDto.ImageSystemUploadFile insuranceReportFile = findReportFile(
+            reportFiles, "insurance", insuranceForm);
+        String requestFileName = resolveImageSystemPathFileName(requestReportFile);
+        String dataSharingFileName = firstNonBlank(
+            resolveImageSystemPathFileName(dataSharingReportFile), requestFileName);
+        String insuranceFileName = firstNonBlank(
+            resolveImageSystemPathFileName(insuranceReportFile), requestFileName);
+        chgVo.setFileNm(requestFileName);
+        chgVo.setFileMaskNm(StringUtils.substringAfterLast(requestFileName, "/"));
+        msfRequestRepository.updateMsfRequestSvcChgScanId(chgVo);
+
+        if (!successProcessResults.isEmpty()) {
+            successProcessResults.stream()
+                .filter(result -> result != null && result.isSuccess())
+                .forEach(result -> updateSvcChgDtlScanIdByProcessResult(
+                    requestKey,
+                    requestForm,
+                    dataSharingForm,
+                    insuranceForm,
+                    requestFileName,
+                    dataSharingFileName,
+                    insuranceFileName,
+                    result));
+        }
+
+        return FormResponse.of(ResSvcChgMessage.SUCCESS, null);
+    }
+
+    /** 서비스변경 신청서 및 구비서류 이미징 시스템 업로드 */
+    public FormResponse<Void> uploadImageSystem(ImageSystemUploadReqDto req) {
+        if (req == null || req.getRequestKey() == null) {
+            return FormResponse.of(ResSvcChgMessage.CHANGE_REQUEST_INVALID, "필수 파라미터가 누락되었습니다.", null);
+        }
+
+        try {
+            uploadImageSystemFilesDeferred(req);
+        } catch (Exception e) {
+            log.warn("[uploadImageSystem] image-system upload failed: requestKey={}, message={}",
+                req.getRequestKey(), e.getMessage(), e);
+            return FormResponse.of(ResSvcChgMessage.CHANGE_PROCESS_ERROR, "이미징시스템 전송에 실패했습니다.", null);
+        }
+
+        return FormResponse.of(ResSvcChgMessage.SUCCESS, null);
+    }
+
+    private void updateSvcChgDtlScanIdByProcessResult(
+        Long requestKey,
+        String requestForm,
+        String dataSharingForm,
+        String insuranceForm,
+        String requestFileName,
+        String dataSharingFileName,
+        String insuranceFileName,
+        ServiceChangeCompleteResVO.ProcessResult result
+    ) {
+        String svcTgtCd = StringUtil.NVL(result.getSvcTgtCd(), "");
+        if (StringUtils.isBlank(svcTgtCd)) {
+            return;
+        }
+        String scanId = resolveServiceChangeDtlScanId(svcTgtCd, requestForm, dataSharingForm, insuranceForm);
+        String fileName = resolveServiceChangeDtlFileName(
+            svcTgtCd, requestFileName, dataSharingFileName, insuranceFileName);
+        if (StringUtils.isBlank(scanId)) {
+            return;
+        }
+        if (("ADD".equals(result.getAction()) || "CANCEL".equals(result.getAction()))
+            && StringUtils.isNotBlank(result.getSoc())) {
+            MsfRequestSvcChgDtlVo dtlVo = new MsfRequestSvcChgDtlVo();
+            dtlVo.setRequestKey(requestKey);
+            dtlVo.setSvcTgtCd(svcTgtCd);
+            dtlVo.setProcTypeCd(result.getProcTypeCd());
+            dtlVo.setSocCd(result.getSoc());
+            dtlVo.setScanId(scanId);
+            setSvcChgDtlFileName(dtlVo, fileName);
+            msfRequestRepository.updateMsfRequestSvcChgDtlSocScanId(dtlVo);
+            return;
+        }
+        updateSvcChgDtlScanIdBySvcTgtCd(requestKey, svcTgtCd, scanId, fileName);
+    }
+
+    private void updateSvcChgDtlScanIdBySvcTgtCd(
+        Long requestKey,
+        String svcTgtCd,
+        String scanId,
+        String fileName
+    ) {
+        if (StringUtils.isBlank(svcTgtCd) || StringUtils.isBlank(scanId)) {
+            return;
+        }
+        MsfRequestSvcChgDtlVo dtlVo = new MsfRequestSvcChgDtlVo();
+        dtlVo.setRequestKey(requestKey);
+        dtlVo.setSvcTgtCd(svcTgtCd);
+        dtlVo.setScanId(scanId);
+        setSvcChgDtlFileName(dtlVo, fileName);
+        msfRequestRepository.updateMsfRequestSvcChgDtlScanId(dtlVo);
+    }
+
+    private void setSvcChgDtlFileName(MsfRequestSvcChgDtlVo dtlVo, String fileName) {
+        if (StringUtils.isBlank(fileName)) {
+            return;
+        }
+        dtlVo.setFileNm(fileName);
+        dtlVo.setFileMaskNm(StringUtils.substringAfterLast(fileName, "/"));
+    }
+
+    private String resolveServiceChangeDtlScanId(
+        String svcTgtCd,
+        String requestForm,
+        String dataSharingForm,
+        String insuranceForm
+    ) {
+        if ("R15".equals(svcTgtCd)) {
+            return dataSharingForm;
+        }
+        if ("R14".equals(svcTgtCd)) {
+            return insuranceForm;
+        }
+        return requestForm;
+    }
+
+    private String resolveServiceChangeDtlFileName(
+        String svcTgtCd,
+        String requestFileName,
+        String dataSharingFileName,
+        String insuranceFileName
+    ) {
+        if ("R15".equals(svcTgtCd)) {
+            return dataSharingFileName;
+        }
+        if ("R14".equals(svcTgtCd)) {
+            return insuranceFileName;
+        }
+        return requestFileName;
+    }
+
+    private ServiceChangeCompleteReqDto.ImageSystemUploadFile findReportFile(
+        List<ServiceChangeCompleteReqDto.ImageSystemUploadFile> reportFiles,
+        String documentType,
+        String documentId
+    ) {
+        if (reportFiles == null || reportFiles.isEmpty()) {
+            return null;
+        }
+        ServiceChangeCompleteReqDto.ImageSystemUploadFile matchedByType = reportFiles.stream()
+            .filter(file -> file != null && documentType.equalsIgnoreCase(safe(file.getDocumentType())))
+            .findFirst()
+            .orElse(null);
+        if (matchedByType != null || StringUtils.isBlank(documentId)) {
+            return matchedByType;
+        }
+        return reportFiles.stream()
+            .filter(file -> file != null && documentId.equals(file.getDocumentId()))
+            .findFirst()
+            .orElse(null);
+    }
+
+    private void uploadImageSystemFilesDeferred(ImageSystemUploadReqDto req) {
+        List<ImageSystemFileUploadRequest.UploadFile> files = new ArrayList<>();
+        appendImageSystemFiles(files, req.getReportFiles(), true);
+        appendImageSystemFiles(files, req.getRequiredDocFiles(), false);
+
+        if (files.isEmpty()) {
+            log.info("[uploadImageSystem] image-system upload skipped: no files");
+            return;
+        }
+
+        String orgId = firstNonBlank(req.getShopCd(), req.getCpntId(), req.getAgentCd());
+        ImageSystemFileUploadRequest request = ImageSystemFileUploadRequest.builder()
+            .files(files)
+            .formTypeCd("servicechange")
+            .operTypeCd("")
+            .parentScanId(safe(req.getParentScanId()))
+            .rgstPrsnId(firstNonBlank(req.getManagerCd(), resolveLoginUserId(null)))
+            .orgId(orgId)
+            .custNm(safe(req.getCstmrNm()))
+            .memo(safe(req.getMemo()))
+            .onlineYn("Y")
+            .companyId(orgId)
+            .build();
+
+        List<ImageSystemPdfUploadResponse> responses = imageSystemUploader.uploadPdf(request);
+        boolean hasFailure = responses == null || responses.stream().anyMatch(r -> r == null || !r.success());
+        if (hasFailure) {
+            throw new ServiceChangeImageSystemUploadException("image-system upload response failure");
+        }
+
+        log.info("[uploadImageSystem] image-system upload completed: fileCount={}", files.size());
     }
 
     private Long saveSvcChgRequest(
-        String applicationKey, String ncn,
+        String ncn,
         ServiceChangeCompleteReqDto req,
         List<AdditionApplyReqDto> cancelList,
-        List<AdditionApplyReqDto> addList) {
-        Long requestKey = svcChgPageRepositoryImpl.nextRequestKey();
+        List<AdditionApplyReqDto> addList
+    ) {
+        // 사전 채번된 키가 있으면 재사용, 없으면 신규 발급 (서비스해지 패턴과 동일)
+        Long requestKey = req.getRequestKey();
+        if (requestKey == null) {
+            requestKey = generateKeyRepository.getGeneratedRequestKey();
+        }
         if (requestKey == null) {
             throw new ServiceChangeSaveFailureException("request key generation failed");
         }
+        log.debug("[saveSvcChgRequest] requestKey={} (reused={})", requestKey, req.getRequestKey() != null);
         List<String> serviceSelect = req.getServiceSelect() != null ? req.getServiceSelect() : new ArrayList<>();
+
+        applyWriterInfo(req);
+        requireWriterInfo(req, requestKey);
 
         MsfRequestSvcChgVo svcChgVo = buildSvcChgVo(requestKey, req);
         requireInserted(msfRequestRepository.insertMsfRequestSvcChg(svcChgVo), "insert service change", requestKey);
@@ -747,133 +2167,298 @@ public class MsfSvcChgPageServiceImpl {
             requireInserted(msfRequestRepository.insertMsfRequestAgent(agentVo), "insert agent", requestKey);
         }
 
-        requireInserted(msfRequestRepository.insertMsfRequestMst(buildSvcChgMstVo(requestKey, req)), "insert request mst", requestKey);
+        ServiceChangeDocumentIds documentIds = ServiceChangeDocumentIds.of(req);
+        saveSocDtlList(requestKey, cancelList, addList, documentIds.requestForm(), req.getParentScanId());
+        saveServiceTypeDtlList(requestKey, serviceSelect, req, documentIds);
 
-        for (MsfRequestClauseVo clauseVo : buildSvcChgClauseVos(requestKey, req)) {
-            requireInserted(
-                msfRequestRepository.insertMsfRequestClause(clauseVo),
-                "insert clause:" + safe(clauseVo.getCdGroupId()),
-                requestKey
-            );
-        }
-
-        saveSocDtlList(requestKey, cancelList, addList);
-        saveServiceTypeDtlList(requestKey, serviceSelect, req);
-
-        logger.info("[serviceChangeComplete] DB saved: requestKey={}, ncn={}, applicationKey={}, serviceSelect={}",
-            requestKey, ncn, applicationKey, serviceSelect);
+        log.info("[serviceChangeComplete] DB saved: requestKey={}, ncn={}, serviceSelect={}",
+            requestKey, ncn, serviceSelect);
         return requestKey;
     }
 
+    private static class ServiceChangeDocumentIds {
+
+        private final String requestForm;
+        private final String dataSharingForm;
+        private final String insuranceForm;
+
+        private ServiceChangeDocumentIds(String requestForm, String dataSharingForm, String insuranceForm) {
+            this.requestForm = requestForm;
+            this.dataSharingForm = dataSharingForm;
+            this.insuranceForm = insuranceForm;
+        }
+
+        private static ServiceChangeDocumentIds of(ServiceChangeCompleteReqDto req) {
+            List<String> ids = req != null && req.getDocumentId() != null
+                ? req.getDocumentId().stream()
+                .filter(StringUtils::isNotBlank)
+                .collect(Collectors.toList())
+                : new ArrayList<>();
+
+            String requestForm = getOrEmpty(ids, 0);
+            boolean hasDataSharingJoinForm = hasDataSharingJoinForm(req);
+            String dataSharingForm = hasDataSharingJoinForm ? firstNonBlank(getOrEmpty(ids, 1), requestForm) : requestForm;
+            int insuranceIndex = hasDataSharingJoinForm ? 2 : 1;
+            String insuranceForm = firstNonBlank(getOrEmpty(ids, insuranceIndex), requestForm);
+
+            return new ServiceChangeDocumentIds(requestForm, dataSharingForm, insuranceForm);
+        }
+
+        private static boolean hasDataSharingJoinForm(ServiceChangeCompleteReqDto req) {
+            return req != null
+                && req.getDataSharing() != null
+                && "shareUseState1".equals(req.getDataSharing().getShareUseState());
+        }
+
+        private static String getOrEmpty(List<String> ids, int index) {
+            return ids != null && index >= 0 && index < ids.size() ? ids.get(index) : "";
+        }
+
+        private String requestForm() {
+            return requestForm;
+        }
+
+        private String dataSharingForm() {
+            return dataSharingForm;
+        }
+
+        private String insuranceForm() {
+            return insuranceForm;
+        }
+    }
+
     /** R11/R12: SOC 해지·신청 DTL 일괄 저장 */
-    private void saveSocDtlList(Long requestKey, List<AdditionApplyReqDto> cancelList, List<AdditionApplyReqDto> addList) {
-        for (AdditionApplyReqDto cancelReq : cancelList) {
-            logger.info("[serviceChangeComplete] SOC cancel dtl: requestKey={}, svcTgtCd={}, soc={}, prodHstSeq={}",
+    private void saveSocDtlList(
+        Long requestKey,
+        List<AdditionApplyReqDto> cancelList,
+        List<AdditionApplyReqDto> addList,
+        String scanId,
+        String parentScanId
+    ) {
+        for (AdditionApplyReqDto cancelReq: cancelList) {
+            // PROC_TYPE_CD="C"(즉시처리) — DB 처리유형코드이며 가입/해지 구분 아님
+            log.info("[serviceChangeComplete] SOC cancel dtl: requestKey={}, svcTgtCd={}, soc={}, prodHstSeq={}, procTypeCd=C(즉시처리)",
                 requestKey, cancelReq.getSvcTgtCd(), cancelReq.getSoc(), StringUtil.NVL(cancelReq.getProdHstSeq(), "-"));
             Long dtlSeq = nextSvcChgDtlSeq(requestKey);
             requireInserted(
                 msfRequestRepository.insertMsfRequestSvcChgDtl(
-                    buildSocDtlVo(dtlSeq, requestKey, cancelReq.getSvcTgtCd(), cancelReq.getSoc(), "C", cancelReq.getFtrNewParam())),
+                    buildSocDtlVo(dtlSeq, requestKey, cancelReq.getSvcTgtCd(), cancelReq, "D", "C", scanId, parentScanId)),
                 "insert cancel dtl", requestKey);
         }
-        for (AdditionApplyReqDto addReq : addList) {
-            logger.info("[serviceChangeComplete] SOC add dtl: requestKey={}, svcTgtCd={}, soc={}, flag={}, hasFtrNewParam={}",
-                requestKey, addReq.getSvcTgtCd(), addReq.getSoc(),
+        for (AdditionApplyReqDto addReq: addList) {
+            String procTypeCd = resolveSocAddProcTypeCd();
+            // PROC_TYPE_CD: C=즉시처리 — DB 처리유형코드이며 가입/해지 구분 아님
+            // 실제 처리 IF는 regSvcChg에서 결정한다. 가입은 Y25 단건 우선 후 실패 시 X21, flag=Y 선해지는 같은 해지 흐름 후 가입.
+            log.info(
+                "[serviceChangeComplete] SOC add dtl: requestKey={}, svcTgtCd={}, soc={}, flag={}, selfCareUnavailable={}, hasFtrNewParam={}, procTypeCd={}({})",
+                requestKey,
+                addReq.getSvcTgtCd(),
+                addReq.getSoc(),
                 StringUtil.NVL(addReq.getFlag(), "N"),
-                StringUtil.NVL(addReq.getFtrNewParam(), "").isEmpty() ? "N" : "Y");
+                addReq.getSelfCareUnavailable(),
+                StringUtil.NVL(addReq.getFtrNewParam(), "").isEmpty() ? "N" : "Y",
+                procTypeCd,
+                "C".equals(procTypeCd) ? "즉시처리" : "예약처리");
             Long dtlSeq = nextSvcChgDtlSeq(requestKey);
             requireInserted(
                 msfRequestRepository.insertMsfRequestSvcChgDtl(
-                    buildSocDtlVo(dtlSeq, requestKey, addReq.getSvcTgtCd(), addReq.getSoc(), "R", addReq.getFtrNewParam())),
+                    buildSocDtlVo(
+                        dtlSeq,
+                        requestKey,
+                        addReq.getSvcTgtCd(),
+                        addReq,
+                        "Y".equalsIgnoreCase(StringUtil.NVL(addReq.getFlag(), "")) ? "C" : "I",
+                        procTypeCd,
+                        scanId,
+                        parentScanId)),
                 "insert add dtl", requestKey);
         }
     }
 
     /** 서비스 타입별 DTL 저장 (P11/O11/O12/R14/O13/R15/R16) */
-    private void saveServiceTypeDtlList(Long requestKey, List<String> serviceSelect, ServiceChangeCompleteReqDto req) {
+    private void saveServiceTypeDtlList(
+        Long requestKey,
+        List<String> serviceSelect,
+        ServiceChangeCompleteReqDto req,
+        ServiceChangeDocumentIds documentIds
+    ) {
+        String parentScanId = req.getParentScanId();
         if (serviceSelect.contains("P11") && req.getPlanChange() != null) {
-            savePlanChangeDtl(requestKey, req.getPlanChange());
+            savePlanChangeDtl(requestKey, req.getPlanChange(), documentIds.requestForm(), parentScanId);
         }
         if (serviceSelect.contains("O11") && req.getNumberChange() != null) {
-            saveNumberChangeDtl(requestKey, req.getNumberChange());
+            saveNumberChangeDtl(requestKey, req.getNumberChange(), documentIds.requestForm(), parentScanId);
         }
         if (serviceSelect.contains("O12") && req.getUnpause() != null) {
-            saveUnpauseDtl(requestKey, req.getUnpause());
+            saveUnpauseDtl(requestKey, req.getUnpause(), documentIds.requestForm(), parentScanId);
         }
         if (serviceSelect.contains("R14") && req.getInsurance() != null) {
-            saveInsuranceDtl(requestKey, req.getInsurance());
+            saveInsuranceDtl(requestKey, req.getInsurance(), documentIds.insuranceForm(), parentScanId);
         }
         if (serviceSelect.contains("O13") && req.getSimInfo() != null) {
-            saveSimInfoDtl(requestKey, req.getSimInfo());
+            saveSimInfoDtl(requestKey, req, documentIds.requestForm(), parentScanId);
         }
         if (serviceSelect.contains("R15") && req.getDataSharing() != null) {
-            saveDataSharingDtl(requestKey, req.getDataSharing());
+            saveDataSharingDtl(requestKey, req.getDataSharing(), documentIds.dataSharingForm(), parentScanId);
         }
         if (serviceSelect.contains("R16") && req.getCombineSolo() != null) {
-            saveCombineSoloDtl(requestKey, req.getCombineSolo());
+            saveCombineSoloDtl(requestKey, req.getCombineSolo(), documentIds.requestForm(), parentScanId);
         }
     }
 
-    private void savePlanChangeDtl(Long requestKey, ServiceChangeCompleteReqDto.PlanChange p) {
-        Long dtlSeq = nextSvcChgDtlSeq(requestKey);
-        MsfRequestSvcChgDtlVo vo = buildBaseDtlVo(dtlSeq, requestKey, p.getSvcTgtCd(), "R");
-        vo.setSocCd(StringUtil.NVL(p.getPlanCd(), ""));
-        vo.setAddtionInfo(StringUtil.NVL(p.getChangeTypeCd(), ""));
-        insertSvcChgDtl(vo, "insert plan dtl");
+    private void savePlanChangeDtl(Long requestKey, ServiceChangeCompleteReqDto.PlanChange p, String scanId, String parentScanId) {
+        try {
+            Long dtlSeq = nextSvcChgDtlSeq(requestKey);
+            String procTypeCd = "PCN".equals(p.getActCode()) ? "C" : "R";
+            MsfRequestSvcChgDtlVo vo = buildBaseDtlVo(dtlSeq, requestKey, p.getSvcTgtCd(), procTypeCd, scanId, parentScanId);
+            vo.setSvcChgTypeCd("C");
+            vo.setSocCd(StringUtil.NVL(p.getPlanCd(), ""));
+            vo.setSocNm(resolvePlanSocName(p.getPlanCd(), p.getSvcTgtCd()));
+            //vo.setAddtionInfo(StringUtil.NVL(p.getChangeTypeCd(), ""));
+            String today = DateTimeUtil.getShortDateString().replaceAll("-", "");
+            String changeDate = "";
+
+            if ("C".equals(procTypeCd)) {
+                changeDate = today;
+            } else {
+                String chgapyDate = DateTimeUtil.addMonths(today, +1);
+                String chgDate = chgapyDate.substring(0, 6);
+                changeDate = chgDate + "01";
+            }
+            vo.setAddtionInfo(changeDate);
+            insertSvcChgDtl(vo, "insert plan dtl");
+        } catch (Exception e) {
+            log.debug("요금변경 날짜 계산중 오류 발생");
+        }
     }
 
-    private void saveNumberChangeDtl(Long requestKey, ServiceChangeCompleteReqDto.NumberChange p) {
+    private void saveNumberChangeDtl(Long requestKey, ServiceChangeCompleteReqDto.NumberChange p, String scanId, String parentScanId) {
         Long dtlSeq = nextSvcChgDtlSeq(requestKey);
-        MsfRequestSvcChgDtlVo vo = buildBaseDtlVo(dtlSeq, requestKey, p.getSvcTgtCd(), "R");
+        MsfRequestSvcChgDtlVo vo = buildBaseDtlVo(dtlSeq, requestKey, p.getSvcTgtCd(), "C", scanId, parentScanId);
+        vo.setSvcChgTypeCd("C");
+        vo.setSocCd(StringUtil.NVL(p.getSvcTgtCd(), ""));
+        vo.setSocNm(resolveServiceTargetName(p.getSvcTgtCd()));
         vo.setAddtionInfo(StringUtil.NVL(p.getWishNo(), ""));
         insertSvcChgDtl(vo, "insert number dtl");
     }
 
-    private void saveUnpauseDtl(Long requestKey, ServiceChangeCompleteReqDto.Unpause p) {
+    private void saveUnpauseDtl(Long requestKey, ServiceChangeCompleteReqDto.Unpause p, String scanId, String parentScanId) {
         Long dtlSeq = nextSvcChgDtlSeq(requestKey);
-        MsfRequestSvcChgDtlVo vo = buildBaseDtlVo(dtlSeq, requestKey, p.getSvcTgtCd(), "R");
+        MsfRequestSvcChgDtlVo vo = buildBaseDtlVo(dtlSeq, requestKey, p.getSvcTgtCd(), "C", scanId, parentScanId);
+        vo.setSvcChgTypeCd("C");
+        vo.setSocCd(StringUtil.NVL(p.getSvcTgtCd(), ""));
+        vo.setSocNm(resolveServiceTargetName(p.getSvcTgtCd()));
         vo.setAddtionInfo(StringUtil.NVL(p.getUnLockPw(), ""));
         insertSvcChgDtl(vo, "insert unpause dtl");
     }
 
-    private void saveInsuranceDtl(Long requestKey, ServiceChangeCompleteReqDto.Insurance p) {
+    private void saveInsuranceDtl(Long requestKey, ServiceChangeCompleteReqDto.Insurance p, String scanId, String parentScanId) {
         Long dtlSeq = nextSvcChgDtlSeq(requestKey);
-        MsfRequestSvcChgDtlVo vo = buildBaseDtlVo(dtlSeq, requestKey, p.getSvcTgtCd(), "R");
+        MsfRequestSvcChgDtlVo vo = buildBaseDtlVo(dtlSeq, requestKey, p.getSvcTgtCd(), "C", scanId, parentScanId);
+        vo.setSvcChgTypeCd("I");
         vo.setClauseInsuranceYn(StringUtil.NVL(p.getClauseInsuranceYn(), "N"));
-        vo.setInsrCd(StringUtil.NVL(p.getInsrProdCd(), ""));
+        // 보험코드와 성격 다름
+        // vo.setInsrCd(StringUtil.NVL(p.getInsrProdCd(), ""));
+        vo.setSocCd(firstNonBlank(p.getInsrProdCd(), p.getSvcTgtCd()));
+        vo.setSocNm(resolveServiceTargetName(p.getSvcTgtCd()));
         vo.setAddtionInfo(StringUtil.NVL(p.getCatCd(), ""));
         insertSvcChgDtl(vo, "insert insurance dtl");
     }
 
-    private void saveSimInfoDtl(Long requestKey, ServiceChangeCompleteReqDto.SimInfo p) {
+    private void saveSimInfoDtl(Long requestKey, ServiceChangeCompleteReqDto req, String scanId, String parentScanId) {
+        ServiceChangeCompleteReqDto.SimInfo p = req.getSimInfo();
         Long dtlSeq = nextSvcChgDtlSeq(requestKey);
-        MsfRequestSvcChgDtlVo vo = buildBaseDtlVo(dtlSeq, requestKey, p.getSvcTgtCd(), "R");
-        vo.setUsimBuyTypeCd(StringUtil.NVL(p.getHasSim(), ""));
+
+        String procTypeCd = "R"; // 소켓 통신으로 R 고정
+        MsfRequestSvcChgDtlVo vo = buildBaseDtlVo(dtlSeq, requestKey, "O13", procTypeCd, scanId, parentScanId);
+        String usimModelNm = firstNonBlank(
+            productInfoService.getUsimModelNm(p.getReqUsimSn()),
+            p.getReqUsimNm(),
+            resolveServiceTargetName("O13")
+        );
+        vo.setSocCd("O13");
+        vo.setSocNm(usimModelNm);
+        vo.setSvcChgTypeCd("C");
+        vo.setUsimBuyTypeCd(org.springframework.util.StringUtils.hasText(p.getSimPurchaseMethod()) ? p.getSimPurchaseMethod() : "N");
+        vo.setAddtionInfo(p.isHasSim() ? "1" : "B".equals(p.getSimPurchaseMethod()) ? "3" : "2");
+        vo.setReqUsimNm(usimModelNm);
         vo.setReqUsimSn(StringUtil.NVL(p.getReqUsimSn(), ""));
         vo.setEid(StringUtil.NVL(p.getEid(), ""));
         vo.setImei1(StringUtil.NVL(p.getImei1(), ""));
         vo.setImei2(StringUtil.NVL(p.getImei2(), ""));
+
+        if (!"ESIM".equals(p.getSimTypeCd())) {
+            MplatFormXmlSelfcareRequest y02Request = MplatFormXmlSelfcareRequest.builder()
+                .ncn(req.getNcn())
+                .ctn(req.getCtn())
+                .custId(req.getCustId())
+                .build();
+            MspPrxSoapResponse mspPrxSoapResponse = msfMcpOsstPrxService.callXmlSelfService(
+                List.of(), MplatformServiceType.Y02, y02Request);
+            PricePlanY02ResDto y02Response = XmlConvertUtils.xmlReturnParser(
+                mspPrxSoapResponse.rawXml(), PricePlanY02ResDto.class);
+            MsfRequestSvcChgDtlVo rateInfoVo = new MsfRequestSvcChgDtlVo();
+            if (y02Response.getCommHeader().isSuccess()) {
+                rateInfoVo.setSocCd(y02Response.getOutDto().getProdId());
+                rateInfoVo.setSocNm(y02Response.getOutDto().getProdNm());
+                String price = y02Response.getOutDto().getFamtTarifAmt();
+                rateInfoVo.setProdAmt(price != null ? Long.parseLong(price) : null);
+            }
+            PriceJoinUsimResponse priceJoinUsimResponse = msfUsimChangeSvcService.selectRateInfo(rateInfoVo);
+            // 가입비 및 유심비 조회
+
+            Long prodAmt = org.springframework.util.StringUtils.hasText(priceJoinUsimResponse.getSimPrice())
+                ? Long.parseLong(priceJoinUsimResponse.getSimPrice())
+                : null;
+            vo.setProdAmt(prodAmt);
+
+            // 가입비 및 유심비 조회
+            // MsfRequestSaleVo saleVo = new MsfRequestSaleVo();
+            // saleVo.setRequestKey(requestKey);
+            // saleVo.setUsimPrice(prodAmt);
+            // saleVo.setSocCode(rateInfoVo.getSocCd());
+            // saleVo.setSocNm(rateInfoVo.getSocNm());
+            // saleVo.setSocBaseChrgAmt(rateInfoVo.getProdAmt());
+            // saleVo.setUsimPayMthdCd(p.isHasSim() ? "1" : "B".equals(p.getSimPurchaseMethod()) ? "3" : "2");
+            // saleVo.setUsimPriceTypeCd(p.isHasSim() ? "N" : p.getSimPurchaseMethod());
+            // msfRequestRepository.insertMsfRequestSale(saleVo);
+
+        } else {
+            vo.setEid(StringUtil.NVL(p.getSimTypeCd(), ""));
+        }
+
         insertSvcChgDtl(vo, "insert sim dtl");
     }
 
-    private void saveDataSharingDtl(Long requestKey, ServiceChangeCompleteReqDto.DataSharing p) {
+    private void saveDataSharingDtl(Long requestKey, ServiceChangeCompleteReqDto.DataSharing p, String scanId, String parentScanId) {
         Long dtlSeq = nextSvcChgDtlSeq(requestKey);
-        String procTypeCd = "shareUseState2".equals(p.getShareUseState()) ? "C" : "R";
-        MsfRequestSvcChgDtlVo vo = buildBaseDtlVo(dtlSeq, requestKey, p.getSvcTgtCd(), procTypeCd);
-        vo.setAddtionInfo(StringUtil.NVL(p.getSharePhoneNum(), ""));
+        String procTypeCd = "C";
+        MsfRequestSvcChgDtlVo vo = buildBaseDtlVo(dtlSeq, requestKey, p.getSvcTgtCd(), procTypeCd, scanId, parentScanId);
+        vo.setSvcChgTypeCd("shareUseState2".equals(p.getShareUseState()) ? "D" : "I");
+        vo.setSocCd(StringUtil.NVL(p.getSvcTgtCd(), ""));
+        vo.setSocNm(resolveDataSharingSocName(p));
+        String targetNo = "shareUseState2".equals(p.getShareUseState())
+            ? StringUtil.NVL(p.getDataSharingTargetNo(), p.getSharePhoneNum())
+            : p.getSharePhoneNum();
+        vo.setAddtionInfo(normalizePhone(targetNo));
+        vo.setReqUsimSn(StringUtil.NVL(p.getShareUsimNum(), ""));
+        vo.setIccId(StringUtil.NVL(p.getShareUsimNum(), ""));
         insertSvcChgDtl(vo, "insert data sharing dtl");
     }
 
-    private void saveCombineSoloDtl(Long requestKey, ServiceChangeCompleteReqDto.CombineSolo p) {
+    private void saveCombineSoloDtl(Long requestKey, ServiceChangeCompleteReqDto.CombineSolo p, String scanId, String parentScanId) {
         Long dtlSeq = nextSvcChgDtlSeq(requestKey);
-        MsfRequestSvcChgDtlVo vo = buildBaseDtlVo(dtlSeq, requestKey, p.getSvcTgtCd(), "R");
+        MsfRequestSvcChgDtlVo vo = buildBaseDtlVo(dtlSeq, requestKey, p.getSvcTgtCd(), "C", scanId, parentScanId);
+        vo.setSvcChgTypeCd("I");
+        vo.setSocCd(StringUtil.NVL(p.getSvcTgtCd(), ""));
+        vo.setSocNm(resolveServiceTargetName(p.getSvcTgtCd()));
         vo.setCombineSoloYn("Y");
         vo.setAddtionInfo(StringUtil.NVL(p.getSoloData(), ""));
         insertSvcChgDtl(vo, "insert combine solo dtl");
     }
 
     private Long nextSvcChgDtlSeq(Long requestKey) {
-        Long dtlSeq = svcChgPageRepositoryImpl.nextSvcChgDtlSeq();
+        Long dtlSeq = generateKeyRepository.getGeneratedRequestKey();
         if (dtlSeq == null) {
             throw new ServiceChangeSaveFailureException("svc chg dtl sequence generation failed: requestKey=" + requestKey);
         }
@@ -894,30 +2479,55 @@ public class MsfSvcChgPageServiceImpl {
         }
     }
 
+    private void requireWriterInfo(ServiceChangeCompleteReqDto req, Long requestKey) {
+        if (isBlank(req.getAgentCd())) {
+            throw new ServiceChangeSaveFailureException("agentCd required: requestKey=" + requestKey);
+        }
+        if (isBlank(req.getManagerCd())) {
+            throw new ServiceChangeSaveFailureException("managerCd required: requestKey=" + requestKey);
+        }
+    }
+
     private MsfRequestSvcChgVo buildSvcChgVo(Long requestKey, ServiceChangeCompleteReqDto req) {
         MsfRequestSvcChgVo vo = new MsfRequestSvcChgVo();
         String clientIp = RequestUtils.getClientIp();
+        String loginUserId = resolveLoginUserId(req);
         vo.setRequestKey(requestKey);
         vo.setCretIp(clientIp);
-        vo.setCretId("MSF_FORM");
+        vo.setCretId(loginUserId);
         vo.setAmdIp(clientIp);
-        vo.setAmdId("MSF_FORM");
+        vo.setAmdId(loginUserId);
         vo.setManagerCd(StringUtil.NVL(req.getManagerCd(), ""));
         vo.setManagerNm(StringUtil.NVL(req.getManagerNm(), ""));
         vo.setAgentCd(StringUtil.NVL(req.getAgentCd(), ""));
         vo.setAgentNm(StringUtil.NVL(req.getAgentNm(), ""));
-        vo.setCpntId(StringUtil.NVL(req.getCpntId(), ""));
-        vo.setCpntNm(StringUtil.NVL(req.getCpntNm(), ""));
-        vo.setCntpntShopCd(StringUtil.NVL(req.getCntpntShopCd(), ""));
-        vo.setCntpntShopNm(StringUtil.NVL(req.getCntpntShopNm(), ""));
+        vo.setShopCd(safe(req.getShopCd()));
+        vo.setShopNm(safe(req.getShopNm()));
+        vo.setRealShopNm(safe(req.getRealShopNm()));
+        vo.setCpntId(safe(req.getCpntId()));
+        vo.setCpntNm(safe(req.getCpntNm()));
+        vo.setCntpntShopCd(safe(req.getCntpntShopCd()));
+        vo.setCntpntShopNm(safe(req.getCntpntShopNm()));
         vo.setCstmrTypeCd(StringUtil.NVL(req.getCstmrTypeCd(), "NA"));
         vo.setChgMobileNo(StringUtil.NVL(req.getCtn(), ""));
         vo.setChgContractNum(StringUtil.NVL(req.getNcn(), ""));
-        vo.setRegstId("MSF_FORM");
-        vo.setProcCd("RQ");
+        vo.setMemo(safe(req.getMemo()));
+        vo.setRegstId(loginUserId);
+        vo.setProcCd("RC");
         vo.setRecYn("N");
         vo.setAppFormYn("N");
         vo.setAppFormXmlYn("N");
+        ServiceChangeCompleteReqDto.ImageSystemUploadFile reportFile = req.getReportFiles() == null || req.getReportFiles().isEmpty()
+            ? null
+            : req.getReportFiles().get(0);
+        String pathFileName = resolveImageSystemPathFileName(reportFile);
+        vo.setFileNm(pathFileName);
+        vo.setFileMaskNm(StringUtils.substringAfterLast(pathFileName, "/"));
+        vo.setParentScanId(StringUtil.NVL(req.getParentScanId(), ""));
+        vo.setSignTgtSbst(StringUtil.NVL(req.getSignTgtSbst(), ""));
+        if (req.getDocumentId() != null && !req.getDocumentId().isEmpty()) {
+            vo.setScanId(req.getDocumentId().get(0));
+        }
         return vo;
     }
 
@@ -953,7 +2563,8 @@ public class MsfSvcChgPageServiceImpl {
         vo.setCstmrTelRnNo(safe(req.getTelNo3()));
         String cstmrTypeCd = safe(req.getCstmrTypeCd());
         String bizNo = joinParts(req.getCstmrJuridicalBizNo1(), req.getCstmrJuridicalBizNo2(), req.getCstmrJuridicalBizNo3());
-        if ("JP".equals(cstmrTypeCd) || "GO".equals(cstmrTypeCd)) {
+        String foreignerNo = firstNonBlank(req.getCstmrForeignerRrn(), req.getCstmrPrivateBizNo());
+        if (isJuridicalCustomerType(cstmrTypeCd)) {
             vo.setCstmrJuridicalCname(safe(req.getCstmrNm()));
             vo.setCstmrJuridicalRrn(joinParts(req.getCstmrJuridicalRrn1(), req.getCstmrJuridicalRrn2()));
             vo.setCstmrJuridicalBizNo(bizNo);
@@ -962,9 +2573,11 @@ public class MsfSvcChgPageServiceImpl {
         } else if ("FN".equals(cstmrTypeCd) || "FM".equals(cstmrTypeCd)) {
             vo.setCstmrForeignerBirth(safe(req.getUserBirthDate()));
             vo.setCstmrForeignerGenderCd(safe(req.getUserGender()));
-            vo.setCstmrPrivateBizNo(bizNo);
             if (!bizNo.isBlank()) {
+                vo.setCstmrPrivateBizNo(bizNo);
                 vo.setCstmrPrivateCname(safe(req.getCstmrNm()));
+            } else {
+                vo.setCstmrForeignerRrn(foreignerNo);
             }
         } else {
             vo.setCstmrNativeBirth(safe(req.getUserBirthDate()));
@@ -1003,6 +2616,7 @@ public class MsfSvcChgPageServiceImpl {
     private MsfRequestAgentVo buildSvcChgAgentVo(Long requestKey, ServiceChangeCompleteReqDto req) {
         MsfRequestAgentVo agentVo = new MsfRequestAgentVo();
         agentVo.setRequestKey(requestKey);
+        agentVo.setMinorAgentAgrmYn("N");
         agentVo.setMinorAgentSelfInqryAgrmYn("N");
 
         if (isMinorCustomerType(req.getCstmrTypeCd())) {
@@ -1020,9 +2634,10 @@ public class MsfSvcChgPageServiceImpl {
             agentVo.setMinorAgentAgrmYn(isChecked(req.getRepAgree()) ? "Y" : "N");
         }
 
-        if ("V2".equals(safe(req.getCstmrVisitTypeCd()))) {
+        if (isJuridicalCustomerType(req.getCstmrTypeCd())
+            && "VDP".equals(safe(req.getCstmrVisitTypeCd()))) {
             agentVo.setJrdclAgentNm(firstNonBlank(req.getMinorAgentNm(), req.getRepName()));
-            agentVo.setJrdclAgentRrn(joinParts(req.getRepRegistrationNo1(), req.getRepRegistrationNo2()));
+            agentVo.setJrdclAgentRrn(toAgentBirthGender(req.getAgentBirthDate(), req.getAgentGender()));
             agentVo.setJrdclAgentRelTypeCd(safe(req.getMinorAgentRelTypeCd()));
             agentVo.setJrdclAgentTelFnNo(safe(req.getMinorAgentTelFnNo()));
             agentVo.setJrdclAgentTelMnNo(safe(req.getMinorAgentTelMnNo()));
@@ -1032,85 +2647,53 @@ public class MsfSvcChgPageServiceImpl {
         return agentVo;
     }
 
-    private MsfRequestMstVo buildSvcChgMstVo(Long requestKey, ServiceChangeCompleteReqDto req) {
-        String mobileNo = firstNonBlank(
-            joinParts(req.getMobileNo1(), req.getMobileNo2(), req.getMobileNo3()),
-            safe(req.getCtn()).replaceAll("\\D", "")
-        );
-
-        MsfRequestMstVo mstVo = new MsfRequestMstVo();
-        mstVo.setRequestKey(requestKey);
-        mstVo.setCretIp(RequestUtils.getClientIp());
-        mstVo.setCretId("MSF_FORM");
-        mstVo.setReqTypeCd("SC");
-        mstVo.setUserId(firstNonBlank(req.getManagerCd(), "MSF_FORM"));
-        mstVo.setCstmrNm(safe(req.getCstmrNm()));
-        mstVo.setMobileNo(mobileNo);
-        mstVo.setCstmrNativeRrn("");
-        mstVo.setContractNum(safe(req.getNcn()));
-        mstVo.setCstmrTypeCd(firstNonBlank(req.getCstmrTypeCd(), "NA"));
-        mstVo.setOnlineAuthTypeCd("");
-        mstVo.setOnlineAuthInfo("MSF:" + requestKey);
-        mstVo.setEtcMobileNo(mobileNo);
-        return mstVo;
+    private static boolean isMinorCustomerType(String cstmrTypeCd) {
+        return "NM".equals(safe(cstmrTypeCd)) || "FM".equals(safe(cstmrTypeCd));
     }
 
-    private List<MsfRequestClauseVo> buildSvcChgClauseVos(Long requestKey, ServiceChangeCompleteReqDto req) {
-        List<MsfRequestClauseVo> clauseVos = new ArrayList<>();
-        if (req.getClauses() != null) {
-            for (ServiceChangeCompleteReqDto.Clause clause : req.getClauses()) {
-                if (clause == null || isBlank(clause.getCode()) || !isChecked(clause.getChecked())) {
-                    continue;
-                }
-                clauseVos.add(buildSvcChgClauseVo(requestKey, resolveClauseGroupId(clause), resolveClauseGroupId2(clause), clause.getVersion()));
+    private static boolean isJuridicalCustomerType(String cstmrTypeCd) {
+        return "JP".equals(safe(cstmrTypeCd)) || "GO".equals(safe(cstmrTypeCd));
+    }
+
+    private static String toAgentBirthGender(String birthDate, String gender) {
+        String birth = safe(birthDate).replaceAll("\\D", "");
+        if (birth.isEmpty()) {
+            return "";
+        }
+
+        StringBuilder agentBirthGender = new StringBuilder(birth);
+        String normalizedGender = safe(gender).trim();
+        if (birth.length() == 8) {
+            if ("M".equalsIgnoreCase(normalizedGender)) {
+                agentBirthGender.append(birth.startsWith("19") ? "1" : "3");
+            } else if ("F".equalsIgnoreCase(normalizedGender)) {
+                agentBirthGender.append(birth.startsWith("19") ? "2" : "4");
+            } else if (normalizedGender.matches("^[1-8]$")) {
+                agentBirthGender.append(normalizedGender);
             }
         }
 
-        return clauseVos;
-    }
-
-    private MsfRequestClauseVo buildSvcChgClauseVo(Long requestKey, String cdGroupId, String cdGroupId2, String version) {
-        MsfRequestClauseVo clauseVo = new MsfRequestClauseVo();
-        clauseVo.setRequestKey(requestKey);
-        clauseVo.setCdGroupId(cdGroupId);
-        clauseVo.setCdGroupId2(cdGroupId2);
-        clauseVo.setVersion(safe(version));
-        return clauseVo;
-    }
-
-    private static String resolveClauseGroupId(ServiceChangeCompleteReqDto.Clause clause) {
-        return firstNonBlank(clause.getTermsGroupCd(), clause.getCdGroupId(), "CLAUSE_FORM_01");
-    }
-
-    private static String resolveClauseGroupId2(ServiceChangeCompleteReqDto.Clause clause) {
-        String termsItemCd = firstNonBlank(clause.getTermsItemCd(), clause.getCdGroupId2());
-        if (!isBlank(termsItemCd)) {
-            return termsItemCd;
-        }
-        return "CLAUSE_INFO_01".equals(safe(clause.getCode())) ? "01" : safe(clause.getCode());
-    }
-
-    private static boolean isMinorCustomerType(String cstmrTypeCd) {
-        return "NM".equals(safe(cstmrTypeCd)) || "FM".equals(safe(cstmrTypeCd));
+        // JRDCL_AGENT_RRN은 생년월일 또는 생년월일+성별 뒤를 0으로 채워 13자리로 등록한다.
+        return StringUtils.rightPad(agentBirthGender.toString(), 13, '0');
     }
 
     private static boolean hasAgentData(MsfRequestAgentVo agentVo) {
         return agentVo != null
             && (
-                !isBlank(agentVo.getMinorAgentNm())
-                    || !isBlank(agentVo.getMinorAgentRrn())
-                    || !isBlank(agentVo.getMinorAgentBirth())
-                    || !isBlank(agentVo.getMinorAgentTelFnNo())
-                    || !isBlank(agentVo.getJrdclAgentNm())
-                    || !isBlank(agentVo.getJrdclAgentTelFnNo())
-            );
+            !isBlank(agentVo.getMinorAgentNm())
+                || !isBlank(agentVo.getMinorAgentRrn())
+                || !isBlank(agentVo.getMinorAgentBirth())
+                || !isBlank(agentVo.getMinorAgentTelFnNo())
+                || !isBlank(agentVo.getJrdclAgentNm())
+                || !isBlank(agentVo.getJrdclAgentTelFnNo())
+        );
     }
 
     private static String firstNonBlank(String... values) {
         if (values == null) {
             return "";
         }
-        for (String value : values) {
+        for (String value: values) {
             if (!isBlank(value)) {
                 return value;
             }
@@ -1137,7 +2720,7 @@ public class MsfSvcChgPageServiceImpl {
     private static String joinParts(String... values) {
         StringBuilder builder = new StringBuilder();
         boolean hasValue = false;
-        for (String value : values) {
+        for (String value: values) {
             String safeValue = safe(value);
             if (!safeValue.isBlank()) {
                 hasValue = true;
@@ -1159,8 +2742,118 @@ public class MsfSvcChgPageServiceImpl {
         return id + "@" + domain;
     }
 
+    private String resolveLoginUserId(ServiceChangeCompleteReqDto req) {
+        try {
+            if (AuthenticationUtils.getUser() != null && !isBlank(AuthenticationUtils.getUser().getUserId())) {
+                return AuthenticationUtils.getUser().getUserId();
+            }
+        } catch (Exception e) {
+            log.debug("[serviceChangeComplete] login user resolve failed: {}", e.getMessage());
+        }
+        return firstNonBlank(req == null ? "" : req.getManagerCd(), "MSF_FORM");
+    }
+
+    private void applyWriterInfo(ServiceChangeCompleteReqDto req) {
+        if (req == null) {
+            return;
+        }
+
+        String agentCd = req.getAgentCd();
+        String managerCd = req.getManagerCd();
+        String managerNm = req.getManagerNm();
+        String agentNm = req.getAgentNm();
+        String shopCd = req.getShopCd();
+        String shopNm = req.getShopNm();
+        String realShopNm = req.getRealShopNm();
+        String cpntId = req.getCpntId();
+        String cpntNm = req.getCpntNm();
+        String cntpntShopCd = req.getCntpntShopCd();
+        String cntpntShopNm = req.getCntpntShopNm();
+        try {
+            String loginAgentOrgnId = AuthenticationUtils.getAgentCode();
+            String loginShopOrgnId = AuthenticationUtils.getShopCode();
+            AgencyCache agentInfo = agencyCacheReader.getAgencyOrEmpty(loginAgentOrgnId);
+            AgencyCache shopInfo = agencyCacheReader.getAgencyOrEmpty(loginShopOrgnId);
+
+            log.debug(
+                "[applyWriterInfo] organization source: requestAgentCd={}, requestKtOrgId={}, requestAgentNm={}, "
+                    + "loginAgentOrgnId={}, agentKtOrganizationId={}, agentOrganizationId={}, agentOrganizationName={}, "
+                    + "loginShopOrgnId={}, shopKtOrganizationId={}, shopOrganizationId={}, shopOrganizationName={}",
+                agentCd, req.getKtOrgId(), agentNm,
+                loginAgentOrgnId, agentInfo.ktOrganizationId(), agentInfo.organizationId(), agentInfo.organizationName(),
+                loginShopOrgnId, shopInfo.ktOrganizationId(), shopInfo.organizationId(), shopInfo.organizationName());
+
+            // 서비스변경 화면에서 선택한 대리점 값은 M플랫폼 처리에도 그대로 사용한다.
+            // 신청서 표시용 판매점 정보는 화면에서 cpntId/cpntNm으로 별도 구성한다.
+            // 20260716 DB AGENTCD (KT조직코드로 셋팅) M모바일 조직코드는 cntpntShopCd 여기를 참조
+            agentCd = firstNonBlank(req.getKtOrgId(), agentCd, agentInfo.ktOrganizationId(), loginAgentOrgnId);
+            agentNm = firstNonBlank(agentNm, AuthenticationUtils.getAgentName(), agentInfo.organizationName());
+            shopCd = firstNonBlank(loginShopOrgnId, shopCd);
+            shopNm = firstNonBlank(shopInfo.organizationName(), AuthenticationUtils.getShopName(), shopNm);
+            realShopNm = firstNonBlank(shopNm, realShopNm);
+            cpntId = firstNonBlank(shopCd, cpntId);
+            cpntNm = firstNonBlank(shopNm, cpntNm);
+            cntpntShopCd = firstNonBlank(cntpntShopCd, loginAgentOrgnId);
+            cntpntShopNm = firstNonBlank(agentNm, cntpntShopNm);
+            managerCd = AuthenticationUtils.getUser().getUserId();
+            managerNm = AuthenticationUtils.getUser().getUserName();
+        } catch (RuntimeException ignored) {
+            agentCd = firstNonBlank(req.getKtOrgId(), agentCd, "TEST_AGENT");
+            managerCd = firstNonBlank(managerCd, "MSF_FORM_TEST");
+            managerNm = firstNonBlank(managerNm, "MSF Form Test");
+            agentNm = firstNonBlank(agentNm, "Test Agency");
+            shopCd = firstNonBlank(shopCd, agentCd);
+            shopNm = firstNonBlank(shopNm, agentNm);
+            realShopNm = firstNonBlank(realShopNm, shopNm);
+            cpntId = firstNonBlank(cpntId, shopCd);
+            cpntNm = firstNonBlank(cpntNm, shopNm);
+            cntpntShopCd = firstNonBlank(cntpntShopCd, agentCd);
+            cntpntShopNm = firstNonBlank(cntpntShopNm, agentNm);
+        }
+
+        log.debug(
+            "[applyWriterInfo] final organization: agentCd={}, agentNm={}, shopCd={}, shopNm={}, realShopNm={}, "
+                + "cpntId={}, cpntNm={}, cntpntShopCd={}, cntpntShopNm={}",
+            agentCd, agentNm, shopCd, shopNm, realShopNm,
+            cpntId, cpntNm, cntpntShopCd, cntpntShopNm);
+
+        req.setManagerCd(managerCd);
+        req.setManagerNm(managerNm);
+        req.setAgentCd(agentCd);
+        req.setAgentNm(agentNm);
+        req.setShopCd(shopCd);
+        req.setShopNm(shopNm);
+        req.setRealShopNm(realShopNm);
+        req.setCpntId(cpntId);
+        req.setCpntNm(cpntNm);
+        req.setCntpntShopCd(cntpntShopCd);
+        req.setCntpntShopNm(cntpntShopNm);
+    }
+
+    private static String resolveSocAddProcTypeCd() {
+        return "C";
+    }
+
+    // USIM_PYMN_MTHD_CD 기준: B(후청구/다음달요금합산)는 예약, 그 외 R(즉납)/N(비구매)은 즉시처리.
+    @SuppressWarnings("PMD.UnusedPrivateMethod")
+    private static String resolveSimInfoProcTypeCd(ServiceChangeCompleteReqDto.SimInfo simInfo) {
+        String simPurchaseMethod = safe(simInfo == null ? null : simInfo.getSimPurchaseMethod()).trim();
+        return "B".equalsIgnoreCase(simPurchaseMethod) ? "R" : "C";
+    }
+
+    private static boolean isWirelessDataBlockSoc(AdditionApplyReqDto req) {
+        return req != null && "WIRELESSC".equalsIgnoreCase(safe(req.getSoc()));
+    }
+
     /** 서비스 타입 기반 DTL 기본 구조 생성 */
-    private MsfRequestSvcChgDtlVo buildBaseDtlVo(Long dtlSeq, Long requestKey, String svcType, String procTypeCd) {
+    private MsfRequestSvcChgDtlVo buildBaseDtlVo(
+        Long dtlSeq,
+        Long requestKey,
+        String svcType,
+        String procTypeCd,
+        String scanId,
+        String parentScanId
+    ) {
         MsfRequestSvcChgDtlVo vo = new MsfRequestSvcChgDtlVo();
         String clientIp = RequestUtils.getClientIp();
         vo.setRequestSvcChgDtlSeq(dtlSeq);
@@ -1171,26 +2864,66 @@ public class MsfSvcChgPageServiceImpl {
         vo.setAmdId("MSF_FORM");
         vo.setSvcTgtCd(StringUtil.NVL(svcType, ""));
         vo.setProcTypeCd(StringUtil.NVL(procTypeCd, ""));
+        vo.setProcCd("RC");
+        vo.setResCd("");
+        vo.setResMsg("");
+        vo.setResNo("");
         vo.setAppFormYn("N");
         vo.setAppFormXmlYn("N");
+        vo.setScanId(StringUtil.NVL(scanId, ""));
+        vo.setParentScanId(StringUtil.NVL(parentScanId, ""));
         return vo;
     }
 
     /** SOC 기반 DTL (R11 부가서비스 / R12 무선데이터차단) */
-    private MsfRequestSvcChgDtlVo buildSocDtlVo(Long dtlSeq, Long requestKey, String svcTgtCd, String soc, String procTypeCd, String addtionInfo) {
-        MsfRequestSvcChgDtlVo vo = buildBaseDtlVo(dtlSeq, requestKey, StringUtil.NVL(svcTgtCd, ""), procTypeCd);
+    private MsfRequestSvcChgDtlVo buildSocDtlVo(
+        Long dtlSeq,
+        Long requestKey,
+        String svcTgtCd,
+        AdditionApplyReqDto req,
+        String svcChgTypeCd,
+        String procTypeCd,
+        String scanId,
+        String parentScanId
+    ) {
+        String soc = req == null ? "" : req.getSoc();
+        MsfRequestSvcChgDtlVo vo = buildBaseDtlVo(dtlSeq, requestKey, StringUtil.NVL(svcTgtCd, ""), procTypeCd, scanId, parentScanId);
+        vo.setSvcChgTypeCd(StringUtil.NVL(svcChgTypeCd, ""));
         vo.setSocCd(StringUtil.NVL(soc, ""));
-        vo.setAddtionInfo(StringUtil.NVL(addtionInfo, ""));
+        vo.setSocNm(resolveAdditionServiceName(req));
+        vo.setProdAmt(resolveAdditionProdAmt(soc));
+        vo.setAddtionInfo(req == null ? "" : StringUtil.NVL(req.getFtrNewParam(), ""));
         return vo;
     }
 
+    private Long resolveAdditionProdAmt(String soc) {
+        if (isBlank(soc)) {
+            return null;
+        }
+        try {
+            MspRateMstDto mspRateMstDto = getMspRateMst(soc);
+            if (mspRateMstDto != null) {
+                return (long) mspRateMstDto.getBaseAmt();
+            }
+        } catch (Exception e) {
+            log.debug("[serviceChangeComplete] failed to resolve product amount: soc={}, msg={}", soc, e.getMessage());
+        }
+        return null;
+    }
+
     private static class ServiceChangeSaveFailureException extends RuntimeException {
+
         private ServiceChangeSaveFailureException(String message) {
             super(message);
         }
     }
 
+    private static class ServiceChangeImageSystemUploadException extends RuntimeException {
 
+        private ServiceChangeImageSystemUploadException(String message) {
+            super(message);
+        }
+    }
 
 
 }

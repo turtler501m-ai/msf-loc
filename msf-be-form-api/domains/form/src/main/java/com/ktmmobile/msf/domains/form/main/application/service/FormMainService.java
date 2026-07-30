@@ -37,7 +37,8 @@ public class FormMainService implements FormMainReader {
 
     @Override
     public FormMainCountResponse getCountFormRequest() {
-        return FormMainCountResponse.of(formMainRepository.getCountFormStatus(), formMainRepository.getCountFormService());
+        String userId = AuthenticationUtils.getUser().getUserId();
+        return FormMainCountResponse.of(formMainRepository.getCountFormStatus(userId), formMainRepository.getCountFormService(userId));
     }
 
     @Override

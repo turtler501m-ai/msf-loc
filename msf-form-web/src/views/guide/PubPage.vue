@@ -1,60 +1,80 @@
 <template>
+  <!-- 1. 레이아웃이 필요 없는 특정 화면일 때 -->
+  <div v-if="isFullLayout" class="full-layout-root">
+    <MsfFocusScope>
+      <component :is="currentContent" v-if="currentContent" />
+      <div v-else class="error-wrap">
+        <h3>해당 화면({{ screenId }})을 찾을 수 없습니다.</h3>
+      </div>
+    </MsfFocusScope>
+  </div>
+
+  <!-- 2. 일반적인 화면일 때: 기존 MsfBaseLayout 구조 그대로 유지 -->
   <!-- MsfBaseLayout -->
-  <div class="layout-root">
-    <!-- MsfHeader -->
-    <div class="header-wrap">
-      <header class="header-inner">
-        <h1 class="logo"><img src="@/assets/images/logo.svg" alt="kt mobile" /></h1>
-        <div class="side-wrap">
-          <div class="user-info">
-            <p class="name"><span class="avatar"></span>홍길동</p>
-            <ul class="infos">
-              <li>SPT8050</li>
-              <li>IT전략팀</li>
-            </ul>
+  <div v-else class="layout-root">
+    <MsfFocusScope>
+      <!-- MsfHeader -->
+      <div class="header-wrap">
+        <header class="header-inner">
+          <h1 class="logo"><img src="@/assets/images/logo.svg" alt="kt mobile" /></h1>
+          <div class="side-wrap">
+            <div class="user-info">
+              <p class="name"><span class="avatar"></span>홍길동</p>
+              <ul class="infos">
+                <li>SPT8050</li>
+                <li>IT전략팀</li>
+              </ul>
+            </div>
           </div>
-        </div>
-      </header>
-    </div>
-    <!-- // MsfHeader -->
-    <!-- 컨텐츠 -->
-    <main class="container-layout">
-      <MsfCustomScroll
-        :ref="
-          (el) => {
-            mainScrollRef = el
-          }
-        "
-        class="main-layout-scroll"
-        :use-lock="isLayoutLocked"
-      >
+        </header>
+      </div>
+      <!-- // MsfHeader -->
+      <!-- 컨텐츠 -->
+      <main class="container-layout">
         <MsfContainer class="main-content">
           <component :is="currentContent" v-if="currentContent" />
           <div v-else>
             <h3>해당 화면({{ screenId }})을 찾을 수 없습니다.</h3>
           </div>
         </MsfContainer>
-      </MsfCustomScroll>
-    </main>
-    <!-- // 컨텐츠 -->
-    <!-- MsfBottomNav -->
-    <aside class="bottom-container">
-      <h2 class="ut-blind">하단 메뉴</h2>
-      <ul class="bottom-list">
-        <MsfBottomNavItem v-for="menu in menusSample" :key="menu.id" :item="menu" />
-        <MsfButton iconOnly="logout" class="logout-btn">로그아웃</MsfButton>
-      </ul>
-    </aside>
-    <!-- // MsfBottomNav -->
+      </main>
+      <!-- // 컨텐츠 -->
+      <!-- MsfBottomNav -->
+      <aside class="bottom-container">
+        <h2 class="ut-blind">하단 메뉴</h2>
+        <ul class="bottom-list">
+          <MsfBottomNavItem v-for="menu in menusSample" :key="menu.id" :item="menu" />
+          <li><MsfButton iconOnly="logout" class="logout-btn">로그아웃</MsfButton></li>
+        </ul>
+      </aside>
+      <!-- // MsfBottomNav -->
+    </MsfFocusScope>
   </div>
   <!-- // MsfBaseLayout -->
 </template>
 
 <script setup>
 import { computed, defineAsyncComponent } from 'vue'
-import { mainScrollRef, isLayoutLocked } from '@/hooks/useGlobalScroll'
+// import { mainScrollRef, isLayoutLocked } from '@/hooks/useGlobalScroll'
 const props = defineProps({
   screenId: String,
+})
+
+// MsfBaseLayout을 적용하지 않을 화면 ID 목록
+const FULL_LAYOUT_SCREENS = [
+  'S106030104',
+  'S106030105',
+  'S106030106',
+  'S106030101',
+  'S106010101',
+  'S106050101_404',
+  'S106060101',
+  'S106060102',
+]
+
+// 현재 화면이 풀 레이아웃인지 여부 반환
+const isFullLayout = computed(() => {
+  return FULL_LAYOUT_SCREENS.includes(props.screenId)
 })
 
 // 폴더 안에 있는 모든 vue 파일을 탐색
@@ -122,6 +142,14 @@ const menusSample = [
 </script>
 
 <style scoped lang="scss">
+/* 퍼블확인용 스타일 (#app과 스타일 통일) */
+.full-layout-root {
+  height: var(--msf-app-height, 100dvh);
+  height: var(--msf-app-height, 100vh);
+  display: flex;
+  flex-direction: column;
+  overscroll-behavior: none;
+}
 /* MsfHeader 스타일 */
 .header-wrap {
   width: 100%;
@@ -150,7 +178,7 @@ const menusSample = [
       margin: 0;
       padding: 0;
       height: auto;
-      font-size: inherit;
+      @include flex($v: center);
     }
     .side-wrap {
       @include flex($v: center) {
@@ -173,6 +201,7 @@ const menusSample = [
             background-image: url('@/assets/images/userAvatar.svg');
             background-position: left center;
             background-size: 100%;
+            background-repeat: no-repeat;
           }
         }
         ul.infos {

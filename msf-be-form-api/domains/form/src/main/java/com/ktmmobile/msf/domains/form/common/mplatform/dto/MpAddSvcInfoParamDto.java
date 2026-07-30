@@ -1,15 +1,13 @@
 package com.ktmmobile.msf.domains.form.common.mplatform.dto;
 
-import static com.ktmmobile.msf.domains.form.common.constants.Constants.GROUP_CODE_SOC_FREE_TAX_LIST;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
 import org.jdom.Element;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.ktmmobile.msf.domains.form.common.dto.NmcpCdDtlDto;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.CommonXmlVO;
@@ -17,9 +15,11 @@ import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpSocVO;
 import com.ktmmobile.msf.domains.form.common.util.NmcpServiceUtils;
 import com.ktmmobile.msf.domains.form.common.util.XmlParse;
 
+import static com.ktmmobile.msf.domains.form.common.constants.Constants.GROUP_CODE_SOC_FREE_TAX_LIST;
+
+@Slf4j
 public class MpAddSvcInfoParamDto extends CommonXmlVO {
 
-    private static final Logger logger = LoggerFactory.getLogger(MpAddSvcInfoParamDto.class);
 	 private List<MpSocVO> list;
 	    private int freeCnt = 0;
 	    private int notfreeCnt = 0;
@@ -46,7 +46,7 @@ public class MpAddSvcInfoParamDto extends CommonXmlVO {
 	            vo.setParamSbst(XmlParse.getChildValue(item, "paramSbst"));
 
 	            vo.parseParamSbst();
-	            vo.setSettingYn(!vo.getParamSbst().trim().isEmpty() ? "Y" : "N");
+	            vo.setSettingYn(!vo.getParamSbst().isBlank() ? "Y" : "N");
 
 	            if(XmlParse.getChildValue(item, "socRateValue").equals("Free")){
 	                freeCnt++;
@@ -54,19 +54,17 @@ public class MpAddSvcInfoParamDto extends CommonXmlVO {
 	            }else{
 	                int vatVal = Integer.parseInt( XmlParse.getChildValue(item, "socRateValue").replace(",", "").replace("WON","").replace(" ", "") );
 
-
-
-	                //과세 비과세 확인
+                    //과세 비과세 확인
 	                // TODO: NmcpServiceUtils.getBean() ContextLoaderListener 구 방식 → Spring Boot DI 방식으로 교체 후 try/catch 제거
 	                NmcpCdDtlDto socFreeTax = null;
 	                try {
 	                    socFreeTax = NmcpServiceUtils.getCodeNmDto(GROUP_CODE_SOC_FREE_TAX_LIST, vo.getSoc());
 	                } catch (Exception e) {
 	                    if (e instanceof NullPointerException && String.valueOf(e.getMessage()).contains("applicationContext")) {
-	                        logger.debug("[MpAddSvcInfoParamDto][parse] SOC={} tax cache is unavailable. Treat as taxable. cause={}({})",
+                            log.debug("[MpAddSvcInfoParamDto][parse] SOC={} tax cache is unavailable. Treat as taxable. cause={}({})",
 	                                vo.getSoc(), e.getClass().getSimpleName(), e.getMessage());
 	                    } else {
-	                        logger.warn("[MpAddSvcInfoParamDto][parse] SOC={} tax cache lookup failed. Treat as taxable. cause={}({})",
+                            log.warn("[MpAddSvcInfoParamDto][parse] SOC={} tax cache lookup failed. Treat as taxable. cause={}({})",
 	                                vo.getSoc(), e.getClass().getSimpleName(), e.getMessage());
 	                    }
 	                }
@@ -172,7 +170,6 @@ public class MpAddSvcInfoParamDto extends CommonXmlVO {
 	    public void setTotalRateVatVal(int totalRateVatVal) {
 	        this.totalRateVatVal = totalRateVatVal;
 	    }
-
 
 
 }

@@ -1,10 +1,10 @@
 package com.ktmmobile.msf.domains.form.form.ownerchange.dto;
 
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.fasterxml.jackson.annotation.JsonRootName;
 import lombok.Data;
 
 @Data
-@JacksonXmlRootElement(localName = "outDto")
+@JsonRootName("outDto")
 public class OwnerChangePossibleValidationResponse {
 
     private String resultCd;

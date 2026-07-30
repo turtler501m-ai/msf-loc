@@ -1,10 +1,10 @@
 package com.ktmmobile.msf.domains.form.form.servicechange.dto;
 
+import java.io.Serializable;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.io.Serializable;
 
 @Getter
 @Setter
@@ -23,6 +23,7 @@ public class MyPageSearchDto implements Serializable {
     private String message;
     private String custId;
     private String modelName;
+    private String rprsPrdtId;
     private String contractNum; // 계약번호
     private Integer menuKey;
     private String backUrl;
@@ -33,4 +34,6 @@ public class MyPageSearchDto implements Serializable {
     private String seq;
     private String addDivCd;
     private String soc; // 요금제 코드
+    private Boolean roadAddrChk;
+    private Boolean skipPerMyktfInfo;
 }

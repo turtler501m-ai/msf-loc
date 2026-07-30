@@ -1,0 +1,31 @@
+#### DEV Profile
+spring:
+  config.activate.on-profile: dev
+
+  ## Security
+  security:
+    jwt:
+      secret-key: ENC(hKrZ3fsWBSj/Wewee/CTSBrkriH58zLi5bEnV2Q4wgaK4eulP0eEboOVgI73AQT7F6dCToR9eGzswAUQBhfon/SvYp1i9bR+RGoOAqcu/tI=)
+
+
+## 외부 서비스 인증 (Inbound)
+external-service-auth:
+  services:
+    eformsign: ## eFormSign
+      api-key: ENC(+WEP/BvEVcflYQdjBH4UwvuIII0U4++RRq88kgvADnivvQh/Xn0BoRGFc+y2dCpr6GWBYb4q5gwBDfJ1R7sOj/3ruTaaz1TvkGHpstD8If4DhmLtDn5vvhal9jlR6zWByf0E7AiNDSPXjcqCfuehrw==)
+      allowed-ip-addresses: ## 허용 IP 목록 (단일 IP, CIDR 가능)
+        - 0.0.0.0/0      # TODO: 임시로 전체 IP 허용
+        - 172.28.31.12   # msf-eformsign-app-dev
+        - 172.28.131.12  # msf-eformsign-app-dev
+    koi-idcard: ## KOI 모바일신분증 인증
+      api-key: ENC(EAHW/nf7f/4Kx8tGKqEzSdBdzs21Ohc7JljeCxOVdXn/6Znj7cpiRubzaCe+y6/kSSQMR8zoJ39vpppbTNKKS1/rYJDd574i2ZW+Jly6Qht36jNORUu88AEVen44nXpbl0KnBH4y8plc0K9RIvwS8A==)
+      allowed-ip-addresses: ## 허용 IP 목록 (단일 IP, CIDR 가능)
+        - 0.0.0.0/0    # TODO: 임시로 전체 IP 허용
+        - 10.0.4.0/24  # Docker Overlay Network(msf-infra-app-app-private)
+
+
+## Response Handling
+response-handling:
+  exception:
+    className: false
+    message: true

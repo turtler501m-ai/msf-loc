@@ -9,8 +9,8 @@ import com.ktmmobile.msf.commons.file.domain.vo.RawFile;
 
 @Builder
 public record FileResponse(
-    String filePathName,
     String filePath,
+    String directoryPath,
     String fileName,
     RawFile rawFile,
     String downloadSignedUrl
@@ -22,9 +22,9 @@ public record FileResponse(
 
     public static FileResponse of(CommonFile file, String signedUrl) {
         return FileResponse.builder()
-            .filePathName(resolveFilePathName(file.rawFile()))
             .filePath(resolveFilePath(file.rawFile()))
-            .fileName(file.rawFile().name())
+            .directoryPath(resolveDirectoryPath(file.rawFile()))
+            .fileName(file.rawFile().fileName())
             .rawFile(file.rawFile())
             .downloadSignedUrl(signedUrl)
             .build();
@@ -36,18 +36,18 @@ public record FileResponse(
             .toList();
     }
 
-    private static String resolveFilePathName(RawFile rawFile) {
-        String path = resolveFilePath(rawFile);
-        if ("/".equals(path)) {
-            return path + rawFile.name();
+    private static String resolveFilePath(RawFile rawFile) {
+        String directoryPath = resolveDirectoryPath(rawFile);
+        if ("/".equals(directoryPath)) {
+            return directoryPath + rawFile.fileName();
         }
-        return path + "/" + rawFile.name();
+        return directoryPath + "/" + rawFile.fileName();
     }
 
-    private static String resolveFilePath(RawFile rawFile) {
-        if (rawFile.path() == null || rawFile.path().isBlank()) {
+    private static String resolveDirectoryPath(RawFile rawFile) {
+        if (rawFile.directoryPath() == null || rawFile.directoryPath().isBlank()) {
             return "/";
         }
-        return "/" + rawFile.path();
+        return "/" + rawFile.directoryPath();
     }
 }

@@ -2,11 +2,11 @@ package com.ktmmobile.msf.domains.form.common.dto;
 
 import java.io.Serializable;
 
+import com.ktds.crypto.exception.CryptoException;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import com.ktds.crypto.exception.CryptoException;
 import com.ktmmobile.msf.domains.form.common.util.EncryptUtil;
 import com.ktmmobile.msf.domains.form.common.util.MaskingUtil;
 import com.ktmmobile.msf.domains.form.common.util.NmcpServiceUtils;
@@ -35,6 +35,7 @@ public class McpUserCntrMngDto implements Serializable {
     private int dcAmt;              // 할인금액
     private String modelName;       // 단말기 모델명
     private String modelId;         // 단말기 모델ID
+    private String rprsPrdtId;         // 대표 단말기 모델ID
     private String intmSrlNo;       // 단말기일련번호
     private String unIntmSrlNo;     // 단말기일련번호
     private String dobyyyymmdd;     // 생년월일
@@ -72,7 +73,9 @@ public class McpUserCntrMngDto implements Serializable {
     private String subscriberNo;    // 고객휴대폰번호
     private String age;             // 나이
     private String birth;           // 생년월일(앞6자리)
-    private String fstEsimYn;       // 최초 ESim 여부
+    private String esimYn;       // 최초 ESim 여부
+    private String imei;
+    private String blBillingMethod; //요금납부방법
 
     // cntrMobileNo setter에 formatUnSvcNo 연동 사이드이펙트
     public void setCntrMobileNo(String cntrMobileNo) {
@@ -81,7 +84,9 @@ public class McpUserCntrMngDto implements Serializable {
     }
 
     public String getCntrMobileNoMasking() {
-        if (cntrMobileNo == null) { return ""; }
+        if (cntrMobileNo == null) {
+            return "";
+        }
         return MaskingUtil.getMaskedTelNo(StringUtil.getMobileFullNum(cntrMobileNo));
     }
 
@@ -107,7 +112,9 @@ public class McpUserCntrMngDto implements Serializable {
     // 월요금 = vatAmt - promotionDcAmt (최소 0)
     public int getInstMnthAmt() {
         int rtnInt = getVatAmt() - getPromotionDcAmt();
-        if (rtnInt > 0) { return rtnInt; }
+        if (rtnInt > 0) {
+            return rtnInt;
+        }
         return 0;
     }
 

@@ -3,7 +3,9 @@ package com.ktmmobile.msf.commons.common.cache;
 import java.time.Duration;
 import java.util.List;
 
+import io.lettuce.core.ClientOptions;
 import io.lettuce.core.ReadFrom;
+import io.lettuce.core.SocketOptions;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -15,6 +17,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisNode;
 import org.springframework.data.redis.connection.RedisPassword;
+import org.springframework.data.redis.connection.RedisSentinelConfiguration;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.RedisStaticMasterReplicaConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
@@ -46,10 +49,20 @@ public class RedisConfig {
     }
 
     public RedisConnectionFactory createConnectionFactory(Duration commandTimeout) {
+        if (hasSentinelNodes()) {
+            return sentinelConnectionFactory(commandTimeout);
+        }
         if (hasMasterReplicaNodes()) {
             return masterReplicaConnectionFactory(commandTimeout);
         }
         return standaloneConnectionFactory(commandTimeout);
+    }
+
+    private boolean hasSentinelNodes() {
+        return redisProperties.getSentinel() != null
+            && StringUtils.hasText(redisProperties.getSentinel().getMaster())
+            && redisProperties.getSentinel().getNodes() != null
+            && redisProperties.getSentinel().getNodes().stream().anyMatch(StringUtils::hasText);
     }
 
     private boolean hasMasterReplicaNodes() {
@@ -66,9 +79,25 @@ public class RedisConfig {
         serverConfig.setDatabase(redisProperties.getDatabase());
 
         return new LettuceConnectionFactory(serverConfig,
-            LettuceClientConfiguration.builder()
-                .commandTimeout(commandTimeout)
-                .build());
+            createLettuceClientConfiguration(commandTimeout));
+    }
+
+    private RedisConnectionFactory sentinelConnectionFactory(Duration commandTimeout) {
+        log.info(">>> Redis 구성: Sentinel Mode, master={}, commandTimeout={}",
+            redisProperties.getSentinel().getMaster(), commandTimeout);
+
+        RedisSentinelConfiguration serverConfig = new RedisSentinelConfiguration()
+            .master(redisProperties.getSentinel().getMaster());
+        redisProperties.getSentinel().getNodes().stream()
+            .filter(StringUtils::hasText)
+            .map(RedisNode::fromString)
+            .forEach(serverConfig::addSentinel);
+        applyAuthentication(serverConfig);
+        applySentinelAuthentication(serverConfig);
+        serverConfig.setDatabase(redisProperties.getDatabase());
+
+        return new LettuceConnectionFactory(serverConfig,
+            createLettuceClientConfiguration(commandTimeout, ReadFrom.REPLICA_PREFERRED));
     }
 
     private RedisConnectionFactory masterReplicaConnectionFactory(Duration commandTimeout) {
@@ -86,11 +115,27 @@ public class RedisConfig {
         applyAuthentication(serverConfig);
         serverConfig.setDatabase(redisProperties.getDatabase());
 
-        LettuceClientConfiguration clientConfig = LettuceClientConfiguration.builder()
-            .readFrom(ReadFrom.REPLICA_PREFERRED)
+        return new LettuceConnectionFactory(serverConfig,
+            createLettuceClientConfiguration(commandTimeout, ReadFrom.REPLICA_PREFERRED));
+    }
+
+    private LettuceClientConfiguration createLettuceClientConfiguration(Duration commandTimeout) {
+        return createLettuceClientConfiguration(commandTimeout, null);
+    }
+
+    private LettuceClientConfiguration createLettuceClientConfiguration(Duration commandTimeout, ReadFrom readFrom) {
+        LettuceClientConfiguration.LettuceClientConfigurationBuilder builder = LettuceClientConfiguration.builder()
             .commandTimeout(commandTimeout)
-            .build();
-        return new LettuceConnectionFactory(serverConfig, clientConfig);
+            .clientOptions(ClientOptions.builder()
+                .socketOptions(SocketOptions.builder()
+                    .connectTimeout(redisProperties.getConnectTimeout())
+                    .build())
+                .build());
+        if (readFrom != null) {
+            builder.readFrom(readFrom);
+        }
+
+        return builder.build();
     }
 
     private void applyAuthentication(RedisStandaloneConfiguration serverConfig) {
@@ -108,6 +153,24 @@ public class RedisConfig {
         }
         if (StringUtils.hasText(redisProperties.getPassword())) {
             serverConfig.setPassword(RedisPassword.of(redisProperties.getPassword()));
+        }
+    }
+
+    private void applyAuthentication(RedisSentinelConfiguration serverConfig) {
+        if (StringUtils.hasText(redisProperties.getUsername())) {
+            serverConfig.setUsername(redisProperties.getUsername());
+        }
+        if (StringUtils.hasText(redisProperties.getPassword())) {
+            serverConfig.setPassword(RedisPassword.of(redisProperties.getPassword()));
+        }
+    }
+
+    private void applySentinelAuthentication(RedisSentinelConfiguration serverConfig) {
+        if (StringUtils.hasText(redisProperties.getSentinel().getUsername())) {
+            serverConfig.setSentinelUsername(redisProperties.getSentinel().getUsername());
+        }
+        if (StringUtils.hasText(redisProperties.getSentinel().getPassword())) {
+            serverConfig.setSentinelPassword(RedisPassword.of(redisProperties.getSentinel().getPassword()));
         }
     }
 

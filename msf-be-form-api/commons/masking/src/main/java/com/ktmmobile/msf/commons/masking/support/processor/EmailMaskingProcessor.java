@@ -22,7 +22,7 @@ public class EmailMaskingProcessor implements MaskingProcessor {
 
         int atIndex = value.indexOf('@');
         if (atIndex <= 0) {
-            return MaskingTextUtils.maskMiddle(value, 1, 0);
+            return MaskingProcessorUtils.maskMiddle(value, 1, 0);
         }
 
         String localPart = value.substring(0, atIndex);
@@ -33,8 +33,8 @@ public class EmailMaskingProcessor implements MaskingProcessor {
     private String maskLocalPart(String localPart) {
         int codePointCount = localPart.codePointCount(0, localPart.length());
         if (codePointCount == 1) {
-            return String.valueOf(MaskingTextUtils.MASK);
+            return String.valueOf(MaskingProcessorUtils.MASK);
         }
-        return MaskingTextUtils.firstCodePoint(localPart) + String.valueOf(MaskingTextUtils.MASK).repeat(codePointCount - 1);
+        return MaskingProcessorUtils.firstCodePoint(localPart) + String.valueOf(MaskingProcessorUtils.MASK).repeat(codePointCount - 1);
     }
 }

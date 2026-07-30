@@ -6,7 +6,7 @@
       <em class="tit">신청서 발송</em>
     </div>
     <MsfStack type="field" nowrap>
-      <MsfInput v-model="phoneNumber" readonly class="ut-w-200" />
+      <MsfInput v-model="displayPhoneNumber" readonly class="ut-w-200" />
       <MsfButton variant="subtle" :disabled="invalid" @click="onClickSendForm">발송</MsfButton>
     </MsfStack>
   </MsfBox>
@@ -14,29 +14,24 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
 import { post } from '@/libs/api/msf.api'
-import { getFormTypeCode } from '@/libs/utils/comn.utils'
 import { showAlert, showConfirm } from '@/libs/utils/comp.utils'
-import { validateMobile, isEmpty } from '@/libs/utils/string.utils'
-
-const route = useRoute()
+import { validateMobile, isEmpty, formatTelephone } from '@/libs/utils/string.utils'
 
 const props = defineProps({
-  formKey: { type: String, required: true },
-  phone: { type: String, required: true },
-  name: { type: String, required: true },
+  formData: {
+    type: Object,
+    default: () => ({}),
+  },
 })
 
-const smsType = ref('')
-
-const phoneNumber = ref(props.phone)
-const customerName = ref(props.name)
+const phoneNumber = ref(props.formData?.mobiles?.[0]?.mobile)
 
 const invalid = computed(() => {
   if (isEmpty(phoneNumber.value)) return true
   return !validateMobile(phoneNumber.value)
 })
+const displayPhoneNumber = computed(() => formatTelephone(phoneNumber.value))
 
 const onClickSendForm = async () => {
   if (isEmpty(phoneNumber.value)) {
@@ -48,17 +43,19 @@ const onClickSendForm = async () => {
     return false
   }
 
-  const formTypeCd = getFormTypeCode(route.path)
-  smsType.value = `F-${formTypeCd}-CMP`
-
   showConfirm('신청서를 발송하시겠습니까?', async () => {
-    const result = await post('/api/shared/common/sms/send', {
-      type: smsType.value,
-      path: route.path,
-      phone: phoneNumber.value,
-      name: customerName.value,
-    })
-    if (result?.code !== '0000') {
+    // const params = Object.assign({}, props.formDatay)
+    // params.documentId = Array.isArray(props.formData.documentId)
+    //   ? props.formData.documentId
+    //   : [props.formData.documentId]
+    const result = await post(
+      '/api/form/common/eform/documents/link/send',
+      { requestKey: props.formData.requestKey },
+      {
+        skipAlert: true,
+      },
+    )
+    if (result?.code !== '0000' || result?.data?.code !== '0000') {
       showAlert('신청서 발송이 실패하였습니다.\n다시 시도해 주세요.')
       return false
     }
@@ -68,11 +65,11 @@ const onClickSendForm = async () => {
 }
 
 watch(
-  () => props.phone,
+  () => props.formData,
   (newVal) => {
-    phoneNumber.value = newVal
+    phoneNumber.value = newVal.mobiles?.[0]?.mobile
   },
-  { immediate: true },
+  { immediate: true, deep: true },
 )
 </script>
 

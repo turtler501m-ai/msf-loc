@@ -1,7 +1,7 @@
 @use 'sass:math';
 @use '@/assets/styles/abstracts' as *;
 
-// a11y
+// a11y : 접근성숨김(스크린리더 읽히면서 숨김)
 .ut-blind {
   position: absolute !important;
   clip: rect(0 0 0 0);
@@ -9,6 +9,10 @@
   height: 1px;
   margin: -1px;
   overflow: hidden;
+}
+// 일반 숨김(스크린리더 안읽히면서 숨김)
+.ut-hidden {
+  display: none !important;
 }
 
 // font color
@@ -47,7 +51,22 @@
 .ut-color-black {
   color: var(--color-foreground) !important;
 }
-
+// 강조색상
+.ut-color-success {
+  color: var(--color-accent-success) !important;
+}
+.ut-color-warning {
+  color: var(--color-accent-warning) !important;
+}
+.ut-color-error {
+  color: var(--color-accent-error) !important;
+}
+.ut-color-blue {
+  color: var(--color-accent-info) !important;
+}
+.ut-color-purple {
+  color: var(--color-accent-purple) !important;
+}
 // font weight
 .ut-weight-regular {
   font-weight: var(--font-weight-regular) !important;
@@ -60,6 +79,9 @@
 }
 .ut-weight-bold {
   font-weight: var(--font-weight-bold) !important;
+}
+.ut-weight-inherit {
+  font-weight: inherit !important;
 }
 
 // alignment
@@ -191,6 +213,14 @@
   width: rem(16px);
   text-align: center;
 }
+// 텍스트 콜론(:)스타일 <span class="ut-colon">:</span>
+.ut-colon {
+  display: inline-block !important;
+  margin-left: rem(3px);
+  margin-right: rem(3px);
+  line-height: var(--line-height-fit);
+  font-size: inherit;
+}
 
 // modal 영역 ios 관성스크롤 제거
 [class*='overlay'] {
@@ -237,7 +267,7 @@
 .ut-text-caption {
   font-size: var(--font-size-12);
 }
-// 타이틀 하단 설명문구
+// 타이틀 하단 설명문구, 일반 안내문구
 .ut-text-desc {
   font-size: var(--font-size-16);
   font-weight: var(--font-weight-medium);
@@ -273,6 +303,25 @@
   @include separator;
   padding-right: rem(16px);
   margin-right: rem(16px);
+}
+
+// 타이틀스타일 텍스트 우측에 구분선을 가짐
+.ut-text-separate {
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-gray-900);
+  @include separator;
+  padding-right: rem(12px);
+  margin-right: rem(12px);
+}
+// 정보 텍스트 스타일 (em태그 빨간색강조) : 신청서확인 타이틀 (시간안내문구)
+.ut-text-info {
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-gray-600);
+  em {
+    color: var(--color-accent-base);
+  }
 }
 
 // 남은시간 스타일(휴대폰 인증부분)

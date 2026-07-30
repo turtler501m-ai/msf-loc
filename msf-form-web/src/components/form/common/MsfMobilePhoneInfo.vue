@@ -78,9 +78,9 @@ const formData = reactive({
       <MsfStack type="field">
         <MsfInput v-model="formData.imei" placeholder="휴대폰 일련번호 입력" class="ut-w-300" />
         <MsfButton variant="subtle">스캔하기</MsfButton>
-        <MsfButton variant="toggle" disabled>일련번호 유효성 체크</MsfButton>
-        <MsfButton variant="toggle">일련번호 유효성 체크</MsfButton>
-        <MsfButton variant="toggle" active>일련번호 유효성 체크 완료</MsfButton>
+        <MsfButton variant="validation" disabled>유효성 체크</MsfButton>
+        <MsfButton variant="validation">유효성 체크</MsfButton>
+        <MsfButton variant="validation" active>유효성 체크 완료</MsfButton>
       </MsfStack>
     </MsfFormGroup>
   </MsfStack>

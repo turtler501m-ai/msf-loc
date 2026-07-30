@@ -17,6 +17,7 @@ import com.ktmmobile.msf.commons.common.datasource.common.property.DataSourceIte
 import com.ktmmobile.msf.commons.common.datasource.common.property.DataSourcesProperties;
 
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
+@SuppressWarnings("PMD.AbstractClassWithoutAbstractMethod")
 public abstract class AbstractGroupDataSourceSupport {
 
     private static final String PROPERTY_HIKARI = ".hikari";

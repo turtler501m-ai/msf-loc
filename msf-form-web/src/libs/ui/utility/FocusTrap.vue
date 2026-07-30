@@ -10,9 +10,13 @@ const trapRegistry = {
 import { ref, watch, onMounted, onUnmounted, useId, nextTick } from 'vue'
 
 const props = defineProps({
+  /** 포커스 트랩 활성화 여부 */
   isActive: { type: Boolean, default: true },
+  /** 활성화 시 첫 번째 포커스 가능 요소로 자동 포커스 이동 여부 */
   autoFocus: { type: Boolean, default: true },
+  /** 비활성화 시 트랩을 열기 전 포커스 요소로 복귀할지 여부 */
   restoreFocus: { type: Boolean, default: true },
+  /** Tab 이동이 트랩 내부에서 순환되도록 할지 여부 */
   loop: { type: Boolean, default: true },
 })
 
@@ -32,25 +36,39 @@ const isTopMost = () => {
   return topId === id
 }
 
+// Dialog open 이벤트 등에서 이미 내부 요소로 이동한 포커스를 autoFocus가 다시 뺏지 않도록 확인
+const hasFocusInside = () => {
+  const activeElement = document.activeElement
+  return !!activeElement && containerRef.value?.contains(activeElement)
+}
+
 /** 포커스 가능한 노드 필터링 */
 const updateFocusNodes = () => {
   if (!containerRef.value) return
   const elements = containerRef.value.querySelectorAll(SELECTORS)
-  // sentinel' 클래스를 가진 요소는 목록에서 제외해야 무한 루프가 안 생김
+  // sentinel 클래스를 가진 요소는 목록에서 제외해야 무한 루프가 안 생김
   focusableNodes = Array.from(elements).filter((el) => {
+    const style = window.getComputedStyle(el)
+
     return (
       !el.classList.contains('focus-trap-sentinel') &&
-      window.getComputedStyle(el).display !== 'none' &&
-      window.getComputedStyle(el).visibility !== 'hidden'
+      !el.hidden &&
+      el.getAttribute('aria-hidden') !== 'true' &&
+      !el.disabled &&
+      style.display !== 'none' &&
+      style.visibility !== 'hidden'
     )
   })
 }
 
 /** 포커스 처리 (무한 루프 방지 로직) */
 const handleSentinelFocus = (isStart) => {
-  if (!isTopMost()) return
+  if (!props.isActive || !isTopMost()) return
   updateFocusNodes()
-
+  if (!props.loop) {
+    emit('exit')
+    return
+  }
   if (focusableNodes.length > 0) {
     const target = isStart ? focusableNodes[focusableNodes.length - 1] : focusableNodes[0]
     target.focus()
@@ -61,7 +79,12 @@ const handleKeyDown = (e) => {
   if (!props.isActive || !isTopMost() || e.key !== 'Tab') return
 
   updateFocusNodes()
-  if (focusableNodes.length === 0) return e.preventDefault()
+
+  if (focusableNodes.length === 0) {
+    if (props.loop) e.preventDefault()
+    else emit('exit')
+    return
+  }
 
   const first = focusableNodes[0]
   const last = focusableNodes[focusableNodes.length - 1]
@@ -80,15 +103,27 @@ watch(
   async (active) => {
     if (active) {
       trapRegistry.triggerElements.set(id, document.activeElement)
-      trapRegistry.activeIds.push(id)
+
+      if (!trapRegistry.activeIds.includes(id)) {
+        trapRegistry.activeIds.push(id)
+      }
 
       await nextTick()
       if (containerRef.value) {
+        observer?.disconnect()
         observer = new MutationObserver(updateFocusNodes)
-        observer.observe(containerRef.value, { childList: true, subtree: true })
+        observer.observe(containerRef.value, {
+          childList: true,
+          subtree: true,
+          attributes: true,
+          attributeFilter: ['disabled', 'tabindex', 'hidden', 'style', 'aria-hidden'],
+        })
 
         if (props.autoFocus) {
           setTimeout(() => {
+            // 지연 중 상태가 바뀌었거나 내부 포커스가 이미 잡혔다면 기본 포커스를 건너뜀
+            if (!props.isActive || !isTopMost() || hasFocusInside()) return
+
             updateFocusNodes()
             if (focusableNodes.length > 0) focusableNodes[0].focus()
             else containerRef.value?.focus()
@@ -97,13 +132,13 @@ watch(
       }
     } else {
       trapRegistry.activeIds = trapRegistry.activeIds.filter((tid) => tid !== id)
+      const trigger = trapRegistry.triggerElements.get(id)
       if (props.restoreFocus) {
-        const trigger = trapRegistry.triggerElements.get(id)
         setTimeout(() => {
           trigger?.focus()
-          trapRegistry.triggerElements.delete(id)
         }, 200)
       }
+      trapRegistry.triggerElements.delete(id)
       observer?.disconnect()
     }
   },
@@ -115,6 +150,7 @@ onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown)
   observer?.disconnect()
   trapRegistry.activeIds = trapRegistry.activeIds.filter((tid) => tid !== id)
+  trapRegistry.triggerElements.delete(id)
 })
 </script>
 

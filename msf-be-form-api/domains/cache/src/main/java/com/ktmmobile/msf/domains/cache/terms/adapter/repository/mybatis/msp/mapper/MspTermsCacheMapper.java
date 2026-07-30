@@ -6,8 +6,12 @@ import org.apache.ibatis.annotations.Mapper;
 
 import com.ktmmobile.msf.domains.cache.terms.domain.entity.TermsDetail;
 
+/**
+ * MSP 약관 상세 조회 MyBatis Mapper
+ */
 @Mapper
 public interface MspTermsCacheMapper {
 
+    /** 약관 상세 목록 조회 */
     List<TermsDetail> selectListTermsDetail(List<TermsDetail> termsDetailList);
 }

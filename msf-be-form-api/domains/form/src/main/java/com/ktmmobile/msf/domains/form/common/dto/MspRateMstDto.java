@@ -54,6 +54,7 @@ public class MspRateMstDto implements Serializable {
     private String xmlQosCnt;
     private String xmlCallCnt;
     private String jehuProdType;        // 요금제 제휴처
+    private String jehuProdNm;        // 요금제 제휴처명
 
     // 기본료 + 부가세 10% 계산
     public int getBaseVatAmt() {
@@ -70,9 +71,13 @@ public class MspRateMstDto implements Serializable {
         String convertFreeDataCnt = freeDataCnt;
         BigDecimal castData;
         try {
-            if (StringUtils.isEmpty(convertFreeDataCnt)) { convertFreeDataCnt = "0"; }
+            if (StringUtils.isEmpty(convertFreeDataCnt)) {
+                convertFreeDataCnt = "0";
+            }
             castData = new BigDecimal(convertFreeDataCnt);
-            if (castData.intValue() < 1) { return ""; }
+            if (castData.intValue() < 1) {
+                return "";
+            }
             if (castData.intValue() >= 1024) {
                 return castData.divide(new BigDecimal("1024"), 1, BigDecimal.ROUND_DOWN).stripTrailingZeros().toPlainString() + "GB";
             }
@@ -86,9 +91,13 @@ public class MspRateMstDto implements Serializable {
         String convertFreeDataCnt = freeDataCnt;
         BigDecimal castData;
         try {
-            if (StringUtils.isEmpty(convertFreeDataCnt)) { convertFreeDataCnt = "0"; }
+            if (StringUtils.isEmpty(convertFreeDataCnt)) {
+                convertFreeDataCnt = "0";
+            }
             castData = new BigDecimal(convertFreeDataCnt);
-            if (castData.intValue() < 1) { return "0MB"; }
+            if (castData.intValue() < 1) {
+                return "0MB";
+            }
             if (castData.intValue() >= 1024) {
                 return castData.divide(new BigDecimal("1024"), 1, BigDecimal.ROUND_DOWN).stripTrailingZeros().toPlainString() + "GB";
             }
@@ -106,12 +115,18 @@ public class MspRateMstDto implements Serializable {
             } else {
                 if (!StringUtils.isEmpty(nwOutCallCnt)) {
                     sbRtn.append("망외").append(nwOutCallCnt);
-                    if (StringUtils.isNumeric(nwOutCallCnt)) { sbRtn.append("분"); }
+                    if (StringUtils.isNumeric(nwOutCallCnt)) {
+                        sbRtn.append("분");
+                    }
                 }
-                if (sbRtn.length() > 0) { sbRtn.append("<br/>"); }
+                if (sbRtn.length() > 0) {
+                    sbRtn.append("<br/>");
+                }
                 if (!StringUtils.isEmpty(nwInCallCnt)) {
                     sbRtn.append("망내").append(nwInCallCnt);
-                    if (StringUtils.isNumeric(nwInCallCnt)) { sbRtn.append("분"); }
+                    if (StringUtils.isNumeric(nwInCallCnt)) {
+                        sbRtn.append("분");
+                    }
                 }
             }
         } else if (StringUtils.isNumeric(freeCallCnt)) {
@@ -130,12 +145,18 @@ public class MspRateMstDto implements Serializable {
             } else {
                 if (!StringUtils.isEmpty(nwOutCallCnt)) {
                     sbRtn.append("망외 ").append(nwOutCallCnt);
-                    if (nwOutCallCnt.indexOf("기본제공") == -1) { sbRtn.append("분"); }
+                    if (nwOutCallCnt.indexOf("기본제공") == -1) {
+                        sbRtn.append("분");
+                    }
                 }
-                if (sbRtn.length() > 0) { sbRtn.append(","); }
+                if (sbRtn.length() > 0) {
+                    sbRtn.append(",");
+                }
                 if (!StringUtils.isEmpty(nwInCallCnt)) {
                     sbRtn.append("망내 ").append(nwInCallCnt);
-                    if (StringUtils.isNumeric(nwInCallCnt)) { sbRtn.append("분"); }
+                    if (StringUtils.isNumeric(nwInCallCnt)) {
+                        sbRtn.append("분");
+                    }
                 }
                 return sbRtn.toString();
             }

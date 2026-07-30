@@ -4,7 +4,7 @@
     <div class="completed-msg">
       <img src="@/assets/images/completedIcon.svg" alt="완료" />
       <p class="user-name">
-        <em class="ut-color-accent"> {{ data.name }} </em>님
+        <em class="ut-color-accent"> {{ displayName }} </em>님
       </p>
       <div class="info-txt">
         <strong> 작성하신 신청서가 작성 완료되었습니다.</strong>
@@ -12,13 +12,13 @@
       </div>
     </div>
     <div class="box-layout">
-      <MsfAppViewer class="box-item" :form-key="data.formKey" :form-type="props.formType" />
-      <MsfAppSender
+      <MsfAppViewer
         class="box-item"
-        :phone="data.phone"
-        :name="data.name"
-        :form-key="data.formKey"
+        :form-key="data.requestKey"
+        :form-type="data.formType"
+        :document-id="data.documentId"
       />
+      <MsfAppSender class="box-item" :form-data="data" />
     </div>
     <MsfTextList
       :items="[
@@ -77,23 +77,29 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeMount, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { post } from '@/libs/api/msf.api'
-import { getFormTypeCode } from '@/libs/utils/comn.utils'
 import { showAlert, showConfirm } from '@/libs/utils/comp.utils'
-import { validateMobile, isEmpty } from '@/libs/utils/string.utils'
+import { validateMobile, isEmpty, maskingName } from '@/libs/utils/string.utils'
 
 const route = useRoute()
 
 const props = defineProps({
-  formType: { type: String, required: true },
-  formData: { type: Object, required: true },
+  requestKey: { type: String, required: true },
 })
 
 const smsType = ref('')
-const data = ref(props.formData)
+const data = ref({
+  formType: '',
+  requestKey: '',
+  documentId: [],
+  name: '',
+  mobiles: [],
+})
 const phoneNumber = ref('')
+
+const displayName = computed(() => maskingName(data.value?.name || ''))
 
 const invalid = computed(() => {
   if (isEmpty(phoneNumber.value)) return true
@@ -110,8 +116,7 @@ const onClickSendKTMessage = async (type) => {
     return false
   }
 
-  const formTypeCd = getFormTypeCode(route.path)
-  smsType.value = `F-${formTypeCd}-${type}DN`
+  smsType.value = `F-${data.value.formType}-${type}DN`
 
   showConfirm('SMS를 발송하시겠습니까?', async () => {
     const result = await post('/api/shared/common/sms/send', {
@@ -129,12 +134,29 @@ const onClickSendKTMessage = async (type) => {
 }
 
 watch(
-  () => props.formData,
-  (newVal) => {
-    data.value = newVal
+  () => props.requestKey,
+  async (newVal) => {
+    if (!isEmpty(newVal)) {
+      const result = await post('/api/form/common/complete/form', {
+        requestKey: newVal,
+      })
+      data.value = result.data
+    } else {
+      data.value = {}
+    }
   },
-  { immediate: true, deep: true },
 )
+
+onBeforeMount(async () => {
+  const result = await post('/api/form/common/complete/form', {
+    requestKey: props.requestKey,
+  })
+  if (result.code !== '0000') {
+    data.value = {}
+    return
+  }
+  data.value = result.data
+})
 </script>
 
 <style lang="scss" scoped></style>

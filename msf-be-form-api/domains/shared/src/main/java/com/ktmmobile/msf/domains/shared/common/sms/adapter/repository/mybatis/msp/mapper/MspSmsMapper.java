@@ -8,4 +8,6 @@ import com.ktmmobile.msf.domains.shared.common.sms.domain.entity.MspSmsData;
 public interface MspSmsMapper {
 
     Integer insertSmsData(MspSmsData mspSmsData);
+
+    Integer insertKakaoData(MspSmsData mspSmsData);
 }

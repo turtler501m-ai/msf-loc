@@ -1,6 +1,6 @@
 <template>
   <MsfNumberInput
-    ref="input1"
+    ref="input1Ref"
     v-bind="$attrs"
     v-model="number1"
     maxlength="3"
@@ -8,25 +8,27 @@
     :readonly="readonly || !!number1"
     :disabled="disabled"
     :ariaLabel="`${cleanLabel} 앞자리`"
-    @maxlength="input2?.focus()"
+    @maxlength="input2Ref?.focus()"
   />
   <span class="unit-sep">-</span>
   <MsfNumberInput
-    ref="input2"
+    ref="input2Ref"
     v-bind="$attrs"
     v-model="number2"
+    :id="number2Id"
     maxlength="4"
     placeholder="가운데 4자리"
     :readonly="readonly"
     :disabled="disabled"
     :ariaLabel="`${cleanLabel} 가운데 4자리`"
-    @maxlength="input3?.focus()"
+    @maxlength="input3Ref?.focus()"
   />
   <span class="unit-sep">-</span>
   <MsfNumberInput
-    ref="input3"
+    ref="input3Ref"
     v-bind="$attrs"
     v-model="number3"
+    :id="number3Id"
     :type="secure ? 'password' : 'text'"
     maxlength="4"
     placeholder="뒤 4자리"
@@ -37,8 +39,13 @@
 </template>
 
 <script setup>
-import { computed, watch, ref } from 'vue'
+import { computed, watch, ref, useId } from 'vue'
 import { validateMobile } from '@/libs/utils/string.utils'
+
+// 컴포넌트 내부에서 유니크 ID 생성
+const uniqueId = useId()
+const number2Id = computed(() => `inp-number2-${uniqueId}`)
+const number3Id = computed(() => `inp-number3-${uniqueId}`)
 
 // 네이티브 속성(readonly, disabled, maxlength 등)을
 // 최상위 태그가 아닌 input으로 깔끔하게 넘겨줍니다.
@@ -51,9 +58,9 @@ const number1 = defineModel('number1', { type: [String, Number], default: '010' 
 const number2 = defineModel('number2', { type: [String, Number], default: '' })
 const number3 = defineModel('number3', { type: [String, Number], default: '' })
 
-const input1 = ref(null)
-const input2 = ref(null)
-const input3 = ref(null)
+const input1Ref = ref(null)
+const input2Ref = ref(null)
+const input3Ref = ref(null)
 
 // props 정의
 const props = defineProps({
@@ -87,4 +94,15 @@ watch(
     emit('verify', isValid && isStrictLength)
   },
 )
+
+defineExpose({
+  focus: () => {
+    if (!number1.value) input1Ref.value?.focus()
+    else if (!number2.value) input2Ref.value?.focus()
+    else input3Ref.value?.focus()
+  },
+  isValid: computed(() =>
+    validateMobile(number1.value + '-' + number2.value + '-' + number3.value),
+  ),
+})
 </script>

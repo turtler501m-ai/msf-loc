@@ -1,0 +1,16 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- 스마트폰 -->
+    <rect x="14" y="6" width="20" height="36" rx="3" stroke="#2D3748" stroke-width="2" />
+    <!-- 폰 화면 -->
+    <rect x="17" y="10" width="14" height="24" rx="1" stroke="#2D3748" stroke-width="1.5" />
+    <!-- 홈버튼/하단 표시 -->
+    <line x1="21" y1="39" x2="27" y2="39" stroke="#2D3748" stroke-width="2" stroke-linecap="round" />
+    <!-- 흔들림 지그재그 - 왼쪽 -->
+    <path d="M10 15L7 18L10 21L7 24L10 27" stroke="#2D3748" stroke-width="2" stroke-linecap="round"
+        stroke-linejoin="round" />
+    <!-- 흔들림 지그재그 - 오른쪽 -->
+    <path d="M38 15L41 18L38 21L41 24L38 27" stroke="#2D3748" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" />
+    <!-- 금지 사선 -->
+    <line x1="6" y1="6" x2="42" y2="42" stroke="#2D3748" stroke-width="2.5" stroke-linecap="round" />
+</svg>

@@ -1,5 +1,6 @@
 <template>
-  <RouterView />
+  <MsfFocusScope> <RouterView /></MsfFocusScope>
+  <MsfNetworkBanner />
   <!-- 전역적으로 사용되는 포탈 영역(Dialog, Popover 등을 띄우는 영역) -->
   <div id="portal-root" class="portal"></div>
   <MsfAlertDialog
@@ -29,18 +30,58 @@
         : undefined
     "
   />
+  <MsfLoadingComp :isOpen="showLoading" />
 </template>
 
 <script setup>
-// import { onMounted, onUnmounted, ref } from 'vue'
-import { RouterView } from 'vue-router'
+import { computed, onBeforeMount, onMounted, onUnmounted, ref, watch } from 'vue'
+import { RouterView, useRoute } from 'vue-router'
+import { storeToRefs } from 'pinia'
+import MsfNetworkBanner from '@/components/common/MsfNetworkBanner.vue'
 import { useMsfAlertStore } from '@/stores/msf_alert'
-import { showAlert } from '@/libs/utils/comp.utils'
-import { onBeforeMount } from 'vue'
+import { useMsfLoadingStore } from '@/stores/msf_loading'
+import { useMsfNetworkStore } from '@/stores/msf_network'
+import { post } from '@/libs/api/msf.api'
+import { showAlert, showConfirm } from '@/libs/utils/comp.utils'
+import {
+  appUpdate,
+  getDeviceUuid,
+  initializeDeviceInfo,
+  isAppWebView,
+} from '@/libs/utils/device.utils'
+import { useAppHeight } from '@/hooks/useAppHeight'
+import { isNonProduction } from '@/libs/utils/env.utils'
+
+useAppHeight() // 전역 레이아웃 기기높이 기준값(--msf-app-height) 생성
+
+const route = useRoute()
 
 const { alerts, removeAlert } = useMsfAlertStore()
-import { post } from '@/libs/api/msf.api'
-import { appDeviceType, getDeviceInfo } from '@/libs/utils/device.utils'
+
+const { loadings } = storeToRefs(useMsfLoadingStore())
+const networkStore = useMsfNetworkStore()
+const NETWORK_CHECK_FORM_DOMAINS = ['newchange', 'servicechange', 'ownerchange', 'termination']
+const isAppWebViewDetected = ref(false)
+const isAppWebViewMode = ref(false)
+
+const showLoading = computed(() => loadings.value)
+const shouldCheckNetwork = computed(() => {
+  if (!isAppWebViewDetected.value || !isAppWebViewMode.value) return false
+  if (!route.path.startsWith('/form/')) return false
+
+  const domain = route.path.split('/')[2]
+
+  return NETWORK_CHECK_FORM_DOMAINS.includes(domain)
+})
+
+const syncNetworkMonitoring = () => {
+  if (shouldCheckNetwork.value) {
+    networkStore.startMonitoring('form')
+    return
+  }
+
+  networkStore.stopMonitoring({ scope: 'form', resetStatus: true })
+}
 
 // // 화면 보안 처리 여부를 결정하는 반응형 상태
 // const isSecureHidden = ref(false)
@@ -115,20 +156,95 @@ import { appDeviceType, getDeviceInfo } from '@/libs/utils/device.utils'
 //   }
 // })
 
-onBeforeMount(async () => {
-  await appDeviceType() // 디바이스 유형 감지 및 localStorage에 저장
-  await getDeviceInfo() // 디바이스 정보 수집 (콘솔에 출력)
-  const param = {
-    os: localStorage.getItem('deviceType'), // 운영체제 정보
-    appOsVer: localStorage.getItem('appOsVersion'), // 앱 운영체제 버전 정보 (예시)
-    version: localStorage.getItem('appVersion'), // 앱 버전 정보
-    uuid: localStorage.getItem('MSF_DEVICE_UUID'),
-  }
-  if (localStorage.getItem('deviceType') !== 'PC') {
-    const result = await post('/api/n/app/intro', param)
-    showAlert(result.message)
+onBeforeMount(() => {
+  // 앱이 실행될 때마다 디바이스 유형과 UUID를 초기화
+})
+
+// const baseUri = window.location.origin
+
+const downloadUrl = ref('')
+
+onMounted(async () => {
+  try {
+    await initializeDeviceInfo()
+    isAppWebViewMode.value = isAppWebView()
+    isAppWebViewDetected.value = true
+    console.log('appDeviceType:', localStorage.getItem('deviceType'))
+    console.log(
+      'getDeviceInfo:',
+      localStorage.getItem('appOsVersion'),
+      localStorage.getItem('appVersion'),
+      getDeviceUuid(),
+    )
+    await delay(500)
+    const param = {
+      os: localStorage.getItem('deviceType'), // 운영체제 정보
+      appOsVer: localStorage.getItem('appOsVersion'), // 앱 운영체제 버전 정보 (예시)
+      version: localStorage.getItem('appVersion'), // 앱 버전 정보
+      uuid: getDeviceUuid(),
+    }
+    if (localStorage.getItem('deviceType') !== 'P') {
+      param.uuid = getDeviceUuid()
+      if (route.path !== '/download') {
+        const result = await post('/api/n/app/intro', param)
+        console.log(result.message)
+        if (result.code === '0000') {
+          // showAlert(JSON.stringify(result))
+          console.log('env no product:' + isNonProduction())
+          if (result.data.update === 'Y') {
+            if (localStorage.getItem('deviceType') === 'I') {
+              // if (isNonProduction()) {
+              //   downloadUrl.value =
+              //     `itms-services://?action=download-manifest&url=` + result.data.updateUrl
+              // } else {
+              //   downloadUrl.value = `itms-apps://itunes.apple.com/app/id6792940961`
+              // }
+              downloadUrl.value =
+                `itms-services://?action=download-manifest&url=` + result.data.updateUrl
+            }
+            if (localStorage.getItem('deviceType') === 'A') {
+              downloadUrl.value = result.data.updateUrl
+            }
+            if (result.data.mustUpCd === 'Y') {
+              showAlert(
+                '현재 설치된 App이 최신 버전이 아닙니다.\n최신 버전으로 업데이트 해주세요.',
+                () => {
+                  appUpdate(downloadUrl.value)
+                },
+              )
+            } else {
+              showConfirm(
+                '최신 출시된 App이 있습니다.\n최신 버전으로 업데이트 하시겠습니까?',
+                () => {
+                  appUpdate(downloadUrl.value)
+                },
+                '',
+                () => {},
+              )
+            }
+          }
+        } else {
+          showAlert('앱 버전 정보를 가져오는 데 실패하였습니다.\n앱을 재실행 해주세요.')
+        }
+      }
+    }
+  } catch (err) {
+    console.error('디바이스 정보 초기화 실패:', err)
   }
 })
+onUnmounted(() => {
+  networkStore.stopMonitoring({ scope: 'form', resetStatus: true })
+})
+
+watch(
+  shouldCheckNetwork,
+  () => {
+    syncNetworkMonitoring()
+  },
+  { immediate: true },
+)
+
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 </script>
 
 <style scoped></style>

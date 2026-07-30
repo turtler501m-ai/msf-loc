@@ -34,8 +34,8 @@ $em-font-weight: var(--font-weight-bold);
 $th-font-weight: var(--font-weight-regular);
 
 // placeholder
-$placeholder-font-color: var(--color-gray-500);
-$placeholder-font-weight: var(--font-weight-regular);
+$placeholder-font-color: var(--color-text-placeholder);
+$placeholder-font-weight: var(--font-weight-medium);
 
 // selection
 $selection-color: null; //var(--color-foreground)
@@ -83,10 +83,11 @@ html {
   // scroll-behavior: smooth; // 1
   -webkit-font-smoothing: antialiased; // 2
   -webkit-text-size-adjust: 100%; // 3
+  text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent; // 4
   // overflow-y: auto;
   // overflow: hidden;
-  font-size: 16px;
+  font-size: 16px; // ★ 화면 전체적인 사이즈 비율을 조절하고 싶으시면 이값을 키우거나 줄이시면 됩니다.
 }
 
 // 문서의 기본 설정
@@ -109,6 +110,34 @@ body {
   word-break: keep-all;
   overflow-wrap: anywhere;
   touch-action: manipulation;
+}
+
+// 높이 관련 수정
+html {
+  width: 100%;
+  height: 100%;
+}
+body {
+  position: fixed; // 안드로이드에서 높이 0으로 처리되는 문제로 설정
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+// #app에서 레이아웃 기준값(--msf-app-height) 사용
+#app {
+  // height: var(--msf-app-height, 100vh);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overscroll-behavior: none; // 터치 기기에서 바운스 효과 방지
+}
+/* #app에서 스크롤 허용 (.layout-root가 없을 때)*/
+#app:not(:has(.layout-root)) {
+  overflow-y: auto;
 }
 
 // HTML5 태그에 대한 IE 호환성 설정
@@ -191,7 +220,7 @@ table {
   border-collapse: collapse;
   empty-cells: show;
   border-spacing: 0;
-  transform: translateZ(0); // 윈도우 크롬에서 sub-pixel 라인 방지에 자주 쓰는 트릭
+  // transform: translateZ(0); // 윈도우 크롬에서 sub-pixel 라인 방지에 자주 쓰는 트릭___약관스크롤 사라짐현상으로 삭제__20260521
 }
 caption {
   caption-side: bottom;
@@ -355,8 +384,9 @@ body.datepicker-open::before {
   position: fixed;
   top: 0;
   left: 0;
+  width: 100%;
   width: 100vw;
-  height: 100vh;
+  height: var(--msf-app-height, 100vh);
   background-color: var(--color-alpha-dim); /* 딤 처리 농도 */
   // z-index: 999; /* 데이트피커 메뉴보다는 낮아야 함 */
   z-index: 1001; /* 데이트피커 메뉴보다는 낮아야 함 */
@@ -369,4 +399,7 @@ body.datepicker-open::before {
 // 선택 팝업 높이 지정
 .select-dialog {
   max-height: rem(440px) !important;
+  div.header-wrap {
+    margin-bottom: rem(12px);
+  }
 }

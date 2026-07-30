@@ -12,6 +12,7 @@ import com.ktmmobile.msf.commons.logincore.application.port.in.LoginRefreshToken
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginTokenPair;
 import com.ktmmobile.msf.commons.logincore.support.exception.RefreshTokenNotExistsException;
 import com.ktmmobile.msf.commons.logincore.support.properties.LoginCoreProperties;
+import com.ktmmobile.msf.commons.websecurity.security.auth.service.LoginJwtTokenValidator;
 
 @RequiredArgsConstructor
 @Service
@@ -19,15 +20,27 @@ public class LoginRefreshTokenCookieService implements LoginRefreshTokenCookieMa
 
     private final LoginCoreProperties properties;
 
+    /**
+     * Refresh Token 쿠키 조회
+     *
+     * @param cookies 쿠키 배열
+     * @return Refresh Token
+     */
     @Override
     public String getRefreshToken(Cookie[] cookies) {
         String refreshToken = findRefreshToken(cookies);
         if (refreshToken == null) {
-            throw new RefreshTokenNotExistsException("RefreshToken이 없습니다.");
+            throw new RefreshTokenNotExistsException(LoginJwtTokenValidator.TOKEN_LOGGED_OUT_MESSAGE);
         }
         return refreshToken;
     }
 
+    /**
+     * Refresh Token 쿠키 Optional 조회
+     *
+     * @param cookies 쿠키 배열
+     * @return Refresh Token
+     */
     @Override
     public String findRefreshToken(Cookie[] cookies) {
         if (cookies == null) {
@@ -42,6 +55,12 @@ public class LoginRefreshTokenCookieService implements LoginRefreshTokenCookieMa
             .orElse(null);
     }
 
+    /**
+     * Refresh Token 쿠키 생성
+     *
+     * @param tokenPair 토큰 쌍
+     * @return 응답 쿠키
+     */
     @Override
     public ResponseCookie createRefreshTokenCookie(LoginTokenPair tokenPair) {
         LoginCoreProperties.Cookie cookie = properties.cookie();
@@ -54,6 +73,11 @@ public class LoginRefreshTokenCookieService implements LoginRefreshTokenCookieMa
             .build();
     }
 
+    /**
+     * Refresh Token 삭제 쿠키 생성
+     *
+     * @return 응답 쿠키
+     */
     @Override
     public ResponseCookie deleteRefreshTokenCookie() {
         LoginCoreProperties.Cookie cookie = properties.cookie();

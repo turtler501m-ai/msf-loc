@@ -1,5 +1,5 @@
 <template>
-  <div :class="rootClasses" role="group">
+  <div ref="checkboxGroupRef" :class="rootClasses" role="group">
     <MsfCheckbox
       v-for="option in optionList"
       :key="option.value"
@@ -46,6 +46,8 @@ const props = defineProps({
 
 // 이벤트 등록
 const emit = defineEmits(['update:modelValue', 'change'])
+
+const checkboxGroupRef = ref(null)
 
 const optionList = ref(props.options)
 
@@ -96,6 +98,12 @@ watch(
 
 onBeforeMount(() => {
   getOptionsByGroupCode(props.groupCode)
+})
+
+defineExpose({
+  focus: () => {
+    checkboxGroupRef.value?.querySelector('input[type=checkbox]')?.focus()
+  },
 })
 </script>
 

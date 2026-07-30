@@ -45,7 +45,7 @@ public class CacheLocalStore {
         if (cacheLoader.storeType() == CacheStoreType.HASH) {
             return Optional.ofNullable(hashStore.getOrDefault(cacheLoader.cacheName(), Map.of()).get(key));
         }
-        return Optional.ofNullable(valueStore.get(cacheKeyGenerator.generate(cacheLoader.cacheName(), key)));
+        return Optional.ofNullable(valueStore.get(valueStoreKey(cacheLoader, key)));
     }
 
     /**
@@ -70,7 +70,7 @@ public class CacheLocalStore {
         }
 
         for (String key: keys) {
-            Object value = valueStore.get(cacheKeyGenerator.generate(cacheLoader.cacheName(), key));
+            Object value = valueStore.get(valueStoreKey(cacheLoader, key));
             if (value != null) {
                 values.put(key, value);
             }
@@ -87,6 +87,9 @@ public class CacheLocalStore {
     public boolean hasCache(CacheLoader<?> cacheLoader) {
         if (cacheLoader.storeType() == CacheStoreType.HASH) {
             return hashStore.containsKey(cacheLoader.cacheName());
+        }
+        if (cacheLoader.storeType() == CacheStoreType.SINGLE_VALUE) {
+            return valueStore.containsKey(cacheLoader.cacheName());
         }
         return valueStore.keySet().stream()
             .anyMatch(key -> key.startsWith(cacheLoader.cacheName() + ":"));
@@ -124,6 +127,13 @@ public class CacheLocalStore {
             hashStore.put(cacheLoader.cacheName(), Map.copyOf(values));
             return;
         }
+        if (cacheLoader.storeType() == CacheStoreType.SINGLE_VALUE) {
+            clear(cacheLoader);
+            values.values().stream()
+                .findFirst()
+                .ifPresent(value -> valueStore.put(cacheLoader.cacheName(), value));
+            return;
+        }
 
         valueStore.keySet().removeIf(key -> key.startsWith(cacheLoader.cacheName() + ":"));
         values.forEach((key, value) -> set(cacheLoader, key, value));
@@ -147,7 +157,7 @@ public class CacheLocalStore {
             });
             return;
         }
-        valueStore.put(cacheKeyGenerator.generate(cacheLoader.cacheName(), key), value);
+        valueStore.put(valueStoreKey(cacheLoader, key), value);
     }
 
     /**
@@ -181,6 +191,11 @@ public class CacheLocalStore {
             metadataStore.remove(cacheLoader.cacheName());
             return;
         }
+        if (cacheLoader.storeType() == CacheStoreType.SINGLE_VALUE) {
+            valueStore.remove(cacheLoader.cacheName());
+            metadataStore.remove(cacheLoader.cacheName());
+            return;
+        }
         valueStore.keySet().removeIf(key -> key.startsWith(cacheLoader.cacheName() + ":"));
         metadataStore.remove(cacheLoader.cacheName());
     }
@@ -200,6 +215,13 @@ public class CacheLocalStore {
             });
             return;
         }
-        valueStore.remove(cacheKeyGenerator.generate(cacheLoader.cacheName(), key));
+        valueStore.remove(valueStoreKey(cacheLoader, key));
+    }
+
+    private String valueStoreKey(CacheLoader<?> cacheLoader, String key) {
+        if (cacheLoader.storeType() == CacheStoreType.SINGLE_VALUE) {
+            return cacheLoader.cacheName();
+        }
+        return cacheKeyGenerator.generate(cacheLoader.cacheName(), key);
     }
 }

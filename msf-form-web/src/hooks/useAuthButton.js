@@ -8,15 +8,13 @@ export function useAuthButton(dependenciesCallback, externalAuthFlag, validator)
     dependenciesCallback,
     (newVals) => {
       let isReady = false
-      console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
-      console.log(newVals)
       if (validator) {
         // 커스텀 검증 함수가 제공된 경우 사용
         isReady = !!validator(newVals)
       } else {
         // 모든 의존성 값이 유효한지 체크 (undefined, null, 빈 문자열 방지)
         isReady = newVals.every(
-          (val) => val !== undefined && val !== null && String(val).trim().length > 0,
+          (val) => val !== undefined && val !== null && val && String(val).trim().length > 0,
         )
       }
 
@@ -39,6 +37,23 @@ export function useAuthButton(dependenciesCallback, externalAuthFlag, validator)
     },
     { deep: true, immediate: true },
   )
+
+  if (externalAuthFlag) {
+    watch(
+      () => externalAuthFlag.value,
+      (newVal) => {
+        if (newVal === false) {
+          if (status.value === 'verified' || status.value === 'sent') {
+            status.value = 'ready'
+          }
+        } else if (newVal === true) {
+          if (status.value !== 'verified') {
+            status.value = 'verified'
+          }
+        }
+      }
+    )
+  }
 
   const send = () => {
     if (status.value === 'ready' || status.value === 'sent') {

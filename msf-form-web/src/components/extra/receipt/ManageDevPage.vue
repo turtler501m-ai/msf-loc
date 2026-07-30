@@ -38,7 +38,9 @@
           class="search-input"
           @keyup.enter="onSearch"
         />
-        <MsfButton variant="primary" noMinWidth class="search-btn" @click="onSearch">조회</MsfButton>
+        <MsfButton variant="primary" noMinWidth class="search-btn" @click="onSearch"
+          >조회</MsfButton
+        >
       </MsfStack>
     </MsfStack>
   </MsfBox>
@@ -56,7 +58,10 @@
     @row-double-click="onRowDoubleClick"
   >
     <template #buttons>
-      <MsfButton variant="subtle" :disabled="!selectedRow" @click="openDetail(selectedRow)">상세보기</MsfButton>
+      <MsfButton variant="subtle" :disabled="!selectedRow" @click="openDetail(selectedRow)"
+        >상세보기</MsfButton
+      >
+      <MsfButton variant="subtle" @click="isAppConfirmModalOpen = true">신청서확인</MsfButton>
     </template>
   </MsfDataTable>
 
@@ -69,8 +74,12 @@
         <MsfButton variant="subtle" :disabled="!canCompleteCancel" @click="onClickReceiptComplete">
           해지완료
         </MsfButton>
-        <MsfButton variant="subtle" :disabled="!canRejectCancel" @click="onClickReject">반려처리</MsfButton>
-        <MsfButton variant="subtle" :disabled="!canRevertCancel" @click="onClickRevert">완료취소</MsfButton>
+        <MsfButton variant="subtle" :disabled="!canRejectCancel" @click="onClickReject"
+          >반려처리</MsfButton
+        >
+        <MsfButton variant="subtle" :disabled="!canRevertCancel" @click="onClickRevert"
+          >완료취소</MsfButton
+        >
         <MsfButton variant="subtle" @click="closeDetail">닫기</MsfButton>
       </MsfButtonGroup>
 
@@ -111,6 +120,7 @@
       </MsfStack>
     </template>
   </MsfDialog>
+  <MsfAppConfirmTestModal v-model="isAppConfirmModalOpen" :use-test="true" />
 </template>
 
 <script setup>
@@ -125,9 +135,8 @@ const FORM_TYPE_CANCEL = '4' // 서비스해지
 
 const CANCEL_PROC_OPTIONS = [
   { label: '상태 전체', value: '' },
-  { label: '접수', value: 'RC' },
-  { label: '처리중', value: 'RQ' },
-  { label: '완료', value: 'CP' },
+  { label: '접수처리중', value: 'RQ' },
+  { label: '처리완료', value: 'RC' },
   { label: '취소', value: 'BK' },
 ]
 
@@ -135,6 +144,7 @@ const applyTypeOptions = ref([{ label: '신청서 전체', value: '' }])
 const baseProcCdOptions = ref([{ label: '상태 전체', value: '' }])
 const cstmrTypeOptions = ref([])
 const identityCertTypeOptions = ref([])
+const isAppConfirmModalOpen = ref(false)
 
 onMounted(async () => {
   const [formTypeList, procSttusList, cstmrTypeList, identityCertTypeList] = await Promise.all([
@@ -151,8 +161,14 @@ onMounted(async () => {
     { label: '상태 전체', value: '' },
     ...(procSttusList || []).map((item) => ({ label: item.title, value: item.code })),
   ]
-  cstmrTypeOptions.value = (cstmrTypeList || []).map((item) => ({ label: item.title, value: item.code }))
-  identityCertTypeOptions.value = (identityCertTypeList || []).map((item) => ({ label: item.title, value: item.code }))
+  cstmrTypeOptions.value = (cstmrTypeList || []).map((item) => ({
+    label: item.title,
+    value: item.code,
+  }))
+  identityCertTypeOptions.value = (identityCertTypeList || []).map((item) => ({
+    label: item.title,
+    value: item.code,
+  }))
 })
 
 const searchGbnOptions = [
@@ -164,7 +180,7 @@ const searchGbnOptions = [
 const searchForm = reactive({
   startDt: '',
   endDt: '',
-  applyTypeCd: '',
+  applyTypeCd: FORM_TYPE_CANCEL,
   searchGbn: '',
   searchName: '',
   procCd: '',
@@ -183,10 +199,16 @@ const procCdOptions = computed(() =>
   searchForm.applyTypeCd === FORM_TYPE_CANCEL ? CANCEL_PROC_OPTIONS : baseProcCdOptions.value,
 )
 
-const isCancelProcessTarget = computed(() => String(detail.value?.formTypeCd || '') === FORM_TYPE_CANCEL)
-const canCompleteCancel = computed(() => isCancelProcessTarget.value && ['RC', 'RQ'].includes(detail.value?.procCd))
-const canRejectCancel = computed(() => isCancelProcessTarget.value && ['RC', 'RQ'].includes(detail.value?.procCd))
-const canRevertCancel = computed(() => isCancelProcessTarget.value && detail.value?.procCd === 'CP')
+const isCancelProcessTarget = computed(
+  () => String(detail.value?.formTypeCd || '') === FORM_TYPE_CANCEL,
+)
+const canCompleteCancel = computed(
+  () => isCancelProcessTarget.value && detail.value?.procCd === 'RQ',
+)
+const canRejectCancel = computed(
+  () => isCancelProcessTarget.value && detail.value?.procCd === 'RQ',
+)
+const canRevertCancel = computed(() => isCancelProcessTarget.value && detail.value?.procCd === 'RC')
 const canEditMemo = computed(() => canCompleteCancel.value || canRejectCancel.value)
 
 watch(
@@ -208,7 +230,7 @@ function onSearchGbnChange() {
 }
 
 const COMPLETE_DEFAULT_CODES = {
-  itgOderWhyCd: '01',
+  itgOderWhyCd: 'PN1',
   aftmnIncInCd: '01',
   apyRelTypeCd: '01',
   custTchMediCd: '01',
@@ -408,7 +430,10 @@ async function fetchDetail(requestKey) {
 async function openDetail(row = selectedRow.value) {
   const requestKey = normalizeRequestKey(row?.requestKey ?? row?.applyNo)
   if (!requestKey) {
-    console.warn('[신청서관리][상세팝업] 진행 중단', { reason: 'requestKey missing', row: summarizeRow(row) })
+    console.warn('[신청서관리][상세팝업] 진행 중단', {
+      reason: 'requestKey missing',
+      row: summarizeRow(row),
+    })
     alertStore.openAlert('선택된 행이 없습니다.')
     return
   }

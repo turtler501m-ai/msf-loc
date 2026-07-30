@@ -1,7 +1,6 @@
 package com.ktmmobile.msf.domains.form.common.repository;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.ResourceAccessException;
@@ -13,16 +12,14 @@ import org.springframework.web.client.RestTemplate;
  * api.interface.use-mcp : true  — mcp-api REST 호출. 연결 실패 시 MCP 직접 조회로 자동 전환(TEST)
  *                         false — mcp-api 호출 없이 MCP 직접 조회만 사용 (정책 변경 시)
  */
-
+@Slf4j
 @Component
 public class McpApiClient {
 
-    private static final Logger logger = LoggerFactory.getLogger(McpApiClient.class);
-
-    @Value("${api.interface.server}")
+    @Value("${api.interface.server:}")
     private String baseUrl;
 
-    @Value("${api.interface.use-mcp}")
+    @Value("${api.interface.use-mcp:false}")
     private boolean useMcp;
 
     private final MspApiDirectRepository mspApiDirectRepository;
@@ -42,19 +39,19 @@ public class McpApiClient {
 
     public <T> T post(String path, Object request, Class<T> responseType) {
         if (!useMcp) {
-            logger.debug("[MspApiClient] use-mcp=false, MSP 직접 조회: {}", path);
+            log.debug("[MspApiClient] use-mcp=false, MSP 직접 조회: {}", path);
             return mspApiDirectRepository.query(path, request, responseType);
         }
 
         String url = baseUrl + path;
-        logger.debug("[MspApiClient] POST {}", url);
+        log.debug("[MspApiClient] POST {}", url);
         try {
             T response = restTemplate.postForObject(url, request, responseType);
-            logger.debug("[MspApiClient] POST {} OK", url);
+            log.debug("[MspApiClient] POST {} OK", url);
             return response;
         } catch (ResourceAccessException e) {
-            logger.warn("[MspApiClient] POST {} 연결 실패", url);
-            logger.warn("[MspApiClient] MSP 직접 조회 실행: {}", e.getMessage());
+            log.warn("[MspApiClient] POST {} 연결 실패", url);
+            log.warn("[MspApiClient] MSP 직접 조회 실행: {}", e.getMessage());
             return mspApiDirectRepository.query(path, request, responseType);
         }
     }

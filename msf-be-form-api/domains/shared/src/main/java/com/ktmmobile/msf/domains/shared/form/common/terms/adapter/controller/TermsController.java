@@ -29,7 +29,7 @@ public class TermsController {
         TermsCacheRequest request = TermsCacheRequest.of(condition.groupCode(), requestSpecList);
         List<TermsCacheResponse> list = termsCacheReader.getListTerms(request);
 
-        return ResponseUtils.ok(termsCacheReader.getListTerms(request));
+        return ResponseUtils.ok(list);
     }
 
     @PostMapping("/content")

@@ -1,8 +1,8 @@
 <template>
   <MsfInput
+    ref="inputRef"
     v-bind="$attrs"
     v-model="model"
-    :id="inputId"
     :maxlength="props.length"
     :placeholder="defaultPlaceholder"
     inputmode="numeric"
@@ -13,14 +13,9 @@
 </template>
 
 <script setup>
-import { computed, useId, inject } from 'vue'
-import { validateDateInput, validateDate, validateSDate } from '@/libs/utils/date.utils'
+import { computed, ref } from 'vue'
+import { validateBirthDate, calcAgeFromBirth } from '@/libs/utils/date.utils'
 import { showAlert } from '@/libs/utils/comp.utils'
-
-// ID 설정
-const injectedId = inject('form-group-id', null)
-const inputId = computed(() => props.id || injectedId || useId())
-
 // 네이티브 속성을 input 태그에 바로 적용합니다.
 defineOptions({
   inheritAttrs: false,
@@ -40,6 +35,8 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 
+const inputRef = ref(null)
+
 // length 길이에 따라 똑똑하게 기본 placeholder를 바꿔줍니다.
 // (물론 부모 컴포넌트에서 placeholder="내용"을 직접 넘기면 그게 우선 적용됩니다.)
 const defaultPlaceholder = computed(() =>
@@ -54,24 +51,23 @@ const onInput = (e) => {
   const sanitizedValue = e.target.value.replace(/[^0-9]/g, '')
   e.target.value = sanitizedValue
 
-  if (!validateDateInput(sanitizedValue, props.length)) {
-    e.target.value = sanitizedValue.substring(0, sanitizedValue.length - 1)
-  }
+  // if (!validateDateInput(sanitizedValue, props.length)) {
+  //   e.target.value = sanitizedValue.substring(0, sanitizedValue.length - 1)
+  // }
   emit('update:modelValue', e.target.value)
 }
 
 const onBlur = (e) => {
   const val = e.target.value.replace(/[^0-9]/g, '')
-  const len = Number(props.length)
 
-  if (val.length > 0) {
-    let isValid = false
-    if (val.length === len) {
-      isValid = len === 8 ? validateDate(val) : validateSDate(val)
-    }
+  if (val.length >= props.length) {
+    let { isValid, msg } = validateBirthDate(val)
+    // if (val.length === len) {
+    //   isValid = validateBirthDate(val)
+    // }
 
     if (!isValid) {
-      showAlert('유효한 생년월일이 아닙니다.')
+      showAlert(msg, () => e.target?.focus())
       e.target.value = ''
       model.value = ''
       emit('update:modelValue', '')
@@ -82,6 +78,46 @@ const onBlur = (e) => {
     }
   }
 }
+
+const isValid = computed(() => {
+  return validateBirthDate(model.value)?.isValid
+})
+
+const isMinor = computed(() => {
+  if (!isValid.value) {
+    return false
+  }
+
+  const age = calcAgeFromBirth(model.value)
+  if (age < 0) {
+    return false
+  }
+
+  return age < 19
+})
+
+const isAdult = computed(() => {
+  if (!isValid.value) {
+    return false
+  }
+
+  const age = calcAgeFromBirth(model.value)
+  if (age < 0) {
+    return false
+  }
+
+  return age >= 19
+})
+
+defineExpose({
+  isValid,
+  isMinor,
+  isAdult,
+  length: computed(() => props.length),
+  focus: () => {
+    inputRef.value?.focus()
+  },
+})
 </script>
 
 <style scoped></style>

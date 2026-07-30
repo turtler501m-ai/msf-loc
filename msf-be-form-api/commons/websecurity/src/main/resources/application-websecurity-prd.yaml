@@ -1,0 +1,39 @@
+#### PRD Profile
+spring:
+  config.activate.on-profile: prd
+
+  ## Security
+  security:
+    jwt:
+      secret-key: ENC(LfdtVqgKK5sErB4saM22gjwld6rYmJr6rIXbkB1jR4jy6c+3djzhEjnSss3YDqgGPaugiqP71UIoL0Ldx3aCLoFh+djlHBOKN29tBuoIFjI=)
+
+  ## Request Log
+  request-log:
+    enabled:
+      request-headers: false
+      response-headers: false
+      request-body: false
+      response-body: false
+
+
+## 외부 서비스 인증 (Inbound)
+external-service-auth:
+  services:
+    eformsign: ## eFormSign
+      api-key: ENC(VCTU3FXrYXmAv/4mYLm6S3S8mpHucbXn8DiyexntolUvqSkrlTHmEJ+XoLXRFUWfxGHHbrb+88bobEnqKmW9d1FF6MCAGkvJzeISerdRHAakewRL6RGlDQZ/k4UZWSoZj5+WMDM7ICApfqzxN4DodA==)
+      allowed-ip-addresses: ## 허용 IP 목록 (단일 IP, CIDR 가능)
+        - 172.28.11.27   # msf-eformsign-app1-prd
+        - 172.28.111.27  # msf-eformsign-app1-prd
+        - 172.28.11.28   # msf-eformsign-app2-prd
+        - 172.28.111.28  # msf-eformsign-app2-prd
+    koi-idcard: ## KOI 모바일신분증 인증
+      api-key: ENC(CyUdyEhLtJeRnvFZONaU+MJqy/EXNJfvrV01YeqEHYL6N3+g2cwQI9VRhbE6jGBCvDoy90z1HiPzvw6GykiSM9KGBjPWlS0E3E3duErtXnIQ7atjV9QQiJKx8UB0o/EPFWd9Vmf9evenv3RoAHSY+Q==)
+      allowed-ip-addresses: ## 허용 IP 목록 (단일 IP, CIDR 가능)
+        - 10.0.2.0/24  # Docker Overlay Network(msf-infra-app-app-private)
+
+
+## Response Handling
+response-handling:
+  exception:
+    className: false
+    message: false

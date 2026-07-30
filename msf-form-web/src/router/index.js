@@ -1,6 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router'
-// import { isAuthenticated } from '@/libs/utils/auth.utils'
-import { showConfirm } from '@/libs/utils/comp.utils'
+import { useMsfStepStore } from '@/stores/msf_step'
+import { showConfirmAsync } from '@/libs/utils/comp.utils'
+import { useMsfUserStore } from '@/stores/msf_user'
+import { useMsfFormNewChgStore } from '@/stores/msf_newchange'
+import { useMsfFormOwnChgStore } from '@/stores/msf_ownerChange'
+import { getEnvName } from '@/libs/utils/env.utils'
 
 // 레이아웃
 import MsfBaseLayout from '@/layouts/MsfBaseLayout.vue'
@@ -12,6 +16,8 @@ import MsfNotFoundView from '@/views/MsfNotFoundView.vue'
 import MsfAppDownloadView from '@/views/MsfAppDownloadView.vue'
 // 로그인
 import MsfLoginView from '@/views/MsfLoginView.vue'
+// 신청서
+import MsfFormView from '@/views/MsfFormView.vue'
 // 단말 사용 인증
 import MsfDeviceAuthView from '@/views/MsfDeviceAuthView.vue'
 // 단말 사용 등록
@@ -28,6 +34,13 @@ import PubList from '@/views/guide/PubList.vue'
 import PubPage from '@/views/guide/PubPage.vue'
 import FormCommonGuideView from '@/views/guide/FormCommonGuideView.vue'
 import FormGuideView from '@/views/guide/FormGuideView.vue'
+import GridGuideView from '@/views/guide/GridGuideView.vue'
+// 개발 샘플
+import DevGuide from '@/views/guide/DevGuide.vue'
+import DeviceGuideView from '@/views/guide/DeviceGuideView.vue'
+
+const DEFAULT_TITLE = 'SMART 신청서'
+const ENV_NAME = getEnvName()
 
 const router = createRouter({
   scrollBehavior: () => ({ y: 0 }),
@@ -42,7 +55,7 @@ const router = createRouter({
         {
           path: 'form/:domain',
           name: 'form',
-          component: () => import('@/views/MsfFormView.vue'),
+          component: MsfFormView,
         },
         {
           path: 'extra/:pathes+',
@@ -83,26 +96,28 @@ const router = createRouter({
     {
       path: '/passwordChange',
       name: 'passwordChange',
+      meta: { skipAuth: true },
       component: MsfPwChangeView, // 비밀번호 변경
     },
-    {
-      path: '/404',
-      name: 'not-found-explicit',
-      meta: { skipAuth: true },
-      component: MsfNotFoundView, // 404 컴포넌트
-    },
-    {
-      path: '/:pathMatch(.*)*',
-      name: 'not-found',
-      meta: { skipAuth: true },
-      component: MsfNotFoundView, // 404 컴포넌트
-    },
     // ===== 퍼블리싱, 화면확인용 라우팅(실제화면에서 사용안함) ===== //
+    {
+      path: '/guide/dev',
+      name: 'DevGuide',
+      meta: { skipAuth: true },
+      component: DevGuide, // 개발 가이드
+    },
+    {
+      path: '/guide/device',
+      name: 'DeviceGuide',
+      meta: { skipAuth: true },
+      component: DeviceGuideView, // 앱 통신 가이드
+    },
     {
       path: '/pub/:screenId',
       name: 'PubPage',
       component: PubPage, // 퍼블리싱 화면보기용
       props: true,
+      meta: { skipAuth: true },
     },
     {
       path: '/guide',
@@ -123,6 +138,12 @@ const router = createRouter({
       component: GuideView, // 퍼블리싱 테스트
     },
     {
+      path: '/guide/grid',
+      name: 'GridGuide',
+      meta: { skipAuth: true },
+      component: GridGuideView, // 퍼블리싱 테스트
+    },
+    {
       path: '/guide/form-common',
       name: 'FormCommonGuide',
       meta: { skipAuth: true },
@@ -135,35 +156,73 @@ const router = createRouter({
       component: FormGuideView, // 퍼블리싱 반복 폼 정리
     },
     // ================================================== //
+    {
+      path: '/404',
+      name: 'not-found-explicit',
+      meta: { skipAuth: true },
+      component: MsfNotFoundView, // 404 컴포넌트
+    },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      meta: { skipAuth: true },
+      component: MsfNotFoundView, // 404 컴포넌트
+    },
   ],
 })
 
-router.beforeEach((to, from, next) => {
-  console.log('from:', from, 'to:', to)
-  if (from.path === '/form/newchange') {
-    showConfirm(
-      '신청서 작성 중에 화면 이탈시 입력하신 내용은 ‘임시저장’ 메뉴에서 확인 후 이어서 작성하실수 있습니다.\n(입력 정보는 7일간 보관됩니다.)\n화면을 이동하시겠습니까?',
-      () => {
-        next()
-      },
-    )
-    return
+router.beforeEach(async (to, from) => {
+  if (to.path === '/login') {
+    return true
   }
-  if (from.path.startsWith('/form/')) {
-    showConfirm(
-      '신청서 작성 중에 화면 이탈시 입력 내용은 재사용이 불가합니다.\n화면을 이동하시겠습니까?',
-      () => {
-        next()
-      },
-    )
-    return
+
+  const msfUserStore = useMsfUserStore()
+
+  // 1. 인증이 필요한 페이지인데 인증이 안되었다면
+  // if (!to.meta.skipAuth && !msfUserStore.token) {
+  if (!to.meta.skipAuth && !msfUserStore.isAuthenticated) {
+    const success = await msfUserStore.loadUserInfo()
+    if (!success) return { name: 'Login' }
   }
-  next()
+
+  if (to.path === '/' && from.path === '/') {
+    return true
+  }
+
+  // 2. 기존 이탈 방지 로직 유지
+  if (from.path === '/form/newchange' || from.path.startsWith('/form/')) {
+    const stepStore = useMsfStepStore()
+    const newChgStore = useMsfFormNewChgStore()
+    const ownChgStore = useMsfFormOwnChgStore()
+    let result = true
+    if (!stepStore.isWorkNotice()) {
+      const message =
+        from.path === '/form/newchange'
+          ? newChgStore.applicationKey
+            ? '신청서 작성 중에 화면 이탈시 입력하신 내용은 ‘임시저장’ 메뉴에서 확인 후 이어서 작성하실수 있습니다.\n(입력 정보는 7일간 보관됩니다.)\n화면을 이동하시겠습니까?'
+            : '신청서 작성 중에 화면 이탈시 입력 내용은 재사용이 불가합니다.\n화면을 이동하시겠습니까?'
+          : '신청서 작성 중에 화면 이탈시 입력 내용은 재사용이 불가합니다.\n화면을 이동하시겠습니까?'
+
+      // 2. await 사용 (이제 정상적으로 true/false를 반환받습니다)
+      result = await showConfirmAsync(message)
+
+      if (result) {
+        ownChgStore.$reset()
+      }
+    }
+
+    stepStore.clearWorkNotice()
+
+    // 3. 반환값으로 라우팅 제어 (경고 발생 안 함)
+    return result
+  }
+  // 4. 그 외에는 그냥 통과
+  return true
 })
 
-// router.afterEach((to) => {
-//   const title = to.meta.title || 'MSF'
-//   document.title = title
-// })
+router.afterEach((to) => {
+  const title = to.meta.title || DEFAULT_TITLE
+  document.title = ENV_NAME ? `[${ENV_NAME}] ${title}` : title
+})
 
 export default router

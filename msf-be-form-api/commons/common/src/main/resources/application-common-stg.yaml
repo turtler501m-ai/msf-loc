@@ -1,0 +1,41 @@
+## Common
+common:
+  public-url:
+    form-service: https://s-smartform.ktmmobile.com
+    admin-service: https://s-smartform-admin.ktmmobile.com
+
+
+
+## Spring
+spring:
+  ## DataSource
+  datasource:
+    groups:
+      ## 스마트서식지
+      smartform:
+        writer:
+          url: jdbc:postgresql://.../msf_core?currentSchema=smartform
+          username: ENC(...)
+          password: ENC(...)
+
+      ## M전산
+      msp:
+        standalone:
+          url: jdbc:oracle:thin:@...:...
+          username: ENC(...)
+          password: ENC(...)
+
+  ## Spring Data
+  data:
+    ## Redis
+    redis:
+      host:
+      port:
+      password: ENC(...)
+
+
+
+## 메시지 발송
+message-sender:
+  kakao:
+    sender-key: ENC(N+ltqmPq9ah3Esds0wRQFAK/gYQ0+Lm66MOCslTT+qr/o5eEqs28R02boZErkdvg37IPGpYBvVVgFc9h39NtmX4vPqfPgJc+fBi2/gsvsGM=)

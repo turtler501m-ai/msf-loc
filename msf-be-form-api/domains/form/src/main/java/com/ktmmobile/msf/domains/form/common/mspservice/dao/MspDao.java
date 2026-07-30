@@ -29,7 +29,7 @@ public interface MspDao {
         * @Author : ant
         * @Create Date : 2016. 1. 12.
         */
-        public List<MspSalePlcyMstDto> findMspSalePlcyMst(MspSalePlcyMstDto mspSalePlcyMstDto);
+        List<MspSalePlcyMstDto> findMspSalePlcyMst(MspSalePlcyMstDto mspSalePlcyMstDto);
 
         /**
         * @Description :
@@ -39,7 +39,7 @@ public interface MspDao {
         * @Author : ant
         * @Create Date : 2016. 1. 12.
         */
-        public MspSalePrdtMstDto findMspSalePrdMst(MspSalePrdtMstDto mspSalePrdtMstDto);
+        MspSalePrdtMstDto findMspSalePrdMst(MspSalePrdtMstDto mspSalePrdtMstDto);
 
 
         /**
@@ -50,7 +50,7 @@ public interface MspDao {
         * @Author : ant
         * @Create Date : 2016. 1. 12.
         */
-        public List<MspSaleAgrmMst> listMspSaleAgrmMst(String salePlcyCd);
+        List<MspSaleAgrmMst> listMspSaleAgrmMst(String salePlcyCd);
 
         /**
         * @Description : MSP MSP_SALE_SUBSD_MST 테이블에서 각종 요금정보를 조회한다.
@@ -59,7 +59,7 @@ public interface MspDao {
         * @Author : ant
         * @Create Date : 2016. 1. 25.
         */
-        public MspSaleSubsdMstDto getMspSaleSubsdMst( MspSaleSubsdMstDto mspSaleSubsdMstDto) ;
+        MspSaleSubsdMstDto getMspSaleSubsdMst( MspSaleSubsdMstDto mspSaleSubsdMstDto) ;
 
         /**
         * @Description : MSP 코드 정보를 조회한다.
@@ -68,7 +68,7 @@ public interface MspDao {
         * @Author : ant
         * @Create Date : 2016. 1. 25.
         */
-        public CmnGrpCdMst findCmnGrpCdMst(CmnGrpCdMst cmnGrpCdMst);
+        CmnGrpCdMst findCmnGrpCdMst(CmnGrpCdMst cmnGrpCdMst);
 
         /**
         * @Description :
@@ -77,7 +77,7 @@ public interface MspDao {
         * @Author : ant
         * @Create Date : 2016. 2. 4.
         */
-        public List<MspRateMstDto> listRateByOrgnInfos(
+        List<MspRateMstDto> listRateByOrgnInfos(
                 MspSalePlcyMstDto mspSalePlcyMstDto);
 
         /**
@@ -87,7 +87,7 @@ public interface MspDao {
         * @Author : ant
         * @Create Date : 2016. 2. 5.
         */
-        public List<MspSalePlcyMstDto> listMspSalePlcyInfoByOnlyOrgn(MspSalePlcyMstDto mspSalePlcyMstDto);
+        List<MspSalePlcyMstDto> listMspSalePlcyInfoByOnlyOrgn(MspSalePlcyMstDto mspSalePlcyMstDto);
 
 
         /**
@@ -97,7 +97,7 @@ public interface MspDao {
         * @Author : ant
         * @Create Date : 2016. 3. 17.
         */
-        public PhoneMspDto findMspPhoneInfo(String prdtId);
+        PhoneMspDto findMspPhoneInfo(String prdtId);
 
 
         /**
@@ -107,7 +107,7 @@ public interface MspDao {
         * @Author : ant
         * @Create Date : 2016. 9. 6
         */
-        public List<MspNoticSupportMstDto> listMspOfficialSupportRateNm();
+        List<MspNoticSupportMstDto> listMspOfficialSupportRateNm();
 
         /**
         * @Description : 공시지원금 목록을 가져온다.
@@ -116,7 +116,7 @@ public interface MspDao {
         * @Author : ant
         * @Create Date : 2016. 9. 6
         */
-        public List<MspNoticSupportMstDto> listMspOfficialNoticeSupport(MspNoticSupportMstDto mspNoticSupportMstDto, int skipResult, int maxResult);
+        List<MspNoticSupportMstDto> listMspOfficialNoticeSupport(MspNoticSupportMstDto mspNoticSupportMstDto, int skipResult, int maxResult);
 
         /**
         * @Description : 공시지원금 갯수를 가져온다.
@@ -125,7 +125,7 @@ public interface MspDao {
         * @Author : ant
         * @Create Date : 2016. 9. 6
         */
-        public int listMspOfficialNoticeSupportCount(MspNoticSupportMstDto mspNoticSupportMstDto);
+        int listMspOfficialNoticeSupportCount(MspNoticSupportMstDto mspNoticSupportMstDto);
 
 
 
@@ -136,7 +136,7 @@ public interface MspDao {
         * @Author : power
         * @Create Date : 2016. 12. 14
         */
-        public String getCustomerSsn(String contractNum) ;
+        String getCustomerSsn(String contractNum) ;
 
 
          /**
@@ -146,9 +146,9 @@ public interface MspDao {
           * @Author : power
           * @Create Date : 2019. 12. 14
           */
-         public MspRateMstDto getMspRateMst(String rateCd) ;
+         MspRateMstDto getMspRateMst(String rateCd) ;
 
-         public  List<MspSaleSubsdMstDto> listMspSaleMst(MspSaleSubsdMstDto mspSaleSubsdMstDto) ;
+         List<MspSaleSubsdMstDto> listMspSaleMst(MspSaleSubsdMstDto mspSaleSubsdMstDto) ;
 
 
     List<MspSaleAgrmMst> findMspSaleMnth(String salePlcyCd);

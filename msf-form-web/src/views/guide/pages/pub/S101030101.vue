@@ -2,7 +2,7 @@
   <MsfTitleBar title="신규/변경 > 상품 퍼블확인용" />
   <div class="page-step-panel">
     <!-- SIM정보_상품(휴대폰) -->
-    <MsfTitleArea title="SIM정보_상품(휴대폰)" />
+    <MsfTitleArea title="SIM 정보_상품(휴대폰)" />
     <MsfStack vertical type="formgroups">
       <MsfFormGroup label="SIM 보유" tag="div" required>
         <MsfChip
@@ -27,11 +27,16 @@
       </MsfFormGroup>
       <MsfFormGroup label="USIM 번호" required>
         <MsfStack type="field">
-          <MsfInput v-model="formData.simNo" placeholder="USIM 번호 19자리" class="ut-w-300" />
+          <MsfNumberInput
+            v-model="formData.simNo"
+            placeholder="USIM 번호 19자리"
+            maxLenght="19"
+            class="ut-w-300"
+          />
           <MsfButton variant="subtle">스캔하기</MsfButton>
-          <MsfButton variant="toggle" disabled>USIM 번호 유효성 체크</MsfButton>
-          <MsfButton variant="toggle">USIM 번호 유효성 체크</MsfButton>
-          <MsfButton variant="toggle" active>USIM 번호 유효성 체크</MsfButton>
+          <MsfButton variant="validation" disabled>USIM 번호 유효성 체크</MsfButton>
+          <MsfButton variant="validation">USIM 번호 유효성 체크</MsfButton>
+          <MsfButton variant="validation" active>USIM 번호 유효성 체크</MsfButton>
         </MsfStack>
       </MsfFormGroup>
       <MsfFormGroup label="USIM 구매 방식" tag="div" required>
@@ -84,11 +89,15 @@
     <MsfStack vertical type="formgroups">
       <MsfFormGroup label="휴대폰 일련번호" required>
         <MsfStack type="field">
-          <MsfInput v-model="formData.imei" placeholder="휴대폰 일련번호 입력" class="ut-w-300" />
+          <MsfNumberInput
+            v-model="formData.imei"
+            placeholder="휴대폰 일련번호 입력"
+            class="ut-w-300"
+          />
           <MsfButton variant="subtle">스캔하기</MsfButton>
-          <MsfButton variant="toggle" disabled>일련번호 유효성 체크</MsfButton>
-          <MsfButton variant="toggle">일련번호 유효성 체크</MsfButton>
-          <MsfButton variant="toggle" active>일련번호 유효성 체크 완료</MsfButton>
+          <MsfButton variant="validation" disabled>일련번호 유효성 체크</MsfButton>
+          <MsfButton variant="validation">일련번호 유효성 체크</MsfButton>
+          <MsfButton variant="validation" active>일련번호 유효성 체크 완료</MsfButton>
         </MsfStack>
       </MsfFormGroup>
     </MsfStack>
@@ -108,7 +117,7 @@
             class="ut-w-300"
             placeholder="통신사 선택"
           />
-          <MsfInput
+          <MsfNumberInput
             v-model="formData.transferPhone"
             placeholder="휴대폰 번호 ‘-’ 없이 입력"
             class="ut-w-300"
@@ -129,21 +138,24 @@
           />
         </MsfStack>
         <MsfStack type="field">
-          <MsfInput
+          <MsfNumberInput
             v-model="formData.transferAuthNum"
             placeholder="휴대폰 일련번호 뒤 4자리"
+            maxLength="4"
             class="ut-w-300"
           />
           <MsfButton variant="subtle">번호이동 사전동의</MsfButton>
         </MsfStack>
-        <MsfInput
+        <MsfNumberInput
           v-model="formData.transferBankNum"
           placeholder="요금납부 계좌번호 뒤 4자리"
+          maxLength="4"
           class="ut-w-300"
         />
-        <MsfInput
+        <MsfNumberInput
           v-model="formData.transferCardNum"
           placeholder="요금납부 신용카드 뒤 4자리"
+          maxLength="4"
           class="ut-w-300"
         />
       </MsfFormGroup>
@@ -178,11 +190,26 @@
     <MsfStack vertical type="formgroups">
       <MsfFormGroup label="번호예약" required>
         <MsfStack type="field">
-          <MsfInput v-model="formData.reserve1" placeholder="앞 3자리" />
+          <MsfMobileInput
+            v-model:number1="formData.reserve1"
+            v-model:number2="formData.reserve2"
+            v-model:number3="formData.reserve3"
+          />
+          <!-- <MsfInput v-model="formData.reserve1" placeholder="앞 3자리" maxLength="3" />
           <span class="unit-sep">-</span>
-          <MsfInput v-model="formData.reserve2" id="inp-reserve2" placeholder="가운데 4자리" />
+          <MsfInput
+            v-model="formData.reserve2"
+            id="inp-reserve2"
+            placeholder="가운데 4자리"
+            maxLength="4"
+          />
           <span class="unit-sep">-</span>
-          <MsfInput v-model="formData.reserve3" id="inp-reserve3" placeholder="뒤 4자리" />
+          <MsfInput
+            v-model="formData.reserve3"
+            id="inp-reserve3"
+            placeholder="뒤 4자리"
+            maxLength="4"
+          /> -->
           <MsfButton variant="subtle">번호조회</MsfButton>
         </MsfStack>
         <p class="ut-text-desc">
@@ -273,7 +300,7 @@
     <!-- // 안심 보험 -->
     <!-- 안심 보험 약관 동의  -->
     <MsfTitleArea title="안심 보험 약관 동의" />
-    <MsfAgreementGroup policy="join" ref="agreementRef" required />
+    <!-- <MsfAgreementGroup policy="join" ref="agreementRef" required /> -->
     <!-- // 안심 보험 약관 동의 -->
     <!-- 납부 정보 -->
     <MsfTitleArea title="납부 정보" />
@@ -322,14 +349,14 @@
             placeholder="은행 선택"
             class="ut-w-300"
           />
-          <MsfInput
+          <MsfNumberInput
             v-model="formData.autoAcctNo"
             id="inp-autoAcctNo"
             placeholder="계좌번호 입력"
             class="ut-w-200"
           />
-          <MsfButton variant="toggle">계좌번호 유효성 체크</MsfButton>
-          <MsfButton variant="toggle" active>계좌번호 유효성 체크 완료</MsfButton>
+          <MsfButton variant="validation">계좌번호 유효성 체크</MsfButton>
+          <MsfButton variant="validation" active>계좌번호 유효성 체크 완료</MsfButton>
         </MsfStack>
         <MsfStack type="field">
           <MsfInput
@@ -384,14 +411,14 @@
             placeholder="카드사 선택"
             class="ut-w-300"
           />
-          <MsfInput
+          <MsfNumberInput
             v-model="formData.cardNo"
             id="inp-cardNo"
             placeholder="카드번호 입력"
             class="ut-w-200"
           />
-          <MsfButton variant="toggle">신용카드 유효성 체크</MsfButton>
-          <MsfButton variant="toggle" active>신용카드 유효성 체크 완료</MsfButton>
+          <MsfButton variant="validation">신용카드 유효성 체크</MsfButton>
+          <MsfButton variant="validation" active>신용카드 유효성 체크 완료</MsfButton>
         </MsfStack>
         <MsfStack type="field">
           <MsfSelect
@@ -445,8 +472,8 @@
             placeholder="청구계정ID 입력"
             class="ut-w-300"
           />
-          <MsfButton variant="toggle">청구계정 체크</MsfButton>
-          <MsfButton variant="toggle" active>청구계정 체크 완료</MsfButton>
+          <MsfButton variant="validation">청구계정 체크</MsfButton>
+          <MsfButton variant="validation" active>청구계정 체크 완료</MsfButton>
         </MsfStack>
         <MsfCheckbox
           v-model="formData.combAgree"
@@ -514,7 +541,7 @@ const formData = reactive({
   deviceInstallment: [], //휴대폰 할부금
   offsetAmt: [], //미환급금 요금상계(후불)
   /* 신규가입 번호 예약 */
-  reserve1: '', //번호예약 앞 3자리
+  reserve1: '010', //번호예약 앞 3자리
   reserve2: '', //번호예약 가운데 4자리
   reserve3: '', //번호예약 뒤 4자리
   wishNo: '', //희망 신규번호

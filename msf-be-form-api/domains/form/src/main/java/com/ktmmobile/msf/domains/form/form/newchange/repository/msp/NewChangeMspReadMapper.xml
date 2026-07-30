@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.form.form.newchange.repository.msp.NewChangeMspReadMapper">
+
+  <!-- 평생할인 프로모션 가입유형 조회 -->
+  <select id="selectDisPrmtSlsTp" parameterType="com.ktmmobile.msf.domains.form.form.common.dto.MspSaleSubsdMstRequest" resultType="java.lang.String">
+    /* NewChangeMspReadMapper.selectDisPrmtSlsTp */
+    SELECT ETC1
+    FROM CMN_GRP_CD_MST
+    WHERE GRP_ID = 'CMN0092'
+      AND CD_VAL = (SELECT KTA.SLS_NO
+                FROM MSP_KT_PLCY_MST KTA
+                   , MSP_KT_PLCY_DISCOUNT KTB
+                   , MSP_KT_PLCY_OPER KTC
+                   , MSP_KT_PLCY_INST KTD
+                   , MSP_KT_PLCY_ENGG KTE
+                WHERE KTA.PLCY_ID = KTB.PLCY_ID
+                  AND KTA.PLCY_ID = KTC.PLCY_ID
+                  AND KTA.PLCY_ID = KTD.PLCY_ID
+                  AND KTA.PLCY_ID = KTE.PLCY_ID
+                  AND KTA.USE_YN = 'Y'
+                  AND KTA.PPPO = 'PO'
+                  AND KTA.PLCY_TYPE = DECODE(#{reqBuyTypeCd}, 'MM', '01', DECODE(#{usimKindsCd},'09','03','02'))
+                  AND KTB.DC_TYPE = NVL(#{sprtTp}, 'NN')
+                  AND KTC.OPER_TYPE = #{operTypeCd}
+                  AND KTD.INST_CNT = NVL(#{modelMonthly}, '0')
+                  AND KTE.ENGG_CNT = NVL(#{agrmTrm}, '0')
+                  AND ROWNUM = 1)
+  </select>
+
+  <!-- 평생할인 프로모션 ID 조회 -->
+  <select id="selectDisPrmtId" parameterType="com.ktmmobile.msf.domains.form.form.common.dto.MspSaleSubsdMstRequest" resultType="java.lang.String">
+    /* NewChangeMspReadMapper.selectDisPrmtId */
+    SELECT DISTINCT PRMT_ID
+    FROM VW_DIS_PRMT_DTL A
+    WHERE 1=1
+    AND TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS') BETWEEN A.STRT_DTTM AND A.END_DTTM
+    AND USG_YN = 'Y'
+    AND ORGN_ID = #{agentCd}
+    AND SLS_TP = #{slsTp}
+    <choose>
+      <when test="reqBuyTypeCd == 'UU' or modelId == null or modelId == ''">
+        AND INTM_YN = 'N'
+      </when>
+      <otherwise>
+        AND INTM_YN = 'Y'
+        AND MODEL_ID = (SELECT RPRS_PRDT_ID FROM CMN_INTM_MDL A WHERE PRDT_ID = #{modelId})
+      </otherwise>
+    </choose>
+    AND ENGG_SRL LIKE '%'||#{modelMonthly}||'%'
+    AND RATE_CD = #{rateCd}
+    AND EVNT_CD = 'NAC'
+  </select>
+
+  <!-- 프로모션 기본 요금 조회 -->
+  <select id="selectPromoBaseAmt" parameterType="java.util.List" resultType="java.lang.Long">
+    /* NewChangeMspReadMapper.selectPromoBaseAmt */
+    SELECT ROUND(SUM(BASE_AMT) * 1.1, 0)
+    FROM MSP_RATE_MST
+    WHERE RATE_CD IN (
+      SELECT DISTINCT SOC
+      FROM VW_DIS_PRMT_DTL
+      WHERE PRMT_ID IN
+      <foreach collection="list" item="prmtId" open="(" separator="," close=")">
+        #{prmtId}
+      </foreach>
+    )
+  </select>
+</mapper>

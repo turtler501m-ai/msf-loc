@@ -37,7 +37,12 @@
     <template #footer>
       <MsfButtonGroup>
         <MsfButton variant="secondary" @click="onClose">취소</MsfButton>
-        <MsfButton v-if="props.settingData?.addSvcSettingCompleted" variant="tertiary" @click="onReset">초기화</MsfButton>
+        <MsfButton
+          v-if="props.settingData?.showChangeCancel"
+          variant="tertiary"
+          @click="onReset"
+          >변경취소</MsfButton
+        >
         <MsfButton variant="primary" @click="onConfirm">확인</MsfButton>
       </MsfButtonGroup>
     </template>
@@ -45,7 +50,7 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed, watch } from 'vue'
+import { reactive, computed, watch } from 'vue'
 import { differenceInMonths } from 'date-fns'
 import { toDate } from '@/libs/utils/date.utils'
 import { showAlert } from '@/libs/utils/comp.utils'
@@ -53,6 +58,7 @@ import { showAlert } from '@/libs/utils/comp.utils'
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
   settingData: { type: Object, default: () => ({}) },
+  initialSettingData: { type: Object, default: () => ({}) },
 })
 
 const emit = defineEmits(['update:modelValue', 'open', 'close', 'confirm'])
@@ -65,8 +71,8 @@ const formData = reactive({
 })
 
 // 기존 설정값에서 초기값 복원
-const initializeFromSettingData = () => {
-  const { ftrNewParam, startDate, endDate, timeSelect } = props.settingData
+const initializeFromSettingData = (settingData = props.settingData) => {
+  const { paramSbst, ftrNewParam, startDate, endDate, timeSelect } = settingData
 
   if (ftrNewParam) {
     // ftrNewParam 형식: 시작시간:입대일자:전역일자 (예: 24:20250516:20270217)
@@ -85,20 +91,39 @@ const initializeFromSettingData = () => {
       }
     }
   } else {
-    formData.startDate = startDate || ''
-    formData.endDate = endDate || ''
-    formData.timeSelect = timeSelect || ''
+    if (paramSbst) {
+      // 키 매핑 정의
+      const keyMap = {
+        ENLIS_DT: 'startDate', // 전역일자 ex) 20270216
+        END_DT: 'endDate', // 입대일자 ex) 20250516
+        TIME_OPTION1: 'timeSelect', // 시작시간 ex)24
+        // TIME_DUR: 'duration'  // 적용시간 ex) 00000300
+      }
+
+      paramSbst.split('|').forEach((item) => {
+        const [key, value] = item.split('=')
+        if (key && keyMap[key]) {
+          const fieldName = keyMap[key]
+          formData[fieldName] = (value || '').trim()
+        }
+      })
+    } else {
+      formData.startDate = startDate || ''
+      formData.endDate = endDate || ''
+      formData.timeSelect = timeSelect || ''
+    }
   }
 }
 
-const isFormReset = ref(false)
-
-watch(() => props.modelValue, (isOpen) => {
-  if (isOpen) {
-    isFormReset.value = false
-    initializeFromSettingData()
-  }
-}, { immediate: true })
+watch(
+  () => props.modelValue,
+  (isOpen) => {
+    if (isOpen) {
+      initializeFromSettingData()
+    }
+  },
+  { immediate: true },
+)
 
 // 시간 선택 옵션 (1시간 단위, 0~23시)
 const timeOptions = computed(() => {
@@ -122,19 +147,13 @@ const onClose = () => {
 }
 
 const onReset = () => {
-  isFormReset.value = true
-  formData.startDate = ''
-  formData.endDate = ''
-  formData.timeSelect = ''
+  initializeFromSettingData(
+    Object.keys(props.initialSettingData).length ? props.initialSettingData : props.settingData,
+  )
 }
 
 // 확인 버튼 클릭
 const onConfirm = () => {
-  if (isFormReset.value) {
-    emit('confirm', { isReset: true })
-    onClose()
-    return
-  }
   const startDate = formData.startDate?.trim()
   const endDate = formData.endDate?.trim()
   const timeSelect = formData.timeSelect?.trim()
@@ -159,11 +178,9 @@ const onConfirm = () => {
 
   // 시작일이 현재 이후인지 검증
   const startDateObj = toDate(startDate)
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-
-  if (startDateObj < today) {
-    showAlert('입대일자는 오늘 이후로 선택해 주세요.')
+  startDateObj.setHours(parseInt(timeSelect, 10), 0, 0, 0)
+  if (startDateObj < new Date()) {
+    showAlert('입대일자는 현재 시간 이후로 선택해 주세요.')
     return
   }
 

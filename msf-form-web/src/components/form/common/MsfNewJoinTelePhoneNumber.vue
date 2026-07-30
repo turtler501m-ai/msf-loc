@@ -1,130 +1,201 @@
-<script setup>
-import { reactive, ref } from 'vue'
-
-const formData = defineModel({ type: Object, required: true })
-
-const input1 = ref(null)
-const input2 = ref(null)
-const input3 = ref(null)
-
-// const formData = reactive({
-//   /* SIM정보_상품(휴대폰) */
-//   hasSim: '', //SIM보유
-//   usimKindsCd: '', //USIM 선택
-//   reqUsimSn: '', //USIM 번호
-//   simPurchaseMethod: '', //USIM 구매 방식
-//   prodNm: '', //휴대폰 모델명
-//   eid: '', //EID
-//   imei1: '', //IMEI1
-//   imei2: '', //IMEI2
-//   /* 휴대폰 정보_상품 (휴대폰) */
-//   imei: '', //IMEI
-//   /* 번호이동 할 전화번호 */
-//   moveCompanyCd: '', //통신사 선택
-//   moveMobileNo: '', //번호이동 할 전화번호
-//   moveAuthTypeCd: '', //번호이동 인증
-//   moveAuthNo: '', //번호이동 인증 : 일련번호4자리
-//   transferBankNum: '', //번호이동 인증 : 계좌번호4자리
-//   transferCardNum: '', //번호이동 인증 : 신용카드4자리
-//   moveThismonthPayTypeCd: false, //이번달 사용요금
-//   moveAllotmentSttusCd: [], //휴대폰 할부금
-//   moveRefundAgreeYn: [], //미환급금 요금상계(후불)
-//   /* 신규가입 번호 예약 */
-//   reqWantFnNo: '', //번호예약 앞 3자리
-//   reqWantMnNo: '', //번호예약 가운데 4자리
-//   reqWantRnNo: '', //번호예약 뒤 4자리
-//   wishNo: '', //희망 신규번호
-//   /* 부가서비스 신청 */
-//   //무료부가서비스
-//   reqAdditionListNm: [
-//     'freeVas1',
-//     'freeVas2',
-//     'freeVas3',
-//     'freeVas4',
-//     'freeVas5',
-//     'freeVas6',
-//     'freeVas7',
-//     'freeVas8',
-//   ],
-//   addtionId: ['paidVas1'], //유료부가서비스
-//   /* 안심 보험 */
-//   clauseInsuranceYn: '', //가입여부
-//   recCat1: '', //추천 카테고리1
-//   recCat2: '', //추천 카테고리2
-//   /* 납부 정보 */
-//   cstmrBillSendTypeCd: '', //수신유형
-//   reqPayTypeCd: '', //납부방법
-//   autoPayerType: '', //자동이체-납부자유형
-//   reqBankCd: '', //자동이체-은행선택
-//   reqAccountNo: '', //자동이체-계좌번호입력
-//   reqAccountNm: '', //자동이체-납부고객명
-//   reqAccountRrn: '', //자동이체-생년월일(8자리) 임력
-//   reqAccountRelTypeCd: '', //자동이체-관계
-//   isAutoAgree: false, //자동이체-동의
-//   cardPayerType: '', //신용카드-납부자유형
-//   reqCardCompanyCd: '', //신용카드-카드사선택
-//   reqCardNo: '', //신용카드-카드번호입력
-//   reqCardMm: '', //신용카드-유효기간(MM)
-//   reqCardYy: '', //신용카드-유효기간(YY)
-//   reqCardNm: '', //신용카드-납부고객명
-//   reqCardRrn: '', //신용카드-생년월일
-//   cardRelation: '', //신용카드-관계
-//   combId: '', //통합청구-청구계정ID
-//   combAgree: false, //통합청구-동의
-//   /* 메모 */
-//   memo: '', //메모
-// })
-</script>
-
 <template>
-  <!-- 신규가입 번호 예약 -->
-  <MsfTitleArea title="신규가입 번호 예약" />
+  <!-- 번호 변경 -->
+  <MsfTitleArea title="번호 변경" />
   <MsfStack vertical type="formgroups">
     <MsfFormGroup label="번호예약" required>
       <MsfStack type="field">
-        <MsfNumberInput
-          ref="input1"
-          v-model="formData.reqWantFnNo"
-          placeholder="앞자리"
-          maxlength="3"
-          @maxlength="input2?.focus()"
-        />
+        <MsfNumberInput v-model="model.reqWantFnNo" placeholder="010" maxlength="3" disabled />
         <span class="unit-sep">-</span>
         <MsfNumberInput
-          ref="input2"
-          v-model="formData.reqWantMnNo"
-          id="inp-reserve2"
-          placeholder="가운데 4자리"
+          v-model="model.reqWantMnNo"
+          placeholder="****"
           maxlength="4"
-          @maxlength="input3?.focus()"
+          class="ut-w-100"
+          disabled
         />
         <span class="unit-sep">-</span>
         <MsfNumberInput
-          ref="input3"
-          v-model="formData.reqWantRnNo"
+          v-model="model.reqWantRnNo"
           id="inp-reserve3"
           placeholder="뒤 4자리"
           maxlength="4"
+          :readonly="!!model.wishNo"
         />
-        <MsfButton variant="subtle">번호조회</MsfButton>
+        <MsfButton
+          variant="subtle"
+          @click="handleNumberSearch"
+          :disabled="
+            store.authFlags?.numberChgConfirmCompleted ||
+            !!model.wishNo ||
+            String(model.reqWantRnNo || '').length !== 4
+          "
+          >번호조회</MsfButton
+        >
       </MsfStack>
       <p class="ut-text-desc">
-        <span class="ut-text-count">조회 가능 횟수 <em>20회</em></span
+        <span class="ut-text-count"
+          >조회 가능 횟수 <em>{{ 20 - store.wishNoSearchCount }}회</em></span
         >※ 조회 가능 횟수를 초과할 경우 신청서를 재작성 해야 합니다.
       </p>
       <MsfStack type="field">
         <MsfInput
-          v-model="formData.wishNo"
+          :model-value="formattedWishNo"
           id="inp-wishNo"
           placeholder="선택된 희망 신규번호"
           class="ut-w-300"
           disabled
         />
-        <MsfButton variant="toggle">선택취소</MsfButton>
+        <MsfButton variant="toggle" @click="handleCancelNumber" v-if="model.wishNo"
+          >선택취소</MsfButton
+        >
       </MsfStack>
     </MsfFormGroup>
   </MsfStack>
   <!-- // 신규가입 번호 예약 -->
-</template>
 
-<style scoped lang="scss"></style>
+  <!-- 신규번호 검색 모달 -->
+  <MsfNewNumberSearchModal
+    v-model="isModalOpen"
+    :searchParams="searchParams"
+    @confirm="onNumberConfirm"
+  />
+</template>
+<script setup>
+import { ref, defineModel, defineProps, onMounted, computed, watch } from 'vue'
+import { useMsfFormSvcChgStore } from '@/stores/msf_serviceChange'
+import { useAuthButton } from '@/hooks/useAuthButton'
+import { formatTelephone } from '@/libs/utils/string.utils'
+import { showAlert, showConfirm } from '@/libs/utils/comp.utils'
+
+import MsfNewNumberSearchModal from './popups/MsfNewNumberSearchModal.vue'
+
+const emit = defineEmits(['ready'])
+
+// ─── 로그 접두사 ──────────────────────────────────────────────────────────────
+const getLogPrefix = (task) => `[변경][분실복구/일시정지해제][${task}]`
+
+// ─── 상태 (State) ─────────────────────────────────────────────────────────────
+const store = useMsfFormSvcChgStore()
+
+const model = defineModel('modelValue', { type: Object, required: true })
+const props = defineProps({
+  title: { type: String, default: '번호 변경' },
+})
+const isModalOpen = ref(false)
+
+const searchParams = computed(() => ({
+  pageMode: 'CHG',
+  reqWantFnNo: model.value.reqWantFnNo,
+  reqWantMnNo: model.value.reqWantMnNo,
+  reqWantRnNo: model.value.reqWantRnNo,
+  ncn: model.value.ncn || model.value.contractNum || '',
+  ctn: `${model.value.deviceChgTel1 || ''}${model.value.deviceChgTel2 || ''}${model.value.deviceChgTel3 || ''}`,
+  custId: model.value.custId || '',
+}))
+
+const formattedWishNo = computed(() => {
+  return formatTelephone(model.value.wishNo)
+})
+
+// ─── 버튼 핸들러 ──────────────────────────────────────────────────────────
+
+const handleNumberSearch = () => {
+  if (store.wishNoSearchCount >= 20) {
+    showAlert('희망번호 조회 가능 횟수(20회)를 초과하였습니다.\n신청서를 재작성해 주세요.')
+    return
+  }
+  store.incrementWishNoSearchCount()
+  isModalOpen.value = true
+}
+
+// Modal callback
+const onNumberConfirm = async (data) => {
+  try {
+    const payload = {
+      tlpNo: (typeof data === 'object' ? data.ctn : data) || '',
+      tlpNoc: (typeof data === 'object' ? data.sctn : data) || '',
+      tlpMarket: (typeof data === 'object' ? data.marketGubun : data) || '',
+    }
+
+    store.authFlags.numberChg = false
+    model.value.numberChgConfirmCompleted = false
+
+    model.value.wishNo = payload.tlpNo
+    model.value.wishNoc = payload.tlpNoc
+    model.value.wishMarket = payload.tlpMarket
+    if (model.value.wishNo !== '') {
+      store.authFlags.numberChg = true
+      model.value.numberChgConfirmCompleted = true
+    }
+    reserveAuthBtn.verify()
+  } catch (error) {
+    console.error('Reserve number error:', error)
+  }
+}
+
+// 선택 취소
+const handleCancelNumber = async () => {
+  //if (!confirm('예약된 번호를 취소하시겠습니까?')) return
+  showConfirm(
+    '예약된 번호를 취소하시겠습니까?',
+    () => {
+      model.value.wishNo = ''
+      model.value.wishNoc = ''
+      model.value.wishMarket = ''
+      store.authFlags.numberChg = false
+      model.value.numberChgConfirmCompleted = false
+
+      reserveAuthBtn.reset()
+    },
+    '',
+    () => {}
+  )
+}
+
+const reserveAuthBtn = useAuthButton(
+  () => [model.value?.reqWantFnNo, model.value?.reqWantMnNo, model.value?.reqWantRnNo],
+  {
+    get value() {
+      return store.authFlags?.numberChg || false
+    },
+    set value(v) {
+      if (store.authFlags) {
+        store.authFlags.numberChg = v
+      }
+    },
+  },
+)
+
+watch(
+  () => store.cancelAuthResetKey,
+  (val, old) => {
+    if (typeof old === 'number') {
+      reserveAuthBtn.reset()
+    }
+  },
+)
+
+const validate = () => {
+  if (!model.value.wishNo) return false
+  if (!model.value.wishNoc) return false
+  if (!model.value.wishMarket) return false
+  //if (!store.authFlags?.numberChg) return false
+  return true
+}
+
+defineExpose({ validate })
+
+// ─── 라이프사이클 & 이벤트 ─────────────────────────────────────────────────
+
+onMounted(() => {
+  //console.log(`${getLogPrefix('초기화')} mounted`)
+
+  store.authFlags.numberChg = false
+  model.value.numberChgConfirmCompleted = false
+
+  model.value.wishNo = ''
+  model.value.wishNoc = ''
+  model.value.wishMarket = ''
+  emit('ready')
+})
+</script>

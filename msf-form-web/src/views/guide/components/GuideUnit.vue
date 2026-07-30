@@ -185,7 +185,9 @@ const getDisplayDefault = (key) => {
 const handleObjectInput = (key, value) => {
   try {
     state[key] = JSON.parse(value)
-  } catch (e) {}
+  } catch (e) {
+    console.warn('[GuideUnit.handleObjectInput] 오류가 발생했습니다.', e)
+  }
 }
 
 const generatedCode = computed(() => {
@@ -277,7 +279,6 @@ const copyToClipboard = (text) => {
   max-width: 960px;
   margin: 0 auto;
   padding: 30px 20px 120px;
-  color: #333;
 }
 .sb-header {
   margin-bottom: 32px;

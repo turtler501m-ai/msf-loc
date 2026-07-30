@@ -6,13 +6,14 @@ import lombok.Setter;
 
 /**
  * requestView 위약금 정산 블록 데이터.
- * X54(스폰서/위약금), X16(잔여 할부금), mspAddInfo(할부원금) 결과를 담는다.
+ * X54(스폰서/위약금), X62(심플할인), X16(잔여 할부금), mspAddInfo(할부원금) 결과를 담는다.
  */
 @Getter
 @Setter
 @NoArgsConstructor
 public class TerminationSettlementDto {
     private boolean prePayment;             // 선불 요금제 여부
+    // X54 스폰서 약정 정보
     private String saleEngtNm;              // 스폰서 유형명
     private String saleEngtOptnCd;          // 스폰서 유형 옵션 코드 (KD/PM)
     private String trmnForecBprmsAmt;       // 예상 위약금
@@ -24,9 +25,18 @@ public class TerminationSettlementDto {
     private String engtAplyStDate;          // 가입일
     private String engtExpirPamDate;        // 만료예정일
     private String engtRmndDate;            // 잔여약정기간
+    // X62 심플할인 정보
+    private String sdsEngtAplyStDate;       // 심플할인 약정 시작일
+    private String sdsEngtExpirPamDate;     // 심플할인 약정 종료일
+    private String sdsEngtPerdMonsNum;      // 심플할인 약정개월
+    private String sdsChageDcAplyYn;        // 심플할인 요금할인 적용여부
+    private String sdsDcSuprtAmt;           // 심플할인 월 할인 금액
+    private String sdsPpPenlt;              // 심플할인 요금할인 반환금
+    // X16 잔여 할부금
     private String installmentAmt;          // 잔여 할부 금액
     private String totalNoOfInstall;        // 잔여 개월
     private String installmentYN;           // 할부 여부
+    // mspAddInfo 할부원금
     private int instOrginAmnt;              // 할부원금
     private int instMnthCnt;                // 할부개월수
     private int remainPay;                  // 잔여 할부금액

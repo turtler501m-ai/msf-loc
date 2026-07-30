@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.form.form.newchange.repository.msp.McpUploadPhoneInfoWriteMapper">
+  <insert id="insertMcpUploadPhoneInfo" parameterType="com.ktmmobile.msf.domains.form.form.common.vo.McpUploadPhoneInfoVo">
+    INSERT INTO MCP_MNG.MCP_UPLOAD_PHONE_INFO@DL_MCP
+    (     UPLOAD_PHONE_SRL_NO
+        , REQ_MODEL_NAME
+        , MODEL_ID
+        , REQ_PHONE_SN
+        , EID
+        , IMEI1
+        , IMEI2
+        , UPLOAD_PHONE_IMG
+        , ACCESS_IP
+        , USER_ID
+        , SYS_DT
+        , SYS_RDATE
+        , MOVE_TLCM_IND_CD
+        , MOVE_CMNC_GNRT_IND_CD
+        , RST_CD
+        , EVNT_CD
+        , RSLT_CD
+        , RSLT_YN
+        , RSLT_MSG
+        , PRNTS_CONTRACT_NO)
+    VALUES(
+        #{uploadPhoneSrlNo}
+      , #{reqModelName}
+      , #{modelId}
+      , #{reqPhoneSn}
+      , #{eid}
+      , #{imei1}
+      , #{imei2}
+      , #{uploadPhoneImg}
+      , #{accessIp}
+      , #{userId}
+      , #{sysDt}
+      , #{sysRdate}
+      , #{moveTlcmIndCd}
+      , #{moveCmncGnrtIndCd}
+      , #{rstCd}
+      , #{evntCd}
+      , #{rsltCd}
+      , #{rsltYn}
+      , #{rsltMsg}
+      , #{prntsContractNo}
+    )
+  </insert>
+  </mapper>

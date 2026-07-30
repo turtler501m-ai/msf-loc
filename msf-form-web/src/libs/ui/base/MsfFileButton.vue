@@ -14,6 +14,7 @@
         prefixIcon="upload"
         class="select-btn"
         :disabled="disabled"
+        :loading="props.loading"
         @click="openFilePicker"
       >
         {{ btnLabel }}
@@ -37,6 +38,8 @@ const props = defineProps({
   multiple: { type: Boolean, default: false },
   /** 비활성화 */
   disabled: { type: Boolean, default: false },
+  /** 앞쪽 로딩아이콘 표시 여부 (로딩중 버튼에 필요시 사용) */
+  loading: Boolean,
 })
 
 const emit = defineEmits(['update:modelValue', 'change', 'clear'])

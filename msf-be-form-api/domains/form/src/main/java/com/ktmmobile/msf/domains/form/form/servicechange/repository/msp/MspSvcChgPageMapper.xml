@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="MspSvcChgPageMapper">
+
+  <select id="selectCntrListNoLogin" parameterType="com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto" resultType="com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto">
+    <!-- 서비스변경/해지 비로그인 가입정보조회 -->
+    SELECT
+      SVC_CNTR_NO
+      , CONTRACT_NUM
+      , CUST_ID
+      , MODEL_NAME
+      , MODEL_ID
+      , CNTR_MOBILE_NO
+      , SUB_STATUS
+      , DOBYYYYMMDD
+      , USER_NAME
+      , unUserSSn
+      , LST_COM_ACTV_DATE
+      , CUSTOMER_ID
+      , CUSTOMER_TYPE
+      , PPPO
+      , BAN_ADR_ZIP
+      , BAN_ADR_PRIMARY_LN
+      , BAN_ADR_SECONDARY_LN
+      , ESIM_YN
+    FROM (
+      SELECT
+        A.SVC_CNTR_NO
+        , A.CONTRACT_NUM
+        , A.CUSTOMER_ID AS CUST_ID
+        , A.MODEL_NAME
+        , A.MODEL_ID
+        , A.SUBSCRIBER_NO AS CNTR_MOBILE_NO
+        , A.SUB_STATUS
+        , A.DOBYYYYMMDD
+        , A.SUB_LINK_NAME AS USER_NAME
+        , A.USER_SSN AS unUserSSn
+        , A.LST_COM_ACTV_DATE
+        , B.CUSTOMER_ID
+        , B.CUSTOMER_TYPE
+        , A.PPPO
+        , A.SUB_ADR_ZIP AS BAN_ADR_ZIP
+        , A.SUB_ADR_PRIMARY_LN AS BAN_ADR_PRIMARY_LN
+        , A.SUB_ADR_SECONDARY_LN AS BAN_ADR_SECONDARY_LN
+        , CASE WHEN A.USIM_TYPE = 'E' THEN 'Y' ELSE 'N' END AS ESIM_YN
+      FROM MSP_JUO_SUB_INFO A, MSP_JUO_CUS_INFO B
+      WHERE A.CUSTOMER_ID = B.CUSTOMER_ID
+      <if test="svcCntrNo != null and svcCntrNo != ''">
+        AND A.SVC_CNTR_NO = #{svcCntrNo}
+      </if>
+      <if test="cntrMobileNo != null and cntrMobileNo != ''">
+        AND A.SUBSCRIBER_NO = TRIM(#{cntrMobileNo})
+      </if>
+      <if test="subLinkName != null and subLinkName != ''">
+        AND UPPER(REPLACE(A.SUB_LINK_NAME, ' ', '')) = UPPER(REPLACE(#{subLinkName}, ' ', ''))
+      </if>
+        AND A.SUB_STATUS <![CDATA[<>]]> 'C'
+      ORDER BY A.CONTRACT_NUM DESC   /* 20260625 */
+    )
+    WHERE ROWNUM = 1
+  </select>
+
+  <select id="selectRprsPrdtInfo" parameterType="com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto" resultType="com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto">
+    <!-- 서비스변경 대표 정보 조회 -->
+    SELECT
+      CMN.PRDT_ID,
+      CMN.PRDT_NM PROD_NM,
+      CMN.RPRS_PRDT_ID,
+      CMN.PRDT_CODE REQ_MODEL_NM,
+      (SELECT MAX(PROD_ID) FROM NMCP_PROD_BAS@DL_MCP WHERE RPRS_PRDT_ID = CMN.RPRS_PRDT_ID AND SALE_YN='Y') PROD_ID,
+      CMN.PRDT_TYPE_CD, -- 제품유형코드
+      CMN.PRDT_IND_CD, -- 제품구분코드
+      CMN.PRDT_COLR_CD, -- 제품색상코드
+      CMN.RPRS_YN,
+      CMN.MNFCT_ID,
+      SALE.SALE_PLCY_CD,
+      SALE.PRDT_ID AS S_PRDT_ID,
+      SALE.OLD_YN,
+      SALE.NEW_CMSN_AMT,
+      SALE.MNP_CMSN_AMT,
+      SALE.HCN_CMSN_AMT
+    FROM MSP_SALE_PRDT_MST SALE INNER JOIN CMN_INTM_MDL CMN ON SALE.PRDT_ID = CMN.PRDT_ID
+    WHERE 1=1
+      AND PRDT_TYPE_CD = '01' -- 제품유형코드
+      --AND PRDT_IND_CD = '04' -- 제품구분코드
+      AND OLD_YN='N' -- 중고여부
+      AND RPRS_YN='Y' --대표여부
+      --AND PRDT_DT >= TO_CHAR(SYSDATE, 'YYYYMMDD') -- 제품단종일자 임시주석
+      AND SALE.PRDT_ID= #{modelId}
+      AND rownum = 1
+  </select>
+
+  <insert id="insertRateResChgAccessTrace" parameterType="com.ktmmobile.msf.domains.form.common.dto.McpIpStatisticDto">
+    INSERT INTO NMCP_RATE_RES_CHG_BAS@DL_MCP(
+        RATE_RES_CHG_SEQ
+      , SVC_CNTR_NO
+      , MOBILE_NO
+      , USER_ID
+      , EVENT_CODE
+      , RES_CHG_RATE_CD
+      , BEF_CHG_RATE_CD
+      , BEF_CHG_RATE_AMNT
+      , PARAM
+      , RES_CHG_DATE
+      , RES_CHG_APY_DATE
+      , TRT_MDL_DIV
+      , GLOBAL_NO
+      , BATCH_RSLT_CD
+      , CRET_IP
+      , CRET_DT
+    )VALUES(
+       (SELECT NVL(MAX(RATE_RES_CHG_SEQ), 0) + 1 AS RATE_RES_CHG_SEQ  FROM NMCP_RATE_RES_CHG_BAS@DL_MCP)
+     ,#{svcCntrNo}
+     ,#{mobileNo}
+     ,#{userid}
+     ,#{eventCode}
+     ,#{resChgRateCd}
+     ,#{befChgRateCd}
+     ,#{befChgRateAmnt}
+     ,#{param}
+     ,#{resChgDate}
+     ,#{resChgApyDate}
+     ,#{trtMdlDiv}
+     ,#{globalNo}
+     ,#{batchRsltCd}
+     ,#{cretIp}
+     ,SYSDATE
+     )
+  </insert>
+
+</mapper>

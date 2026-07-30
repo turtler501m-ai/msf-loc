@@ -47,8 +47,7 @@ public class ReceiptPageService implements ReceiptPageReader {
         log.debug("formType:{}, cretId:{}", formTypelist.toString(), AuthenticationUtils.getUser().getUserId());
         ReceiptPageCondition reCondition = condition.toBuilder()
             .formTypeCd(formTypelist)
-            //.authShopCd(AuthenticationUtils.getShopCode())              // molo -- test 용
-            //.authCretId(AuthenticationUtils.getUser().getUserId()) // molo -- 이 조건을 사용해야 함.
+            .authCretId(AuthenticationUtils.getUser().getUserId())
             .build();
         Page<ReceiptPage> page = formRequestRepository.selectList(reCondition);
         return PagedDataResponse.of(page,

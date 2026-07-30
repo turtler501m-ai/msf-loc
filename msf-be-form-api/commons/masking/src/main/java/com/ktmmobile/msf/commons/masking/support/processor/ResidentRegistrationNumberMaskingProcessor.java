@@ -21,10 +21,10 @@ public class ResidentRegistrationNumberMaskingProcessor implements MaskingProces
     }
 
     static String maskRegistrationNumber(String value) {
-        String digits = MaskingTextUtils.onlyDigits(value);
+        String digits = MaskingProcessorUtils.onlyDigits(value);
         if (digits.length() < MIN_MASKING_DIGIT_COUNT) {
             return value;
         }
-        return MaskingTextUtils.maskDigits(value, 7, 0);
+        return MaskingProcessorUtils.maskDigits(value, 7, 0);
     }
 }

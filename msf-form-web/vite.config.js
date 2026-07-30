@@ -13,7 +13,11 @@ export default defineConfig(({ command, mode }) => {
   // 두 번째 인자: .env 파일이 위치한 경로 (보통 process.cwd() 사용)
   // 세 번째 인자: (옵션) 환경변수 접두사 설정
   const env = loadEnv(mode, process.cwd(), '')
-  console.log('>>> Loaded Environment Variables:', env.VITE_MSF_API_URL)
+  console.log('>>> Loaded Environment Variables:', env.VITE_MSF_BASE_URL)
+  const proxyTarget =
+    mode === 'loc' && !env.VITE_MSF_BASE_URL?.includes('localhost:')
+      ? env.VITE_MSF_BASE_URL
+      : undefined
 
   return {
     plugins: [vue(), vueDevTools(), Components({ dirs: ['src/components', 'src/libs/ui'] })],
@@ -31,15 +35,18 @@ export default defineConfig(({ command, mode }) => {
       },
     },
     server: {
-      port: 7085,
+      port: 7080,
       host: '0.0.0.0',
-      // proxy: {
-      //   '/api': {
-      //     target: env.MSF_BASE_URL,
-      //     changeOrigin: true,
-      //     rewrite: (path) => path.replace(/^\/api/, '')
-      //   },
-      // },
+      proxy: proxyTarget
+        ? {
+            '/api': {
+              target: proxyTarget,
+              changeOrigin: true,
+              secure: true,
+              cookieDomainRewrite: '',
+            },
+          }
+        : undefined,
     },
     build: {
       minify: 'terser',

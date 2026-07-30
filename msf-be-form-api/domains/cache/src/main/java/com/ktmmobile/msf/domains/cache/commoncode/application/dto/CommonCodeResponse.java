@@ -5,6 +5,9 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.ktmmobile.msf.commons.common.data.type.UseYn;
 import com.ktmmobile.msf.domains.cache.commoncode.domain.dto.CommonCodeData;
 
+/**
+ * 그룹ID를 포함한 공통코드 단건 응답
+ */
 public record CommonCodeResponse(
     String groupId,
     String code,
@@ -15,6 +18,7 @@ public record CommonCodeResponse(
     DetailResponse detail
 ) {
 
+    /** 공통코드 데이터의 단건 응답 변환 */
     public static CommonCodeResponse toResponse(CommonCodeData commonCode, boolean includeDetail) {
         return new CommonCodeResponse(
             commonCode.groupId(),
@@ -25,6 +29,9 @@ public record CommonCodeResponse(
         );
     }
 
+    /**
+     * 공통코드 상세 응답
+     */
     public record DetailResponse(
         String abbrName,
         String description,
@@ -42,6 +49,7 @@ public record CommonCodeResponse(
         String endDate
     ) {
 
+        /** 공통코드 상세 데이터의 응답 변환 */
         static DetailResponse toResponse(CommonCodeData.Detail detail) {
             if (detail == null) {
                 return empty();

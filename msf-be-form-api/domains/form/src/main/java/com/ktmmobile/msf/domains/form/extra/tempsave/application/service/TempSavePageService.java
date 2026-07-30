@@ -42,8 +42,8 @@ public class TempSavePageService implements TempSavePageReader {
         log.debug("formType:{}, cretId:{}", formTypelist.toString(), AuthenticationUtils.getUser().getUserId());
         TempSavePageCondition reCondition = condition.toBuilder()
             .formTypeCd(formTypelist)
-            .authShopCd(AuthenticationUtils.getShopCode())              // molo -- test 용
-            //.authCretId(AuthenticationUtils.getUser().getUserId()) // molo -- 이 조건을 사용해야 함.
+            //.authShopCd(AuthenticationUtils.getShopCode())              // molo -- test 용
+            .authCretId(AuthenticationUtils.getUser().getUserId())
             .build();
         Page<TempSavePage> page = tempSavePageRepository.selectList(reCondition);
         return PagedDataResponse.of(page,

@@ -3,7 +3,9 @@ package com.ktmmobile.msf.domains.form.form.common.repository.msp;
 import java.util.List;
 
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
+import com.ktmmobile.msf.domains.form.form.common.dto.InsrProdRequest;
 import com.ktmmobile.msf.domains.form.form.common.dto.MsfRequestAdditionRequest;
 import com.ktmmobile.msf.domains.form.form.common.dto.MspAdditionDto;
 import com.ktmmobile.msf.domains.form.form.common.dto.MspSalePlcyMstInfoDto;
@@ -14,6 +16,8 @@ import com.ktmmobile.msf.domains.form.form.common.dto.PriceJoinUsimRequest;
 import com.ktmmobile.msf.domains.form.form.common.dto.PriceJoinUsimResponse;
 import com.ktmmobile.msf.domains.form.form.common.dto.ProductInfoRequest;
 import com.ktmmobile.msf.domains.form.form.common.dto.RateInfoResponse;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestSvcChgDtlVo;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.IntmInsrResponse;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.PhoneModelCapacityResponse;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.PhoneModelColorResponse;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.PhoneModelMonthlyResponse;
@@ -24,6 +28,9 @@ import com.ktmmobile.msf.domains.form.form.newchange.dto.PhoneSaleTypeResponse;
 public interface ProductInfoReadMapper {
 
     //판매정책조회
+    List<MspSalePlcyMstInfoDto> selectMspSalePlcyMst(ProductInfoRequest condition);
+
+    //판매정책목록조회
     List<MspSalePlcyMstInfoDto> selectMspSalePlcyMstList(ProductInfoRequest condition);
 
     //할인유형조회
@@ -50,7 +57,14 @@ public interface ProductInfoReadMapper {
     //유심 요금제 목록 조회
     List<RateInfoResponse> selectUsimRateList(ProductInfoRequest condition);
 
-    //가격정보조회 (약정 있는 경우, 단말, 요금, 지원금)
+    //안심보험 목록 조회
+    List<IntmInsrResponse> selectInsrList(InsrProdRequest condition);
+
+
+    //가격정보조회 (단말 및 요금)
+    MspSaleSubsdMstResponse selectMspModelRateInfo(MspSaleSubsdMstRequest condition);
+
+    //가격정보조회 (지원금)
     MspSaleSubsdMstResponse selectMspSaleSubsdMst(MspSaleSubsdMstRequest condition);
 
     //가격정보 (약정 없는 경우 : 무약정의 할인율)
@@ -61,7 +75,16 @@ public interface ProductInfoReadMapper {
 
 
     //부가서비스 상세조회
-    List<MspAdditionDto> selectMsfAdditionList(MsfRequestAdditionRequest condition);
+    List<MspAdditionDto> selectMspAdditionList(MsfRequestAdditionRequest condition);
 
+    //부가서비스 조회
+    List<MspAdditionDto> selectMcpAdditionList(MsfRequestAdditionRequest condition);
+
+    //부가서비스 상품코드별 이용기간 조회
+    List<String> selectMcpAdditionUsePrd(@Param("rateCd") String rateCd);
+
+    //M전산에서 매장재고의 일련번호? 로 K코드 추출하기
+    String selectModelNm(String prodId);
+
+    RateInfoResponse selectRateInfo(MsfRequestSvcChgDtlVo vo);
 }
-

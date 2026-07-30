@@ -23,4 +23,8 @@ public class SmsRepositoryImpl implements SmsRepository {
     @Override public Integer registerSmsInfo(MspSmsData mspSmsData) {
         return mspSmsMapper.insertSmsData(mspSmsData);
     }
+
+    @Override public Integer registerKakaoInfo(MspSmsData mspSmsData) {
+        return mspSmsMapper.insertKakaoData(mspSmsData);
+    }
 }

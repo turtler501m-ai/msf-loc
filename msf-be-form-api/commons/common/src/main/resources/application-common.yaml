@@ -1,3 +1,11 @@
+## Common
+common:
+  public-url:
+    form-service:  ## 환경별 설정
+    admin-service: ## 환경별 설정
+
+
+
 ## Spring
 spring:
   ## Basic
@@ -11,16 +19,13 @@ spring:
       smartform:
         type: ROUTING
         writer:
-          url: ${SMARTFORM_WRITER_DB_URL}
-          username: ${SMARTFORM_WRITER_DB_USERNAME}
-          password: ${SMARTFORM_WRITER_DB_PASSWORD}
           hikari:
             maximum-pool-size: 20
         reader:
-          url: ${SMARTFORM_READER_DB_URL}
-          username: ${SMARTFORM_READER_DB_USERNAME}
-          password: ${SMARTFORM_READER_DB_PASSWORD}
           read-only: true
+          url: ${spring.datasource.groups.smartform.writer.url}
+          username: ${spring.datasource.groups.smartform.writer.username}
+          password: ${spring.datasource.groups.smartform.writer.password}
           hikari:
             maximum-pool-size: 30
 
@@ -28,9 +33,6 @@ spring:
       msp:
         type: STANDALONE
         standalone:
-          url: ${MSP_DB_URL}
-          username: ${MSP_DB_USERNAME}
-          password: ${MSP_DB_PASSWORD}
           read-only: true
           hikari:
             maximum-pool-size: 20
@@ -54,10 +56,7 @@ spring:
   data:
     ## Redis
     redis:
-      host: ${REDIS_HOST:}
-      port: ${REDIS_PORT:}
-      password: ${REDIS_PASSWORD:}
-      timeout: 300ms
+      timeout: 500ms
       connect-timeout: 200ms
       lettuce:
         shutdown-timeout: 500ms
@@ -65,7 +64,6 @@ spring:
           refresh:
             period: 60s
             dynamic-refresh-sources: true
-            adaptive: false
 
   ## TaskExecutor
   task:
@@ -90,6 +88,20 @@ spring:
 
 
 
+## 메시지 발송
+message-sender:
+  kakao: ## 카카오톡 알림톡
+    sender-key:  ## 각 환경별 설정
+
+
+
+## Jasypt
+jasypt:
+  encryptor:
+    password: ${JASYPT_ENCRYPTOR_PASSWORD}
+
+
+
 ## Scheduling
 scheduling:
   enabled: true
@@ -104,53 +116,53 @@ startup:
 
 
 ## Logging
+http-log:
+  default-rules:
+    ## HTTP 로그 헤더 기본 룰
+    ## 헤더명 뒤에 [size] 또는 [start:end] 지정 가능
+    header-names:
+      include:
+        - Content-Type
+        - Authorization[10]
+        - X-Service-Api-Key[10]
+      exclude:
+        - X-Content-Type-Options
+      #additional-include: { }
+      #additional-exclude: { }
+
+    ## HTTP 로그 바디(JSON, form-urlencoded, form-data) 마스킹 기본 룰
+    body-masked-fields:
+      include:
+        - authorization
+        - password
+        - authNumber
+        - secret
+        - token
+        - passwd
+        - apiKey
+      exclude:
+        - tokenType
+      #additional-include: { }
+      #additional-exclude: { }
+
+    ## HTTP 로그 바디(JSON, form-urlencoded, form-data) 축약 기본 룰
+    ## 필드명 뒤에 [size] 또는 [start:end] 지정 가능
+    body-truncated-fields:
+      default-truncated-size: 50
+      include:
+        - accessToken[10]
+        - loginSessionId[8:]
+        - content
+        - image
+        - file
+      exclude: []
+      #additional-include: { }
+      #additional-exclude: { }
+
+
+
 logging:
   pattern:
     correlation: "[%X{traceId}-%X{spanId}][%X{clientId}] "
   level:
     com.ktmmobile.msf: info
-
-
-
----
-#### PRD Profile
-spring:
-  config.activate.on-profile: prd
-  data:
-    redis:
-      masterreplica:
-        nodes: ${REDIS_HOSTS}  # 끝에 S 주의
-
-
-
----
-#### STG Profile
-spring:
-  config.activate.on-profile: stg
-
-
-
----
-#### DEV Profile
-spring:
-  config.activate.on-profile: dev
-
-logging:
-  level:
-    com.ktmmobile.msf: debug
-    jdbc:
-      sqlonly: off
-      sqltiming: off
-      resultsettable: debug
-      audit: off
-      resultset: off
-      connection: off
-
-
-
----
-#### LOCAL Profile
-spring:
-  config.activate.on-profile: local
-
-## 별도 파일에 프로퍼티 정의: application-common-local.yaml

@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MPhoneNoListXmlVO;
-import com.ktmmobile.msf.domains.form.form.newchange.service.MarketInfo;
 
 /**
  * 희망번호 조회 Response
@@ -18,7 +17,7 @@ import com.ktmmobile.msf.domains.form.form.newchange.service.MarketInfo;
 public class SearchNumberResponse {
 
     private List<MPhoneNoListXmlVO> mPhoneNoList; //
-    private List<MarketInfo> marketList;// 상세 정보 리스트
+    //private List<MarketInfo> marketList;// 상세 정보 리스트
 
     private int tryCount;
 

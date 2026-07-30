@@ -1,10 +1,13 @@
 package com.ktmmobile.msf.domains.form.common.util;
 
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.SocketTimeoutException;
 import java.util.Map;
+
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
@@ -13,12 +16,9 @@ import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.params.HttpMethodParams;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+@Slf4j
 public class CommonHttpClient {
-
-    private static final Logger logger = LoggerFactory.getLogger(CommonHttpClient.class);
 
     private final String url;
     public CommonHttpClient(String url) {
@@ -55,10 +55,16 @@ public class CommonHttpClient {
         } catch (SocketTimeoutException e){
             throw e;
         } catch (Exception e) {
-            logger.error(e.getMessage());
+            log.error(e.getMessage());
         } finally {
             method.releaseConnection();
-            if(br != null) try { br.close(); } catch (Exception fe) {logger.error(fe.getMessage());}
+            if (br != null) {
+                try {
+                    br.close();
+                } catch (Exception e) {
+                    log.error(e.getMessage());
+                }
+            }
         }
 
         return result;
@@ -95,11 +101,17 @@ public class CommonHttpClient {
         } catch (SocketTimeoutException e){
             throw e;
         } catch (Exception e) {
-            logger.error(e.getMessage());
+            log.error(e.getMessage());
         } finally {
             method.releaseConnection();
             client.getHttpConnectionManager().closeIdleConnections(0);
-            if(br != null) try { br.close(); } catch (Exception fe) {logger.error(fe.getMessage());}
+            if (br != null) {
+                try {
+                    br.close();
+                } catch (Exception e) {
+                    log.error(e.getMessage());
+                }
+            }
         }
 
         return result;
@@ -126,7 +138,7 @@ public class CommonHttpClient {
             int statusCode = client.executeMethod(method);
 
             if (statusCode != HttpStatus.SC_OK) {
-                logger.debug("Method failed: " + method.getStatusLine());
+                log.debug("Method failed: " + method.getStatusLine());
             }
 
             // Read the response body.
@@ -138,7 +150,7 @@ public class CommonHttpClient {
         } catch (HttpException e) {
             throw e;
         } catch (SocketTimeoutException e){
-            logger.error(e.getMessage());
+            log.error(e.getMessage());
             throw e;
         } catch (IOException e) {
             throw e;
@@ -181,10 +193,16 @@ public class CommonHttpClient {
         } catch (SocketTimeoutException e){
             throw e;
         } catch (Exception e) {
-            logger.error(e.getMessage());
+            log.error(e.getMessage());
         } finally {
             method.releaseConnection();
-            if(br != null) try { br.close(); } catch (Exception fe) {logger.error(fe.getMessage());}
+            if (br != null) {
+                try {
+                    br.close();
+                } catch (Exception e) {
+                    log.error(e.getMessage());
+                }
+            }
         }
 
         return result;
@@ -227,11 +245,17 @@ public class CommonHttpClient {
         } catch (SocketTimeoutException e){
             throw e;
         } catch (Exception e) {
-            logger.error(e.getMessage());
+            log.error(e.getMessage());
         } finally {
             method.releaseConnection();
             client.getHttpConnectionManager().closeIdleConnections(0);
-            if(br != null) try { br.close(); } catch (Exception fe) {logger.error(fe.getMessage());}
+            if (br != null) {
+                try {
+                    br.close();
+                } catch (Exception e) {
+                    log.error(e.getMessage());
+                }
+            }
         }
 
         return result;

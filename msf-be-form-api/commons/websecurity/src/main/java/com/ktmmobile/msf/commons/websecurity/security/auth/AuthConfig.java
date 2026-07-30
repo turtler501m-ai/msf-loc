@@ -6,7 +6,6 @@ import java.util.Map;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import jakarta.servlet.DispatcherType;
-import jakarta.servlet.http.HttpServletRequest;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import org.springframework.context.annotation.Bean;
@@ -20,7 +19,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.DelegatingPasswordEncoder;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
@@ -46,11 +44,14 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.ktmmobile.msf.commons.websecurity.security.auth.converter.JwtMemberAuthenticationConverter;
+import com.ktmmobile.msf.commons.websecurity.security.auth.filter.ExternalServiceAuthenticationFilter;
 import com.ktmmobile.msf.commons.websecurity.security.auth.handler.DefaultAccessDeniedHandler;
 import com.ktmmobile.msf.commons.websecurity.security.auth.handler.DefaultAuthenticationEntryPoint;
-import com.ktmmobile.msf.commons.websecurity.security.auth.properties.JwtSecurityProperties;
-import com.ktmmobile.msf.commons.websecurity.security.auth.properties.SecurityAuthorizationProperties;
+import com.ktmmobile.msf.commons.websecurity.security.auth.property.ExternalServiceAuthenticationProperties;
+import com.ktmmobile.msf.commons.websecurity.security.auth.property.JwtSecurityProperties;
+import com.ktmmobile.msf.commons.websecurity.security.auth.property.SecurityAuthorizationProperties;
 import com.ktmmobile.msf.commons.websecurity.web.filter.ClientIdMdcFilter;
+import com.ktmmobile.msf.commons.websecurity.web.util.RequestUtils;
 
 @EnableMethodSecurity
 @EnableWebSecurity
@@ -63,7 +64,8 @@ public class AuthConfig {
         AuthenticationEntryPoint authenticationEntryPoint,
         AccessDeniedHandler accessDeniedHandler,
         JwtMemberAuthenticationConverter jwtMemberAuthenticationConverter,
-        SecurityAuthorizationProperties securityAuthorizationProperties
+        SecurityAuthorizationProperties securityAuthorizationProperties,
+        ExternalServiceAuthenticationProperties externalServiceAuthenticationProperties
     ) {
         http.httpBasic(AbstractHttpConfigurer::disable)
             .formLogin(AbstractHttpConfigurer::disable)
@@ -89,6 +91,10 @@ public class AuthConfig {
                 .bearerTokenResolver(bearerTokenResolver(securityAuthorizationProperties.tokenIgnoreUrlPatterns()))
                 .jwt(jwtConfigurer -> jwtConfigurer.jwtAuthenticationConverter(jwtMemberAuthenticationConverter)))
 
+            .addFilterBefore(
+                new ExternalServiceAuthenticationFilter(externalServiceAuthenticationProperties, authenticationEntryPoint),
+                BearerTokenAuthenticationFilter.class
+            )
             .addFilterAfter(new ClientIdMdcFilter(), BearerTokenAuthenticationFilter.class);
         return http.build();
     }
@@ -97,7 +103,7 @@ public class AuthConfig {
         DefaultBearerTokenResolver delegate = new DefaultBearerTokenResolver();
         AntPathMatcher pathMatcher = new AntPathMatcher();
         return request -> {
-            String requestPath = requestPath(request);
+            String requestPath = RequestUtils.getRequestPath(request);
             for (String pattern: tokenIgnoreUrlPatterns) {
                 if (pathMatcher.match(pattern, requestPath)) {
                     return null;
@@ -105,16 +111,6 @@ public class AuthConfig {
             }
             return delegate.resolve(request);
         };
-    }
-
-    private String requestPath(HttpServletRequest request) {
-        String requestUri = request.getRequestURI();
-        String contextPath = request.getContextPath();
-        if (StringUtils.hasText(contextPath) && requestUri.startsWith(contextPath)) {
-            String path = requestUri.substring(contextPath.length());
-            return StringUtils.hasText(path) ? path : "/";
-        }
-        return requestUri;
     }
 
     private CorsConfigurationSource corsConfigurationSource() {
@@ -131,13 +127,11 @@ public class AuthConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        String encodingId = "bcrypt";
         Map<String, PasswordEncoder> encoders = new HashMap<>();
-        encoders.put(encodingId, new BCryptPasswordEncoder());
-        encoders.put("noop", NoOpPasswordEncoder.getInstance());
+        encoders.put("bcrypt", new BCryptPasswordEncoder());
         encoders.put("scrypt", SCryptPasswordEncoder.defaultsForSpringSecurity_v5_8());
         encoders.put("argon2", Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8());
-        return new DelegatingPasswordEncoder(encodingId, encoders);
+        return new DelegatingPasswordEncoder("bcrypt", encoders);
     }
 
     @Bean

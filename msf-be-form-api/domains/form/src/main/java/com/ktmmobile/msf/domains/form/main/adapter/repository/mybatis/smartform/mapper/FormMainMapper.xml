@@ -4,29 +4,76 @@
     "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ktmmobile.msf.domains.form.main.adapter.repository.mybatis.smartform.mapper.FormMainMapper">
 
-  <!-- FIXME: 실제 조회 쿼리로 변경 필요 -->
-  <select id="selectCountFormStatus" resultType="com.ktmmobile.msf.domains.form.main.domain.entity.ChartCount">
-    select a.*
+  <sql id="with_form_status">
+    with nwchg as (
+      select proc_cd
+        from msf_request
+       where cret_dt >= to_date(to_char(now(), 'YYYYMMDD'), 'YYYYMMDD')
+         and cret_id = #{value}
+    ), svchg as (
+      select proc_cd
+        from msf_request_svc_chg
+       where cret_dt >= to_date(to_char(now(), 'YYYYMMDD'), 'YYYYMMDD')
+         and cret_id = #{value}
+    ), nmchg as (
+      select proc_cd
+        from msf_request_name_chg
+       where cret_dt >= to_date(to_char(now(), 'YYYYMMDD'), 'YYYYMMDD')
+         and cret_id = #{value}
+    ), svcnl as (
+      select proc_cd
+        from msf_request_cancel
+       where cret_dt >= to_date(to_char(now(), 'YYYYMMDD'), 'YYYYMMDD')
+         and cret_id = #{value}
+    )
+  </sql>
+  <select id="selectCountFormStatus" parameterType="string" resultType="com.ktmmobile.msf.domains.form.main.domain.entity.ChartCount">
+    <include refid="with_form_status" />
+    select 'RQ' as code, '신청완료' as name, sum(cnt) as count
       from (
-    select '1' as code, '신청중' as name, 100 as count
-    union all
-    select '2' as code, '접수완료' as name, 50 as count
-    union all
-    select '3' as code, '이미지전송완료' as name, 30 as count
-           ) a
-     order by a.code
+            select count(*) as cnt from nwchg where proc_cd = 'RQ'
+             union all
+            select count(*) as cnt from svchg where proc_cd = 'RQ'
+             union all
+            select count(*) as cnt from nmchg where proc_cd = 'RQ'
+             union all
+            select count(*) as cnt from svcnl where proc_cd = 'RQ'
+           )
+     union all
+    select 'CP' as code, '처리완료' as name, sum(cnt) as count
+      from (
+            select count(*) as cnt from nwchg where proc_cd = 'CP'
+             union all
+            select count(*) as cnt from svchg where proc_cd = 'CP'
+             union all
+            select count(*) as cnt from nmchg where proc_cd = 'CP'
+             union all
+            select count(*) as cnt from svcnl where proc_cd = 'CP'
+           )
+     union all
+    select 'BK' as code, '신청취소' as name, sum(cnt) as count
+      from (
+            select count(*) as cnt from nwchg where proc_cd = 'BK'
+             union all
+            select count(*) as cnt from svchg where proc_cd = 'BK'
+             union all
+            select count(*) as cnt from nmchg where proc_cd = 'BK'
+             union all
+            select count(*) as cnt from svcnl where proc_cd = 'BK'
+           )
   </select>
-  <!-- FIXME: 실제 조회 쿼리로 변경 필요 -->
-  <select id="selectCountFormService" resultType="com.ktmmobile.msf.domains.form.main.domain.entity.ChartCount">
+
+  <select id="selectCountFormService" parameterType="string" resultType="com.ktmmobile.msf.domains.form.main.domain.entity.ChartCount">
+    <include refid="with_form_status" />
     select a.code, b.dtl_cd_nm as name, a.count
       from (
-    select '1' as code, 100 as count
-    union all
-    select '2' as code, 75 as count
-    union all
-    select '3' as code, 50 as count
-    union all
-    select '4' as code, 25 as count
+            select '1' as code, count(*) as count from nwchg
+             union all
+            select '2' as code, count(*) as count from svchg
+             union all
+            select '3' as code, count(*) as count from nmchg
+             union all
+            select '4' as code, count(*) as count from svcnl
            ) a
          , msf_cd_dtl b
      where a.code = b.dtl_cd

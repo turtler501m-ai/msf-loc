@@ -4,6 +4,8 @@ plugins {
 
 dependencies {
     implementation(project(":commons:common"))
+    implementation(project(":commons:crypto"))
+    implementation(project(":commons:mybatis"))
     implementation(project(":commons:websecurity"))
 
     implementation("org.springframework.boot:spring-boot-starter-aspectj")

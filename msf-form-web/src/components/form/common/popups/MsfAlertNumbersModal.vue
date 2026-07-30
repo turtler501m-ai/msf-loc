@@ -14,26 +14,31 @@
           v-model="formData.numberValue1"
           placeholder="알림 휴대폰번호 입력 (필수)"
           class="ut-w100p"
+          maxlength="11"
         />
         <MsfNumberInput
           v-model="formData.numberValue2"
           placeholder="알림 휴대폰번호 입력 (선택)"
           class="ut-w100p"
+          maxlength="11"
         />
         <MsfNumberInput
           v-model="formData.numberValue3"
           placeholder="알림 휴대폰번호 입력 (선택)"
           class="ut-w100p"
+          maxlength="11"
         />
         <MsfNumberInput
           v-model="formData.numberValue4"
           placeholder="알림 휴대폰번호 입력 (선택)"
           class="ut-w100p"
+          maxlength="11"
         />
         <MsfNumberInput
           v-model="formData.numberValue5"
           placeholder="알림 휴대폰번호 입력 (선택)"
           class="ut-w100p"
+          maxlength="11"
         />
       </MsfStack>
     </MsfFormGroup>
@@ -42,7 +47,12 @@
     <template #footer>
       <MsfButtonGroup>
         <MsfButton variant="secondary" @click="onClose">취소</MsfButton>
-        <MsfButton v-if="props.settingData?.addSvcSettingCompleted" variant="tertiary" @click="onReset">초기화</MsfButton>
+        <MsfButton
+          v-if="props.settingData?.showChangeCancel"
+          variant="tertiary"
+          @click="onReset"
+          >변경취소</MsfButton
+        >
         <MsfButton variant="primary" @click="onConfirm">확인</MsfButton>
       </MsfButtonGroup>
     </template>
@@ -50,13 +60,14 @@
 </template>
 
 <script setup>
-import { reactive, ref, watch } from 'vue'
+import { reactive, watch } from 'vue'
 import { showAlert } from '@/libs/utils/comp.utils'
-import { normalizePhone, isValidMobileNumber } from '@/libs/utils/string.utils'
+import { normalizePhone } from '@/libs/utils/string.utils'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
   settingData: { type: Object, default: () => ({}) },
+  initialSettingData: { type: Object, default: () => ({}) },
 })
 
 const emit = defineEmits(['update:modelValue', 'open', 'close', 'confirm'])
@@ -71,33 +82,58 @@ const formData = reactive({
 })
 
 // 기존 설정값에서 초기값 복원
-const initializeFromSettingData = () => {
-  const { ftrNewParam, numberValue1, numberValue2, numberValue3, numberValue4, numberValue5 } = props.settingData
+const initializeFromSettingData = (settingData = props.settingData) => {
+  const {
+    paramSbst,
+    ftrNewParam,
+    numberValue1,
+    numberValue2,
+    numberValue3,
+    numberValue4,
+    numberValue5,
+  } = settingData
 
   if (ftrNewParam) {
-    const numbers = String(ftrNewParam).split(':').map(n => n.trim()).filter(Boolean)
+    const numbers = String(ftrNewParam)
+      .split(':')
+      .map((n) => n.trim())
+      .filter(Boolean)
     formData.numberValue1 = numbers[0] || ''
     formData.numberValue2 = numbers[1] || ''
     formData.numberValue3 = numbers[2] || ''
     formData.numberValue4 = numbers[3] || ''
     formData.numberValue5 = numbers[4] || ''
   } else {
-    formData.numberValue1 = numberValue1 || ''
-    formData.numberValue2 = numberValue2 || ''
-    formData.numberValue3 = numberValue3 || ''
-    formData.numberValue4 = numberValue4 || ''
-    formData.numberValue5 = numberValue5 || ''
+    if (paramSbst) {
+      paramSbst.split('|').forEach((item) => {
+        const [key, value] = item.split('=')
+        // APNT_NO + 숫자 패턴 확인 (정규식: APNT_NO(\d+))
+        const match = key && key.match(/APNT_NO(\d+)/)
+        if (match) {
+          const index = match[1] // 1, 2, 3, 4, 5 추출
+          const fieldName = `numberValue${index}`
+          formData[fieldName] = (value || '').trim()
+        }
+      })
+    } else {
+      formData.numberValue1 = numberValue1 || ''
+      formData.numberValue2 = numberValue2 || ''
+      formData.numberValue3 = numberValue3 || ''
+      formData.numberValue4 = numberValue4 || ''
+      formData.numberValue5 = numberValue5 || ''
+    }
   }
 }
 
-const isFormReset = ref(false)
-
-watch(() => props.modelValue, (isOpen) => {
-  if (isOpen) {
-    isFormReset.value = false
-    initializeFromSettingData()
-  }
-}, { immediate: true })
+watch(
+  () => props.modelValue,
+  (isOpen) => {
+    if (isOpen) {
+      initializeFromSettingData()
+    }
+  },
+  { immediate: true },
+)
 
 // 닫힘 이벤트
 const onClose = () => {
@@ -108,21 +144,15 @@ const onClose = () => {
 }
 
 const onReset = () => {
-  isFormReset.value = true
-  formData.numberValue1 = ''
-  formData.numberValue2 = ''
-  formData.numberValue3 = ''
-  formData.numberValue4 = ''
-  formData.numberValue5 = ''
+  initializeFromSettingData(
+    Object.keys(props.initialSettingData).length ? props.initialSettingData : props.settingData,
+  )
 }
+
+const isValidMobileNumber2 = (value) => /^01\d{9}$/.test(normalizePhone(value))
 
 // 확인 이벤트
 const onConfirm = () => {
-  if (isFormReset.value) {
-    emit('confirm', { isReset: true })
-    onClose()
-    return
-  }
   const allValues = [
     normalizePhone(formData.numberValue1),
     normalizePhone(formData.numberValue2),
@@ -137,7 +167,7 @@ const onConfirm = () => {
     return
   }
 
-  const invalidNumber = allValues.find((number) => number && !isValidMobileNumber(number))
+  const invalidNumber = allValues.find((number) => number && !isValidMobileNumber2(number))
   if (invalidNumber) {
     showAlert('유효한 휴대폰번호를 입력해 주세요.')
     return

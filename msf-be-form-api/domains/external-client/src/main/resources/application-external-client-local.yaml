@@ -1,0 +1,48 @@
+## HTTP Client
+http-client:
+  proxy:
+    enabled: false
+
+
+
+## 내부 서비스 (Outbound)
+internal-service:
+  services:
+    form-api: ## FORM-API
+      base-url: http://localhost:8080
+    admin-api: ## ADMIN-API
+      base-url: http://localhost:8180
+    batch: ## BATCH
+      base-url: http://localhost:8280
+    koi-ocr: ## KOI OCR 인식
+      base-url: https://d-smartform.ktmmobile.com/_ocr
+      #base-url: https://d-msf-ocr.ktmmobile.com
+    koi-idcard: ## KOI 모바일신분증 인증
+      base-url: https://d-smartform-idcard.ktmmobile.com
+      #base-url: https://d-msf-idcard.ktmmobile.com
+    eformsign: ## eFormSign
+      base-url: https://d-smartform-eform.ktmmobile.com
+      #base-url: https://d-msf-eform.ktmmobile.com
+      properties:
+        member-id: test@forcs.com
+        api-key: ENC(JQqKDvGAb2e10KlEvnGxEedNxfD+TV9cWY9mpJkMd/cY+Y1jUGVUE5QEJVJJXGo+WHCeuY4sgYVMz91uSpCJ8AiZwxwcmNSKb38QJSLTaI8=)
+        private-key: ENC(gCHRJhqN7LRkeCjehOctfO8ARRDLdFt/qSfjqwZwohC+iZ8UywXVAPXAkfSSvjBUsMagzY+Ubyqpf/PHw2TuEyBMXi9OfOxtAmxAEwHnX+CfqFeNoBoDTVsTn6wgbKWg9ayW25zucmtHXi3q/mQVw44L68nLYpypP+HhXWgIFVR41EIEnmTA7OLqc+iO5PBEzTGRFZ/nruQRTqVCfsDDNMaP4mUbh7hl7EcAsDlECl0=)
+
+
+
+## 외부 서비스 (Outbound)
+external-service:
+  services:
+    msp-prx: ## MSP PRX
+      base-url: https://d-smartform.ktmmobile.com/_prx
+    nice-api: ## NICE API
+      base-url: https://secure.nuguya.com
+      properties:
+        svc-pwd: ENC(AVc+24vY5uQC22Q45KL9d1nqvNxCDfYFKORIWQQCxeXkWR8duwD3ctnCVgNKAid2)
+    image-system: ## 이미지 시스템
+      base-url: https://scnimgstg.ktmmobile.com  # STG 환경 사용
+    juso: ## 주소 검색
+      base-url: https://business.juso.go.kr
+      properties:
+        api-key: ENC(zClLBzYLx8hs0+6Qs1XrFJU7oVnaHxcyAWz5mmFg9fwOrEBesSpPunPjlLaGIuYI+EeMQ590MDqPGb8enps+qKW5+uKhxmD3pZDCpAe/JwQ=)
+        coord-api-key: ENC(lL2k/kadYrZ88Yo46pp5OcD0ia8J6lek6QqJ83A897D80gVkeuZk4kjBrxfhaxJU+S+ATvu7N28HiPddbe/YV+G/LOHdcCyoWFDzU20K4os=)

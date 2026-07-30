@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.ktmmobile.msf.domains.form.form.common.dto.MsfRequestDocDto;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter
@@ -14,9 +15,15 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @NoArgsConstructor
 public class TerminationApplyReqDto {
 
+    private String parentScanId;
+    private Long requestKey;
+    private String documentId;
+    private String fileNm;
+    private String fileMaskNm;
     private Customer customer;
     private Product product;
     private Agreement agreement;
+    private List<MsfRequestDocDto> msfRequestDocList;
 
     private String cstmrTypeCd;
     private String receiveWayCd;
@@ -31,7 +38,11 @@ public class TerminationApplyReqDto {
         private String managerCd;
         private String managerNm;
         private String agentCd;
+        private String ktOrgId;
         private String agentNm;
+        private String shopCd;
+        private String shopNm;
+        private String realShopNm;
         private String customerType;
         private String identityCertTypeCd;
         private String identityTypeCd;
@@ -76,6 +87,7 @@ public class TerminationApplyReqDto {
         private String repRegistrationNo2;
         private boolean repAgree;
         private String minorAgentNm;
+        private String agentBirthDate;
         private String agentGender;
         private String minorAgentRelTypeCd;
         private String minorAgentTelFnNo;

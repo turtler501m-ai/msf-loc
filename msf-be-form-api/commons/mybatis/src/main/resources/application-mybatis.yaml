@@ -3,22 +3,24 @@ mybatis:
   datasource:
     smartform:
       mapper-scan-packages:
+        - com.ktmmobile.msf.commons.**.adapter.repository.mybatis.smartform.mapper
         - com.ktmmobile.msf.domains.**.adapter.repository.mybatis.smartform.mapper
         - com.ktmmobile.msf.domains.**.repository.smartform
       mapper-locations:
-        - classpath*:com/ktmmobile/msf/commons/mybatis/mapper/*.xml
+        - classpath*:com/ktmmobile/msf/commons/**/adapter/repository/mybatis/smartform/mapper/*.xml
         - classpath*:com/ktmmobile/msf/domains/**/adapter/repository/mybatis/smartform/mapper/*.xml
         - classpath*:com/ktmmobile/msf/domains/**/repository/smartform/*.xml
-        - classpath*:com/ktmmobile/msf/domains/**/mapper/*.xml  # legacy mappers (FCommonDaoImpl 등)
+        - classpath*:com/ktmmobile/msf/domains/**/mapper/*.xml  # legacy mappers
     msp:
       mapper-scan-packages:
+        - com.ktmmobile.msf.commons.**.adapter.repository.mybatis.msp.mapper
         - com.ktmmobile.msf.domains.**.adapter.repository.mybatis.msp.mapper
         - com.ktmmobile.msf.domains.**.repository.msp
       mapper-locations:
-        - classpath*:com/ktmmobile/msf/commons/mybatis/mapper/*.xml
+        - classpath*:com/ktmmobile/msf/commons/**/adapter/repository/mybatis/msp/mapper/*.xml
         - classpath*:com/ktmmobile/msf/domains/**/adapter/repository/mybatis/msp/mapper/*.xml
         - classpath*:com/ktmmobile/msf/domains/**/repository/msp/*.xml
-        - classpath*:com/ktmmobile/msf/domains/**/mapper/*.xml  # legacy mappers (EventBoardMapper 등)
+        - classpath*:com/ktmmobile/msf/domains/**/mapper/*.xml  # legacy mappers
   type-handlers-packages:
     - com.ktmmobile.msf.commons.mybatis.typehandler.global
     - com.ktmmobile.msf.domains.**.adapter.repository.mybatis.msp.typehandler

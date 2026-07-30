@@ -52,6 +52,7 @@ public class StringMakerUtil {
 //        return sb.toString();
 
         // 마스킹해제 인증 완료 시
+        // FIXME: SessionUtils 의존성 제거
         if(SessionUtils.getMaskingSession() > 0 ) {
             return str;
         }
@@ -69,6 +70,7 @@ public class StringMakerUtil {
 //        return sb.toString();
 
         // 마스킹해제 인증 완료 시
+        // FIXME: SessionUtils 의존성 제거
         if(SessionUtils.getMaskingSession() > 0 ) {
             return str;
         }
@@ -131,6 +133,7 @@ public class StringMakerUtil {
     public static String getCardExpirDate2(String str){
 
         // 마스킹해제 인증 완료 시
+        // FIXME: SessionUtils 의존성 제거
         if(SessionUtils.getMaskingSession() > 0 ) {
             return str;
         }

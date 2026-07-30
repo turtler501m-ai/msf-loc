@@ -81,7 +81,7 @@ public class CacheRedisWriter implements CacheStoreWriter {
     }
 
     private void putAllInBatches(String realKey, Map<String, Object> values) {
-        Map<String, Object> batch = new LinkedHashMap<>(REDIS_HASH_WRITE_BATCH_SIZE);
+        Map<String, Object> batch = LinkedHashMap.newLinkedHashMap(REDIS_HASH_WRITE_BATCH_SIZE);
         for (Map.Entry<String, Object> entry: values.entrySet()) {
             batch.put(entry.getKey(), entry.getValue());
             if (batch.size() >= REDIS_HASH_WRITE_BATCH_SIZE) {

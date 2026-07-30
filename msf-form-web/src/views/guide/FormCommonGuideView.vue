@@ -43,7 +43,12 @@
           class="ut-w100p"
         />
       </MsfFormGroup>
-      <MsfAddressSearchPop v-model="showAddressSearchPop" @confirm="onConfirmAddressSearchPop" />
+      <MsfAddressSearchPop
+        v-model="showAddressSearchPop"
+        :address1="address.address1"
+        :address2="address.address2"
+        @confirm="onConfirmAddressSearchPop"
+      />
     </div>
   </div>
 </template>
@@ -60,6 +65,8 @@ const onComplete = (result) => {
 }
 
 const address = ref({ postcode: '', address1: '', address2: '' })
+// const previewAddress1 = ref('테헤란로')
+// const previewAddress2 = ref('5층')
 const showAddressSearchPop = ref(false)
 const onClickSearchAddressBtn = () => {
   showAddressSearchPop.value = true

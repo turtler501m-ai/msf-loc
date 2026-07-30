@@ -3,60 +3,59 @@
     ref="triggerRef"
     class="popover-trigger-container"
     :class="{ 'is-active': isPopoverOpen }"
-    @click="togglePopover"
+    @click.capture="togglePopover"
   >
     <slot name="trigger" :disabled="inactiveEvent"></slot>
-  </div>
-
-  <Teleport :to="props.portalSelector || 'body'">
-    <FocusTrap
-      v-if="isPopoverOpen"
-      :is-active="true"
-      :loop="false"
-      :restore-focus="true"
-      @exit="closePopover"
-    >
-      <div
-        v-if="props.hasOverlay"
-        class="popover-overlay-guard"
-        @click.stop="handleOutsideClick"
-      ></div>
-      <div
-        ref="popoverRef"
-        class="popover-root"
-        v-bind="$attrs"
-        :style="{
-          width: props.width,
-          maxHeight: props.maxHeight,
-          /* 위치 계산이 완료되기 전까지는 숨겨서 0,0 지점에 잠깐 나타나는 '깜빡임' 방지 */
-          visibility: isPositioned ? 'visible' : 'hidden',
-        }"
-        @click.stop
+    <Teleport :to="props.portalSelector || '#portal-root'" :disabled="!props.portalSelector">
+      <FocusTrap
+        v-if="isPopoverOpen"
+        :is-active="true"
+        :loop="false"
+        :restore-focus="true"
+        @exit="closePopover"
       >
-        <div class="popover-header">
-          <div class="header-inner">
-            <div v-if="props.title" class="header">
-              <h2 class="title">{{ props.title }}</h2>
+        <div
+          v-if="props.hasOverlay"
+          class="popover-overlay-guard"
+          @click.stop="handleOutsideClick"
+        ></div>
+        <div
+          ref="popoverRef"
+          class="popover-root"
+          v-bind="$attrs"
+          :style="{
+            width: props.width,
+            maxHeight: props.maxHeight,
+            /* 위치 계산이 완료되기 전까지는 숨겨서 0,0 지점에 잠깐 나타나는 '깜빡임' 방지 */
+            visibility: isPositioned ? 'visible' : 'hidden',
+          }"
+          @click.stop
+        >
+          <div class="popover-header">
+            <div class="header-inner">
+              <div v-if="props.title" class="header">
+                <h2 class="title">{{ props.title }}</h2>
+              </div>
+              <MsfButton
+                v-if="showCloseBtn"
+                variant="ghost"
+                iconOnly="close"
+                class="popover-close-button"
+                @click="closePopover"
+              >
+                닫기
+              </MsfButton>
             </div>
-            <MsfButton
-              v-if="showCloseBtn"
-              variant="ghost"
-              iconOnly="close"
-              class="popover-close-button"
-              @click="closePopover"
-            >
-              닫기
-            </MsfButton>
           </div>
+          <MsfCustomScroll class="popover-content popover-scrollbar">
+            <div class="popover-inner">
+              <slot></slot>
+            </div>
+          </MsfCustomScroll>
         </div>
-        <MsfCustomScroll class="popover-content popover-scrollbar">
-          <div class="popover-inner">
-            <slot></slot>
-          </div>
-        </MsfCustomScroll>
-      </div>
-    </FocusTrap>
-  </Teleport>
+      </FocusTrap>
+    </Teleport>
+  </div>
 </template>
 
 <script setup>
@@ -69,11 +68,23 @@ const { lock, unlock } = useScrollLock()
 const props = defineProps({
   title: String,
   trigger: { type: String, default: 'trigger' }, // 기본 트리거 텍스트
-  placement: { type: [String, Array], default: ['top', 'start'] }, // 나타날 위치 (top, bottom 등)
+  /**
+   * @param {string | string[]} placement
+   * 순서: [Side, Align]
+   * - Side (첫 번째): 나타날 방향 ('top' | 'bottom' | 'left' | 'right')
+   * - Align (두 번째): 해당 방향에서의 정렬 ('start' | 'center' | 'end')
+   *
+   * 예: ['bottom', 'end'] -> 아래쪽 렌더링, 오른쪽 끝 정렬
+   * 예: ['right', 'start'] -> 오른쪽 옆 렌더링, 위쪽 끝 정렬
+   */
+  placement: {
+    type: [String, Array],
+    default: () => ['top', 'start'],
+  },
   isOpen: { type: Boolean, default: false }, // 외부에서 제어 가능한 열림 상태
   inactiveEvent: { type: Boolean, default: false }, // 비활성화 여부
   gap: { type: Number, default: 8 }, // 트리거와 팝업 사이의 간격(px)
-  portalSelector: { type: [String, Object], default: null }, // 렌더링될 대상 요소
+  portalSelector: { type: [String, Object], default: '#portal-root' }, // 렌더링 될 대상 요소 (null 일때 버튼뒤로 렌더링)
   width: { type: String, default: '460px' }, // 팝업 너비
   maxHeight: { type: String, default: '' }, // 팝업 최대 높이 (내부 스크롤 발생 조건)
   closeLock: { type: Boolean, default: false }, // 스크롤 시 닫기 방지 여부
@@ -89,7 +100,6 @@ const isPopoverOpen = ref(props.isOpen)
 const isPositioned = ref(false)
 const popoverRef = useTemplateRef('popoverRef')
 const triggerRef = useTemplateRef('triggerRef')
-const portalContainer = ref(null) // 스크롤이 있는 부모 컨테이너 자동 감지용
 const isScrollLocked = ref(false) // 열리는 시점의 찰나에 스크롤 이벤트 중복 발생 방지
 
 // 위치 설정을 배열 형태로 통일
@@ -97,76 +107,142 @@ const placements = computed(() =>
   Array.isArray(props.placement) ? props.placement : [props.placement],
 )
 
-// 팝업 위치 계산
+/**
+ * 팝업 위치 계산 핵심 로직
+ */
 const setPopoverPosition = async () => {
+  /* 위치 계산이 완료되기 전까지는 숨김 */
   isPositioned.value = false
+
+  // DOM 렌더링 및 내부 CustomScroll 높이 확보를 위해 대기
   await nextTick()
-  await nextTick() // Teleport 이동 및 DOM 렌더링을 완전히 기다리기 위해 이중 nextTick 사용
+  await nextTick()
 
   const target = triggerRef.value
   const popover = popoverRef.value
   if (!target || !popover) return
 
-  // 1. 기준 요소(트리거) 및 뷰포트 정보 획득
+  // [중요] 포털 사용 여부 판단
+  const isPortaled = props.portalSelector !== null && props.portalSelector !== 'null'
+
+  // 뷰포트 및 엘리먼트 정보 미리 확보
   const targetRect = target.getBoundingClientRect()
-  const portal = props.portalSelector || portalContainer.value || document.body
-  const isBody = portal === document.body || portal === document.documentElement
-
-  // 2. Portal의 좌표값 (특정 요소 안에 렌더링될 경우 상대 좌표 계산용)
-  const portalRect = isBody ? { top: 0, left: 0 } : portal.getBoundingClientRect()
-
-  const popoverWidth = popover.offsetWidth
   const popoverHeight = popover.offsetHeight
+  const popoverWidth = popover.offsetWidth
   const viewportHeight = window.innerHeight
   const viewportWidth = window.innerWidth
 
-  // 3. 기본 위치 설정 (Portal 기준 상대 좌표 계산)
-  let posX = isBody ? targetRect.left + window.scrollX : targetRect.left - portalRect.left
-  let posY = isBody ? targetRect.top + window.scrollY : targetRect.top - portalRect.top
-
   let [side, align] = placements.value
 
-  // 4. Flip (화면 공간 부족 시 상하 반전 자동 감지)
-  if (side === 'bottom' && targetRect.bottom + popoverHeight + props.gap > viewportHeight) {
-    if (targetRect.top > popoverHeight) side = 'top' // 위쪽 공간이 충분하면 위로 보냄
-  } else if (side === 'top' && targetRect.top - popoverHeight - props.gap < 0) {
-    if (viewportHeight - targetRect.bottom > popoverHeight) side = 'bottom' // 아래 공간이 충분하면 아래로 보냄
+  // ---------------------------------------------------------
+  // 1. Flip 자동 감지 (공간 부족 시 반전)
+  // ---------------------------------------------------------
+  const space = {
+    top: targetRect.top,
+    bottom: viewportHeight - targetRect.bottom,
+    left: targetRect.left,
+    right: viewportWidth - targetRect.right,
   }
 
-  // 5. 선택된 방향(side)에 따른 최종 Y축 좌표 확정
-  if (side === 'top') {
-    posY -= popoverHeight + props.gap
+  // 현재 설정된 방향의 필요 공간
+  const neededWidth = popoverWidth + props.gap
+  const neededHeight = popoverHeight + props.gap
+
+  // 현재 방향에서 공간이 부족한 경우, 가장 여유 있는 방향을 찾음
+  const isVertical = side === 'top' || side === 'bottom'
+  const needsFlip = isVertical
+    ? side === 'top'
+      ? space.top < neededHeight
+      : space.bottom < neededHeight
+    : side === 'left'
+      ? space.left < neededWidth
+      : space.right < neededWidth
+
+  if (needsFlip) {
+    if (isVertical) {
+      // 세로 방향일 때: top/bottom 중 더 넓은 곳 선택
+      side = space.top > space.bottom ? 'top' : 'bottom'
+    } else {
+      // 가로 방향일 때: left/right 중 더 넓은 곳 선택
+      side = space.left > space.right ? 'left' : 'right'
+    }
+  }
+
+  // ---------------------------------------------------------
+  // CASE 1: 트리거 기준 (Portal 미사용)
+  // ---------------------------------------------------------
+  if (!isPortaled) {
+    let posY = 0
+    let posX = 0
+
+    // 가로 방향 배치 (Right / Left)
+    if (side === 'right' || side === 'left') {
+      posX = side === 'right' ? target.offsetWidth + props.gap : -(popoverWidth + props.gap)
+      // align 처리
+      if (align === 'bottom') posY = target.offsetHeight - popoverHeight
+      else if (align === 'center') posY = (target.offsetHeight - popoverHeight) / 2
+    }
+    // 세로 방향 배치 (Bottom / Top)
+    else {
+      posY = side === 'bottom' ? target.offsetHeight + props.gap : -(popoverHeight + props.gap)
+      // align 처리
+      if (align === 'end') posX = target.offsetWidth - popoverWidth
+      else if (align === 'center') posX = (target.offsetWidth - popoverWidth) / 2
+    }
+
+    popover.style.top = `${posY}px`
+    popover.style.left = `${posX}px`
+    isPositioned.value = true
+    return
+  }
+
+  // ---------------------------------------------------------
+  // CASE 2: 포털(Portal) 렌더링
+  // ---------------------------------------------------------
+  const selector = props.portalSelector === 'null' ? '#portal-root' : props.portalSelector
+  const portal = document.querySelector(selector) || document.body
+  const portalRect = portal.getBoundingClientRect()
+
+  let top = targetRect.top - portalRect.top
+  let left = targetRect.left - portalRect.left
+
+  if (side === 'right' || side === 'left') {
+    left =
+      side === 'right'
+        ? targetRect.right - portalRect.left + props.gap
+        : targetRect.left - portalRect.left - popoverWidth - props.gap
+
+    if (align === 'bottom') top += targetRect.height - popoverHeight
+    else if (align === 'center') top += (targetRect.height - popoverHeight) / 2
   } else {
-    posY += targetRect.height + props.gap
+    top =
+      side === 'bottom'
+        ? targetRect.bottom - portalRect.top + props.gap
+        : targetRect.top - portalRect.top - popoverHeight - props.gap
+
+    if (align === 'end') left += targetRect.width - popoverWidth
+    else if (align === 'center') left += (targetRect.width - popoverWidth) / 2
   }
 
-  // 6. 정렬(Align) 수식 적용 (start, end, center)
-  if (align === 'start') {
-    // 트리거 왼쪽 끝에 정렬
-  } else if (align === 'end') {
-    posX += targetRect.width - popoverWidth
-  } else {
-    // 중앙 정렬
-    posX += targetRect.width / 2 - popoverWidth / 2
-  }
-
-  // 7. 화면 가로 이탈 방지 (가로 방향으로 화면 밖으로 나가는 것 방어)
-  posX = Math.max(
-    isBody ? window.scrollX : 0,
-    Math.min(posX, (isBody ? viewportWidth + window.scrollX : portal.clientWidth) - popoverWidth),
-  )
-
-  // 8. 최종 스타일 적용 및 노출
-  popover.style.top = `${posY}px`
-  popover.style.left = `${posX}px`
+  popover.style.top = `${top}px`
+  popover.style.left = `${left}px`
   isPositioned.value = true
 }
 
 // 팝업 토글 핸들러
-const togglePopover = () => {
+const togglePopover = (e) => {
   if (props.inactiveEvent) return
-  isPopoverOpen.value = !isPopoverOpen.value
-  emit('update:isOpen', isPopoverOpen.value)
+
+  // 1. 이미 열려 있는 경우: 팝업을 닫고 이벤트 전파를 완전히 차단
+  if (isPopoverOpen.value) {
+    e.stopPropagation() // 이벤트가 부모로 올라가는 것을 막음
+    closePopover()
+    return
+  }
+  // 2. 닫혀 있는 경우: 팝업을 열고 이벤트 전파를 막지 않음
+  // (부모 컴포넌트의 클릭 이벤트가 그대로 전달되어 API가 호출됨)
+  isPopoverOpen.value = true
+  emit('update:isOpen', true)
   // console.log('팝오버 열림')
 }
 
@@ -255,7 +331,7 @@ onUnmounted(() => {
   position: relative;
   // 열렸을때 클릭을 위해서 z-index높임
   &.is-active {
-    z-index: 1000;
+    z-index: 1001;
   }
 }
 .popover-root {

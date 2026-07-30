@@ -15,6 +15,12 @@ public record LoginUserInfoResponse(
     Organization organization
 ) {
 
+    /**
+     * 사용자 정보 응답 변환
+     *
+     * @param userInfo 사용자 정보
+     * @return 사용자 정보 응답
+     */
     public static LoginUserInfoResponse from(LoginUserInfo userInfo) {
         return new LoginUserInfoResponse(
             userInfo.userId(),
@@ -26,6 +32,12 @@ public record LoginUserInfoResponse(
         );
     }
 
+    /**
+     * 로그인 결과 사용자 정보 응답 변환
+     *
+     * @param userInfo 로그인 결과 사용자 정보
+     * @return 사용자 정보 응답
+     */
     public static LoginUserInfoResponse from(LoginResultUserInfo userInfo) {
         return new LoginUserInfoResponse(
             userInfo.userId(),
@@ -44,6 +56,12 @@ public record LoginUserInfoResponse(
         String shopName
     ) {
 
+        /**
+         * 로그인 조직 정보 응답 변환
+         *
+         * @param organization 로그인 조직 정보
+         * @return 조직 정보 응답
+         */
         public static Organization from(LoginOrganization organization) {
             return new Organization(
                 organization.agentCode(),

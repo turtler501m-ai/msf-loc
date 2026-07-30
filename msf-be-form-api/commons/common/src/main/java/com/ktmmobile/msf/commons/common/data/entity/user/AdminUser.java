@@ -15,6 +15,11 @@ public class AdminUser implements MsfUser, Serializable {
     private final String userId;
     private final String userName;
     private final UserOrganization organization;
+    private final String roleCode;
+
+    public AdminUser(UserType userType, String userId, String userName, UserOrganization organization) {
+        this(userType, userId, userName, organization, null);
+    }
 
     public String getAgentCode() {
         return organization.agentCode();

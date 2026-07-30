@@ -7,7 +7,7 @@
       :config="componentConfig"
       :initialState="componentState"
       caseTitle="활용 예시"
-      caseDescription="FormGroup 활용 예시입니다."
+      caseDescription='기본 tag(label)는 첫 번째 입력 컨트롤 id와 연결됩니다. 특정 입력 컨트롤과 연결하지 않고 항목 제목으로만 표시할 때는 tag="div"를 사용합니다.'
     >
       <template #default="{ props: unitProps }">
         <MsfFormGroup v-bind="unitProps">
@@ -21,15 +21,15 @@
 
       <template #cases>
         <GuideSourceBox :source="selfSource" id="ex1">
-          <!-- 이메일주소 -->
+          <!-- 단일 입력 컨트롤 -->
           <MsfFormGroup label="이메일 주소" required>
             <MsfInput v-model="inputValue" placeholder="example@email.com" />
           </MsfFormGroup>
         </GuideSourceBox>
         <GuideSourceBox :source="selfSource" id="ex2">
-          <!-- 이메일주소 -->
-          <MsfFormGroup label="이메일 주소" required>
-            <MsfInput v-model="inputValue" placeholder="example@email.com" />
+          <!-- 특정 입력 컨트롤과 label을 연결하지 않는 항목 -->
+          <MsfFormGroup label="제목" tag="div" required>
+            <MsfButton variant="subtle">버튼</MsfButton>
           </MsfFormGroup>
         </GuideSourceBox>
       </template>
@@ -46,7 +46,12 @@ const inputValue = ref('')
 
 const componentConfig = {
   label: '레이블',
-  tag: ['label', 'div'],
+  tag: {
+    description:
+      'label: 첫 번째 입력 컨트롤 id와 연결 / div: 특정 입력 컨트롤과 연결하지 않고 항목 제목으로만 표시할 때 사용',
+    options: ['label', 'div'],
+    default: 'label',
+  },
   required: false,
   helpText: '도움말 문구',
   error: '에러 메시지',

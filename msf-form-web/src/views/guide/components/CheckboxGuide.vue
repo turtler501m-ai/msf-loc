@@ -45,7 +45,7 @@ const isReturnData = ref('N')
 
 // 1. 컨트롤러에 나타날 옵션 정의
 const componentConfig = {
-  variant: ['default', 'boxed'],
+  variant: ['default', 'boxed', 'lined'],
   size: ['small', 'medium'],
   label: '레이블',
   id: '',

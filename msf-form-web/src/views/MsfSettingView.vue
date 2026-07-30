@@ -4,20 +4,12 @@
   <!-- 로그인 설정 -->
   <MsfTitleArea title="로그인 설정" />
   <MsfStack vertical type="formgroups">
-    <MsfFormGroup label="지문 로그인 설정">
+    <MsfFormGroup label="지문/Face ID<br/>로그인 설정">
       <MsfSwitch
-        v-model="formData.isFingerLogin"
-        :disabled="fingerDisabled"
+        v-model="formData.isBioLogin"
+        :disabled="bioLoginDisabled"
         showInnerLabel
-        @change="handleChange1"
-      />
-    </MsfFormGroup>
-    <MsfFormGroup label="Face ID<br/>로그인 설정">
-      <MsfSwitch
-        v-model="formData.isFaceId"
-        :disabled="faceIdDisabled"
-        showInnerLabel
-        @change="handleChange2"
+        @change="onChangeBio"
       />
     </MsfFormGroup>
   </MsfStack>
@@ -45,123 +37,236 @@
 import { reactive, ref, onMounted } from 'vue'
 import { post } from '@/libs/api/msf.api'
 import { showAlert, showConfirm } from '@/libs/utils/comp.utils'
-import { useMsfUserStore } from '@/stores/msf_user'
+// import { useMsfUserStore } from '@/stores/msf_user'
+import {
+  getBioLoginStatus,
+  setBioLoginRegistration,
+  setBioLoginRegistrationSave,
+  generateRandomString,
+  generateHash,
+  bioLogin,
+  getDeviceUuid,
+  appUpdate,
+} from '@/libs/utils/device.utils'
+import { isNonProduction } from '@/libs/utils/env.utils'
 
 const appSettings = ref(null)
-const faceIdDisabled = ref(false)
-const fingerDisabled = ref(false)
-const msfUserStore = useMsfUserStore()
+const bioLoginDisabled = ref(true)
+// const msfUserStore = useMsfUserStore()
 
 const formData = reactive({
-  isFingerLogin: false, //지문 로그인 설정
-  isFaceId: false, //페이스ID 로그인 설정
+  isBioLogin: false, //지문 로그인 설정
 })
 
 onMounted(async () => {
-  await msfUserStore.initDeviceUuid()
-  const initData = {
-    deviceUuid: msfUserStore.getDeviceUuid(),
-  }
-  post('/api/n/app/login/init', initData)
-    .then((data) => {
-      if (data.code == '0000') {
-        appSettings.value = 'V ' + data.data
-        console.log('init data:' + data.data.apvSttusCd)
-        console.log('bioLoginYn:' + data.data.bioLoginYn)
-        // B: 지문, F: 얼굴
-        if (data.data?.bioLoginYn == 'F') {
-          formData.isFaceId = true
-          formData.isFingerLogin = false
-        } else if (data.data?.bioLoginYn == 'B') {
-          formData.isFingerLogin = true
-          formData.isFaceId = false
+  console.log('getBioLoginStatus 호출 전' + bioLoginDisabled.value)
+  await getBioLoginStatus()
+  console.log('isBioLoginAvailable: ', localStorage.getItem('isBioLoginAvailable'))
+
+  if (localStorage.getItem('isBioLoginAvailable') === 'Y') {
+    bioLoginDisabled.value = false
+    const initData = {
+      deviceUuid: getDeviceUuid(),
+    }
+    if (initData.deviceUuid == null || initData.deviceUuid == '') {
+      showAlert('deviceUuid is null or empty')
+      return
+    }
+    post('/api/app/login/init', initData)
+      .then((data) => {
+        if (data.code == '0000') {
+          appSettings.value = 'V ' + data.data
+          console.log('init data:' + data.data.apvSttusCd)
+          console.log('bioLoginYn:' + data.data.bioLoginYn)
+          if (data.data?.bioLoginYn == 'Y') {
+            formData.isBioLogin = true
+          } else {
+            formData.isBioLogin = false
+          }
         } else {
-          formData.isFaceId = false
-          formData.isFingerLogin = false
+          showAlert(data.message)
         }
-      } else {
-        // faceIdDisabled.value = true
-        // fingerDisabled.value = true
-      }
-      console.log('faceIdDisabled:' + faceIdDisabled.value)
-      console.log('fingerDisabled:' + fingerDisabled.value)
-    })
-    .catch((err) => console.error('데이터를 가져오는 중 오류 발생:', err))
+      })
+      .catch((err) => console.error('데이터를 가져오는 중 오류 발생:', err))
+  } else {
+    formData.isBioLogin = false
+  }
 })
 
 const onChangeBio = () => {
   const postData = {
-    // molo - 수정 필요
-    deviceUuid: msfUserStore.getDeviceUuid(),
+    deviceUuid: getDeviceUuid(),
     bioLoginYn: 'N',
+    bioLoginToken: '',
+    osCd: localStorage.getItem('deviceType'),
   }
-  if (formData.isFaceId) {
-    postData.bioLoginYn = 'F'
-  } else if (formData.isFingerLogin) {
-    postData.bioLoginYn = 'B'
-  } else {
-    postData.bioLoginYn = 'N'
-  }
-  // showAlert(postData.bioLoginYn)
+
   showConfirm(
     '로그인 설정을 변경하시겠습니까?',
-    () => {
-      post('/api/n/app/settingbio/modify', postData)
-        .then((data) => {
-          console.log(data.code)
-          if (data.code == '0000') {
-            showAlert('로그인 설정이 변경되었습니다.')
-          } else {
-            showAlert('로그인 설정 변경이 실패하였습니다.\n 다시 시도해 주세요.')
-          }
-          window.location.reload()
+    async () => {
+      console.log('formData.isBioLogin: ', formData.isBioLogin)
+      if (formData.isBioLogin == true) {
+        // 사용자가 생체인증을 켜는 경우
+        const randomString = (await generateRandomString(10)) ?? 'ktmAppAAmo'
+        // alert('생체인증 등록을 위한 randomString: ' + randomString)
+
+        const resultkey = await setBioLoginRegistration(randomString)
+
+        if (resultkey !== randomString) {
+          showAlert('생체인증 등록에 실패하였습니다.\n 다시 시도해 주세요.')
+          setFailBioLogin()
+          return
+        }
+
+        postData.bioLoginYn = 'Y'
+        postData.bioLoginToken = await generateHash(postData.deviceUuid)
+        console.log('생체인증 토큰: ', postData.bioLoginToken)
+
+        post('/api/app/settingbio/modify', postData)
+          .then((data) => {
+            console.log(data.code)
+            if (data.code == '0000') {
+              // app data 변경
+              setBioLoginRegistrationSave(postData.bioLoginToken)
+              showAlert('로그인 설정이 변경되었습니다.')
+            } else {
+              showAlert('로그인 설정 변경이 실패하였습니다.\n 다시 시도해 주세요.')
+              setFailBioLogin()
+            }
+          })
+          .catch((err) => console.error('데이터를 가져오는 중 오류 발생:', err))
+      } else {
+        // 서버에서 난수 조회
+        const result = await post('/api/auth/biometric/challenge', {
+          deviceUuid: getDeviceUuid(),
         })
-        .catch((err) => console.error('데이터를 가져오는 중 오류 발생:', err))
+        console.log(result.message)
+        if (result.code === '0000') {
+          const randomString = result.data.nonce
+          var resultdata = await bioLogin(randomString)
+          // showAlert('bioLogin resultdata: ' + JSON.stringify(resultdata))
+
+          postData.bioLoginYn = 'N'
+          postData.bioLoginToken = ''
+
+          if (resultdata) {
+            const formBioData = {
+              deviceUuid: getDeviceUuid(),
+              bioKey: resultdata.biokey,
+              encryptedNonce: resultdata.key,
+              osCd: localStorage.getItem('deviceType'),
+              bioLoginYn: 'N',
+              bioLoginToken: '',
+            }
+            if (!resultdata?.biokey || resultdata.biokey === '' || resultdata.code === '2222') {
+              showAlert('생체인증 정보가 변경되었습니다.\n생체정보를 초기화합니다.', () => {
+                postData.bioLoginYn = 'N'
+                postData.bioLoginToken = ''
+                post('/api/app/settingbio/modify', postData)
+                  .then((data) => {
+                    console.log(data.code)
+                    if (data.code == '0000') {
+                      showAlert('초기화 되었습니다.')
+                    } else {
+                      showAlert('변경이 실패하였습니다.\n 다시 시도해 주세요.')
+                      setFailBioLogin()
+                    }
+                  })
+                  .catch((err) => console.error('데이터를 가져오는 중 오류 발생:', err))
+              })
+              return
+            }
+            if (resultdata.code === '0000') {
+              post('/api/auth/biometric/disable/verify', formBioData)
+                .then(async (data) => {
+                  if (data.code == '0000') {
+                    // app data 변경
+                    setBioLoginRegistrationSave(postData.bioLoginToken)
+                    showAlert('로그인 설정이 변경되었습니다.')
+                  } else {
+                    showAlert('로그인 설정 변경이 실패하였습니다.\n 다시 시도해 주세요.')
+                    setFailBioLogin()
+                  }
+                })
+                .catch((err) => console.error('오류 발생:', err))
+            } else {
+              showAlert('생체인증에 실패하였습니다.\n 다시 시도해 주세요.')
+              setFailBioLogin()
+            }
+          }
+        }
+      }
     },
     '',
     () => {
-      window.location.reload()
+      setFailBioLogin()
     },
   )
 }
 
-const handleChange1 = () => {
-  if (formData.isFingerLogin == true) {
-    formData.isFaceId = false
+const setFailBioLogin = () => {
+  if (formData.isBioLogin == true) {
+    formData.isBioLogin = false
+  } else {
+    formData.isBioLogin = true
   }
-  onChangeBio()
 }
 
-const handleChange2 = () => {
-  if (formData.isFaceId == true) {
-    formData.isFingerLogin = false
-  }
-  onChangeBio()
-}
+const downloadUrl = ref('')
 
 const onClickAppVersion = () => {
   const postData = {
     os: localStorage.getItem('deviceType'), // 운영체제 정보
     appOsVer: localStorage.getItem('appOsVersion'), // 앱 운영체제 버전 정보 (예시)
     version: localStorage.getItem('appVersion'), // 앱 버전 정보
-    uuid: localStorage.getItem('MSF_DEVICE_UUID'),
+    uuid: getDeviceUuid(),
   }
-  post('/api/n/app/intro', postData)
-    .then((data) => {
-      console.log(data.code)
-      if (data.code == '0000') {
-        if (data.data.update == 'N') {
-          showAlert('현재 설지된 App 이 최신 버전 입니다.')
+  if (postData.os === 'P') {
+    showAlert('PC 버전은 최신 버전입니다.')
+    return
+  }
+  post('/api/app/intro', postData)
+    .then((result) => {
+      console.log(result.code)
+      console.log('env no product:' + isNonProduction())
+      if (result.code == '0000') {
+        if (result.data.update == 'Y') {
+          if (localStorage.getItem('deviceType') === 'I') {
+            // if (isNonProduction()) {
+            //   downloadUrl.value =
+            //     `itms-services://?action=download-manifest&url=` + result.data.updateUrl
+            // } else {
+            //   downloadUrl.value = `itms-apps://itunes.apple.com/app/id6792940961`
+            // }
+            downloadUrl.value =
+              `itms-services://?action=download-manifest&url=` + result.data.updateUrl
+          }
+          if (localStorage.getItem('deviceType') === 'A') {
+            downloadUrl.value = result.data.updateUrl
+          }
+          console.log(downloadUrl.value)
+          if (result.data.mustUpCd === 'Y') {
+            showAlert(
+              '현재 설치된 App이 최신 버전이 아닙니다.\n최신 버전으로 업데이트 해주세요.',
+              () => {
+                appUpdate(downloadUrl.value)
+              },
+            )
+          } else {
+            showConfirm(
+              '최신 출시된 App이 있습니다.\n최신 버전으로 업데이트 하시겠습니까?',
+              () => {
+                appUpdate(downloadUrl.value)
+              },
+              '',
+              () => {},
+            )
+          }
         } else {
-          showAlert(
-            '최신 출시된 App 이 다운로드되어,\n 자동으로 설치되므로 App을 자동 종료 합니다.',
-            () => {
-              console.log('확인 버튼 클릭:' + data.data.updateUrl)
-            },
-          )
+          showAlert('현재 설치된 App 이 최신 버전 입니다.')
         }
       } else {
-        showAlert(data.message)
+        showAlert(result.message)
       }
     })
     .catch((err) => console.error('데이터를 가져오는 중 오류 발생:', err))

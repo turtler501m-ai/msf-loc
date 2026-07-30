@@ -1,0 +1,57 @@
+## Common
+common:
+  public-url:
+    form-service: https://smartform.ktmmobile.com
+    admin-service: https://smartform-admin.ktmmobile.com
+
+
+
+## Spring
+spring:
+  ## DataSource
+  datasource:
+    groups:
+      ## 스마트서식지
+      smartform:
+        writer:
+          url: jdbc:postgresql://172.28.12.155:5432/msf_core?currentSchema=smartform
+          username: ENC(W/OFWRFkyQxZO+kiIEoquec808wxXem07+WKXYzcJ/1YJ0WH19RtJHYoNyuWNBGC)
+          password: ENC(1bkP/oNCxnPjmdfQRhasBgXa8KFt3xPgCETsGFwichABLB08O1lwJxvdajh7Rzs1NfK6jC2ePdBUExbBBgt/TA==)
+        reader:
+          url: jdbc:postgresql://172.28.12.155:5433/msf_core?currentSchema=smartform
+          username: ENC(tjrBzvS6BULIqcCCLtPidyIeB4pyOqAQs/UnfPvu7hVpbOv9Hh4ZaN/fWIkIYPSu)
+          password: ENC(yw3qKIame7Vv0urZt3mky3pGGkQ+RDGQHDsv4aT0muA0CupOZEdAkyin/j/vpFkoynWl8DcVJ6V28gPdvfOP3w==)
+
+      ## M전산
+      msp:
+        standalone:
+          url: jdbc:oracle:thin:@10.21.28.28:1521:MSPDEV  # TODO: 통합테스트 기간동안 DEV 환경 DB 사용
+          #url:  # TODO: 확인 후 설정
+          username: ENC(E4lw6nhlULyWI/ewIG6M0TvRChVm1926HbsbzaYwp/DUE9uLRJCNa0jZtmUUx4HP)
+          password: ENC(WZr9BjndCzgnf4LhmSyvMLBaG816WK/kwHetUaFwl2Mip+GkwgZPoA/ztObwaazL)
+
+  ## Spring Data
+  data:
+    ## Redis
+    redis:
+      sentinel:
+        master: redis-master
+        nodes:
+          - 172.28.12.7:26379
+          - 172.28.12.8:26379
+          - 172.28.12.9:26379
+        password: ENC(84gcRWnhMT58qwzb19DYlbTRqznd5qHsdUIVVBV7OnYr10kJ/LGyHNZ41JkESV7lF+/o5jP1yFBIugOktwlkfg==)
+      password: ENC(QI5XCNf1QBIst//Wov/1UtrP12esXYzZ30fA0q4xMg7XVKtB6wxKDYF6E+4wIx70saxB01sE7t8eDAitZ0xUq7L0HopX13qOFPRw59RzNU8=)
+
+
+
+## 메시지 발송
+message-sender:
+  kakao:
+    sender-key: ENC(7W8WFIxVLXvUogQaVYauPRWfkFSQChaILvWVMDTEx+rnpX65v5QqCKGtwQuBOzfTAHfkiri3o7owiFQcGQ4dF4CJEPaJ8z2KgoQucjnJvnc=)
+
+
+
+## Scheduling
+scheduling:
+  enabled: false

@@ -64,6 +64,9 @@ public interface CacheService<T> {
     /** 패턴과 일치하는 Value 캐시 값을 지정한 개수만큼 조회 */
     List<T> getValues(String pattern, int limit);
 
+    /** Value 또는 Hash 캐시 Key의 남은 만료 시간을 조회 */
+    Duration getTimeToLive(String key);
+
     /** Value 또는 Hash 캐시 Key 존재 여부를 조회 */
     boolean hasKey(String key);
 

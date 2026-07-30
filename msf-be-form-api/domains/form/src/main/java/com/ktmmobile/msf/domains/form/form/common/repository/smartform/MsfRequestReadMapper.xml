@@ -28,11 +28,11 @@
             , NULL AS SURVEY_SCORE
             , NULL AS SURVEY_SUGGESTION
             , T1.MEMO AS MEMO
-            , T1.REG_DATE AS SYS_RDATE_DD
+            , TO_CHAR(T1.OPEN_REQ_DT, 'YYYYMMDD') AS SYS_RDATE_DD
             , T1.REGST_ID AS REGST_ID
-            , T1.REG_DT AS REGST_DTTM
+            , T1.REQ_IN_DT AS REGST_DTTM
             , T1.PROC_CD AS PROC_CD
-            , T1.SCAN_ID AS SCAN_ID
+            , T1.PARENT_SCAN_ID AS SCAN_ID
         FROM MSF_REQUEST_CANCEL T1
         INNER JOIN MSF_REQUEST_CSTMR T2
             ON T2.REQUEST_KEY = T1.REQUEST_KEY
@@ -50,10 +50,10 @@
             , T2.AMD_DT AS RVISN_DTTM
             , T2.AMD_ID AS RVISN_ID
             , T2.CSTMR_NM AS CSTMR_NAME
-            , T2.CSTMR_NATIVE_RRN AS CSTMR_NATIVE_RRN
+            , COALESCE(NULLIF(T2.CSTMR_NATIVE_RRN, ''), T2.CSTMR_NATIVE_BIRTH) AS CSTMR_NATIVE_RRN
             , T2.CSTMR_PRIVATE_CNAME AS CSTMR_PRIVATE_CNAME
             , T2.CSTMR_PRIVATE_BIZ_NO AS CSTMR_PRIVATE_NUMBER
-            , T2.CSTMR_FOREIGNER_RRN AS CSTMR_FOREIGNER_RRN
+            , COALESCE(NULLIF(T2.CSTMR_FOREIGNER_RRN, ''), T2.CSTMR_FOREIGNER_BIRTH) AS CSTMR_FOREIGNER_RRN
             , T2.CSTMR_FOREIGNER_BIRTH AS CSTMR_FOREIGNER_BIRTH
             , T2.CSTMR_FOREIGNER_PN AS CSTMR_FOREIGNER_PN
             , T2.CSTMR_FOREIGNER_NATION AS CSTMR_FOREIGNER_NATION
@@ -107,39 +107,69 @@
           AND T2.REQUEST_KEY = #{requestKey}
     </select>
 
-    <select id="selectMcpSvcChgRequest"
+    <select id="selectMcpCancelRequestAgent"
             parameterType="java.lang.Long"
-            resultType="com.ktmmobile.msf.domains.form.form.common.vo.McpRequestVo">
+            resultType="com.ktmmobile.msf.domains.form.form.common.vo.McpRequestAgentVo">
         SELECT
-            T1.REQUEST_KEY                           AS requestKey
-            , T1.MANAGER_CD                          AS managerCode
-            , T1.AGENT_CD                            AS agentCode
-            , '1'                                    AS serviceType
-            , 'SC'                                   AS operType
-            , T1.CSTMR_TYPE_CD                       AS cstmrType
-            , T1.RES_CD                              AS resCode
-            , T1.RES_MSG                             AS resMsg
-            , T1.RES_NO                              AS resNo
-            , '00'                                   AS pstate
-            , T2.ONLINE_AUTH_INFO                    AS onlineAuthInfo
-            , T1.SCAN_ID                             AS scanId
-            , T2.CRET_IP                             AS rip
-            , T1.AGENT_CD                            AS shopCd
-            , T1.AGENT_NM                            AS shopNm
-            , T1.REAL_SHOP_NM                        AS realShopNm
-            , T1.REGST_ID                            AS cretId
-            , T1.CHG_CONTRACT_NUM                    AS contractNum
-            , T1.CNTPNT_SHOP_CD                      AS cntpntShopId
-            , T1.CPNT_ID                             AS cpntId
-            , T1.APP_FORM_YN                         AS appFormYn
-            , T1.APP_FORM_XML_YN                     AS appFormXmlYn
-            , T1.MEMO                                AS memo
-            , T1.FILE_NM                             AS file01
-            , T1.FILE_MASK_NM                        AS file01Mask
-        FROM MSF_REQUEST_SVC_CHG T1
-        INNER JOIN MSF_REQUEST_MST T2
+            T1.REQUEST_KEY
+            , T2.CRET_DT
+            , T2.AMD_DT
+            , T2.AMD_ID
+            , T2.MINOR_AGENT_NM
+            , COALESCE(NULLIF(T2.MINOR_AGENT_RRN, ''), T2.MINOR_AGENT_BIRTH) AS MINOR_AGENT_RRN
+            , T2.MINOR_AGENT_REL_TYPE_CD
+            , T2.MINOR_AGENT_TEL_FN_NO
+            , T2.MINOR_AGENT_TEL_MN_NO
+            , T2.MINOR_AGENT_TEL_RN_NO
+            , T2.MINOR_AGENT_AGRM_YN
+            , T2.MINOR_AGENT_SELF_INQRY_AGRM_YN
+            , T2.MINOR_AGENT_SELF_CERT_TYPE_CD
+            , T1.IDENTITY_ISSU_DATE
+            , T1.SELF_ISSU_NO
+            , T2.JRDCL_AGENT_NM
+            , T2.JRDCL_AGENT_RRN
+            , T2.JRDCL_AGENT_TEL_FN_NO
+            , T2.JRDCL_AGENT_TEL_MN_NO
+            , T2.JRDCL_AGENT_TEL_RN_NO
+        FROM MSF_REQUEST_CANCEL T1
+        INNER JOIN MSF_REQUEST_AGENT T2
             ON T2.REQUEST_KEY = T1.REQUEST_KEY
         WHERE T1.REQUEST_KEY = #{requestKey}
+    </select>
+
+    <select id="selectMcpCancelCustRequestMst"
+            parameterType="java.lang.Long"
+            resultType="com.ktmmobile.msf.domains.form.form.common.vo.McpCustRequestMstVo">
+        SELECT
+            T1.REQUEST_KEY AS requestKey
+            , 'CC' AS reqType
+            , T2.CSTMR_NM AS custNm
+            , T1.CANCEL_MOBILE_NO AS mobileNo
+            , T2.CSTMR_NATIVE_RRN AS cstmrNativeRrn
+            , T2.CSTMR_NATIVE_BIRTH AS cstmrNativeBirth
+            , T2.CSTMR_NATIVE_GENDER_CD AS cstmrNativeGenderCd
+            , T1.CONTRACT_NUM AS ncn
+            , T1.CSTMR_TYPE_CD AS cstmrTypeCd
+            , T1.CSTMR_TYPE_CD AS cstmrType
+            , CASE
+                WHEN T1.CSTMR_TYPE_CD = 'GO' THEN 'G'
+                WHEN T1.CSTMR_TYPE_CD = 'JP' THEN 'B'
+                ELSE 'I'
+              END AS customerType
+            , NULL AS onlineAuthType
+            , NULL AS authInfo
+            , NULLIF(
+                COALESCE(T2.CSTMR_RECEIVE_TEL_FN_NO, '')
+                || COALESCE(T2.CSTMR_RECEIVE_TEL_NM_NO, '')
+                || COALESCE(T2.CSTMR_RECEIVE_TEL_RN_NO, ''),
+                ''
+            ) AS etcMobile
+            , T1.REGST_ID AS cretId
+        FROM MSF_REQUEST_CANCEL T1
+        INNER JOIN MSF_REQUEST_CSTMR T2
+            ON T2.REQUEST_KEY = T1.REQUEST_KEY
+        WHERE T1.REQUEST_KEY = #{requestKey}
+          AND T2.REQUEST_KEY = #{requestKey}
     </select>
 
     <select id="selectMcpSvcChgRequestCstmr"
@@ -151,10 +181,10 @@
             , T2.AMD_DT                                     AS RVISN_DTTM
             , T2.AMD_ID                                     AS RVISN_ID
             , T2.CSTMR_NM                                   AS CSTMR_NAME
-            , T2.CSTMR_NATIVE_RRN                           AS CSTMR_NATIVE_RRN
+            , COALESCE(NULLIF(T2.CSTMR_NATIVE_RRN, ''), T2.CSTMR_NATIVE_BIRTH) AS CSTMR_NATIVE_RRN
             , T2.CSTMR_PRIVATE_CNAME                        AS CSTMR_PRIVATE_CNAME
             , T2.CSTMR_PRIVATE_BIZ_NO                       AS CSTMR_PRIVATE_NUMBER
-            , T2.CSTMR_FOREIGNER_RRN                        AS CSTMR_FOREIGNER_RRN
+            , COALESCE(NULLIF(T2.CSTMR_FOREIGNER_RRN, ''), T2.CSTMR_FOREIGNER_BIRTH) AS CSTMR_FOREIGNER_RRN
             , T2.CSTMR_FOREIGNER_BIRTH                      AS CSTMR_FOREIGNER_BIRTH
             , T2.CSTMR_FOREIGNER_PN                         AS CSTMR_FOREIGNER_PN
             , T2.CSTMR_FOREIGNER_NATION                     AS CSTMR_FOREIGNER_NATION
@@ -207,5 +237,254 @@
         WHERE T1.REQUEST_KEY = #{requestKey}
           AND T2.REQUEST_KEY = #{requestKey}
     </select>
+
+    <select id="selectMcpSvcChgRequestAgent"
+            parameterType="java.lang.Long"
+            resultType="com.ktmmobile.msf.domains.form.form.common.vo.McpRequestAgentVo">
+        SELECT
+            T1.REQUEST_KEY
+            , T2.CRET_DT
+            , T2.AMD_DT
+            , T2.AMD_ID
+            , T2.MINOR_AGENT_NM
+            , COALESCE(NULLIF(T2.MINOR_AGENT_RRN, ''), T2.MINOR_AGENT_BIRTH) AS MINOR_AGENT_RRN
+            , T2.MINOR_AGENT_REL_TYPE_CD
+            , T2.MINOR_AGENT_TEL_FN_NO
+            , T2.MINOR_AGENT_TEL_MN_NO
+            , T2.MINOR_AGENT_TEL_RN_NO
+            , T2.MINOR_AGENT_AGRM_YN
+            , T2.MINOR_AGENT_SELF_INQRY_AGRM_YN
+            , T2.MINOR_AGENT_SELF_CERT_TYPE_CD
+            , NULL AS IDENTITY_ISSU_DATE
+            , NULL AS SELF_ISSU_NO
+            , T2.JRDCL_AGENT_NM
+            , T2.JRDCL_AGENT_RRN
+            , T2.JRDCL_AGENT_TEL_FN_NO
+            , T2.JRDCL_AGENT_TEL_MN_NO
+            , T2.JRDCL_AGENT_TEL_RN_NO
+        FROM MSF_REQUEST_SVC_CHG T1
+        INNER JOIN MSF_REQUEST_AGENT T2
+            ON T2.REQUEST_KEY = T1.REQUEST_KEY
+        WHERE T1.REQUEST_KEY = #{requestKey}
+    </select>
+
+    <select id="selectMcpSvcChgCustRequestMst"
+            parameterType="java.lang.Long"
+            resultType="com.ktmmobile.msf.domains.form.form.common.vo.McpCustRequestMstVo">
+        SELECT
+            T1.REQUEST_KEY AS requestKey
+            , 'SC' AS reqType
+            , T2.CSTMR_NM AS custNm
+            , COALESCE(
+                NULLIF(
+                    COALESCE(T2.CSTMR_MOBILE_FN_NO, '')
+                    || COALESCE(T2.CSTMR_MOBILE_MN_NO, '')
+                    || COALESCE(T2.CSTMR_MOBILE_RN_NO, ''),
+                    ''
+                ),
+                T1.CHG_MOBILE_NO
+            ) AS mobileNo
+            , T2.CSTMR_NATIVE_RRN AS cstmrNativeRrn
+            , T2.CSTMR_NATIVE_BIRTH AS cstmrNativeBirth
+            , T2.CSTMR_NATIVE_GENDER_CD AS cstmrNativeGenderCd
+            , T1.CHG_CONTRACT_NUM AS ncn
+            , T1.CSTMR_TYPE_CD AS cstmrTypeCd
+            , T1.CSTMR_TYPE_CD AS cstmrType
+            , CASE
+                WHEN T1.CSTMR_TYPE_CD = 'GO' THEN 'G'
+                WHEN T1.CSTMR_TYPE_CD = 'JP' THEN 'B'
+                ELSE 'I'
+              END AS customerType
+            , NULL AS onlineAuthType
+            , NULL AS authInfo
+            , COALESCE(
+                NULLIF(
+                    COALESCE(T2.CSTMR_MOBILE_FN_NO, '')
+                    || COALESCE(T2.CSTMR_MOBILE_MN_NO, '')
+                    || COALESCE(T2.CSTMR_MOBILE_RN_NO, ''),
+                    ''
+                ),
+                T1.CHG_MOBILE_NO
+            ) AS etcMobile
+            , T1.REGST_ID AS cretId
+        FROM MSF_REQUEST_SVC_CHG T1
+        INNER JOIN MSF_REQUEST_CSTMR T2
+            ON T2.REQUEST_KEY = T1.REQUEST_KEY
+        WHERE T1.REQUEST_KEY = #{requestKey}
+    </select>
+
+  <select id="selectMsfRequestOwnerChgInfo">
+    SELECT
+      TRNS.TRNS_CSTMR_TYPE_CD          -- 고객구분유형코드
+      , TRNS.TRNS_NM AS TR_TRNS_NM                   -- 양도인명
+      , TRNS.TRNS_TRNSFE_MOBILE_NO     -- 양수인 모바일번호
+      , TRNS.TRNS_MOBILE_NO AS TR_TRNS_MOBILE_NO            -- 명의변경대상 모바일 번호 양도인
+      , SUBSTR(TRNS.TRNS_MOBILE_NO, 1, 3) AS TR_DEVICE_CHG_TEL1
+      , SUBSTR(TRNS.TRNS_MOBILE_NO, 4, 4) AS TR_DEVICE_CHG_TEL2
+      , SUBSTR(TRNS.TRNS_MOBILE_NO, 8, 4) AS TR_DEVICE_CHG_TEL3
+      , TRNS.MINOR_AGENT_NM AS TR_MINOR_AGENT_NM            -- 미성년자법정대리인성명 양도인
+      , TRNS.MINOR_AGENT_BIRTH AS TR_MINOR_AGENT_BIRTH         -- 법정대리인생년월일 양도인
+      , TRNS.MINOR_AGENT_GENDER_CD AS TR_MINOR_AGENT_GENDER_CD     -- 법정대리인성별 양도인
+      , TRNS.MINOR_AGENT_REL_TYPE_CD AS TR_MINOR_AGENT_REL_TYPE_CD   -- 법정대리인관계유형코드 양도인
+      , TRNS.MINOR_AGENT_TEL_FN_NO AS TR_MINOR_AGENT_TEL_FN_NO     -- 법정대리인 전화번호(국번) 양도인
+      , TRNS.MINOR_AGENT_TEL_MN_NO AS TR_MINOR_AGENT_TEL_MN_NO     -- 법정대리인 전화번호(중간자리) 양도인
+      , TRNS.MINOR_AGENT_TEL_RN_NO AS TR_MINOR_AGENT_TEL_RN_NO     -- 법정대리인 전화번호(끝자리) 양도인
+      , TRNS.IDENTITY_CERT_TYPE_CD AS TR_IDENTITY_CERT_TYPE_CD     -- 양도인 인증 수단
+      , TRNS.TRNS_BIRTH
+      , TRNS.TRNS_GENDER_CD
+      , SUBSTRING(NULLIF(TRIM(TRNS.TRNS_BIZ_NO), '') FROM 1 FOR 3) AS TR_CSTMR_JURIDICAL_BIZ_NO1
+      , SUBSTRING(NULLIF(TRIM(TRNS.TRNS_BIZ_NO), '') FROM 4 FOR 2) AS TR_CSTMR_JURIDICAL_BIZ_NO2
+      , SUBSTRING(NULLIF(TRIM(TRNS.TRNS_BIZ_NO), '') FROM 6 FOR 5) AS TR_CSTMR_JURIDICAL_BIZ_NO3
+      , SUBSTRING(NULLIF(TRIM(TRNS.TRNS_JURIDICAL_RRN), '') FROM 1 FOR 6) AS TR_CSTMR_JURIDICAL_RRN1
+      , SUBSTRING(NULLIF(TRIM(TRNS.TRNS_JURIDICAL_RRN), '') FROM 7 FOR 7) AS TR_CSTMR_JURIDICAL_RRN2
+      , TRNS.TRNS_JURIDICAL_REP_NM as TR_CSTMR_JURIDICAL_REP_NM
+      , CHG.CSTMR_TYPE_CD              -- 고객구분유형코드
+      , CHG.MEMO                       -- 메모
+      , CHG.USIM_SUCC_YN
+      , CHG.ICC_ID
+      , CHG.USIM_NM
+      , CASE WHEN EID = 'ESIM' THEN 'Y'
+        ELSE 'N' END AS ESIM_YN
+      , CASE WHEN EID = 'ESIM' THEN 'ESIM'
+        ELSE 'USIM' END AS SIM_TYPE_CD
+      , CHG.JEHU_PROD_TYPE_CD
+      , CHG.SOC
+      , CHG.SOC_NM
+      , CHG.SOC_BASE_CHRG_AMT
+      , CHG.IDENTITY_CERT_TYPE_CD     -- 양수인 인증 수단
+      , SALE.USIM_PAY_MTHD_CD
+      , CSTMR.CSTMR_NM                 -- 양수인 고객명
+      , CSTMR.CSTMR_NATIVE_RRN         -- 양수인 식별정보 (OMITTED)
+      , CSTMR.CSTMR_FOREIGNER_RRN      -- 양수인 외국인 식별정보
+      , CSTMR.CSTMR_NATIVE_GENDER_CD   -- 성별
+      , CSTMR.CSTMR_FOREIGNER_GENDER_CD -- 외국인 성별
+      , CSTMR.CSTMR_FOREIGNER_PN       -- 여권번호
+      , CSTMR.CSTMR_FOREIGNER_COUNTRY_CD -- 국가코드
+      , CSTMR.CSTMR_FOREIGNER_NATION   -- 국적
+      , CSTMR.CSTMR_FOREIGNER_VISA_NO  -- 비자
+      , CSTMR.UPJN_CD                  -- 업종
+      , CSTMR.BCU_SBST                 -- 업태
+      , CSTMR.CSTMR_VISIT_TYPE_CD      -- 방문고객 유형코드
+      , CSTMR.cstmr_receive_tel_fn_no  -- 일반전화(국번)
+      , CSTMR.cstmr_receive_tel_nm_no  -- 일반전화(중간자리)
+      , CSTMR.cstmr_receive_tel_rn_no  -- 일반전화(끝자리)
+      , CSTMR.CSTMR_TEL_FN_NO          -- 고객정보 전화번호(국번)
+      , CSTMR.CSTMR_TEL_MN_NO          -- 고객정보 전화번호(중간자리)
+      , CSTMR.CSTMR_TEL_RN_NO          -- 고객정보 전화번호(끝자리)
+      , CSTMR.CSTMR_MOBILE_FN_NO       -- 휴대폰(국번)
+      , CSTMR.CSTMR_MOBILE_MN_NO       -- 휴대폰(중간자리)
+      , CSTMR.CSTMR_MOBILE_RN_NO       -- 휴대폰(끝자리)
+      , CSTMR.CSTMR_ZIPCD              -- 우편번호
+      , CSTMR.CSTMR_ADR                -- 정보주소
+      , CSTMR.CSTMR_ADR_DTL            -- 상세주소
+      , CSTMR.CSTMR_EMAIL_ADR          -- 이메일
+      , CSTMR.CSTMR_PRIVATE_BIZ_NO		-- 사업자 등록번호
+      , CSTMR.CSTMR_JURIDICAL_USER_NM  -- 실사용자이름
+      , CSTMR.CSTMR_JURIDICAL_BIRTH  -- 실사용자생년월일
+      , CSTMR.CSTMR_JURIDICAL_REP_NM  -- 양수법인대표자명
+      , CASE
+          WHEN CSTMR.CSTMR_FOREIGNER_VDATE_START_DATE IS NULL OR TRIM(CSTMR.CSTMR_FOREIGNER_VDATE_START_DATE) = '' THEN NULL
+          ELSE TO_CHAR(TO_DATE(TRIM(CSTMR.CSTMR_FOREIGNER_VDATE_START_DATE), 'YYYYMMDD'), 'YYYY-MM-DD')
+        END AS CSTMR_FOREIGNER_VDATE_START_DATE
+      , CASE
+          WHEN CSTMR.CSTMR_FOREIGNER_VDATE_END_DATE IS NULL OR TRIM(CSTMR.CSTMR_FOREIGNER_VDATE_END_DATE) = '' THEN NULL
+          ELSE TO_CHAR(TO_DATE(TRIM(CSTMR.CSTMR_FOREIGNER_VDATE_END_DATE), 'YYYYMMDD'), 'YYYY-MM-DD')
+        END AS CSTMR_FOREIGNER_VDATE_END_DATE
+      , CASE
+          WHEN CSTMR.CSTMR_PRIVATE_BIZ_NO_ISSU_DATE IS NULL OR TRIM(CSTMR.CSTMR_PRIVATE_BIZ_NO_ISSU_DATE) = '' THEN NULL
+          ELSE TO_CHAR(TO_DATE(TRIM(CSTMR.CSTMR_PRIVATE_BIZ_NO_ISSU_DATE), 'YYYYMMDD'), 'YYYY-MM-DD')
+        END AS CSTMR_PRIVATE_BIZ_NO_ISSU_DATE   -- 개인사업자사업자등록번호발급일자
+      , CASE
+          WHEN CSTMR.CSTMR_JURIDICAL_BIZ_NO_ISSU_DATE IS NULL OR TRIM(CSTMR.CSTMR_JURIDICAL_BIZ_NO_ISSU_DATE) = '' THEN NULL
+          ELSE TO_CHAR(TO_DATE(TRIM(CSTMR.CSTMR_JURIDICAL_BIZ_NO_ISSU_DATE), 'YYYYMMDD'), 'YYYY-MM-DD')
+        END AS CSTMR_JURIDICAL_BIZ_NO_ISSU_DATE -- 법인발급일자
+      , SUBSTRING(TRIM(CSTMR.CSTMR_JURIDICAL_BIZ_NO) FROM 1 FOR 3) AS CSTMR_JURIDICAL_BIZ_NO1
+      , SUBSTRING(TRIM(CSTMR.CSTMR_JURIDICAL_BIZ_NO) FROM 4 FOR 2) AS CSTMR_JURIDICAL_BIZ_NO2
+      , SUBSTRING(TRIM(CSTMR.CSTMR_JURIDICAL_BIZ_NO) FROM 6 FOR 5) AS CSTMR_JURIDICAL_BIZ_NO3
+      , SUBSTRING(NULLIF(TRIM(CSTMR.CSTMR_JURIDICAL_RRN), '') FROM 1 FOR 6) AS CSTMR_JURIDICAL_RRN1
+      , SUBSTRING(NULLIF(TRIM(CSTMR.CSTMR_JURIDICAL_RRN), '') FROM 7 FOR 7) AS CSTMR_JURIDICAL_RRN2
+      , AGENT.MINOR_AGENT_NM           -- 법정대리인성명
+      , AGENT.MINOR_AGENT_RRN           -- 법정대리인등록번호
+      , AGENT.MINOR_AGENT_GENDER_CD    -- 성별
+      , AGENT.MINOR_AGENT_REL_TYPE_CD  -- 관계유형 코드
+      , AGENT.MINOR_AGENT_TEL_FN_NO    -- 법정대리인 전화(국번)
+      , AGENT.MINOR_AGENT_TEL_MN_NO    -- 법정대리인 전화(중간자리)
+      , AGENT.MINOR_AGENT_TEL_RN_NO    -- 법정대리인 전화(끝자리)
+      , AGENT.JRDCL_AGENT_NM           -- 법인대리인명
+      , AGENT.JRDCL_AGENT_RRN          -- 법인대리인 등록식별정보 (OMITTED)
+      , AGENT.JRDCL_AGENT_REL_TYPE_CD  -- 법인대리인 관계유형코드
+      , AGENT.JRDCL_AGENT_TEL_FN_NO    -- 법인대리인 전화(국번)
+      , AGENT.JRDCL_AGENT_TEL_MN_NO    -- 법인대리인 전화(중간자리)
+      , AGENT.JRDCL_AGENT_TEL_RN_NO    -- 법인대리인 전화(끝자리)
+      , BILL.REQ_PAY_TYPE_CD           -- 요금납부방법유형코드
+      , BILL.REQ_BANK_CD               -- 은행코드
+      , BILL.REQ_ACCOUNT_NM            -- 예금주명
+      , BILL.REQ_ACCOUNT_RRN           -- 예금주 식별정보 (OMITTED)
+      , BILL.REQ_ACCOUNT_REL_TYPE_CD   -- 관계유형코드
+      , BILL.REQ_ACCOUNT_NO            -- 계좌번호
+      , BILL.REQ_CARD_NM               -- 신용카드 명의자
+      , BILL.REQ_CARD_RRN              -- 카드명의자 식별정보 (OMITTED)
+      , BILL.REQ_CARD_COMPANY_CD       -- 카드사코드
+      , BILL.REQ_CARD_NO               -- 신용카드번호
+      , SUBSTRING(BILL.REQ_CARD_YY, 3) AS REQ_CARD_YY -- 유효년
+      , BILL.REQ_CARD_MM               -- 유효월
+      , BILL.OTHERS_PAYMENT_YN         -- 타인납부여부
+      , BILL.OTHERS_PAYMENT_TEL_FN_NO  -- 타인납부 전화번호(국번)
+      , BILL.OTHERS_PAYMENT_TEL_MN_NO  -- 타인납부 전화번호(중간자리)
+      , BILL.OTHERS_PAYMENT_TEL_RN_NO  -- 타인납부 전화번호(끝자리)
+      , BILL.OTHERS_PAYMENT_NM         -- 타인납부고객명
+      , BILL.OTHERS_PAYMENT_RRN        -- 타인납부자 식별정보 (OMITTED)
+      , BILL.OTHERS_PAYMENT_REL_TYPE_CD -- 관계유형코드
+      , BILL.OTHERS_PAYMENT_REQ_NM     -- 신청인명
+      , BILL.OTHERS_PAYMENT_AGR_YN     -- 타인납부 동의여부
+      , BILL.PRNTS_BILL_NO             -- 통합청구번호
+      , BILL.CSTMR_BILL_SEND_TYPE_CD   -- 명세서 종류유형코드
+      , BILL.CSTMR_EMAIL_ADR           -- 명세서이메일주소
+      , SPLIT_PART(BILL.CSTMR_EMAIL_ADR, '@', 1) AS EMAIL_ADDR1           -- 명세서이메일주소
+      , SPLIT_PART(BILL.CSTMR_EMAIL_ADR, '@', 2) AS EMAIL_ADDR2
+    FROM MSF_REQUEST_CSTMR CSTMR
+    INNER JOIN MSF_REQUEST_NAME_TRNS TRNS   ON CSTMR.request_key = TRNS.request_key
+    INNER JOIN msf_request_name_chg chg     ON CSTMR.request_key = chg.request_key
+    INNER JOIN MSF_REQUEST_BILL_REQ bill    ON CSTMR.request_key = bill.request_key
+    LEFT OUTER JOIN MSF_REQUEST_AGENT agent ON CSTMR.request_key = agent.request_key
+    LEFT OUTER JOIN MSF_REQUEST_SALE sale ON CSTMR.request_key = sale.request_key
+    WHERE CSTMR.REQUEST_KEY = #{requestKey}
+  </select>
+
+  <select id="selectMsfFMC0">
+    SELECT
+      CHG.MCN_RES_NO
+      , CHG.AGENT_CD AS MNGM_AGNC_ID
+      , CHG.CPNT_ID AS CNTPNT_CD
+      , CHG.KNOTE_SCAN_ID AS FRMPAP_ID
+      , CS.CSTMR_JURIDICAL_RRN
+      , CSTMR_JURIDICAL_BIZ_NO
+      , CS.CSTMR_JURIDICAL_USER_NM /* 실사용자 이름 */
+      , CS.CSTMR_JURIDICAL_BIRTH /* 실사용자 생년월일 */
+      , cs.cstmr_juridical_rep_nm /* 대표자명 */
+      , cs.cstmr_juridical_biz_no_issu_date
+      , CONCAT(CS.CSTMR_TEL_FN_NO, CS.CSTMR_TEL_MN_NO, CS.CSTMR_TEL_RN_NO) AS CSTMR_TEL_NO
+      , CS.UPJN_CD /* 업종 */
+      , CS.BCU_SBST /* 업태 */
+      , CS.CSTMR_ZIPCD
+      , CS.CSTMR_ADR
+      , CS.CSTMR_ADR_DTL
+      , AG.JRDCL_AGENT_NM /* 법인 대리인 이름 */
+      , AG.JRDCL_AGENT_RRN /* 법인대리인 생년월일 */
+      , AG.JRDCL_AGENT_REL_TYPE_CD /* 법인대리인 관계코드 */
+      , CONCAT(AG.JRDCL_AGENT_TEL_FN_NO, AG.JRDCL_AGENT_TEL_MN_NO, AG.JRDCL_AGENT_TEL_RN_NO) AS JRDCL_AGENT_TEL_NO /* 법인대리인 전화번호 */
+    FROM MSF_REQUEST_NAME_CHG CHG
+    INNER JOIN MSF_REQUEST_CSTMR CS
+      ON CHG.REQUEST_KEY = CS.REQUEST_KEY
+    LEFT JOIN MSF_REQUEST_AGENT AG
+      ON CHG.REQUEST_KEY = AG.REQUEST_KEY
+    WHERE CHG.REQUEST_KEY = #{requestKey}::numeric
+  </select>
+
+  <select id="countMsfRequestSvcChg" resultType="int">
+    SELECT COUNT(*)
+    FROM MSF_REQUEST_SVC_CHG
+    WHERE REQUEST_KEY = #{requestKey}
+  </select>
 
 </mapper>

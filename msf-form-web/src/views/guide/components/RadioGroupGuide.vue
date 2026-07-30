@@ -20,11 +20,17 @@
 <script setup>
 import { ref } from 'vue'
 import { GuideUnit } from '@/views/guide/components'
+import { RADIO_VARIANTS } from '@/libs/ui/base/MsfRadio.vue'
 
 const isRadioSelected = ref('radio1')
 
 // 1. 컨트롤러에 나타날 옵션 정의
 const componentConfig = {
+  variant: {
+    description: 'MsfRadio variant를 상속받아서 사용',
+    options: [...RADIO_VARIANTS],
+    default: 'default',
+  },
   vertical: {
     default: false,
     description: '세로 정렬 여부',
@@ -49,6 +55,7 @@ const componentConfig = {
 
 // 2. 초기값 정의
 const componentState = {
+  variant: undefined,
   vertical: false,
   disabled: false,
   error: false,

@@ -3,8 +3,6 @@ package com.ktmmobile.msf.domains.form.common.dao;
 import java.util.List;
 import java.util.Map;
 
-import com.ktmmobile.msf.domains.form.common.dto.*;
-import lombok.RequiredArgsConstructor;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,11 +11,18 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import com.ktmmobile.msf.commons.mybatis.config.MspMyBatisConfig;
+import com.ktmmobile.msf.domains.form.common.dto.AcesAlwdDto;
+import com.ktmmobile.msf.domains.form.common.dto.BannerDto;
+import com.ktmmobile.msf.domains.form.common.dto.BannerFloatDto;
+import com.ktmmobile.msf.domains.form.common.dto.BannerTextDto;
+import com.ktmmobile.msf.domains.form.common.dto.CdGroupBean;
+import com.ktmmobile.msf.domains.form.common.dto.McpIpStatisticDto;
 import com.ktmmobile.msf.domains.form.common.dto.MspCommDatPrvTxnDto;
-import com.ktmmobile.msf.domains.form.common.dto.MspSmsTemplateMstDto;
-import com.ktmmobile.msf.domains.form.common.dto.NmcpCdDtlDto;
-
 import com.ktmmobile.msf.domains.form.common.dto.MspRateMstDto;
+import com.ktmmobile.msf.domains.form.common.dto.NmcpCdDtlDto;
+import com.ktmmobile.msf.domains.form.common.dto.SiteMenuDto;
+import com.ktmmobile.msf.domains.form.common.dto.WorkNotiDto;
 
 /**
  * @Class Name : CommonDaoImpl
@@ -27,23 +32,28 @@ import com.ktmmobile.msf.domains.form.common.dto.MspRateMstDto;
  * @Create Date :
  */
 @Repository
-@RequiredArgsConstructor
 public class FCommonDaoImpl implements FCommonDao {
 
     private final SqlSessionTemplate sqlSessionTemplate;
+    private final SqlSessionTemplate mspSqlSession;
 
-    @Qualifier("mspSqlSession")
-    private final SqlSessionTemplate mspSqlSession; //postgresql
-
-    @Value("${api.interface.server}")
+    @Value("${api.interface.server:}")
     private String apiInterfaceServer;
+
+    public FCommonDaoImpl(
+        SqlSessionTemplate sqlSessionTemplate,
+        @Qualifier(MspMyBatisConfig.SQL_SESSION_TEMPLATE) SqlSessionTemplate mspSqlSession
+    ) {
+        this.sqlSessionTemplate = sqlSessionTemplate;
+        this.mspSqlSession = mspSqlSession;
+    }
 
     /* (non-Javadoc)
      * @see com.ktmmobile.msf.domains.form.common.dao.CommonDao#insertIp(com.ktmmobile.msf.domains.form.common.dto.McpIpStatisticDto)
      */
     @Override
     public int insertIpStat(McpIpStatisticDto mcpIpStatisticDto) {
-        return sqlSessionTemplate.insert("CommonMapper.insertIpStat", mcpIpStatisticDto);
+        return mspSqlSession.insert("CommonMapper.insertIpStat", mcpIpStatisticDto);
     }
 
     @Override
@@ -52,37 +62,32 @@ public class FCommonDaoImpl implements FCommonDao {
     }
 
     @Override
-    public List<BannerDto> getBannerAllList(){
+    public List<BannerDto> getBannerAllList() {
         return sqlSessionTemplate.selectList("BannerMapper.getBannerAllList");
-    };
+    }
 
     @Override
-    public List<BannerDto> getBannerApdList(){
+    public List<BannerDto> getBannerApdList() {
         return sqlSessionTemplate.selectList("BannerMapper.getBannerApdList");
-    };
+    }
 
     @Override
-    public List<PopupDto> getPopupAllList(){
-        return sqlSessionTemplate.selectList("CommonMapper.getPopupAllList");
-    };
-
-    @Override
-    public List<SiteMenuDto> getMenuAllList(){
+    public List<SiteMenuDto> getMenuAllList() {
         return sqlSessionTemplate.selectList("SiteMenuMapper.getMenuAllList");
-    };
+    }
 
     @Override
-    public List<SiteMenuDto> getMenuAuthList(){
+    public List<SiteMenuDto> getMenuAuthList() {
         return sqlSessionTemplate.selectList("SiteMenuMapper.getMenuAuthList");
-    };
+    }
 
     @Override
-    public List<WorkNotiDto> getMenuUrlAllList(){
+    public List<WorkNotiDto> getMenuUrlAllList() {
         return sqlSessionTemplate.selectList("SiteMenuMapper.getMenuUrlAllList");
-    };
+    }
 
     @Override
-    public List<AcesAlwdDto> getAcesAlwdList(){
+    public List<AcesAlwdDto> getAcesAlwdList() {
         return sqlSessionTemplate.selectList("SiteMenuMapper.getAcesAlwdList");
     }
 
@@ -91,14 +96,10 @@ public class FCommonDaoImpl implements FCommonDao {
         return sqlSessionTemplate.selectList("BannerMapper.getBannerTextList");
     }
 
-    ;
-
     @Override
     public List<BannerFloatDto> getBannerFloatList() {
         return sqlSessionTemplate.selectList("BannerMapper.getBannerFloatList");
     }
-
-
 
     @Override
     public List<NmcpCdDtlDto> getCodeList(NmcpCdDtlDto nmcpCdDtlDto) {
@@ -119,83 +120,12 @@ public class FCommonDaoImpl implements FCommonDao {
         return restTemplate.postForObject(apiInterfaceServer + "/common/mspRateMst", params, MspRateMstDto.class); // CommonMapper.getMspRateMst
     }
 
-
-    /**
-     * <pre>
-     * 설명     : 팝업 리스트 조회
-     * @param PopupDto
-     * @return
-     * @return: List<PopupDto>
-     * </pre>
-     */
-    @Override
-    public List<PopupDto> getPopupList(PopupDto popupDto) {
-        return sqlSessionTemplate.selectList("CommonMapper.getPopupList", popupDto);
-    }
-
-    /**
-     * <pre>
-     * 설명     : 팝업 상세 조회
-     * @param popupSeq
-     * @return
-     * @return: PopupDto
-     * </pre>
-     */
-    @Override
-    public PopupDto getPopupDetail(PopupDto popupDto) {
-        return sqlSessionTemplate.selectOne("CommonMapper.getPopupDetail", popupDto);
-    }
-
-    /**
-     * <pre>
-     * 설명     : 팝업 리스트 조회 메인PC
-     * @param
-     * @return
-     * @return: List<PopupDto>
-     * </pre>
-     */
-    @Override
-    public List<PopupDto> getPopupMainList(String menuCode) {
-        // TODO Auto-generated method stub
-        return sqlSessionTemplate.selectList("CommonMapper.getPopupMainList",menuCode);
-    }
-
     @Override
     public boolean insertmspCommDatPrvTxn(MspCommDatPrvTxnDto mspCommDatPrvTxnDto) {
         RestTemplate restTemplate = new RestTemplate();
-        return 0 < restTemplate.postForObject(apiInterfaceServer + "/common/mspCommDatPrvTxn", mspCommDatPrvTxnDto, Integer.class); // CommonMapper.insertmspCommDatPrvTxn
-    }
-
-    /**
-    * @Description : NMCP Login 정보 저장 테이블에 저장한다.
-    * @param loginHistoryDto
-    * @return
-    * @Author :
-    * @Create Date :
-    */
-    public int insertLoginHistory(LoginHistoryDto loginHistoryDto) {
-        return sqlSessionTemplate.insert("CommonMapper.insertLoginHistory", loginHistoryDto);
-    }
-
-    @Override
-    public MspSmsTemplateMstDto getMspSmsTemplateMst(int templateId){
-        RestTemplate restTemplate = new RestTemplate();
-
-        MultiValueMap<String, Integer> params = new LinkedMultiValueMap<String, Integer>();
-        params.add("templateId", templateId);
-        return restTemplate.postForObject(apiInterfaceServer + "/common/mspSmsTemplateMst", templateId, MspSmsTemplateMstDto.class); // CommonMapper.getMspSmsTemplateMst
-    }
-
-
-    @Override
-    public int checkCrawlingCount(McpIpStatisticDto mcpIpStatisticDto) {
-        Object resultObj = sqlSessionTemplate.selectOne("CommonMapper.checkCrawlingCount",mcpIpStatisticDto);
-        if(resultObj instanceof Number){
-            Number number = (Number) resultObj;
-            return number.intValue();
-        }else{
-            throw new IllegalArgumentException(String.format("Wrong  resultClass type(%s) with queryId:%s, resultClass must be subclass of java.lang.Number", resultObj.getClass().getName(), "CommonMapper.checkCrawlingCount"));
-        }
+        return 0 < restTemplate.postForObject(apiInterfaceServer + "/common/mspCommDatPrvTxn",
+            mspCommDatPrvTxnDto,
+            Integer.class); // CommonMapper.insertmspCommDatPrvTxn
     }
 
     @Override
@@ -204,34 +134,13 @@ public class FCommonDaoImpl implements FCommonDao {
     }
 
     @Override
-    public List<McpIpStatisticDto> getAdminAccessTrace(McpIpStatisticDto mcpIpStatisticDto) {
-        return sqlSessionTemplate.selectList("CommonMapper.getAdminAccessTrace", mcpIpStatisticDto);
-    }
-
-    @Override
-    public int insertRateResChgAccessTrace(McpIpStatisticDto mcpIpStatisticDto) {
-        return sqlSessionTemplate.insert("CommonMapper.insertRateResChgAccessTrace", mcpIpStatisticDto);
-    }
-
-
-    @Override
     public int deleteRateResChgAccessTrace(String rateResChgSeq) {
-        return sqlSessionTemplate.delete("CommonMapper.deleteRateResChgAccessTrace", rateResChgSeq);
+        return mspSqlSession.delete("CommonMapper.deleteRateResChgAccessTrace", rateResChgSeq);
     }
 
     @Override
     public String selectRateResChgAccessTrace(McpIpStatisticDto mcpIpStatisticDto) {
-        return sqlSessionTemplate.selectOne("CommonMapper.selectRateResChgAccessTrace", mcpIpStatisticDto);
-    }
-
-    @Override
-    public List<McpIpStatisticDto> getRateResChgList(McpIpStatisticDto ipStatistic)  {
-        return sqlSessionTemplate.selectList("CommonMapper.getRateResChgList", ipStatistic);
-    }
-
-    @Override
-    public boolean updateNmcpRateResChgBas(McpIpStatisticDto ipStatistic) {
-        return  0 < sqlSessionTemplate.update("CommonMapper.updateNmcpRateResChgBas", ipStatistic);
+        return mspSqlSession.selectOne("CommonMapper.selectRateResChgAccessTrace", mcpIpStatisticDto);
     }
 
     @Override
@@ -247,41 +156,5 @@ public class FCommonDaoImpl implements FCommonDao {
     @Override
     public List<NmcpCdDtlDto> getAllDtlCdList(String cdGroupId) {
         return sqlSessionTemplate.selectList("CommCodeMapper.getAllDtlCdList", cdGroupId);
-    }
-
-    @Override
-    public boolean insertUserEventTrace(UserEventTraceDto userEventTraceDto) {
-        return 0 <  sqlSessionTemplate.insert("CommonMapper.insertUserEventTrace", userEventTraceDto);
-    }
-
-
-    @Override
-    public boolean updateUserEventTrace(UserEventTraceDto userEventTraceDto) {
-        return  0 < sqlSessionTemplate.update("CommonMapper.updateUserEventTrace", userEventTraceDto);
-    }
-
-    @Override
-    public List<UserEventTraceDto> getUserEventTraceList(UserEventTraceDto userEventTraceDto) {
-        return sqlSessionTemplate.selectList("CommonMapper.getUserEventTraceList", userEventTraceDto);
-    }
-
-    @Override
-    public PopupEditorDto getPopupEditor(PopupEditorDto popupEditorDto) {
-        return sqlSessionTemplate.selectOne( "CommonMapper.getPopupEditor", popupEditorDto);
-    }
-
-    @Override
-    public void updatePageViewCount(McpIpStatisticDto mcpIpStatisticDto) {
-        sqlSessionTemplate.update("CommonMapper.updatePageViewCount", mcpIpStatisticDto);
-    }
-
-    @Override
-    public int selectPageViewsCount(String url) {
-        return sqlSessionTemplate.selectOne("CommonMapper.selectPageViewsCount", url);
-    }
-
-    @Override
-    public String getLastedRateAdsvcGdncVersion() {
-        return sqlSessionTemplate.selectOne("CommonMapper.getLastedRateAdsvcGdncVersion");
     }
 }

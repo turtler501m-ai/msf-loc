@@ -1,3 +1,11 @@
+## Common
+common:
+  public-url:
+    form-service: http://localhost:7080
+    admin-service: http://localhost:7180
+
+
+
 spring:
   ## DataSource
   datasource:
@@ -11,9 +19,6 @@ spring:
           hikari:
             maximum-pool-size: 6
         reader:
-          url: ${spring.datasource.groups.smartform.writer.url}
-          username: ${spring.datasource.groups.smartform.writer.username}
-          password: ${spring.datasource.groups.smartform.writer.password}
           hikari:
             maximum-pool-size: 6
 
@@ -34,6 +39,7 @@ spring:
       minimum-idle: 3
       idle-timeout: 59000
 
+
   ## Spring Data
   data:
     ## Redis
@@ -42,16 +48,36 @@ spring:
       host: 211.184.184.30
       port: 46579
       password: ENC(r+Nby5IIIBQWUocgfadxFQQ1sGJCruM/FTqI3me4dw+XYkev0d+8/3Mfu8oqmjMaqrAHcxH+TXDurF9G8tF/GwH7bs/ES4joQFzDMnGUc1A=)
+      timeout: 10s
+      connect-timeout: 1s
+
+
+
+## 메시지 발송
+message-sender:
+  kakao:
+    sender-key: ENC(1vg4gHtg3jDyq1G7eqyZDmvZlT5m8Ocbzr/NjSCEOyVzPh+CruLOOP/QHYVaGT34/GxLXFFMqPEW6/LA2Ql0whQJ/1PGaA/E7kKn2QvqIqk=)
+
+
+
+## Scheduling
+scheduling:
+  enabled: false
+
+
+
+## Actuator
+management:
+  health:
+    redis:
+      enabled: false
+
+
 
 api:
   interface:
     server: http://localhost:9380
     use-mcp: false   # true: mcp-api 호출 (연결실패 시 MSP fallback), false: MSP 직접 조회
-
-management:
-  health:
-    redis:
-      enabled: false
 
 
 
@@ -60,7 +86,7 @@ logging:
   include-application-name: false
   pattern:
     dateformat: yyyy-MM-dd HH:mm:ss.SSS
-    correlation: ""
+    correlation: "[%X{clientId}] "
   level:
     com.ktmmobile.msf: debug
     jdbc:
@@ -70,10 +96,3 @@ logging:
       audit: off
       resultset: off
       connection: off
-
-
-
-## Jasypt
-jasypt:
-  encryptor:
-    password: ${JASYPT_ENCRYPTOR_PASSWORD}

@@ -2,9 +2,11 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.ktmmobile.msf.domains.form.form.termination.repository.smartform.CancelPageMapper">
+    <!--
     <select id="nextRequestKey" resultType="java.lang.Long">
         SELECT nextval('SQ_REQUEST_KEY')
     </select>
+    -->
 
     <select id="countInProgressApplicationByMobileNo" resultType="int">
         SELECT COUNT(*)
@@ -12,7 +14,7 @@
             SELECT RC.REQUEST_KEY
             FROM MSF_REQUEST_CANCEL RC
             WHERE REGEXP_REPLACE(COALESCE(RC.CANCEL_MOBILE_NO, ''), '[^0-9]', '', 'g') = #{mobileNo}
-              AND RC.PROC_CD IN ('RC', 'RQ')
+              AND RC.PROC_CD IN ('RQ')
               /* 확인_ASIS AND (PROC_CD IS NULL OR PROC_CD != 'BK') */
             UNION ALL
             SELECT NC.REQUEST_KEY
@@ -29,12 +31,16 @@
             LEFT JOIN MSF_REQUEST_CSTMR C
                 ON C.REQUEST_KEY = R.REQUEST_KEY
             WHERE R.OPER_TYPE_CD IN ('HCN3', 'HDN3')
-              AND COALESCE(R.SBSC_PRO_CD, '') != '21'
-              AND COALESCE(R.PRO_STTUS_CD, '') NOT IN ('10', '20', '30', '40')
-              AND (
-                  REGEXP_REPLACE(COALESCE(R.OPEN_NO, ''), '[^0-9]', '', 'g') = #{mobileNo}
-                  OR COALESCE(C.CSTMR_MOBILE_FN_NO, '') || COALESCE(C.CSTMR_MOBILE_MN_NO, '') || COALESCE(C.CSTMR_MOBILE_RN_NO, '') = #{mobileNo}
-              )
+              AND COALESCE(R.PROC_CD, '') = 'RQ' -- 처리결과 (RQ:접수처리중 / RC:처리완료 / BK:접수취소)
+              AND REGEXP_REPLACE(COALESCE(R.OPEN_NO, ''), '[^0-9]', '', 'g') = #{mobileNo}
+              <!--AND COALESCE(R.PRO_STTUS_CD, '') = '01' &#45;&#45; 진행상태코드 ( 01:작성완료 / 20:개통요청 / 21:개통완료 )-->
+              <!--AND COALESCE(R.SBSC_PRO_CD, '') = '01' &#45;&#45; 가입진행코드 ( 01:작성완료 / 20:개통요청 / 21:개통완료 )-->
+              <!--AND COALESCE(R.SBSC_PRO_CD, '') != '21'-->
+              <!--AND COALESCE(R.PRO_STTUS_CD, '') NOT IN ('10', '20', '30', '40')-->
+              <!--AND (-->
+              <!--    REGEXP_REPLACE(COALESCE(R.OPEN_NO, ''), '[^0-9]', '', 'g') = #{mobileNo}-->
+              <!--    OR COALESCE(C.CSTMR_MOBILE_FN_NO, '') || COALESCE(C.CSTMR_MOBILE_MN_NO, '') || COALESCE(C.CSTMR_MOBILE_RN_NO, '') = #{mobileNo}-->
+              <!--)-->
         ) T
     </select>
 

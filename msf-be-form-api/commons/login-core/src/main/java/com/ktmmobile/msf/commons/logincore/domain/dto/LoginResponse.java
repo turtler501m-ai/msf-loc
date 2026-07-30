@@ -17,6 +17,12 @@ public record LoginResponse(
 
     private static final ZoneId RESPONSE_ZONE = ZoneId.systemDefault();
 
+    /**
+     * 토큰 쌍 응답 변환
+     *
+     * @param tokenPair 토큰 쌍
+     * @return 로그인 응답
+     */
     public static LoginResponse from(LoginTokenPair tokenPair) {
         return new LoginResponse(
             tokenPair.userId(),
@@ -29,6 +35,12 @@ public record LoginResponse(
         );
     }
 
+    /**
+     * 응답 일시 변환
+     *
+     * @param instant 기준 Instant
+     * @return 응답 일시
+     */
     private static LocalDateTime toResponseDateTime(Instant instant) {
         return LocalDateTime.ofInstant(instant, RESPONSE_ZONE).withNano(0);
     }

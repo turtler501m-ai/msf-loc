@@ -16,17 +16,22 @@ public class AuditingHandler {
     private final MethodSignature signature;
     private final AuditingModifierProxy methodAuditing;
     private final AuditingModifierProxy typeAuditing;
+    private final AuditingModifierOption methodOption;
+    private final AuditingModifierOption typeOption;
 
     @Getter
     private final boolean auditingDisabled;
 
     private String cachedModifier;
+    private Boolean cachedFallbackClientIp;
 
 
     public AuditingHandler(MethodSignature signature) {
         this.signature = signature;
         this.methodAuditing = cacheMethodAuditingAnnotation();
         this.typeAuditing = cacheTypeAuditingAnnotation();
+        this.methodOption = AuditingModifierOption.of(methodAuditing);
+        this.typeOption = AuditingModifierOption.of(typeAuditing);
         this.auditingDisabled = cacheAuditingDisabled();
     }
 
@@ -65,17 +70,20 @@ public class AuditingHandler {
             return cachedModifier;
         }
 
-        String modifier = getModifierOf(methodAuditing);
-        if (StringUtils.hasText(modifier)) {
-            cacheModifier(modifier);
-            return modifier;
-        }
-        modifier = getModifierOf(typeAuditing);
+        String modifier = AuditingModifierResolver.resolve(methodOption, typeOption);
         if (StringUtils.hasText(modifier)) {
             cacheModifier(modifier);
             return modifier;
         }
         return AuditingUtils.getAuditModifier();
+    }
+
+    public boolean fallbackClientIp() {
+        if (cachedFallbackClientIp != null) {
+            return cachedFallbackClientIp;
+        }
+        cachedFallbackClientIp = AuditingModifierResolver.resolveFallbackClientIp(methodOption, typeOption);
+        return cachedFallbackClientIp;
     }
 
     private boolean isModifierCached() {
@@ -84,45 +92,6 @@ public class AuditingHandler {
 
     private void cacheModifier(String modifier) {
         this.cachedModifier = modifier;
-    }
-
-    /**
-     * <pre>
-     * <code>@Auditing(forceApply = true)</code>인 경우, Custom Modifier가 강제 적용됩니다.
-     * 이때 Custom Modifier를 지정하지 않으면 <code>IllegalArgumentException</code>이 발생합니다.
-     * <code>@Auditing(forceApply = false)</code>인 경우, Custom Modifier보다 인증 객체 값이 우선 적용됩니다.</pre>
-     */
-    private String getModifierOf(AuditingModifierProxy auditing) {
-        if (auditing.isEmpty() || !auditing.enabled()) {
-            return null;
-        }
-
-        String customModifier = getCustomModifierOf(auditing);
-        if (auditing.forceApply()) {
-            if (StringUtils.hasText(customModifier)) {
-                return customModifier;
-            }
-            throw new IllegalArgumentException("@Auditing 애너테이션에 Custom Modifier가 지정되지 않았습니다.");
-        }
-
-        if (AuditingUtils.hasAuditModifier()) {
-            return AuditingUtils.getAuditModifier();
-        }
-        return customModifier;
-    }
-
-    /**
-     * <pre>
-     * <code>@Auditing</code>의 <code>modifier()</code>보다 <code>predefinedModifier()</code> 속성이 우선 적용됩니다.</pre>
-     */
-    private String getCustomModifierOf(AuditingModifierProxy auditing) {
-        if (auditing.predefinedModifier().isValid()) {
-            return auditing.predefinedModifier().getCode();
-        }
-        if (StringUtils.hasText(auditing.modifier())) {
-            return auditing.modifier();
-        }
-        return null;
     }
 
     public String getMethodSignatureName() {

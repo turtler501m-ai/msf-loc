@@ -22,9 +22,12 @@ public class EsimRequest {
     private String imei2;
 
     private String modelId; //K코드 (단말코드)
+    private String model; //대표단말기 ID (K코드)
+    private String reqModelNm; //단말모델명
+    private String reqPhoneSn; //휴대폰일련번호
 
-    private String phoneModelId; //삭제예정
-    private int uploadPhoneSrlNo;
+    private int uploadPhoneSrlNo; //eSIM 정보 저장 후 일련번호
 
+    //private String phoneModelId; //삭제예정
     private String agentCd; //선택한 대리점코드
 }

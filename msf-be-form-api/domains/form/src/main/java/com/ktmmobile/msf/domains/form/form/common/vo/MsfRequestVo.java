@@ -6,6 +6,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import com.ktmmobile.msf.commons.crypto.domain.code.FieldCryptoAlgorithm;
+import com.ktmmobile.msf.commons.crypto.support.annotation.Encrypted;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -31,7 +34,10 @@ public class MsfRequestVo {
     String cstmrTypeCd;
     String identityCertTypeCd;
     String knoteIdentityScanCstmrNm;
+
+    @Encrypted(algorithm = FieldCryptoAlgorithm.AES_GCM_SEARCHABLE)
     String knoteIdentityEssNo;
+
     String knoteIdentityTypeCd;
     LocalDateTime knoteIdentityScanDt;
     String knoteScanId;
@@ -51,6 +57,8 @@ public class MsfRequestVo {
     String driveLicnsNo;
     String openNo;
     String contractNum;
+    String custId;
+    String billAcntNo;
     String prodTypeCd;
     String prodId;
     String prodNm;
@@ -86,7 +94,7 @@ public class MsfRequestVo {
     String onOffTypeCd;
     String soCd;
     LocalDateTime openReqDt;
-    LocalDateTime reqInDay;
+    LocalDateTime reqInDt;
     String clausePriCollectYn;
     String clausePriOfferYn;
     String clauseEssCollectYn;
@@ -104,7 +112,8 @@ public class MsfRequestVo {
     String clauseRentalServiceYn;
     String clauseMpps35Yn;
     String clauseFinanceYn;
-    String clause5gCoverageYn = "N";
+    String clause5gCoverageYn;
+    String othersTrnsAllAgreeYn;
     String personalInfoCollectAgreeYn;
     String othersTrnsAgreeYn;
     String clauseSensiCollectYn;
@@ -132,6 +141,13 @@ public class MsfRequestVo {
     String fileMaskNm;
     String faxYn;
     String faxNo;
+    String parentScanId;
+    String clauseMoveCode;
+    String indvLocaPrvAgreeYn;
+    String disPrmtId;
 
+    Long volumeMobileNoQnty;
+    String volumeRepMobileNoYn;
+    String volumeRepMobileNo;
 }
 

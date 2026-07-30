@@ -8,6 +8,8 @@
   >
     <!-- 팝업 내용 -->
     <p class="ut-text-desc">번호를 선택해 주세요.</p>
+    <!-- 컨텐츠 로딩형태 추가_20260610 -->
+    <MsfLoadingComp inline height="400" />
     <MsfRadioGroup
       name="number-select"
       v-model="numberSelect"

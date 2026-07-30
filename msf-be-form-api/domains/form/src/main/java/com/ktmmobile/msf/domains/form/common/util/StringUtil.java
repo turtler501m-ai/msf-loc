@@ -1,5 +1,6 @@
 package com.ktmmobile.msf.domains.form.common.util;
 
+
 import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
@@ -9,39 +10,39 @@ import java.text.DecimalFormat;
 import java.util.Random;
 import java.util.regex.Pattern;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-public class StringUtil extends StringUtils{
-
-    private static final Logger logger = LoggerFactory.getLogger(StringUtil.class);
+@Slf4j
+public class StringUtil extends StringUtils {
 
     //비밀번호 패턴
 
     //* 영문, 숫자, 특수문자 중 3종류를 조합하여 8~16자리
     @Deprecated
-    private static final String Passwrod_PATTERN_8 = "^(?=.*[a-zA-Z\\s]+)(?=.*[0-9]+)(?=.*[!@#$%^*+=-]+).{8,16}$";
+    private static final String PASSWORD_PATTERN_8 = "^(?=.*[a-zA-Z\\s]+)(?=.*[0-9]+)(?=.*[!@#$%^*+=-]+).{8,16}$";
+
     //* 영문, 숫자, 특수문자 중 2종류를 조합하여 10~16자리
     @Deprecated
-    private static final String Passwrod_PATTERN_TEXT_NUM10 = "^(?=.*[a-zA-Z\\s]+)(?=.*[0-9]+).{10,16}$";
+    private static final String PASSWORD_PATTERN_TEXT_NUM10 = "^(?=.*[a-zA-Z\\s]+)(?=.*[0-9]+).{10,16}$";
+
     @Deprecated
-    private static final String Passwrod_PATTERN_NUM_SPECIAL10 = "^(?=.*[!@#$%^*+=-]+)(?=.*[0-9]+).{10,16}$";
+    private static final String PASSWORD_PATTERN_NUM_SPECIAL10 = "^(?=.*[!@#$%^*+=-]+)(?=.*[0-9]+).{10,16}$";
+
     @Deprecated
-    private static final String Passwrod_PATTERN_TEXT_SPECIAL10 = "^(?=.*[a-zA-Z\\s]+)(?=.*[!@#$%^*+=-]+).{10,16}$";
+    private static final String PASSWORD_PATTERN_TEXT_SPECIAL10 = "^(?=.*[a-zA-Z\\s]+)(?=.*[!@#$%^*+=-]+).{10,16}$";
 
     //* 영문 숫자 특수기호 조합 10자리 이상 (정규식)
-    private static final String  Passwrod_PATTERN_10 = "(?=.*[a-zA-Z])(?=.*[!@#$%^*+=-])(?=.*[0-9]).{10,15}$";  //
+    private static final String PASSWORD_PATTERN_10 = "(?=.*[a-zA-Z])(?=.*[!@#$%^*+=-])(?=.*[0-9]).{10,15}$";  //
 
 
-
-    public static boolean isNotNull(String str){
+    public static boolean isNotNull(String str) {
         boolean result = StringUtils.isEmpty(str);
-        if(result){
+        if (result) {
             return !result;
         }
 
-        if(StringUtil.equals("null", str)){
+        if (StringUtil.equals("null", str)) {
             return false;
         }
 
@@ -63,23 +64,23 @@ public class StringUtil extends StringUtils{
     /**
      * int형 값 반환 default 0
      */
-    public static int toInteger(String str){
+    public static int toInteger(String str) {
         int result = 0;
-        try{
+        try {
             result = Integer.parseInt(str);
-        }catch (Exception e) {
-            logger.error(e.getMessage());
+        } catch (Exception e) {
+            log.error(e.getMessage());
         }
         return result;
     }
 
-    public static long toLong(String str){
+    public static long toLong(String str) {
         long result = 0;
 
         try {
             result = Long.parseLong(str);
         } catch (NumberFormatException e) {
-            logger.error(e.getMessage());
+            log.error(e.getMessage());
         }
         return result;
     }
@@ -87,58 +88,65 @@ public class StringUtil extends StringUtils{
     /**
      * 숫자인지 체크 함수
      */
-    public static boolean isNumeric(String str){
-        try{
-            Double.parseDouble(str) ;
-            return true ;
+    public static boolean isNumeric(String str) {
+        try {
+            Double.parseDouble(str);
+            return true;
         } catch (NumberFormatException e) {
-            return false ;
-        } catch(Exception e){
-            return false ;
+            return false;
+        } catch (Exception e) {
+            return false;
         }
 
     }
-    public static String booleanToYN(boolean set){
+
+    public static String booleanToYN(boolean set) {
         String result = "N";
-        try{
-            if(set) result = "Y";
-        }catch (Exception e) {
-            logger.error(e.getMessage());
+        try {
+            if (set) {
+                result = "Y";
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage());
         }
         return result;
     }
 
-    public static String booleanToString(boolean set){
+    public static String booleanToString(boolean set) {
         String result = "false";
-        try{
-            if(set) result = "true";
-        }catch (Exception e) {
-            logger.error(e.getMessage());
+        try {
+            if (set) {
+                result = "true";
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage());
         }
         return result;
     }
 
-    public static boolean YNToBoolean(String set){
+    public static boolean YNToBoolean(String set) {
         boolean result = false;
-        try{
-            if("Y".equals(set)) result = true;
-        }catch (Exception e) {
-            logger.error(e.getMessage());
+        try {
+            if ("Y".equals(set)) {
+                result = true;
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage());
         }
         return result;
     }
 
-    public static String abbreviateByte(String str, int maxWidth){
+    public static String abbreviateByte(String str, int maxWidth) {
         String result = "";
         try {
             byte[] bytes = str.getBytes("UTF-8");
-            if(bytes.length <= maxWidth){
+            if (bytes.length <= maxWidth) {
                 result = new String(bytes, 0, bytes.length, "UTF-8");
-            }else{
-                result = new String(bytes, 0, maxWidth - 3, "UTF-8")+"...";
+            } else {
+                result = new String(bytes, 0, maxWidth - 3, "UTF-8") + "...";
             }
         } catch (UnsupportedEncodingException e) {
-            logger.error(e.getMessage());
+            log.error(e.getMessage());
         }
         return result;
     }
@@ -161,7 +169,7 @@ public class StringUtil extends StringUtils{
             return "";
         }
 
-        int intBeginBytes = beginBytes ;
+        int intBeginBytes = beginBytes;
         if (intBeginBytes < 0) {
             intBeginBytes = 0;
         }
@@ -194,35 +202,42 @@ public class StringUtil extends StringUtils{
         return str.substring(beginIndex, endIndex);
     }
 
-    public static String equalsReplace(String str1, String str2, String replace){
+    public static String equalsReplace(String str1, String str2, String replace) {
         String result = str1;
-        try{
-            if(StringUtil.equals(str1, str2))
+        try {
+            if (StringUtil.equals(str1, str2)) {
                 result = replace;
-        }catch (Exception e) {
-            logger.error(e.getMessage());
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage());
         }
         return result;
     }
 
-    public static String decode(String str1, String str2, String ifStr, String elseStr){
+    public static String decode(String str1, String str2, String ifStr, String elseStr) {
         String result = str1;
-        try{
-            if( StringUtil.equalsIgnoreCase(str1, str2) ) result = ifStr;
-            else result = elseStr;
-        }catch (Exception e) {
-            logger.error(e.getMessage());
+        try {
+            if (StringUtil.equalsIgnoreCase(str1, str2)) {
+                result = ifStr;
+            } else {
+                result = elseStr;
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage());
         }
         return result;
     }
 
-    public static String decode(boolean flag, String ifStr, String elseStr){
+    public static String decode(boolean flag, String ifStr, String elseStr) {
         String result = ifStr;
-        try{
-            if(flag) result = ifStr;
-            else result = elseStr;
-        }catch (Exception e) {
-            logger.error(e.getMessage());
+        try {
+            if (flag) {
+                result = ifStr;
+            } else {
+                result = elseStr;
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage());
         }
         return result;
     }
@@ -230,18 +245,34 @@ public class StringUtil extends StringUtils{
     public static String getScriptFormat(String value) {
         try {
             StringBuffer sb = new StringBuffer();
-            for(int i=0;i<value.length();i++) {
+            for (int i = 0; i < value.length(); i++) {
                 char tmp = value.charAt(i);
-                switch(tmp) {
-                case '\r' : break;
-                case '\n' : sb.append("%0").append(Integer.toHexString((int)'\n')); break;
-                case ' ' : sb.append("%").append(Integer.toHexString((int)' ')); break;
-                case '"' : sb.append("%").append(Integer.toHexString((int)'"')); break;
-                case '&' : sb.append("%").append(Integer.toHexString((int)'&')); break;
-                case '\'' : sb.append("%").append(Integer.toHexString((int)'\'')); break;
-                case '<' : sb.append("%").append(Integer.toHexString((int)'<')); break;
-                case '>' : sb.append("%").append(Integer.toHexString((int)'>')); break;
-                default : sb.append(tmp);
+                switch (tmp) {
+                    case '\r':
+                        break;
+                    case '\n':
+                        sb.append("%0").append(Integer.toHexString((int) '\n'));
+                        break;
+                    case ' ':
+                        sb.append("%").append(Integer.toHexString((int) ' '));
+                        break;
+                    case '"':
+                        sb.append("%").append(Integer.toHexString((int) '"'));
+                        break;
+                    case '&':
+                        sb.append("%").append(Integer.toHexString((int) '&'));
+                        break;
+                    case '\'':
+                        sb.append("%").append(Integer.toHexString((int) '\''));
+                        break;
+                    case '<':
+                        sb.append("%").append(Integer.toHexString((int) '<'));
+                        break;
+                    case '>':
+                        sb.append("%").append(Integer.toHexString((int) '>'));
+                        break;
+                    default:
+                        sb.append(tmp);
                 }
             }
             return sb.toString();
@@ -253,17 +284,31 @@ public class StringUtil extends StringUtils{
     public static String getHtmlFormat(String value) {
         try {
             StringBuffer sb = new StringBuffer();
-            for(int i=0;i<value.length();i++) {
+            for (int i = 0; i < value.length(); i++) {
                 char tmp = value.charAt(i);
-                switch(tmp) {
-                case '\r' : break;
-                case '\n' : sb.append("<br/>"); break;
-                case '\"' : sb.append("&quot;"); break;
-                case '&' : sb.append("&amp;"); break;
-                case '\'' : sb.append("&#39;"); break;
-                case '<' : sb.append("&lt;"); break;
-                case '>' : sb.append("&gt;"); break;
-                default : sb.append(tmp);
+                switch (tmp) {
+                    case '\r':
+                        break;
+                    case '\n':
+                        sb.append("<br/>");
+                        break;
+                    case '\"':
+                        sb.append("&quot;");
+                        break;
+                    case '&':
+                        sb.append("&amp;");
+                        break;
+                    case '\'':
+                        sb.append("&#39;");
+                        break;
+                    case '<':
+                        sb.append("&lt;");
+                        break;
+                    case '>':
+                        sb.append("&gt;");
+                        break;
+                    default:
+                        sb.append(tmp);
                 }
             }
             return sb.toString();
@@ -274,19 +319,21 @@ public class StringUtil extends StringUtils{
 
     public static String leftPad(String startStr, String str, int size, String padStr) {
         int length = size - startStr.length();
-        if(length < 0)
+        if (length < 0) {
             throw new ArrayIndexOutOfBoundsException("문자열이 초과 되었습니다.");
+        }
 
         String leftpad = StringUtil.leftPad(str, length, padStr);
         String result = startStr + leftpad;
-        if(result.length() > size)
+        if (result.length() > size) {
             throw new ArrayIndexOutOfBoundsException("문자열이 초과 되었습니다.");
+        }
 
         return result;
     }
 
     public static String getNumberFormat(String value) {
-        Number number = new Double(value);
+        Number number = Double.valueOf(value);
         return StringUtil.getNumberFormat(number);
     }
 
@@ -298,34 +345,34 @@ public class StringUtil extends StringUtils{
     /**
      * 전화번호(FAX) 자릿수 자르기
      */
-    public static String[] getPhoneNum(String phoneNum){
+    public static String[] getPhoneNum(String phoneNum) {
         String[] result = new String[3];
         String phoneNum1 = "";
         String phoneNum2 = "";
         String phoneNum3 = "";
 
         try {
-            if(phoneNum.length() == 13 ){
+            if (phoneNum.length() == 13) {
                 phoneNum1 = phoneNum.substring(0, 3);
                 phoneNum2 = phoneNum.substring(4, 8);
                 phoneNum3 = phoneNum.substring(9, 13);
-            }else if(phoneNum.length() == 12){
-                if(phoneNum.substring(0, 2).equals("02")){
+            } else if (phoneNum.length() == 12) {
+                if (phoneNum.substring(0, 2).equals("02")) {
                     phoneNum1 = phoneNum.substring(0, 2);
                     phoneNum2 = phoneNum.substring(3, 7);
                     phoneNum3 = phoneNum.substring(8, 12);
-                }else{
+                } else {
                     phoneNum1 = phoneNum.substring(0, 3);
                     phoneNum2 = phoneNum.substring(4, 7);
                     phoneNum3 = phoneNum.substring(8, 12);
                 }
-            }else if(phoneNum.length() == 11){
+            } else if (phoneNum.length() == 11) {
                 phoneNum1 = phoneNum.substring(0, 2);
                 phoneNum2 = phoneNum.substring(3, 6);
                 phoneNum3 = phoneNum.substring(7, 11);
             }
         } catch (Exception e) {
-            logger.error(e.getMessage());
+            log.error(e.getMessage());
         }
 
         result[0] = phoneNum1;
@@ -338,23 +385,23 @@ public class StringUtil extends StringUtils{
     /**
      * 전화번호(FAX) 자릿수 자르기
      */
-    public static String getDivPhoneNum(String phoneNum){
+    public static String getDivPhoneNum(String phoneNum) {
         String phoneNum1 = "";
         String phoneNum2 = "";
         String phoneNum3 = "";
 
         try {
-            if(phoneNum.length() == 11){
+            if (phoneNum.length() == 11) {
                 phoneNum1 = phoneNum.substring(0, 3);
                 phoneNum2 = phoneNum.substring(3, 7);
                 phoneNum3 = phoneNum.substring(7, 11);
-            } else if(phoneNum.length() == 10){
+            } else if (phoneNum.length() == 10) {
                 phoneNum1 = phoneNum.substring(0, 3);
                 phoneNum2 = phoneNum.substring(3, 6);
                 phoneNum3 = phoneNum.substring(6, 10);
             }
         } catch (Exception e) {
-            logger.error(e.getMessage());
+            log.error(e.getMessage());
         }
 
 
@@ -364,34 +411,34 @@ public class StringUtil extends StringUtils{
     /**
      * 휴대전화번호 자릿수 자르기
      */
-    public static String[] getMobileNum(String value){
+    public static String[] getMobileNum(String value) {
         String[] result = new String[3];
         String mobileNum1 = "";
         String mobileNum2 = "";
         String mobileNum3 = "";
         String moblieNum = StringUtil.replace(value, "-", "");
         try {
-            if(moblieNum != null){
-                if(moblieNum.length() == 13 ){
+            if (moblieNum != null) {
+                if (moblieNum.length() == 13) {
                     mobileNum1 = moblieNum.substring(0, 3);
                     mobileNum2 = moblieNum.substring(4, 8);
                     mobileNum3 = moblieNum.substring(9, 13);
-                }else if(moblieNum.length() == 12){
+                } else if (moblieNum.length() == 12) {
                     mobileNum1 = moblieNum.substring(0, 3);
                     mobileNum2 = moblieNum.substring(4, 7);
                     mobileNum3 = moblieNum.substring(8, 12);
-                }else if(moblieNum.length() == 11){
+                } else if (moblieNum.length() == 11) {
                     mobileNum1 = moblieNum.substring(0, 3);
                     mobileNum2 = moblieNum.substring(3, 7);
                     mobileNum3 = moblieNum.substring(7);
-                }else if(moblieNum.length() == 10){
+                } else if (moblieNum.length() == 10) {
                     mobileNum1 = moblieNum.substring(0, 3);
                     mobileNum2 = moblieNum.substring(3, 6);
                     mobileNum3 = moblieNum.substring(6);
                 }
             }
         } catch (Exception e) {
-            logger.error(e.getMessage());
+            log.error(e.getMessage());
         }
 
         result[0] = mobileNum1;
@@ -409,22 +456,22 @@ public class StringUtil extends StringUtils{
     /**
      * 우편번호 자릿수 자르기
      */
-    public static String[] getPostCode(String postcode){
+    public static String[] getPostCode(String postcode) {
         String[] result = new String[2];
         String code1 = "";
         String code2 = "";
         try {
-            if(postcode != null){
-                if(postcode.length() == 6){
+            if (postcode != null) {
+                if (postcode.length() == 6) {
                     code1 = postcode.substring(0, 3);
                     code2 = postcode.substring(3, 6);
-                }else if(postcode.length() == 7){
+                } else if (postcode.length() == 7) {
                     code1 = postcode.substring(0, 3);
                     code2 = postcode.substring(4, 7);
                 }
             }
         } catch (Exception e) {
-            logger.error(e.getMessage());
+            log.error(e.getMessage());
         }
 
         result[0] = code1;
@@ -437,28 +484,28 @@ public class StringUtil extends StringUtils{
     /**
      * email 자르기
      */
-    public static String[] getEmailSplit(String email){
+    public static String[] getEmailSplit(String email) {
         String[] result = new String[2];
-        String email_id = "";
+        String emailId = "";
         String address = "";
-        try{
-            if(email != null){
-                email_id = email.split("@")[0];
+        try {
+            if (email != null) {
+                emailId = email.split("@")[0];
                 address = email.split("@")[1];
             }
-        }catch (Exception e) {
-            logger.error(e.getMessage());
+        } catch (Exception e) {
+            log.error(e.getMessage());
         }
-        result[0] = email_id;
+        result[0] = emailId;
         result[1] = address;
 
         return result;
     }
 
-    public static String[] getCardNumber(String str){
+    public static String[] getCardNumber(String str) {
         String[] result = new String[4];
         String org = StringUtil.replace(str, "-", "");
-        if(org.length() == 16){
+        if (org.length() == 16) {
             result[0] = StringUtil.substring(org, 0, 4);
             result[1] = StringUtil.substring(org, 4, 8);
             result[2] = StringUtil.substring(org, 8, 12);
@@ -471,24 +518,24 @@ public class StringUtil extends StringUtils{
     /**
      * YYYYMMDD 날짜 자르기
      */
-    public static String[] getDateSplit(String yyyymmdd){
+    public static String[] getDateSplit(String yyyymmdd) {
         String[] result = new String[3];
         String yyyy = "";
         String mm = "";
-        String dd= "";
+        String dd = "";
 
         try {
-            if(yyyymmdd.length() == 8 ){
+            if (yyyymmdd.length() == 8) {
                 yyyy = yyyymmdd.substring(0, 4);
                 mm = yyyymmdd.substring(4, 6);
                 dd = yyyymmdd.substring(6);
-            }else if(yyyymmdd.length() == 10){
+            } else if (yyyymmdd.length() == 10) {
                 yyyy = yyyymmdd.substring(0, 4);
                 mm = yyyymmdd.substring(5, 7);
                 dd = yyyymmdd.substring(8);
             }
         } catch (Exception e) {
-            logger.error(e.getMessage());
+            log.error(e.getMessage());
         }
 
         result[0] = yyyy;
@@ -498,49 +545,44 @@ public class StringUtil extends StringUtils{
         return result;
     }
 
-    public static String toTraceStr(Throwable e){
+    public static String toTraceStr(Throwable e) {
         String result = null;
         ByteArrayOutputStream stream = null;
         PrintWriter writer = null;
 
-        try
-        {
+        try {
             stream = new ByteArrayOutputStream();
             writer = new PrintWriter(stream);
             writer.flush();
             result = new String(stream.toByteArray());
-        }
-        catch(Exception e1)
-        {
+        } catch (Exception e1) {
             result = "Cannot catch exception";
-        }
-        finally
-        {
-            try
-            {
-                if(stream != null)
+        } finally {
+            try {
+                if (stream != null) {
                     stream.close();
-                if(writer != null)
+                }
+                if (writer != null) {
                     writer.close();
-            }
-            catch(Exception e2)
-            {
+                }
+            } catch (Exception e2) {
                 result = "Cannot catch exception";
             }
         }
 
-        if(result.length() > 1900)
+        if (result.length() > 1900) {
             result = result.substring(0, 1900) + "...";
+        }
 
         return result;
     }
 
 
-    public static String join(String sep, String ...strings){
+    public static String join(String sep, String... strings) {
         String result = "";
 
-        for(String str : strings){
-            if(StringUtil.isNotEmpty(result)){
+        for (String str: strings) {
+            if (StringUtil.isNotEmpty(result)) {
                 result = result.concat(sep);
             }
             result = result.concat(str);
@@ -556,50 +598,48 @@ public class StringUtil extends StringUtils{
 
         char[] string = str.toCharArray();
 
-        for (int j=0; j<string.length; j++) {
-            if (string[j]>='A' && string[j]<='z') {
+        for (int j = 0; j < string.length; j++) {
+            if (string[j] >= 'A' && string[j] <= 'z') {
                 en++;
-            }
-            else if (string[j]>='\uAC00' && string[j]<='\uD7A3') {
+            } else if (string[j] >= '\uAC00' && string[j] <= '\uD7A3') {
                 ko++;
                 ko++;
-            }
-            else {
+            } else {
                 etc++;
             }
         }
         return (en + ko + etc);
     }
 
-    public static String cutNearestWon(String str){
-        String result=null;
-        if(null !=str && !str.equals("0") && !str.equals("Infinity")){
+    public static String cutNearestWon(String str) {
+        String result = null;
+        if (null != str && !str.equals("0") && !str.equals("Infinity")) {
             //jstl에서 넘어오는 값이 소수점으로 넘어온다
-            int i= Integer.parseInt(str.split("\\.")[0]);
-            i = (int) (Math.floor(i/10)*10);
-            result = i+"";
+            int i = Integer.parseInt(str.split("\\.")[0]);
+            i = (int) (Math.floor(i / 10) * 10);
+            result = i + "";
         }
         return result;
     }
 
-    public static int getRandomInt(int leng){
-        int result=0;
+    public static int getRandomInt(int leng) {
+        int result = 0;
 
         Random numGen = null;
         try {
             numGen = SecureRandom.getInstance("SHA1PRNG");
         } catch (NoSuchAlgorithmException e) {
-            logger.error(e.getMessage());
+            log.error(e.getMessage());
         }
 
-        if(leng>0){
-            double check= Math.floor(numGen.nextDouble()*leng);
-            result = (int) check+1;
+        if (leng > 0) {
+            double check = Math.floor(numGen.nextDouble() * leng);
+            result = (int) check + 1;
         }
         return result;
     }
 
-     /**
+    /**
      * 휴대전화번호 패턴 체크
      * @param mobileCnt 전화번호
      * @return
@@ -616,7 +656,6 @@ public class StringUtil extends StringUtils{
     }
 
 
-
     /**
      * <pre>
      * 설명    : binary 를 받아서 base64 Encoding 처리한다.
@@ -628,7 +667,7 @@ public class StringUtil extends StringUtils{
         try {
             return org.apache.commons.codec.binary.Base64.encodeBase64String(buffer);
         } catch (Exception e) {
-            logger.error(e.getMessage());
+            log.error(e.getMessage());
             return "";
         }
     }
@@ -654,20 +693,20 @@ public class StringUtil extends StringUtils{
         cleanString = cleanString.replaceAll("\\%3F", "?");
 
         cleanString = cleanString.replaceAll("&amp;", "&");
-        cleanString = cleanString.replaceAll("&lt;",  "<");
-        cleanString = cleanString.replaceAll("&gt;",  ">");
+        cleanString = cleanString.replaceAll("&lt;", "<");
+        cleanString = cleanString.replaceAll("&gt;", ">");
         cleanString = cleanString.replaceAll("&#40;", "(");
-        cleanString = cleanString.replaceAll("&quot;","\"");
-        cleanString = cleanString.replaceAll("&#x27;","'");
-        cleanString = cleanString.replaceAll("&#x2F;","/");
+        cleanString = cleanString.replaceAll("&quot;", "\"");
+        cleanString = cleanString.replaceAll("&#x27;", "'");
+        cleanString = cleanString.replaceAll("&#x2F;", "/");
         cleanString = cleanString.replaceAll("&#41;", ")");
 
         cleanString = cleanString.replaceAll("&amp;#40;", "(");
-        cleanString = cleanString.replaceAll("&amp;#x27;","'");
-        cleanString = cleanString.replaceAll("&amp;#x2F;","/");
+        cleanString = cleanString.replaceAll("&amp;#x27;", "'");
+        cleanString = cleanString.replaceAll("&amp;#x2F;", "/");
         cleanString = cleanString.replaceAll("&amp;#41;", ")");
 
-        cleanString = cleanString.replaceAll("&nbsp;","");
+        cleanString = cleanString.replaceAll("&nbsp;", "");
 
         return cleanString;
     }
@@ -683,8 +722,8 @@ public class StringUtil extends StringUtils{
         try {
             return org.apache.commons.codec.binary.Base64.decodeBase64(targetStr);
         } catch (Exception e) {
-            logger.error(e.getMessage());
-            return null ;
+            log.error(e.getMessage());
+            return null;
         }
     }
 
@@ -698,84 +737,82 @@ public class StringUtil extends StringUtils{
 
         boolean rtnObj = true;
 
-        boolean checkPw1=  Pattern.matches(Passwrod_PATTERN_10, pw);
+        boolean checkPw1 = Pattern.matches(PASSWORD_PATTERN_10, pw);
         /*
-         * boolean checkPw2= Pattern.matches(Passwrod_PATTERN_TEXT_NUM10, pw); boolean
-         * checkPw3= Pattern.matches(Passwrod_PATTERN_NUM_SPECIAL10, pw); boolean
-         * checkPw4= Pattern.matches(Passwrod_PATTERN_TEXT_SPECIAL10, pw);
+         * boolean checkPw2= Pattern.matches(PASSWORD_PATTERN_TEXT_NUM10, pw); boolean
+         * checkPw3= Pattern.matches(PASSWORD_PATTERN_NUM_SPECIAL10, pw); boolean
+         * checkPw4= Pattern.matches(PASSWORD_PATTERN_TEXT_SPECIAL10, pw);
          */
 
         //영문,숫자,특수문자 자릿수 조합 체크
-        if(!checkPw1 ) {
+        if (!checkPw1) {
             return false;
         }
 
         //동일 문자 연속 체크 3자리 체크
-        char chr_pass;
+        char chrPass;
         for (int i = 0; i < pw.length(); i++) {
-            chr_pass = pw.charAt(i);
-            if ((pw.length() - 3) >= i ) {
-                if (chr_pass == pw.charAt(i+1) && chr_pass == pw.charAt(i+2)) {
-                    return false;
-                }
+            chrPass = pw.charAt(i);
+            if ((pw.length() - 3) >= i && chrPass == pw.charAt(i + 1) && chrPass == pw.charAt(i + 2)) {
+                return false;
             }
         }
 
         //연속 문자 체크 3자리 체크
-        int SamePass_1 = 0; //연속성(+) 카운드
-        int SamePass_2 = 0; //연속성(-) 카운드
+        int samePass1 = 0; //연속성(+) 카운드
+        int samePass2 = 0; //연속성(-) 카운드
 
-        char chr_pass_0;
-        char chr_pass_1;
-        char chr_pass_2;
+        char chrPass0;
+        char chrPass1;
+        char chrPass2;
 
         for (int i = 0; i < pw.length(); i++) {
-            chr_pass_0 = pw.charAt(i);
+            chrPass0 = pw.charAt(i);
             int indexTmp = i + 1;
             if (pw.length() > indexTmp) {
-                chr_pass_1 = pw.charAt(indexTmp);
+                chrPass1 = pw.charAt(indexTmp);
             } else {
-                chr_pass_1 = 0;
+                chrPass1 = 0;
             }
 
             int indexTmp2 = i + 2;
             if (pw.length() > indexTmp2) {
-                chr_pass_2 = pw.charAt(indexTmp2);
+                chrPass2 = pw.charAt(indexTmp2);
             } else {
-                chr_pass_2 = 0;
+                chrPass2 = 0;
             }
 
             // 연속성(+) 카운드
-            if (chr_pass_0 - chr_pass_1 == 1 && chr_pass_1 - chr_pass_2 == 1) {
-                SamePass_1 = SamePass_1 + 1;
+            if (chrPass0 - chrPass1 == 1 && chrPass1 - chrPass2 == 1) {
+                samePass1 = samePass1 + 1;
             }
 
             // 연속성(-) 카운드
-            if (chr_pass_0 - chr_pass_1 == -1 && chr_pass_1 - chr_pass_2 == -1) {
-                SamePass_2 = SamePass_2 + 1;
+            if (chrPass0 - chrPass1 == -1 && chrPass1 - chrPass2 == -1) {
+                samePass2 = samePass2 + 1;
             }
         }
 
-        if (SamePass_1 > 0 || SamePass_2 > 0) {
+        if (samePass1 > 0 || samePass2 > 0) {
             return false;
         }
 
         // 키보드 연속 3자리 값 입력 체크 START
         boolean keyboardCheck = false;
         String listThreeChar = "qwe|wer|ert|rty|tyu|yui|uio|iop|asd|sdf|dfg|fgh|ghj|hjk|jkl|zxc|xcv|cvb|vbn|bnm";
-        StringBuffer listThreeChar_sbf= new StringBuffer(listThreeChar);
-        String listThreeChar_r = listThreeChar_sbf.reverse().toString();
+        StringBuilder listThreeCharSbf = new StringBuilder(listThreeChar);
+        String listThreeCharR = listThreeCharSbf.reverse().toString();
 
         String[] arrThreeChar = listThreeChar.split("\\|");
-        for (int i=0; i<arrThreeChar.length; i++) {
+        for (int i = 0; i < arrThreeChar.length; i++) {
             if (pw.toLowerCase().matches(".*" + arrThreeChar[i] + ".*")) {
                 keyboardCheck = true;
             }
         }
 
-        String[] arrThreeChar_r = listThreeChar_r.split("\\|");
-        for (int i=0; i<arrThreeChar.length; i++) {
-            if (pw.toLowerCase().matches(".*" + arrThreeChar_r[i] + ".*")) {
+        String[] arrThreeCharR = listThreeCharR.split("\\|");
+        for (int i = 0; i < arrThreeChar.length; i++) {
+            if (pw.toLowerCase().matches(".*" + arrThreeCharR[i] + ".*")) {
                 keyboardCheck = true;
             }
         }
@@ -819,7 +856,7 @@ public class StringUtil extends StringUtils{
 
     public static final String strtoDateStr(String cToStr, String type) {
         if (cToStr != null && !cToStr.equals("") && cToStr.length() == 8) {
-            return cToStr.substring(0,4) + type + cToStr.substring(4,6) + type + cToStr.substring(6,8);
+            return cToStr.substring(0, 4) + type + cToStr.substring(4, 6) + type + cToStr.substring(6, 8);
         }
         return "";
     }
@@ -829,22 +866,22 @@ public class StringUtil extends StringUtils{
      * 특수문자 제거
      * 한글유니코드(\uAC00-\uD7A3), 숫자 0~9(0-9), 영어 소문자a~z(a-z), 대문자A~Z(A-Z), 공백(\s)를 제외한(^) 단어일 경우 체크
      */
-    public static String  onlyStringReplace(String str){
-            String match = "[^\uAC00-\uD7A3xfe0-9a-zA-Z\\s]";
-            String retStr =str.replaceAll(match, "");
-            return retStr;
+    public static String onlyStringReplace(String str) {
+        String match = "[^\uAC00-\uD7A3xfe0-9a-zA-Z\\s]";
+        String retStr = str.replaceAll(match, "");
+        return retStr;
     }
 
     /*
      * 숫자만..
      */
-    public static String onlyNum(String str){
+    public static String onlyNum(String str) {
         if (str == null) {
             return "";
         }
         String match = "[^0-9]";
 
-        String retStr =str.replaceAll(match, "");
+        String retStr = str.replaceAll(match, "");
         return retStr;
     }
 
@@ -856,26 +893,44 @@ public class StringUtil extends StringUtils{
      */
     public static boolean isAllowedAddr(int cp) {
         // 한글
-        if (cp >= 0xAC00 && cp <= 0xD7A380) return true;
+        if (cp >= 0xAC00 && cp <= 0xD7A380) {
+            return true;
+        }
 
         // 한글 자모 (ㄱ~ㆎ)
-        if (cp >= 0x3131 && cp <= 0x318E) return true;
+        if (cp >= 0x3131 && cp <= 0x318E) {
+            return true;
+        }
 
         // 한글 자모 확장 (ᄀ~ᇿ) — 대부분 필요 없음, 그래도 포함 가능
-        if (cp >= 0x1100 && cp <= 0x11FF) return true;
+        if (cp >= 0x1100 && cp <= 0x11FF) {
+            return true;
+        }
 
         // 숫자
-        if (cp >= '0' && cp <= '9') return true;
+        if (cp >= '0' && cp <= '9') {
+            return true;
+        }
         // 영문
-        if ((cp >= 'A' && cp <= 'Z') || (cp >= 'a' && cp <= 'z')) return true;
+        if ((cp >= 'A' && cp <= 'Z') || (cp >= 'a' && cp <= 'z')) {
+            return true;
+        }
 
         // 공백
-        if (cp == ' ') return true;
+        if (cp == ' ') {
+            return true;
+        }
 
         // 주소 특수문자 #&+
         switch (cp) {
-            case '.': case ',': case '(': case ')':
-            case '#': case '+': case '/': case '-':
+            case '.':
+            case ',':
+            case '(':
+            case ')':
+            case '#':
+            case '+':
+            case '/':
+            case '-':
                 return true;
             default:
                 return false;
@@ -883,16 +938,14 @@ public class StringUtil extends StringUtils{
 
     }
 
-    public static String yyyymmddDot(String paramstr,String type) {
+    public static String yyyymmddDot(String paramstr, String type) {
 
-        String str = StringUtil.NVL(paramstr,"");
-        if(!"".equals(str)) {
-            if(str.length() >= 8) {
-                if("99991231".equals(str)) {
-                    str = "-";
-                } else {
-                    str = str.substring(0, 4)+type+str.substring(4, 6)+type+str.substring(6, 8);
-                }
+        String str = StringUtil.NVL(paramstr, "");
+        if (!"".equals(str) && str.length() >= 8) {
+            if ("99991231".equals(str)) {
+                str = "-";
+            } else {
+                str = str.substring(0, 4) + type + str.substring(4, 6) + type + str.substring(6, 8);
             }
         }
 
@@ -919,7 +972,45 @@ public class StringUtil extends StringUtils{
         }
         return sb.toString();
     }
+
+    /**
+     * 왼쪽에 길이에 부족한만큼 값 채우기
+     *
+     * @param padChar 빈자리에 채울 값 선택
+     * @param text 원본 문자열
+     * @param length 해당 길이만큼 문자열 생성
+     * @return String
+     */
+    public static String lpad(String padChar, String text, int length) {
+        if (text == null) {
+            return "";
+        }
+        if (text.length() >= length) {
+            return text;
+        }
+
+        int padCount = length - text.length();
+        return padChar.repeat(padCount) + text;
+    }
+
+    /**
+     * 오른쪽에 길이에 부족한만큼 값 채우기
+     *
+     * @param padChar 빈자리에 채울 값 선택
+     * @param text 원본 문자열
+     * @param length 해당 길이만큼 문자열 생성
+     * @return String
+     */
+    public static String rpad(String padChar, String text, int length) {
+        if (text == null) {
+            return "";
+        }
+        if (text.length() >= length) {
+            return text;
+        }
+
+        int padCount = length - text.length();
+        return text + padChar.repeat(padCount);
+    }
+
 }
-
-
-

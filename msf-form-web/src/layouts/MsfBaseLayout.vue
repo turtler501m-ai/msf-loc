@@ -17,10 +17,11 @@ import { MsfHeader, MsfContainer, MsfBottomNav } from '@/components/layouts'
 
 <style scoped lang="scss">
 .layout-root {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  height: 100dvh;
   overflow: hidden;
 }
 .container-layout {
@@ -40,6 +41,7 @@ import { MsfHeader, MsfContainer, MsfBottomNav } from '@/components/layouts'
   }
   & > .main-content {
     flex: 1;
+    min-height: 0;
   }
 }
 </style>

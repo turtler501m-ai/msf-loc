@@ -1,18 +1,14 @@
 ## Common Profile
 
-
-
----
-## LOCAL Profile
-spring:
-  config.activate.on-profile: local
-
-
+app:
+  config:
+    comb-svc-no: "01027435432" # Y44 회선번호
+    mst-svc-cont-id: "587838774" # Y44 결합회선번호
 
 ---
-## DEV Profile
+## PRD Profile
 spring:
-  config.activate.on-profile: dev
+  config.activate.on-profile: prd
 
 
 
@@ -24,6 +20,13 @@ spring:
 
 
 ---
-## PRD Profile
+## DEV Profile
 spring:
-  config.activate.on-profile: prd
+  config.activate.on-profile: dev
+
+
+
+---
+## LOCAL Profile
+spring:
+  config.activate.on-profile: local

@@ -48,4 +48,11 @@ public class AuditingModifierProxy {
         }
         return auditingModifier.modifier();
     }
+
+    public boolean fallbackClientIp() {
+        if (auditingModifier == null) {
+            return false;
+        }
+        return auditingModifier.fallbackClientIp();
+    }
 }

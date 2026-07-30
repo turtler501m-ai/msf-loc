@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.eformsign.feature.adapter.repository.mybatis.smartform.mapper.EformMapper">
+
+  <select id="verifyNewChangeFormPw" resultType="boolean">
+    SELECT EXISTS (
+    SELECT 1
+    FROM msf_request mr
+    INNER JOIN msf_request_cstmr mrc
+    ON mr.request_key = mrc.request_key
+    WHERE mr.request_key::text = #{requestKey}
+    <choose>
+      <when test="password != null and password.length() == 8">
+        AND (
+        mrc.cstmr_native_birth::text = #{password}
+        OR mrc.cstmr_foreigner_birth::text = #{password}
+        )
+      </when>
+      <when test="password != null and password.length() == 10">
+        AND mrc.cstmr_juridical_biz_no::text = #{password}
+      </when>
+      <when test="password != null and password.length() == 6">
+        AND (
+        (mrc.cstmr_juridical_biz_no IS NULL
+        OR TRIM(mrc.cstmr_juridical_biz_no::text) = '')
+        AND LEFT(mrc.cstmr_juridical_rrn::text, 6) = #{password}
+        )
+      </when>
+      <otherwise>
+        AND 1 = 0
+      </otherwise>
+    </choose>
+    )
+  </select>
+
+  <select id="verifyServiceChangeFormPw" resultType="boolean">
+    SELECT EXISTS (
+    SELECT 1
+    FROM msf_request_svc_chg mr
+    INNER JOIN msf_request_cstmr mrc
+    ON mr.request_key = mrc.request_key
+    WHERE mr.request_key::text = #{requestKey}
+    <choose>
+      <when test="password != null and password.length() == 8">
+        AND (
+        mrc.cstmr_native_birth::text = #{password}
+        OR mrc.cstmr_foreigner_birth::text = #{password}
+        )
+      </when>
+      <when test="password != null and password.length() == 10">
+        AND mrc.cstmr_juridical_biz_no::text = #{password}
+      </when>
+      <when test="password != null and password.length() == 6">
+        AND (
+        (mrc.cstmr_juridical_biz_no IS NULL
+        OR TRIM(mrc.cstmr_juridical_biz_no::text) = '')
+        AND LEFT(mrc.cstmr_juridical_rrn::text, 6) = #{password}
+        )
+      </when>
+      <otherwise>
+        AND 1 = 0
+      </otherwise>
+    </choose>
+    )
+  </select>
+
+  <select id="verifyOwnerChangeFormPw" resultType="boolean">
+    SELECT EXISTS (
+    SELECT 1
+    FROM msf_request_name_chg mr
+    INNER JOIN msf_request_cstmr mrc
+    ON mr.request_key = mrc.request_key
+    WHERE mr.request_key::text = #{requestKey}
+    <choose>
+      <when test="password != null and password.length() == 8">
+        AND (
+        mrc.cstmr_native_birth::text = #{password}
+        OR mrc.cstmr_foreigner_birth::text = #{password}
+        )
+      </when>
+      <when test="password != null and password.length() == 10">
+        AND mrc.cstmr_juridical_biz_no::text = #{password}
+      </when>
+      <when test="password != null and password.length() == 6">
+        AND (
+        (mrc.cstmr_juridical_biz_no IS NULL
+        OR TRIM(mrc.cstmr_juridical_biz_no::text) = '')
+        AND LEFT(mrc.cstmr_juridical_rrn::text, 6) = #{password}
+        )
+      </when>
+      <otherwise>
+        AND 1 = 0
+      </otherwise>
+    </choose>
+    )
+  </select>
+
+  <select id="verifyTerminationFormPw" resultType="boolean">
+    SELECT EXISTS (
+    SELECT 1
+    FROM msf_request_cancel mr
+    INNER JOIN msf_request_cstmr mrc
+    ON mr.request_key = mrc.request_key
+    WHERE mr.request_key::text = #{requestKey}
+    <choose>
+      <when test="password != null and password.length() == 8">
+        AND (
+        mrc.cstmr_native_birth::text = #{password}
+        OR mrc.cstmr_foreigner_birth::text = #{password}
+        )
+      </when>
+      <when test="password != null and password.length() == 10">
+        AND mrc.cstmr_juridical_biz_no::text = #{password}
+      </when>
+      <when test="password != null and password.length() == 6">
+        AND (
+        (mrc.cstmr_juridical_biz_no IS NULL
+        OR TRIM(mrc.cstmr_juridical_biz_no::text) = '')
+        AND LEFT(mrc.cstmr_juridical_rrn::text, 6) = #{password}
+        )
+      </when>
+      <otherwise>
+        AND 1 = 0
+      </otherwise>
+    </choose>
+    )
+  </select>
+
+  <insert id="insertRequestJoinForm" parameterType="com.ktmmobile.msf.domains.shared.form.common.complete.domain.entity.CompletedRequestJoinForm">
+    <selectKey keyProperty="requestRecvSeq" resultType="long" order="BEFORE">
+      select nextval('sq_request_recv_seq'::regclass)
+    </selectKey>
+    insert into msf_request_join_form (
+      request_recv_seq,
+      request_key,
+      recv_type_cd,
+      fax_no,
+      cstmr_zipcd,
+      cstmr_adr,
+      cstmr_adr_dtl,
+      cstmr_email_adr,
+      cstmr_mobile_no,
+      proc_cd,
+      etc_memo
+    ) values (
+      #{requestRecvSeq},
+      #{requestKey},
+      #{recvTypeCd},
+      #{faxNo},
+      #{cstmrZipcd},
+      #{cstmrAdr},
+      #{cstmrAdrDtl},
+      #{cstmrEmailAdr},
+      #{cstmrMobileNo},
+      #{procCd},
+      #{etcMemo}
+    )
+  </insert>
+
+  <update id="updateRequestJoinForm" parameterType="com.ktmmobile.msf.domains.shared.form.common.complete.domain.entity.CompletedRequestJoinForm">
+    update msf_request_join_form
+       set proc_cd = #{procCd}
+         , etc_memo = #{etcMemo}
+     where request_recv_seq = #{requestRecvSeq}
+  </update>
+
+  <select id="selectR14ScanIdOfSvcChgDtl" resultType="string">
+    select scan_id
+      from msf_request_svc_chg_dtl
+     where request_key = #{value}
+       and svc_tgt_cd = 'R14'
+       and res_cd = '0000'
+  </select>
+</mapper>

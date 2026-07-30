@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>인식 실패 - OCR Service</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100dvh; /* dynamic viewport height */
+        background-color: #f8f9fa;
+        overflow: hidden; /* 스크롤바 절대 금지 */
+        touch-action: none; /* 화면 밀어서 스크롤되는 현상 방지 */
+      }
+      .error-container {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
+        justify-content: center;
+        width: 90%;
+        max-width: 400px;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        padding: 40px 20px;
+        text-align: center;
+      }
+      .icon-circle {
+        width: 70px;
+        height: 70px;
+        background: #fff1f0;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 24px;
+      }
+      .error-title {
+        font-size: 22px;
+        font-weight: 700;
+        margin-bottom: 12px;
+        color: #1a1a1a;
+      }
+      .error-msg {
+        font-size: 15px;
+        color: #666;
+        line-height: 1.6;
+        margin-bottom: 30px;
+      }
+      .guide-list {
+        background: #f0f4ff;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: left;
+        margin-bottom: 30px;
+      }
+      .guide-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: #3a6fe3;
+        margin-bottom: 10px;
+        display: block;
+      }
+      .guide-list ul {
+        margin: 0;
+        padding-left: 20px;
+        font-size: 13px;
+        color: #555;
+        line-height: 1.8;
+      }
+      .btn-retry {
+        display: block;
+        background: #3a6fe3;
+        color: white;
+        text-decoration: none;
+        padding: 16px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 16px;
+        transition: 0.2s;
+      }
+      .btn-retry:active {
+        background: #2d56b3;
+        transform: scale(0.98);
+      }
+      @media screen and (orientation: landscape) {
+        body {
+          overflow: hidden; /* 스크롤 절대 방지 */
+          height: 100dvh;
+        }
+
+        .error-container {
+          height: 90dvh;    /* 컨테이너가 화면 높이의 90%만 차지 */
+          padding: 2dvh 20px; /* 위아래 패딩을 화면 높이에 맞게 축소 */
+          gap: 2dvh;        /* 요소 사이 간격을 화면 높이에 맞게 축소 */
+          justify-content: space-evenly;
+        }
+
+        .icon-circle {
+          width: 10dvh;     /* 아이콘 크기 축소 */
+          height: 10dvh;
+          margin-bottom: 0;
+        }
+
+        .icon-circle svg {
+          width: 5dvh;
+          height: 5dvh;
+        }
+
+        .error-title {
+          font-size: 18px;  /* 글자 크기 살짝 조정 */
+          margin-bottom: 0;
+        }
+
+        .error-msg {
+          font-size: 13px;
+          margin-bottom: 0;
+        }
+
+        .guide-list {
+          padding: 1.5dvh 15px; /* 가이드 박스 축소 */
+          margin-bottom: 0;
+        }
+
+        .guide-list ul {
+          line-height: 1.4;
+          font-size: 12px;
+        }
+
+        .btn-retry {
+          padding: 1.5dvh;   /* 버튼 두께 축소 */
+          font-size: 14px;
+          width: 80%;       /* 버튼이 너무 넓어지지 않게 조정 */
+          margin: 0 auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="error-container">
+      <div class="icon-circle">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ff4d4f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+      </div>
+      <div class="error-title">인식에 실패했습니다</div>
+      <div class="error-msg" id="display-msg">요청하신 문서를 처리하는 중에<br />문제가 발생했습니다.</div>
+
+      <div class="guide-list">
+        <span class="guide-title">💡 이렇게 해보세요</span>
+        <ul>
+          <li>너무 어둡거나 빛 반사가 심하지 않은지 확인</li>
+          <li>가이드 영역 안에 맞춰서 배치</li>
+          <li>흔들림이 없도록 고정 후 재시도</li>
+        </ul>
+      </div>
+
+      <a
+        href="#"
+        class="btn-retry"
+        onclick="
+          history.back();
+          return false;
+        "
+        >다시 시도하기</a
+      >
+    </div>
+
+    <script>
+      // URL 파라미터로 받은 메시지가 있으면 교체
+      const params = new URLSearchParams(window.location.search);
+      const msg = params.get("msg");
+      if (msg) {
+        document.getElementById("display-msg").innerText = msg;
+      }
+    </script>
+  </body>
+</html>

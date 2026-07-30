@@ -1,0 +1,357 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="MspAppformMapper">
+
+  <select id="getCopyMcpRequest"
+          parameterType="com.ktmmobile.msf.domains.form.common.dto.AppformReqDto"
+          resultType="com.ktmmobile.msf.domains.form.common.dto.AppformReqDto">
+    SELECT
+        REQ_PAY_TYPE
+      , CLAUSE_PRI_COLLECT_FLAG
+      , CLAUSE_PRI_OFFER_FLAG
+      , CLAUSE_ESS_COLLECT_FLAG
+      , CLAUSE_PRI_TRUST_FLAG
+      , CLAUSE_PRI_AD_FLAG
+      , CLAUSE_CONFIDENCE_FLAG
+      , NW_BLCK_AGRM_YN
+      , APP_BLCK_AGRM_YN
+      , SO_TRNS_AGRM_YN
+      , CLAUSE_RENTAL_MODEL_CP
+      , CLAUSE_RENTAL_MODEL_CP_PR
+      , CLAUSE_RENTAL_SERVICE
+      , CLAUSE_FINANCE_FLAG
+      , CSTMR_FOREIGNER_NATION
+      , CSTMR_FOREIGNER_PN
+      , CSTMR_FOREIGNER_RRN
+      , CSTMR_FOREIGNER_SDATE
+      , CSTMR_FOREIGNER_EDATE
+      , CSTMR_PRIVATE_CNAME
+      , CSTMR_PRIVATE_NUMBER
+      , CSTMR_JURIDICAL_CNAME
+      , CSTMR_JURIDICAL_RRN
+      , CSTMR_JURIDICAL_NUMBER
+      , CSTMR_TEL_FN
+      , CSTMR_TEL_MN
+      , CSTMR_TEL_RN
+      , CSTMR_MOBILE_FN
+      , CSTMR_MOBILE_MN
+      , CSTMR_MOBILE_RN
+      , CSTMR_POST
+      , CSTMR_ADDR
+      , CSTMR_ADDR_DTL
+      , CSTMR_ADDR_BJD
+      , CSTMR_BILL_SEND_CODE
+      , CSTMR_MAIL
+      , CSTMR_MAIL_RECEIVE_FLAG
+      , CSTMR_VISIT_TYPE
+      , CSTMR_RECEIVE_TEL_FN
+      , CSTMR_RECEIVE_TEL_NM
+      , CSTMR_RECEIVE_TEL_RN
+      , OTHERS_PAYMENT_AG
+      , OTHERS_PAYMENT_NM
+      , OTHERS_PAYMENT_RRN
+      , OTHERS_PAYMENT_RELATION
+      , OTHERS_PAYMENT_RNM
+      , CSTMR_NAME
+      , CSTMR_NATIVE_RRN
+      , SELF_INQRY_AGRM_YN
+      , SELF_CERT_TYPE
+      , SELF_ISSU_EXPR_DT
+      , SELF_ISSU_NUM
+      , REQ_BANK
+      , REQ_ACCOUNT_NAME
+      , REQ_ACCOUNT_RRN
+      , REQ_ACCOUNT_RELATION
+      , REQ_ACCOUNT_NUMBER
+      , REQ_CARD_NAME
+      , REQ_CARD_RRN
+      , REQ_CARD_COMPANY
+      , REQ_CARD_NO
+      , REQ_CARD_YY
+      , REQ_CARD_MM
+      , REQ_WIRE_TYPE
+      , MODEL_ID
+      , MODEL_SALE_POLICY_CODE
+      , MINOR_SELF_CERT_TYPE
+      , MINOR_SELF_ISSU_EXPR_DT
+      , MINOR_SELF_ISSU_NUM
+      , FATH_MOBILE_FN
+      , FATH_MOBILE_MN
+      , FATH_MOBILE_RN
+    FROM (
+      SELECT
+          T1.REQ_PAY_TYPE
+        , T1.CLAUSE_PRI_COLLECT_FLAG
+        , T1.CLAUSE_PRI_OFFER_FLAG
+        , T1.CLAUSE_ESS_COLLECT_FLAG
+        , T1.CLAUSE_PRI_TRUST_FLAG
+        , T1.CLAUSE_PRI_AD_FLAG
+        , T1.CLAUSE_CONFIDENCE_FLAG
+        , T1.NW_BLCK_AGRM_YN
+        , T1.APP_BLCK_AGRM_YN
+        , T1.SO_TRNS_AGRM_YN
+        , T1.CLAUSE_RENTAL_MODEL_CP
+        , T1.CLAUSE_RENTAL_MODEL_CP_PR
+        , T1.CLAUSE_RENTAL_SERVICE
+        , T1.CLAUSE_FINANCE_FLAG
+        , T2.CSTMR_FOREIGNER_NATION
+        , T2.CSTMR_FOREIGNER_PN
+        , T2.CSTMR_FOREIGNER_RRN
+        , T2.CSTMR_FOREIGNER_SDATE
+        , T2.CSTMR_FOREIGNER_EDATE
+        , T2.CSTMR_PRIVATE_CNAME
+        , T2.CSTMR_PRIVATE_NUMBER
+        , T2.CSTMR_JURIDICAL_CNAME
+        , T2.CSTMR_JURIDICAL_RRN
+        , T2.CSTMR_JURIDICAL_NUMBER
+        , T2.CSTMR_TEL_FN
+        , T2.CSTMR_TEL_MN
+        , T2.CSTMR_TEL_RN
+        , T2.CSTMR_MOBILE_FN
+        , T2.CSTMR_MOBILE_MN
+        , T2.CSTMR_MOBILE_RN
+        , T2.FATH_MOBILE_FN
+        , T2.FATH_MOBILE_MN
+        , T2.FATH_MOBILE_RN
+        , T2.CSTMR_POST
+        , T2.CSTMR_ADDR
+        , T2.CSTMR_ADDR_DTL
+        , T2.CSTMR_ADDR_BJD
+        , T2.CSTMR_BILL_SEND_CODE
+        , T2.CSTMR_MAIL
+        , T2.CSTMR_MAIL_RECEIVE_FLAG
+        , T2.CSTMR_VISIT_TYPE
+        , T2.CSTMR_RECEIVE_TEL_FN
+        , T2.CSTMR_RECEIVE_TEL_NM
+        , T2.CSTMR_RECEIVE_TEL_RN
+        , T2.OTHERS_PAYMENT_AG
+        , T2.OTHERS_PAYMENT_NM
+        , T2.OTHERS_PAYMENT_RRN
+        , T2.OTHERS_PAYMENT_RELATION
+        , T2.OTHERS_PAYMENT_RNM
+        , T2.CSTMR_NAME
+        , T2.CSTMR_NATIVE_RRN
+        , T2.SELF_INQRY_AGRM_YN
+        , T2.SELF_CERT_TYPE
+        , T2.SELF_ISSU_EXPR_DT
+        , T2.SELF_ISSU_NUM
+        , T3.REQ_BANK
+        , T3.REQ_ACCOUNT_NAME
+        , T3.REQ_ACCOUNT_RRN
+        , T3.REQ_ACCOUNT_RELATION
+        , T3.REQ_ACCOUNT_NUMBER
+        , T3.REQ_CARD_NAME
+        , T3.REQ_CARD_RRN
+        , T3.REQ_CARD_COMPANY
+        , T3.REQ_CARD_NO
+        , T3.REQ_CARD_YY
+        , T3.REQ_CARD_MM
+        , T3.REQ_WIRE_TYPE
+        , T4.MODEL_ID
+        , T4.MODEL_SALE_POLICY_CODE
+        , T4.USIM_PAY_MTHD_CD
+        , T5.MINOR_SELF_CERT_TYPE
+        , T5.MINOR_SELF_ISSU_EXPR_DT
+        , T5.MINOR_SELF_ISSU_NUM
+      FROM
+          MCP_REQUEST@DL_MCP T1
+        , MCP_REQUEST_CSTMR@DL_MCP T2
+        , MCP_REQUEST_REQ@DL_MCP T3
+        , MCP_REQUEST_SALEINFO@DL_MCP T4
+        , MCP_REQUEST_AGENT@DL_MCP T5
+      WHERE 1 = 1
+        AND T1.REQUEST_KEY = T2.REQUEST_KEY
+        AND T1.REQUEST_KEY = T3.REQUEST_KEY
+        AND T1.REQUEST_KEY = T4.REQUEST_KEY
+        AND T1.REQUEST_KEY = T5.REQUEST_KEY(+)
+        AND T1.OPER_TYPE NOT IN ('HDN3', 'HCN3')
+        <choose>
+          <when test="contractNum != null and contractNum != ''">
+            AND T1.CONTRACT_NUM = #{contractNum}
+          </when>
+          <otherwise>
+            AND 1 = 0
+          </otherwise>
+        </choose>
+      ORDER BY T1.REQUEST_STATE_CODE DESC, T1.SYS_RDATE
+    )
+    WHERE ROWNUM = 1
+  </select>
+
+  <select id="requestOsstCount"
+          parameterType="com.ktmmobile.msf.domains.form.common.dto.McpRequestOsstDto"
+          resultType="java.lang.Integer">
+    SELECT COUNT(1)
+    FROM MCP_REQUEST_OSST@DL_MCP T1
+    WHERE 1 = 1
+      AND T1.MVNO_ORD_NO = LPAD(#{mvnoOrdNo}, 14, '0')
+      AND T1.PRGR_STAT_CD = #{prgrStatCd}
+      <if test="rsltCd != null and rsltCd != ''">
+        AND T1.RSLT_CD = #{rsltCd}
+      </if>
+  </select>
+
+  <select id="getRequestOsst"
+          parameterType="com.ktmmobile.msf.domains.form.common.dto.McpRequestOsstDto"
+          resultType="com.ktmmobile.msf.domains.form.common.dto.McpRequestOsstDto">
+    SELECT
+        MVNO_ORD_NO
+      , SEQ
+      , OSST_ORD_NO
+      , PRGR_STAT_CD
+      , CUST_ID
+      , SVC_CNTR_NO
+      , RSLT_CD
+      , RSLT_MSG
+      , RSLT_DT
+      , NSTEP_GLOBAL_ID
+      , PRDC_CHK_NOTI_MSG
+      , NP_BCNTR_TYPE_CD
+      , NP_FEE
+      , NP_NCHRG_AMT
+      , NP_PNLT_AMT
+      , NP_UNPAY_AMT
+      , NP_HNDST_INST_AMT
+      , NP_PREPAY_AMT
+      , NP_BASE_CHRG_AMT
+      , NP_NTNL_CHRG_AMT
+      , NP_INTL_CHRG_AMT
+      , NP_ADD_CHRG_AMT
+      , NP_ETC_CHRG_AMT
+      , NP_VAT
+      , NP_RMN_STRT_DT
+      , NP_RMN_END_DT
+      , TLPH_NO_STAT_CD
+      , ASGN_AGNC_ID
+      , TLPH_NO_OWN_CMPN_CD
+      , OPEN_SVC_IND_CD
+      , ENCD_TLPH_NO
+      , TLPH_NO
+      , IF_TYPE
+      , REGST_DTTM
+    FROM (
+      SELECT
+          MVNO_ORD_NO
+        , SEQ
+        , OSST_ORD_NO
+        , PRGR_STAT_CD
+        , CUST_ID
+        , SVC_CNTR_NO
+        , RSLT_CD
+        , RSLT_MSG
+        , RSLT_DT
+        , NSTEP_GLOBAL_ID
+        , PRDC_CHK_NOTI_MSG
+        , NP_BCNTR_TYPE_CD
+        , NP_FEE
+        , NP_NCHRG_AMT
+        , NP_PNLT_AMT
+        , NP_UNPAY_AMT
+        , NP_HNDST_INST_AMT
+        , NP_PREPAY_AMT
+        , NP_BASE_CHRG_AMT
+        , NP_NTNL_CHRG_AMT
+        , NP_INTL_CHRG_AMT
+        , NP_ADD_CHRG_AMT
+        , NP_ETC_CHRG_AMT
+        , NP_VAT
+        , NP_RMN_STRT_DT
+        , NP_RMN_END_DT
+        , TLPH_NO_STAT_CD
+        , ASGN_AGNC_ID
+        , TLPH_NO_OWN_CMPN_CD
+        , OPEN_SVC_IND_CD
+        , ENCD_TLPH_NO
+        , TLPH_NO
+        , IF_TYPE
+        , REGST_DTTM
+      FROM MCP_REQUEST_OSST@DL_MCP T1
+      WHERE 1 = 1
+        AND T1.MVNO_ORD_NO = LPAD(#{mvnoOrdNo}, 14, '0')
+        AND T1.PRGR_STAT_CD = #{prgrStatCd}
+      ORDER BY SEQ DESC
+    )
+    WHERE ROWNUM = 1
+  </select>
+
+  <insert id="insertMcpRequestOsst"
+          parameterType="com.ktmmobile.msf.domains.form.common.dto.McpRequestOsstDto">
+    INSERT INTO MCP_REQUEST_OSST@DL_MCP (
+        MVNO_ORD_NO
+      , SEQ
+      , OSST_ORD_NO
+      , PRGR_STAT_CD
+      , RSLT_CD
+      , TLPH_NO_STAT_CD
+      , ASGN_AGNC_ID
+      , TLPH_NO_OWN_CMPN_CD
+      , OPEN_SVC_IND_CD
+      , ENCD_TLPH_NO
+      , TLPH_NO
+      , IF_TYPE
+      , NSTEP_GLOBAL_ID
+      , REGST_DTTM
+      , RSLT_DT
+    ) VALUES (
+        LPAD(#{mvnoOrdNo}, 14, '0')
+      , NVL((SELECT MAX(SEQ + 1) FROM MCP_REQUEST_OSST@DL_MCP WHERE MVNO_ORD_NO = LPAD(#{mvnoOrdNo}, 14, '0')), 1)
+      , #{osstOrdNo}
+      , #{prgrStatCd}
+      , #{rsltCd}
+      , #{tlphNoStatCd}
+      , #{asgnAgncId}
+      , #{tlphNoOwnCmpnCd}
+      , #{openSvcIndCd}
+      , #{encdTlphNo}
+      , #{tlphNo}
+      , NVL(#{ifType, jdbcType=VARCHAR}, 'WEB')
+      , #{nstepGlobalId}
+      , SYSDATE
+      , TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+    )
+  </insert>
+
+  <select id="getCodeNmDto"
+          parameterType="com.ktmmobile.msf.domains.form.common.dto.NmcpCdDtlDto"
+          resultType="com.ktmmobile.msf.domains.form.common.dto.NmcpCdDtlDto">
+    SELECT
+        CD_GROUP_ID
+      , DTL_CD
+      , DTL_CD_NM
+      , DTL_CD_DESC
+      , INDC_ODRG
+      , USE_YN
+      , EXPNSN_STR_VAL1
+      , EXPNSN_STR_VAL2
+      , EXPNSN_STR_VAL3
+    FROM NMCP_CD_DTL@DL_MCP
+    WHERE CD_GROUP_ID = #{cdGroupId}
+      AND DTL_CD = #{dtlCd}
+      AND ROWNUM = 1
+  </select>
+
+  <select id="getMspCommonCodeEtc1"
+          parameterType="map"
+          resultType="java.lang.String">
+    SELECT ETC1
+    FROM CMN_GRP_CD_MST
+    WHERE GRP_ID = #{grpId}
+      AND CD_VAL = #{cdVal}
+      AND ROWNUM = 1
+  </select>
+
+  <select id="getMcpAdditionList"
+          parameterType="com.ktmmobile.msf.domains.form.common.dto.AppformReqDto"
+          resultType="java.util.HashMap">
+    SELECT
+        ADDITION_KEY AS "additionKey"
+      , ADDITION_NAME AS "additionNm"
+      , NVL(RANTAL, 0) AS "rantal"
+    FROM MCP_ADDITION@DL_MCP
+    WHERE ADDITION_KEY IN
+    <foreach item="item" collection="additionKeyList" open="(" separator="," close=")">
+      #{item}
+    </foreach>
+  </select>
+
+</mapper>

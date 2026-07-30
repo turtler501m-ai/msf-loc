@@ -11,7 +11,9 @@
           v-model="model.termsAgreed"
           :description="description"
           :required="required"
+          :only-required="true"
           @checked="handleChecked"
+          :disabled="props.disabled"
         />
       </MsfFormGroup>
     </MsfStack>
@@ -20,11 +22,14 @@
 
 <script setup>
 import { ref, defineModel, defineProps, watch } from 'vue'
+import { showAlert } from '@/libs/utils/comp.utils'
 
 const props = defineProps({
   title: { type: String, default: '약관 동의' },
   description: { type: String, default: '' },
   required: { type: Boolean, default: false },
+  disabled: { type: Boolean, default: false },
+  isSaved: { type: Boolean, default: false },
   policy: { type: String, default: 'CLAUSE_FORM_01' },
   specTerms: {
     type: Array,
@@ -53,12 +58,15 @@ const handleChecked = (result) => {
   if (result && Array.isArray(result)) {
     result.forEach((item) => {
       const code = item.code
-      // 만약 model 객체에 해당 code와 일치하는 키가 있다면 값 업데이트
-      if (Object.prototype.hasOwnProperty.call(model.value, code)) {
-        if (typeof model.value[code] === 'boolean') {
-          model.value[code] = item.checked
+      const termData = props.termsData?.find((t) => t.code === code)
+      const targetKey = termData?.id || code
+
+      // 만약 model 객체에 해당 targetKey와 일치하는 키가 있다면 값 업데이트
+      if (Object.prototype.hasOwnProperty.call(model.value, targetKey)) {
+        if (typeof model.value[targetKey] === 'boolean') {
+          model.value[targetKey] = item.checked
         } else {
-          model.value[code] = item.checked ? 'Y' : 'N'
+          model.value[targetKey] = item.checked ? 'Y' : 'N'
         }
       }
     })
@@ -72,9 +80,6 @@ watch(
   () => props.termsData,
   (newTermsData) => {
     if (newTermsData && newTermsData.length > 0) {
-      // 모든 항목(필수+선택)이 체크되었는지 확인하여 model.termsAgreed 업데이트
-      const allChecked = newTermsData.every((term) => isCheckedField(term.checked))
-      model.value.termsAgreed = allChecked
       lastCheckedResult.value = newTermsData
     }
   },
@@ -114,5 +119,15 @@ const reset = () => {
   model.value.termsAgreed = false
 }
 
-defineExpose({ validate, setAllChecked, reset })
+const checkValidation = () => {
+  if (!validate()) {
+    showAlert(`${props.title}가 필요합니다`, () => {
+      agreementRef.value?.focus()
+    })
+    return false
+  }
+  return true
+}
+
+defineExpose({ validate, setAllChecked, reset, checkValidation })
 </script>

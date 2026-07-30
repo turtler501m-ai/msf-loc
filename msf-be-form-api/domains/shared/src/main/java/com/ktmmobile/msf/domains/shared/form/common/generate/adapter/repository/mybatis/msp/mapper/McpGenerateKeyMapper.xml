@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.shared.form.common.generate.adapter.repository.mybatis.msp.mapper.McpGenerateKeyMapper">
+
+  <select id="selectGeneratedResNo" resultType="string">
+    SELECT MCP_MNG.SQ_RCP_RES_NO_01.NEXTVAL@DL_MCP FROM DUAL
+  </select>
+
+  <select id="selectGeneratedRequestKey" resultType="long">
+    SELECT MCP_MNG.SQ_RCP_REQUEST_KEY_01.NEXTVAL@DL_MCP FROM DUAL
+  </select>
+
+  <select id="selectGeneratedCustRequestSeq" resultType="long">
+    SELECT TO_NUMBER(TO_CHAR(SYSDATE, 'YYYYMMDD') || TRIM(TO_CHAR(MCP_MNG.NMCP_CUST_REQUEST_SEQ.NEXTVAL@DL_MCP, '00000'))) FROM DUAL
+  </select>
+
+  <select id="selectGeneratedRequestStateSeq" resultType="java.lang.Long">
+    SELECT NEXTVAL('SQ_REQUEST_STATE_SEQ')
+    <!--SELECT ( TO_CHAR(NOW(), 'YYYYMMDD') || LPAD(NEXTVAL('SQ_REQUEST_STATE_SEQ')::TEXT, 5, '0'))-->
+  </select>
+</mapper>

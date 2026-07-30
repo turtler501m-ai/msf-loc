@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.externalclient.nice.adapter.repository.mybatis.smartform.mapper.NiceApiLogMapper">
+
+  <insert id="insertAccountCheckLog" parameterType="com.ktmmobile.msf.domains.externalclient.nice.domain.entity.NiceApiAccountCheckLog">
+    insert into msf_nice_log (
+      n_certify,
+      n_auth_type_cd,
+      n_ip,
+      n_nm,
+      n_gender_cd,
+      n_auth_birth,
+      n_bank_cd,
+      n_account_no,
+      n_result,
+      n_error_cd,
+      n_cret_dt,
+      n_referer
+    ) values (
+      #{certifyType},
+      #{authTypeCode},
+      #{ip},
+      #{name},
+      #{genderCode},
+      #{authBirth},
+      #{bankCode},
+      #{accountNo},
+      #{result},
+      #{errorCode},
+      now(),
+      #{referer}
+    )
+  </insert>
+
+</mapper>

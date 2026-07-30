@@ -6,33 +6,41 @@
     @open="onOpen"
     @close="onClose"
   >
-    <!-- 팝업 내용 -->
-    <MsfStack vertical type="formgroups">
+    <template #navBar>
       <MsfSelect
-        title="추천 부가서비스"
-        v-model="service"
-        :options="recommendOptions"
-        placeholder="추천 부가서비스"
+        title="부가서비스 카테고리"
+        v-model="selectedCategory"
+        :options="planCategoryOptions"
+        placeholder="카테고리를 선택하세요"
       />
+    </template>
 
+    <!-- 팝업 내용 -->
+      <template v-if="showFreeSection">
       <MsfTitleArea title="무료 부가 서비스" level="2" class="ut-mt-20" />
       <MsfTable>
         <template #colgroup>
           <col style="width: 68px" />
-          <col />
-          <col style="width: 120px" />
-          <col style="width: 112px" />
+          <col :style="{ width: codeColWidth + 'px' }" />
+          <col class="service-name-col" />
+          <col style="width: 160px" />
+          <col style="width: 125px" />
         </template>
         <template #thead>
           <tr>
             <th>선택</th>
-            <th>부가서비스명</th>
+            <th class="code-col-th" :style="{ width: codeColWidth + 'px' }">
+              <span v-if="codeColWidth >= 30">부가서비스코드</span>
+            </th>
+            <th class="service-name-th">
+              <span class="code-col-resize-handle" @mousedown.prevent="startCodeColResize" title="드래그하여 부가서비스코드 컬럼 표시"></span>
+              부가서비스명
+            </th>
             <th>요금</th>
             <th>설정</th>
           </tr>
         </template>
         <template #tbody>
-          <template v-if="freeVasOptions.length > 0">
             <tr v-for="opt in freeVasOptions" :key="opt.value">
               <td class="ut-text-center">
                 <MsfCheckbox
@@ -41,75 +49,78 @@
                   :value="opt.value"
                   :label="opt.name"
                   hideLabel
+                  :disabled="isCancelDisabled(opt)"
                 />
               </td>
-              <td><label :for="`popup-free-${opt.value}`">{{ opt.name }}</label></td>
-              <td class="ut-text-center">{{ getAmountLabel(opt) }}</td>
-              <td class="ut-text-center">
+              <td class="service-code-cell ut-text-center" :style="{ maxWidth: codeColWidth + 'px', padding: codeColWidth < 10 ? '0' : undefined }">{{ opt.value }}</td>
+              <td class="service-name-cell"><label :for="`popup-free-${opt.value}`">{{ opt.name }}</label></td>
+              <td class="ut-text-center amount-cell">{{ getAmountLabel(opt) }}</td>
+              <td class="ut-text-center setting-cell">
                 <MsfButton
                   v-if="opt.settingYn === 'Y' && getSettingModalType(opt) && getSettingModalType(opt) !== 'autoDefault'"
                   variant="subtle"
                   style="white-space: nowrap"
-
+                  :disabled="isActiveService(opt.value)"
                   @click="onSettingClick(opt)"
-                >{{ serviceSettingMap[opt.value] ? '설정완료' : '설정' }}</MsfButton>
+                >{{ serviceSettingMap[opt.value] || isActiveService(opt.value) ? '설정완료' : '설정' }}</MsfButton>
               </td>
             </tr>
-          </template>
-          <tr v-else>
-            <td colspan="4"><div class="nodata-wrap">추가 가능한 무료 부가서비스가 없습니다.</div></td>
-          </tr>
         </template>
       </MsfTable>
+      </template>
 
+      <template v-if="showPaidSection">
       <MsfTitleArea title="유료 부가 서비스" level="2" class="ut-mt-20" />
       <MsfTable>
         <template #colgroup>
           <col style="width: 68px" />
-          <col />
-          <col style="width: 120px" />
-          <col style="width: 112px" />
+          <col :style="{ width: codeColWidth + 'px' }" />
+          <col class="service-name-col" />
+          <col style="width: 160px" />
+          <col style="width: 125px" />
         </template>
         <template #thead>
           <tr>
             <th>선택</th>
-            <th>부가서비스명</th>
+            <th class="code-col-th" :style="{ width: codeColWidth + 'px' }">
+              <span v-if="codeColWidth >= 30">부가서비스코드</span>
+            </th>
+            <th class="service-name-th">
+              <span class="code-col-resize-handle" @mousedown.prevent="startCodeColResize" title="드래그하여 부가서비스코드 컬럼 표시"></span>
+              부가서비스명
+            </th>
             <th>요금</th>
             <th>설정</th>
           </tr>
         </template>
         <template #tbody>
-          <template v-if="paidVasOptions.length > 0">
             <tr v-for="opt in paidVasOptions" :key="opt.value">
-              <td class="ut-text-center">
+              <td class="ut-text-center setting-cell">
                 <MsfCheckbox
                   :id="`popup-paid-${opt.value}`"
                   v-model="paidService"
                   :value="opt.value"
                   :label="opt.name"
                   hideLabel
+                  :disabled="isCancelDisabled(opt)"
                 />
               </td>
-              <td><label :for="`popup-paid-${opt.value}`">{{ opt.name }}</label></td>
-              <td class="ut-text-center">{{ getAmountLabel(opt) }}</td>
+              <td class="service-code-cell ut-text-center" :style="{ maxWidth: codeColWidth + 'px', padding: codeColWidth < 10 ? '0' : undefined }">{{ opt.value }}</td>
+              <td class="service-name-cell"><label :for="`popup-paid-${opt.value}`">{{ opt.name }}</label></td>
+              <td class="ut-text-center amount-cell">{{ getAmountLabel(opt) }}</td>
               <td class="ut-text-center">
                 <MsfButton
                   v-if="opt.settingYn === 'Y' && getSettingModalType(opt) && getSettingModalType(opt) !== 'autoDefault'"
                   variant="subtle"
                   style="white-space: nowrap"
-
+                  :disabled="isActiveService(opt.value)"
                   @click="onSettingClick(opt)"
-                >{{ serviceSettingMap[opt.value] ? '설정완료' : '설정' }}</MsfButton>
+                >{{ serviceSettingMap[opt.value] || isActiveService(opt.value) ? '설정완료' : '설정' }}</MsfButton>
               </td>
             </tr>
-          </template>
-          <tr v-else>
-            <td colspan="4"><div class="nodata-wrap">추가 가능한 유료 부가서비스가 없습니다.</div></td>
-          </tr>
         </template>
       </MsfTable>
-    </MsfStack>
-
+      </template>
     <!-- 하단 고정 -->
     <template #footer>
       <MsfButtonGroup>
@@ -123,7 +134,7 @@
   <MsfIllegalTmBlockModal
     :model-value="showSettingModal && settingModalType === 'illegalTm'"
     :max-count="50"
-    :min-length="0"
+    :min-length="3"
     :setting-data="currentSettingData"
     @update:model-value="closeSettingModal"
     @close="closeSettingModal"
@@ -251,8 +262,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { getCommonCodeList } from '@/libs/utils/comn.utils'
+import { ref, computed, onMounted, watch } from 'vue'
+import { post } from '@/libs/api/msf.api'
 import MsfIllegalTmBlockModal from './MsfIllegalTmBlockModal.vue'
 import MsfInfoProviderBlockModal from './MsfInfoProviderBlockModal.vue'
 import MsfNumberSpoofingBlockModal from './MsfNumberSpoofingBlockModal.vue'
@@ -277,12 +288,34 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'open', 'close', 'confirm'])
 
 // ─── 서비스 선택 상태 ─────────────────────────────────────────────────────────
-const service = ref('')
+const selectedCategory = ref('')
 const freeService = ref([])
 const paidService = ref([])
-const recommendOptions = ref([])
+const planCategoryOptions = ref([])
 const freeVasOptions = ref([])
 const paidVasOptions = ref([])
+const ALWAYS_EXCLUDED_SERVICE_IDS = ['WIRELESSC']
+
+const showFreeSection = computed(() => freeVasOptions.value.length > 0)
+const showPaidSection = computed(() => paidVasOptions.value.length > 0)
+
+// ─── 부가서비스코드 컬럼 리사이즈 ─────────────────────────────────────────────
+const codeColWidth = ref(0)
+
+const startCodeColResize = (e) => {
+  e.preventDefault()
+  const startX = e.clientX
+  const startWidth = codeColWidth.value
+  const onMove = (ev) => {
+    codeColWidth.value = Math.max(0, startWidth + ev.clientX - startX)
+  }
+  const onUp = () => {
+    document.removeEventListener('mousemove', onMove)
+    document.removeEventListener('mouseup', onUp)
+  }
+  document.addEventListener('mousemove', onMove)
+  document.addEventListener('mouseup', onUp)
+}
 
 // ─── 설정 팝업 상태 ───────────────────────────────────────────────────────────
 const settingModalType = ref('')
@@ -320,43 +353,155 @@ const getSettingModalType = (svc = {}) => {
 // ─── 유틸리티 ─────────────────────────────────────────────────────────────────
 const toNumber = (value) => Number(String(value || 0).replace(/,/g, '')) || 0
 
-const getAmountLabel = (opt = {}) => {
-  const amount = opt.amount ?? 0
-  if (amount === 0) return '무료'
-  return `${Number(amount).toLocaleString()} 원`
+const isDailyFlatRateService = (svc = {}) => {
+  const values = [
+    svc.chargeUnit,
+    svc.rateUnit,
+    svc.chargePeriod,
+    svc.ratePeriod,
+    svc.periodUnit,
+    svc.periodUnitNm,
+    svc.feeType,
+    svc.chargeType,
+    svc.chargeTypeCd,
+    svc.rateType,
+    svc.rateTypeCd,
+    svc.socChargeType,
+    svc.socChargeTypeCd,
+    svc.addSvcChargeTypeCd,
+    svc.addSvcRateTypeCd,
+    svc.dailyRateYn,
+    svc.dayRateYn,
+    svc.dayChargeYn,
+    svc.dailyChargeYn,
+    svc.oneDayYn,
+    svc.oneDayChargeYn,
+    svc.flatRatePeriod,
+    svc.flatRatePeriodUnit,
+    svc.flatRatePeriodUnitNm,
+    svc.periodType,
+    svc.periodTypeCd,
+  ].map((value) => String(value || '').trim())
+
+  return values.some((value) => {
+    const upperValue = value.toUpperCase()
+    return (
+      ['일정액', '일', '1일', 'D', 'DAY', 'DAILY', 'Y'].includes(upperValue) ||
+      value.includes('일정액') ||
+      value.includes('일요금') ||
+      value.includes('1일')
+    )
+  })
 }
 
-const getServiceKey = (svc = {}) => String(svc.rateCd || svc.value || svc.soc || svc.prodId || svc.addSvcCd || '')
+const getAmountUnit = (svc = {}) => {
+  if (isDailyFlatRateService(svc)) return '1일'
+  return svc.chargeUnit || svc.rateUnit || ''
+}
+
+const getServiceKey = (svc = {}) => {
+  if (typeof svc === 'string') return svc
+  return String(svc.rateCd || svc.value || svc.soc || svc.prodId || svc.addSvcCd || svc.additionId || '')
+}
+
+const getDailyAdditionPeriod = (daily = {}) =>
+  daily.USE_PRD || daily.usePrd || daily.usePeriod || daily.period || ''
+
+const getPeriodLabel = (svc = {}) => {
+  const dailyPeriod =
+    svc.usePrd ||
+    svc.USE_PRD ||
+    svc.usePeriodDays ||
+    svc.dailyUsePrd ||
+    getDailyAdditionPeriod(svc.dailyAddition)
+  if (dailyPeriod) {
+    const period = String(dailyPeriod).trim()
+    if (period.includes('일') || period.includes('월')) return period
+    return /^\d+$/.test(period) ? `${period}일` : period
+  }
+  const unit = svc.amountUnit || getAmountUnit(svc)
+  return unit || ''
+}
+
+const createDailyAdditionMap = (dailyAdditions = []) =>
+  new Map(
+    dailyAdditions
+      .map((daily) => [getServiceKey(daily), daily])
+      .filter(([code]) => Boolean(code)),
+  )
+
+const mergeDailyAdditionInfo = (svc = {}, dailyAdditionMap = new Map()) => {
+  const daily = dailyAdditionMap.get(getServiceKey(svc))
+  if (!daily) return svc
+
+  return {
+    ...svc,
+    dailyRateYn: 'Y',
+    usePeriodDays: getDailyAdditionPeriod(daily),
+    dailyAddition: daily,
+    chargeUnit: '1일',
+  }
+}
+
+const appendDailyOnlyAdditions = (services = [], dailyAdditions = []) => {
+  const serviceCodes = new Set(services.map(getServiceKey).filter(Boolean))
+  const dailyOnlyServices = dailyAdditions
+    .filter((daily) => {
+      const code = getServiceKey(daily)
+      return code && !serviceCodes.has(code)
+    })
+    .map((daily) =>
+      mergeDailyAdditionInfo(
+        {
+          rateCd: getServiceKey(daily),
+          rateNm: daily.RATE_NM || daily.rateNm || getServiceKey(daily),
+          baseAmt: daily.BASE_AMT ?? daily.baseAmt ?? 0,
+          additionKey: daily.ADDITION_KEY ?? daily.additionKey,
+          sortOrdr: daily.SORT_ORDR ?? daily.sortOrdr ?? 9999,
+        },
+        createDailyAdditionMap([daily]),
+      ),
+    )
+
+  return [...services, ...dailyOnlyServices]
+}
+
+const getVatIncludedAmount = (svc = {}) => {
+  const vatAmount = svc.socRateVatValue ?? svc.socRateVat ?? svc.mmBasAmtVatDesc ?? svc.baseAmtVat
+  if (vatAmount != null && vatAmount !== '') return toNumber(vatAmount)
+  const amount = toNumber(getServiceAmount(svc))
+  return amount === 0 ? 0 : Math.round(amount * 1.1)
+}
+
+const getAmountLabel = (opt = {}) => {
+  const amount = toNumber(opt.amount)
+  const periodLabel = getPeriodLabel(opt)
+  if (amount === 0) return '무료'
+  return `${amount.toLocaleString()}원${periodLabel ? ` / ${periodLabel}` : ''}`
+}
 const getServiceName = (svc = {}) =>
-  svc.rateNm || svc.socDescription || svc.prodNm || svc.addSvcNm || svc.serviceName || '-'
+  svc.rateNm || svc.RATE_NM || svc.socDescription || svc.SOC_DESCRIPTION || svc.prodNm || svc.PROD_NM || svc.addSvcNm || svc.ADD_SVC_NM || svc.serviceName || '-'
 const getServiceAmount = (svc = {}) =>
-  svc.baseAmt ?? svc.socRateVatValue ?? svc.socRateVat ?? svc.socRateValue ?? 0
+  svc.baseAmt ?? svc.BASE_AMT ?? svc.socRateValue ?? svc.SOC_RATE_VALUE ?? svc.socRateVatValue ?? svc.SOC_RATE_VAT_VALUE ?? svc.socRateVat ?? svc.SOC_RATE_VAT ?? 0
 
 const toOption = (svc = {}) => {
-  const amount = toNumber(getServiceAmount(svc))
+  const amount = getVatIncludedAmount(svc)
+  const amountUnit = getAmountUnit(svc)
+  const periodLabel = getPeriodLabel({ ...svc, amountUnit })
   const rateCd = getServiceKey(svc)
   const rateNm = getServiceName(svc)
   return {
     ...svc,
-    label: amount === 0 ? rateNm : `${rateNm} (${amount.toLocaleString()}원)`,
+    label: amount === 0 ? rateNm : `${rateNm} (${amount.toLocaleString()}원${periodLabel ? ` / ${periodLabel}` : ''})`,
     value: rateCd,
     name: rateNm,
     amount,
+    amountUnit,
+    chargeUnit: amountUnit,
     settingYn: svc.settingYn || (getSettingModalType(svc) ? 'Y' : 'N'),
   }
 }
 
-// ─── 옵션 세팅 (이용중 항목 제외) ────────────────────────────────────────────
-const setOptionsFromServices = () => {
-  const activeFreeSet = new Set(props.activeFreeIds)
-  const activePaidSet = new Set(props.activePaidIds)
-  freeVasOptions.value = props.freeServices
-    .map(toOption)
-    .filter((opt) => opt.value && !activeFreeSet.has(opt.value))
-  paidVasOptions.value = props.paidServices
-    .map(toOption)
-    .filter((opt) => opt.value && !activePaidSet.has(opt.value))
-}
 
 // ─── 설정 팝업 핸들러 ─────────────────────────────────────────────────────────
 const currentSettingService = computed(() => {
@@ -405,14 +550,32 @@ const applySettingData = (settingData = {}) => {
   closeSettingModal()
 }
 
+const isActiveService = (rateCd) => {
+  const activeFreeSet = new Set(props.activeFreeIds || [])
+  const activePaidSet = new Set(props.activePaidIds || [])
+  return activeFreeSet.has(rateCd) || activePaidSet.has(rateCd)
+}
+
+const isCancelDisabled = (opt) => {
+  if (!isActiveService(opt.value)) return false
+  const svc = props.freeServices?.find(s => s.rateCd === opt.value) ||
+              props.paidServices?.find(s => s.rateCd === opt.value)
+  if (svc && svc.usePrd) {
+    const todayStr = new Date().toISOString().slice(0, 10).replace(/-/g, '') // YYYYMMDD
+    return svc.usePrd === todayStr
+  }
+  return false
+}
+
 // ─── 팝업 열기/닫기 ───────────────────────────────────────────────────────────
 const onOpen = () => {
-  service.value = ''
+  selectedCategory.value = ''
   freeService.value = []
   paidService.value = []
+  freeVasOptions.value = []
+  paidVasOptions.value = []
   serviceSettingMap.value = {}
-  fetchRecommendCodes()
-  setOptionsFromServices()
+  fetchPlanCategories()
   emit('open')
 }
 
@@ -423,29 +586,112 @@ const onClose = () => {
   }
 }
 
-// ─── 추천 부가서비스 공통코드 조회 ────────────────────────────────────────────
-const fetchRecommendCodes = async () => {
+// ─── 부가서비스 카테고리 목록 조회 ────────────────────────────────────────────
+const fetchPlanCategories = async () => {
   try {
-    const list = await getCommonCodeList('RATE_ADSVC_DIV_CD')
-    recommendOptions.value = list.map(item => ({ label: item.title, value: item.code }))
-  } catch (error) {
-    console.error('추천 부가서비스 코드 조회 실패:', error)
+    const res = await post('/api/form/addition/category/list', {
+      rateAdsvcDivCd: 'R',
+    })
+
+    planCategoryOptions.value = res?.data?.map((item) => ({
+      label: item.ctgNm,
+      value: item.ctgCd,
+    }))
+
+    if (planCategoryOptions.value?.length > 0) {
+      selectedCategory.value = planCategoryOptions.value[0].value
+    }
+  } catch (e) {
+    console.error('Failed to fetch plan categories:', e)
   }
 }
+
+// ─── 카테고리별 부가서비스 목록 조회 ──────────────────────────────────────────
+const fetchAdditionList = async (ctgCd) => {
+  if (!ctgCd) {
+    freeVasOptions.value = []
+    paidVasOptions.value = []
+    return
+  }
+  try {
+    const res = await post('/api/form/addition/list', {
+      operTypeCd: '',
+      prodCtgTypeCd: 'R',
+      categoryMstRequest: {
+        prodCtgId: [ctgCd],
+      },
+    })
+
+    if (res && res.code === '0000' && res.data?.[0]) {
+      const result = res.data[0]
+      const dailyAdditions = result.dailyAddition || []
+      const dailyAdditionMap = createDailyAdditionMap(dailyAdditions)
+      const freeList = (result.freeAddition || []).map((svc) =>
+        mergeDailyAdditionInfo(svc, dailyAdditionMap),
+      )
+      const paidList = appendDailyOnlyAdditions(
+        (result.paidAddition || []).map((svc) => mergeDailyAdditionInfo(svc, dailyAdditionMap)),
+        dailyAdditions,
+      )
+
+      // 부모창 메인 목록에 이미 표시된 서비스는 무료/유료 섹션이 달라져도 팝업에서 제외한다.
+      const parentServiceIds = new Set(
+        [...props.freeServices, ...props.paidServices, ...ALWAYS_EXCLUDED_SERVICE_IDS]
+          .map(getServiceKey)
+          .filter(Boolean),
+      )
+
+      freeVasOptions.value = freeList
+        .map(toOption)
+        .filter((opt) => opt.value && !parentServiceIds.has(opt.value))
+      paidVasOptions.value = paidList
+        .map(toOption)
+        .filter((opt) => opt.value && !parentServiceIds.has(opt.value))
+    } else {
+      freeVasOptions.value = []
+      paidVasOptions.value = []
+    }
+  } catch (e) {
+    console.error('Failed to fetch addition list:', e)
+    freeVasOptions.value = []
+    paidVasOptions.value = []
+  }
+}
+
+watch(selectedCategory, (newVal) => {
+  freeService.value = []
+  paidService.value = []
+  fetchAdditionList(newVal)
+})
 
 // ─── 확인: 설정 데이터 포함해서 emit ─────────────────────────────────────────
 const onConfirm = () => {
   const withSettingData = (opt) => {
     const stored = serviceSettingMap.value[opt.value]
+
+    let activeSetting = null
+    if (isActiveService(opt.value)) {
+      const parentSvc = props.freeServices?.find(s => s.rateCd === opt.value) ||
+                        props.paidServices?.find(s => s.rateCd === opt.value)
+      if (parentSvc?.addSvcSettingData) {
+        activeSetting = parentSvc.addSvcSettingData
+      }
+    }
+
     return {
       ...opt,
       rateCd: opt.value,
       rateNm: opt.name,
-      baseAmt: opt.amount,
-      ...(stored ? {
+      baseAmt: getServiceAmount(opt),
+      socRateVatValue: opt.amount,
+      usePrd: opt.usePrd || opt.USE_PRD || '',
+      usePeriodDays:
+        opt.usePeriodDays || getDailyAdditionPeriod(opt.dailyAddition),
+      chargeUnit: opt.amountUnit || opt.chargeUnit || '',
+      ...(stored || activeSetting ? {
         addSvcSettingCompleted: true,
-        addSvcSettingData: stored,
-        ftrNewParam: stored.ftrNewParam || '',
+        addSvcSettingData: stored || activeSetting,
+        ftrNewParam: (stored || activeSetting).ftrNewParam || '',
       } : {}),
     }
   }
@@ -459,7 +705,7 @@ const onConfirm = () => {
     .map(withSettingData)
 
   emit('confirm', {
-    recommendService: service.value,
+    recommendService: '',
     freeServices: freeSelected,
     paidServices: paidSelected,
     freeCodes: freeService.value,
@@ -478,5 +724,58 @@ onMounted(() => {
 <style lang="scss" scoped>
 .ut-mt-20 {
   margin-top: rem(20px);
+}
+
+.amount-cell {
+  white-space: nowrap;
+}
+
+.setting-cell {
+  white-space: nowrap;
+}
+
+.code-col-th {
+  overflow: hidden;
+  white-space: nowrap;
+  padding: 0 !important;
+}
+
+.service-name-th {
+  position: sticky !important;
+  z-index: 2;
+
+  .code-col-resize-handle {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 6px;
+    cursor: col-resize;
+    z-index: 1;
+
+    &:hover {
+      background: var(--color-gray-150);
+    }
+  }
+}
+
+.service-code-cell {
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.service-name-col {
+  min-width: 0;
+}
+
+.service-name-cell {
+  min-width: 0;
+
+  label {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 </style>

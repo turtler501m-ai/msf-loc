@@ -1,0 +1,14 @@
+.git
+.gradle
+.idea
+.kotlin
+.vscode
+
+**/build
+**/.DS_Store
+
+tools/docker/data
+
+README.md
+HELP.md
+AGENTS.md

@@ -5,6 +5,11 @@ public record LoginTwoFactorStatus(
     boolean twoFactorCompleted
 ) {
 
+    /**
+     * 로그인 세션 없음 상태 생성
+     *
+     * @return 2FA 상태
+     */
     public static LoginTwoFactorStatus notFound() {
         return new LoginTwoFactorStatus(false, false);
     }

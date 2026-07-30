@@ -49,6 +49,6 @@ public class DataSourceFactory {
         int maximumPoolSize = hikariConfig.getMaximumPoolSize();
         int minimumIdle = hikariConfig.getMinimumIdle() == -1 ? maximumPoolSize : hikariConfig.getMinimumIdle();
         log.info("{} - minSize={}, maxSize={}", poolName, minimumIdle, maximumPoolSize);
-        // log.info("{} - idleTimeout={}", poolName, hikariConfig.getIdleTimeout());
+        //log.info("{} - idleTimeout={}", poolName, hikariConfig.getIdleTimeout())
     }
 }

@@ -4,6 +4,7 @@ import java.util.List;
 import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -11,6 +12,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.ktmmobile.msf.commons.websecurity.web.dto.response.CommonResponse;
 import com.ktmmobile.msf.commons.websecurity.web.util.response.ResponseUtils;
+import com.ktmmobile.msf.domains.cache.worknotice.application.dto.WorkNoticeCacheRequest;
+import com.ktmmobile.msf.domains.cache.worknotice.application.dto.WorkNoticeCacheResponse;
+import com.ktmmobile.msf.domains.cache.worknotice.application.port.in.WorkNoticeCacheReader;
 import com.ktmmobile.msf.domains.form.main.application.dto.FormMainCountResponse;
 import com.ktmmobile.msf.domains.form.main.application.dto.NoticeCondition;
 import com.ktmmobile.msf.domains.form.main.application.dto.NoticeHitsRequest;
@@ -21,12 +25,14 @@ import com.ktmmobile.msf.domains.form.main.application.dto.QnaRequest;
 import com.ktmmobile.msf.domains.form.main.application.dto.QnaResponse;
 import com.ktmmobile.msf.domains.form.main.application.port.in.FormMainReader;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/main")
 @RequiredArgsConstructor
 public class FormMainController {
 
     private final FormMainReader formMainReader;
+    private final WorkNoticeCacheReader workNoticeCacheReader;
 
     @PostMapping("/form/count")
     public CommonResponse<FormMainCountResponse> formCount() {
@@ -56,5 +62,10 @@ public class FormMainController {
     @PostMapping("/qna/regist")
     public CommonResponse<Boolean> qnaRegist(@RequestBody @Valid QnaRequest request) {
         return ResponseUtils.ok(formMainReader.registQna(request));
+    }
+
+    @PostMapping("/work")
+    public CommonResponse<WorkNoticeCacheResponse> work(@RequestBody @Valid WorkNoticeCacheRequest request) {
+        return ResponseUtils.ok(workNoticeCacheReader.getListWorkNotice(request));
     }
 }

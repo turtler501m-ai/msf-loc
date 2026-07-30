@@ -258,6 +258,7 @@ LoginRequiredAction
 `LoginRequiredAction.tokenIssuable=false`인 조치가 하나라도 있으면 `LoginActionRequired`를 반환하고 Access/Refresh Token을 발급하지 않습니다.
 2FA가 필요한 경우에는 먼저 `VERIFY_2FA` requiredAction과 `loginSessionId`를 반환하고, 2FA 검증 이후 남은 필수 조치를 다시 응답합니다.
 `tokenIssuable=true`인 조치는 토큰 발급 이후 응답 메타데이터로 함께 내려줍니다.
+
 응답에는 조치 존재 여부와 토큰 발급 가능 여부를 별도 boolean으로 제공합니다.
 
 ```text
@@ -349,21 +350,53 @@ deleteRefreshTokenCookie()
 
 ## Biometric Challenge
 
-신규 구축에서는 `deviceUuid`만으로 기기를 신뢰하지 않습니다.
-모바일 생체인증은 OS가 수행하고, 서버는 기기 개인키로 서명된 challenge를 공개키로 검증합니다.
+생체인증 challenge는 앱이 생체 인증을 완료한 뒤 서버에 되돌려 줄 일회성 검증 값입니다.
+`login-core`는 challenge nonce 생성, Redis 저장, TTL, 암호화된 nonce 복호화와 검증을 담당합니다.
+기기 등록 정보 조회, `deviceUuid` 유효성 검증, `bioKey` 유효성 검증, 생체 로그인 사용 여부 확인은 앱별 DB를 알아야 하므로 각 애플리케이션의 `:login` 모듈에서 처리합니다.
+challenge 발급 API는 `deviceUuid`만 받고, verify API에서 `deviceUuid`, `bioKey`, `encryptedNonce`를 받습니다.
 
-생체인증 challenge는 `LoginBiometricChallengeService`가 생성하고 Redis에 짧은 TTL로 저장합니다.
-
-```text
-auth-challenge:{challengeId} -> {nonce}
-TTL: 3m
-```
-
-실제 Redis key에는 앱 prefix가 붙습니다.
+nonce는 UUID가 아니라 `SecureRandom` 기반 32바이트 난수를 Base64 URL-safe 문자열로 인코딩해서 발급합니다.
+UUID v4도 약 122비트의 랜덤성을 가지므로 세션 식별자처럼 서버 상태를 찾는 ID에는 충분합니다.
+하지만 생체인증 nonce는 식별자보다 인증 challenge 원문에 가깝기 때문에, 고정 포맷 비트가 있는 UUID보다 순수 난수 토큰을 사용하는 편이 의도와 보안 강도 면에서 더 적합합니다.
 
 ```text
-{appPrefix}:auth-challenge:{challengeId}
+loginSessionId
+- 서버 로그인 세션 상태를 찾는 식별자
+- UUID 사용 가능
+
+biometric nonce
+- 앱이 암호화해서 되돌려 주는 인증 challenge 원문
+- SecureRandom 기반 난수 유지 권장
 ```
+
+앱은 발급받은 nonce를 생체 인증 성공 후 AES-256-CBC 방식으로 암호화해 검증 API에 전달합니다.
+CBC는 인증 태그가 없는 방식이므로 장기적으로는 GCM 또는 서명 기반 검증이 더 적합하지만, 앱 호환을 위해 현재 단계에서는 별도 challenge 암복호화 키와 IV를 사용합니다.
+실제 AES-256-CBC 복호화 구현은 직접 `Cipher`를 사용하지 않고 `:commons:crypto`의 `LegacyAes256CbcTextEncryptor`를 사용합니다.
+키와 IV 설정은 `login-core.biometric.challenge-crypto.key`, `login-core.biometric.challenge-crypto.iv`로 분리해 관리합니다.
+
+Redis에는 민감한 원문을 저장하지 않습니다.
+key에는 `deviceUuid`를 해시한 값을 사용하고, value에는 `deviceUuid`, `nonce`를 함께 해시한 값을 저장합니다.
+`bioKey`는 Redis challenge 저장값이 아니라 verify 요청 전 앱별 DB 검증에서 확인합니다.
+
+```text
+Redis key   -> auth-biometric:challenge:{sha256(deviceUuid)}
+Redis value -> sha256(deviceUuid, nonce)
+```
+
+이렇게 저장하면 Redis key 목록, 모니터링, 장애 분석 로그, dump가 노출되더라도 `deviceUuid`, `nonce` 원문이 바로 드러나지 않습니다.
+특히 `bioKey`는 생체 로그인용 비밀 토큰에 가까우므로 Redis에 저장하지 않습니다.
+value에 nonce 평문을 저장하지 않는 이유도 Redis value 유출 시 즉시 재사용 가능한 challenge 원문을 줄이기 위해서입니다.
+
+해시는 암호화가 아니므로 `deviceUuid`와 `bioKey` 후보를 아는 공격자가 같은 해시를 계산해 대조할 수는 있습니다.
+그래도 평문 저장보다 노출 위험과 즉시 재사용 가능성을 줄이며, 검증 시에는 저장된 해시와 계산한 해시를 `MessageDigest.isEqual()`로 비교합니다.
+검증에 성공하면 Redis 값을 원자적으로 삭제해 같은 nonce를 재사용할 수 없게 합니다.
+검증에 실패하면 같은 binding 기준 실패 횟수를 Redis에 기록하고, 3회 실패 시 challenge와 실패 횟수 키를 삭제합니다.
+1~2회 실패 시에는 남은 TTL 안에서 정상 nonce로 재시도할 수 있습니다.
+검증에 성공한 앱 API는 `loginWithBiometric()`을 호출해 기존 로그인 세션 흐름과 같은 `LoginResultResponse`를 반환할 수 있습니다.
+따라서 클라이언트는 ID/PW 로그인과 동일하게 `loginSessionId`, `requiredAction`, `tokenIssuable` 값을 보고 다음 플로우를 진행합니다.
+
+신규 구축에서는 `deviceUuid`만으로 기기를 신뢰하지 않는 구조가 더 적합합니다.
+장기적으로는 모바일 생체인증 후 기기 개인키로 challenge에 서명하고, 서버가 등록된 공개키로 서명을 검증하는 방식을 우선 고려합니다.
 
 ## Configuration
 
@@ -395,7 +428,13 @@ session-time-to-live
 ```text
 challenge-time-to-live
 -> 생체인증 challenge nonce의 유효시간입니다.
--> auth-challenge:{challengeId} 캐시 TTL로 사용합니다.
+-> auth-biometric:challenge:{sha256(deviceUuid)} 캐시 TTL로 사용합니다.
+
+challenge-crypto.key
+-> 앱이 AES-256-CBC로 암호화한 nonce를 복호화할 때 사용하는 별도 challenge 암복호화 키입니다.
+
+challenge-crypto.iv
+-> 앱이 AES-256-CBC로 암호화한 nonce를 복호화할 때 사용하는 별도 challenge IV입니다.
 ```
 
 `login-core.token`

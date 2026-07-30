@@ -27,4 +27,9 @@ public interface CanCustMgmtMapper {
 
     @AutoAuditing
     int updateCanCustProcCd(ProcessUpdateDto req);
+
+    @AutoAuditing
+    int updateCanCustProcessResult(ProcessUpdateDto req);
+
+    int updateCancelOpenReqDt(Long requestKey);
 }

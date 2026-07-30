@@ -6,123 +6,24 @@ spring:
       connect-timeout: 2s
       read-timeout: 5s
 
-    ## 연동 대상 서비스
-    ## internal-service, external-service 프로퍼티를 참조하도록 작성 (직접 작성 지양)
-    serviceclient:
-      ## 내부 서비스
-      form-api:
-        base-url: ${internal-service.services.form-api.base-url}
-        connect-timeout: 1s
-        read-timeout: 2s
-      admin-api:
-        base-url: ${internal-service.services.admin-api.base-url}
-        connect-timeout: 1s
-        read-timeout: 2s
-      batch:
-        base-url: ${internal-service.services.batch.base-url}
-        connect-timeout: 1s
-        read-timeout: 2s
-      koi-ocr:
-        base-url: ${internal-service.services.koi-ocr.base-url}
-        connect-timeout: 2s
-        read-timeout: 3s
-      koi-idcard:
-        base-url: ${internal-service.services.koi-idcard.base-url}
-        connect-timeout: 2s
-        read-timeout: 3s
-      eformsign:
-        base-url: ${internal-service.services.eformsign.base-url}
-        connect-timeout: 2s
-        read-timeout: 3s
-
-      ## 외부 서비스
-      m-platform:
-        base-url: ${external-service.services.m-platform.base-url}
-      msp-prx:
-        base-url: ${external-service.services.msp-prx.base-url}
-      msp-api:
-        base-url: ${external-service.services.msp-api.base-url}
-      msp-ext-api:
-        base-url: ${external-service.services.msp-ext-api.base-url}
-      juso:
-        base-url: ${external-service.services.juso.base-url}
-        connect-timeout: 2s
-        read-timeout: 3s
+    ## 연동 대상 서비스:
+    ## :domains:external-client 모듈 프로퍼티에 작성
 
 
 
 ## HTTP Client
 http-client:
-  logging:
+  proxy:
+    enabled: false
+    groups: []
+
+  recording:
     enabled: true
+    response-body-truncated-size: 1000  # Content-Type=text/*일 때 적용; 0으로 설정하면 축약하지 않음
 
-    ## 헤더 로깅
-    ## include 값은 contains 매칭용 헤더명
-    ## 헤더명 뒤에 [size] 또는 [start:end] 지정 가능 (생략 시 값 전체 로깅)
-    header-names:
-      include:
-        - Content-Type
-        - Authorization[10] # 앞뒤 10글자만 로깅
-      exclude:
-        - x-content-type-options
-
-    ## 바디(JSON, form-urlencoded, form-data) 필드 마스킹
-    body-masked-fields:
-      include:
-        - secret
-        - token
-        - password
-        - passwd
-        - apiKey
-        - api-key
-        - confmKey  # 주소 검색 API Key
-      exclude: []
-
-    ## 바디(JSON, form-urlencoded, form-data) 필드 축약
-    ## 필드명 뒤에 [size] 또는 [start:end] 지정 가능 (생략 시 기본값 사용)
+    ## 바디(JSON, form-urlencoded, form-data) 필드 축약 공통 룰 확장
     body-truncated-fields:
-      default-truncated-size: 50 # 기본값 == [50:50]
-      include:
-        - html
-        - message[100]
-        - photoImage[10:] # KOI-OCR 신분증 인증 응답 Base64 이미지
-        - cropImage[10:]  # KOI-OCR 신분증 인증 응답 Base64 이미지
-        - maskImage[10:]  # KOI-OCR 신분증 인증 응답 Base64 이미지
-      exclude: []
-
-
-
-## 내부 서비스
-## (연동하는 모든 내부 서비스 정보를 여기에서 관리)
-internal-service:
-  services:
-    form-api: ## FORM-API
-      base-url: http://tasks.msf-form-api:8080
-    admin-api: ## ADMIN-API
-      base-url: http://tasks.msf-admin-api:8080
-    batch: ## BATCH
-      base-url: http://tasks.msf-batch:8080
-    koi-ocr: ## KOI OCR 인식
-      base-url: http://tasks.solution-koi-ocr:8080
-    koi-idcard: ## KOI 모바일 신분증 인증
-      base-url: http://tasks.solution-koi-idcard:8080
-    eformsign: ## eFormSign
-      base-url: http://solution-eformsign:8080
-      properties:
-        member-id: ${EFORMSIGN_MEMBER_ID}
-        api-key: ${EFORMSIGN_API_KEY}
-        private-key: ${EFORMSIGN_PRIVATE_KEY}
-
-
-
-## 외부 서비스
-## (연동하는 모든 외부 서비스 정보를 여기에서 관리)
-external-service:
-  services: ## 환경별 설정
-    prx: ## PRX
-      base-url: http://none
-    juso: ## 주소 검색
-      base-url: https://business.juso.go.kr
-      properties:
-        api-key: ${JUSO_API_KEY}
-        coord-api-key: ${JUSO_COORD_API_KEY}
+      additional-include:
+        http-client:
+          - html
+          - message[100]

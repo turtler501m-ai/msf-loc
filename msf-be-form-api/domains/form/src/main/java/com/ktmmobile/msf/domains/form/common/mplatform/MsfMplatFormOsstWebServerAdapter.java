@@ -1,51 +1,42 @@
 package com.ktmmobile.msf.domains.form.common.mplatform;
 
-import java.io.UnsupportedEncodingException;
+
 import java.net.SocketTimeoutException;
-import java.net.URLEncoder;
 import java.util.HashMap;
-import java.util.Set;
 import jakarta.servlet.http.HttpServletRequest;
 
-import org.apache.commons.httpclient.NameValuePair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.ktmmobile.msf.commons.websecurity.web.util.RequestUtils;
-import com.ktmmobile.msf.domains.form.common.dao.MplatFormOsstDao;
+import com.ktmmobile.msf.domains.externalclient.common.property.ExternalServiceProperties;
+import com.ktmmobile.msf.domains.externalclient.mspprx.application.dto.MspPrxSoapResponse;
 import com.ktmmobile.msf.domains.form.common.exception.McpMplatFormException;
 import com.ktmmobile.msf.domains.form.common.exception.SelfServiceException;
+import com.ktmmobile.msf.domains.form.common.mplatform.provider.MplatFormOsstMockResponse;
+import com.ktmmobile.msf.domains.form.common.mplatform.provider.MplatFormOsstResponseProvider;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.CommonXmlVO;
-import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpErrVO;
 import com.ktmmobile.msf.domains.form.common.service.IpStatisticService;
-import com.ktmmobile.msf.domains.form.common.util.HttpClientUtil;
 import com.ktmmobile.msf.domains.form.common.util.NmcpServiceUtils;
 
-import static com.ktmmobile.msf.domains.form.common.constants.Constants.EVENT_CODE_NAME_CHG_PRE_CHK;
-import static com.ktmmobile.msf.domains.form.common.constants.Constants.EVENT_CODE_REPLACE_USIM_PRE_CHK;
+import static com.ktmmobile.msf.domains.externalclient.common.code.ClientConst.SERVICE_NAME_MSP_PRX;
 import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.MPLATFORM_RESPONEXML_EMPTY_EXCEPTION;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class MsfMplatFormOsstWebServerAdapter {
 
-    private static final Logger logger = LoggerFactory.getLogger(MsfMplatFormOsstWebServerAdapter.class);
+    private static final String MSP_PRX_OSST_SERVICE_CALL_PATH = "/mPlatform/osstServiceCall.do";
 
-    @Value("${osst.url}")
-    private String osstUrl;
-
-    @Value("${SERVER_NAME}")
-    private String serverLocation;
-
-    @Autowired
-    private IpStatisticService ipStatisticService;
-
-    @Autowired
-    private MplatFormOsstDao mplatFormOsstDao;
+    private final IpStatisticService ipStatisticService;
+    private final MsfMcpOsstPrxService msfmcpOsstPrxService;
+    private final ExternalServiceProperties externalServiceProperties;
+    private final MplatFormOsstResponseProvider osstResponseProvider;
 
     public boolean callService(HashMap<String, String> param, CommonXmlVO vo) throws SelfServiceException, SocketTimeoutException {
         return callService(param, vo, 10000);
@@ -58,148 +49,42 @@ public class MsfMplatFormOsstWebServerAdapter {
 
         try {
 
-            String callUrl = osstUrl;
+            String callUrl = getMspPrxOsstServiceCallUrl();
+            String appEventCd = param == null ? "" : param.get("appEventCd");
+            log.debug("[OsstWeb.callService] start: appEventCd={}, callUrl={}, timeout={}",
+                appEventCd, callUrl, timeout);
             HashMap<String, String> pMplatform = this.saveMplateSvcLog(param);
-            String getURL = this.getURL(pMplatform);
-
-            NameValuePair[] data = {
-                new NameValuePair("getURL", getURL)
-            };
+            log.debug("[OsstWeb.callService] request prepared: appEventCd={}, parameterCount={}",
+                appEventCd, pMplatform.size());
 
             // 로컬에서 강제로 성공 처리
-            if ("LOCAL".equals(serverLocation)) {
-
-                String appEventCd = param.get("appEventCd");
-                if (EVENT_CODE_REPLACE_USIM_PRE_CHK.equals(appEventCd)) {
-
-                    StringBuffer selfStringBuffer = new StringBuffer();
-                    selfStringBuffer.append("<soap:Envelope xmlns:soap='http://schemas.xmlsoap.org/soap/envelope/'>");
-                    selfStringBuffer.append("  <soap:Body>");
-                    selfStringBuffer.append("    <ns2:osstNpBfacAgreeResponse xmlns:ns2='http://osst.so.itl.mvno.kt.com/'>");
-                    selfStringBuffer.append("      <return>");
-                    selfStringBuffer.append("	      <bizHeader>");
-                    selfStringBuffer.append("          <appEntrPrsnId>KIS</appEntrPrsnId>");
-                    selfStringBuffer.append("          <appAgncCd>AA00364</appAgncCd>");
-                    selfStringBuffer.append("          <appEventCd>TO1</appEventCd>");
-                    selfStringBuffer.append("          <appSendDateTime>20251103165222</appSendDateTime>");
-                    selfStringBuffer.append("          <appRecvDateTime>20251103165220</appRecvDateTime>");
-                    selfStringBuffer.append("          <appLgDateTime>20251103165220</appLgDateTime>");
-                    selfStringBuffer.append("          <appNstepUserId>91305414</appNstepUserId>");
-                    selfStringBuffer.append("          <appOrderId/>");
-                    selfStringBuffer.append("	      </bizHeader>");
-                    selfStringBuffer.append("	      <commHeader>");
-                    selfStringBuffer.append("          <globalNo>DEV_TEST_000007</globalNo>");
-                    selfStringBuffer.append("          <encYn/>");
-                    selfStringBuffer.append("          <responseType>N</responseType>");
-                    selfStringBuffer.append("          <responseCode></responseCode>");
-                    selfStringBuffer.append("          <responseLogcd/>");
-                    selfStringBuffer.append("          <responseTitle/>");
-                    selfStringBuffer.append("          <responseBasic></responseBasic>");
-                    selfStringBuffer.append("          <langCode/>");
-                    selfStringBuffer.append("          <filler/>");
-                    selfStringBuffer.append("	      </commHeader>");
-                    selfStringBuffer.append("	      <outDto>");
-                    selfStringBuffer.append("          <acceptDt>20251101000000</acceptDt>");
-                    selfStringBuffer.append("          <ctnStatus>A</ctnStatus>");
-                    selfStringBuffer.append("          <openDt>20250723</openDt>");
-                    selfStringBuffer.append("          <rsltCd>00</rsltCd>");
-                    selfStringBuffer.append("          <rsltMsg></rsltMsg>");
-                    selfStringBuffer.append("          <usimChgDt>20251030095005</usimChgDt>");
-                    selfStringBuffer.append("          <usimOnlyYn>N</usimOnlyYn>");
-                    selfStringBuffer.append("          <usimTypeCd>U</usimTypeCd>");
-                    selfStringBuffer.append("	      </outDto>");
-                    selfStringBuffer.append("      </return>");
-                    selfStringBuffer.append("    </ns2:osstNpBfacAgreeResponse>");
-                    selfStringBuffer.append("  </soap:Body>");
-                    selfStringBuffer.append("</soap:Envelope>");
-                    responseXml = selfStringBuffer.toString();
-                } else if ("EP0".equals(appEventCd)) {
-
-                    StringBuffer selfStringBuffer = new StringBuffer();
-                    selfStringBuffer.append("<soap:Envelope xmlns:soap='http://schemas.xmlsoap.org/soap/envelope/'>");
-                    selfStringBuffer.append("  <soap:Body>");
-                    selfStringBuffer.append("    <ns2:osstCanPrcResponse xmlns:ns2='http://osst.so.itl.mvno.kt.com/'>");
-                    selfStringBuffer.append("      <return>");
-                    selfStringBuffer.append("        <bizHeader>");
-                    selfStringBuffer.append("          <appEntrPrsnId>KIS</appEntrPrsnId>");
-                    selfStringBuffer.append("          <appAgncCd>AA00364</appAgncCd>");
-                    selfStringBuffer.append("          <appEventCd>EP0</appEventCd>");
-                    selfStringBuffer.append("          <appSendDateTime>20260427140500</appSendDateTime>");
-                    selfStringBuffer.append("          <appRecvDateTime>20260427140500</appRecvDateTime>");
-                    selfStringBuffer.append("          <appLgDateTime>20260427140500</appLgDateTime>");
-                    selfStringBuffer.append("          <appNstepUserId>DEVTEST</appNstepUserId>");
-                    selfStringBuffer.append("          <appOrderId/>");
-                    selfStringBuffer.append("        </bizHeader>");
-                    selfStringBuffer.append("        <commHeader>");
-                    selfStringBuffer.append("          <globalNo>DEV_EP0_000001</globalNo>");
-                    selfStringBuffer.append("          <encYn/>");
-                    selfStringBuffer.append("          <responseType>N</responseType>");
-                    selfStringBuffer.append("          <responseCode/>");
-                    selfStringBuffer.append("          <responseLogcd/>");
-                    selfStringBuffer.append("          <responseTitle/>");
-                    selfStringBuffer.append("          <responseBasic/>");
-                    selfStringBuffer.append("          <langCode/>");
-                    selfStringBuffer.append("          <filler/>");
-                    selfStringBuffer.append("        </commHeader>");
-                    selfStringBuffer.append("        <outDto>");
-                    selfStringBuffer.append("          <osstOrdNo>20260427000001</osstOrdNo>");
-                    selfStringBuffer.append("          <rslt>S</rslt>");
-                    selfStringBuffer.append("          <rsltMsg>SUCCESS</rsltMsg>");
-                    selfStringBuffer.append("        </outDto>");
-                    selfStringBuffer.append("      </return>");
-                    selfStringBuffer.append("    </ns2:osstCanPrcResponse>");
-                    selfStringBuffer.append("  </soap:Body>");
-                    selfStringBuffer.append("</soap:Envelope>");
-                    responseXml = selfStringBuffer.toString();
-                } else if (EVENT_CODE_NAME_CHG_PRE_CHK.equals(appEventCd)) {
-                    StringBuffer selfStringBuffer = new StringBuffer();
-                    selfStringBuffer.append("<soap:Envelope xmlns:soap='http://schemas.xmlsoap.org/soap/envelope/'>");
-                    selfStringBuffer.append("  <soap:Body>");
-                    selfStringBuffer.append("    <ns2:osstCanPrcResponse xmlns:ns2='http://osst.so.itl.mvno.kt.com/'>");
-                    selfStringBuffer.append("      <return>");
-                    selfStringBuffer.append("        <bizHeader>");
-                    selfStringBuffer.append("          <appEntrPrsnId>ENX</appEntrPrsnId>");
-                    selfStringBuffer.append("          <appAgncCd>AA11071</appAgncCd>");
-                    selfStringBuffer.append("          <appEventCd>PC0</appEventCd>");
-                    selfStringBuffer.append("          <appSendDateTime>20260427140500</appSendDateTime>");
-                    selfStringBuffer.append("          <appRecvDateTime>20260427140500</appRecvDateTime>");
-                    selfStringBuffer.append("          <appLgDateTime>20260427140500</appLgDateTime>");
-                    selfStringBuffer.append("          <appNstepUserId>6833564</appNstepUserId>");
-                    selfStringBuffer.append("          <appOrderId/>");
-                    selfStringBuffer.append("        </bizHeader>");
-                    selfStringBuffer.append("        <commHeader>");
-                    selfStringBuffer.append("          <globalNo>TEST-LSH-0818-08181</globalNo>");
-                    selfStringBuffer.append("          <encYn/>");
-                    selfStringBuffer.append("          <responseType>N</responseType>");
-                    selfStringBuffer.append("          <responseCode/>");
-                    selfStringBuffer.append("          <responseLogcd/>");
-                    selfStringBuffer.append("          <responseTitle/>");
-                    selfStringBuffer.append("          <responseBasic/>");
-                    selfStringBuffer.append("          <langCode/>");
-                    selfStringBuffer.append("          <filler/>");
-                    selfStringBuffer.append("        </commHeader>");
-                    selfStringBuffer.append("        <outDto>");
-                    selfStringBuffer.append("          <osstOrdNo>20170818102466</osstOrdNo>");
-                    selfStringBuffer.append("          <rsltCd>S</rsltCd>");
-                    selfStringBuffer.append("          <rsltMsg>SUCCESS</rsltMsg>");
-                    selfStringBuffer.append("        </outDto>");
-                    selfStringBuffer.append("      </return>");
-                    selfStringBuffer.append("    </ns2:osstCanPrcResponse>");
-                    selfStringBuffer.append("  </soap:Body>");
-                    selfStringBuffer.append("</soap:Envelope>");
-                    responseXml = selfStringBuffer.toString();
-                } else {
-                    vo.setSuccess(true);
+            MplatFormOsstMockResponse mockResponse = osstResponseProvider.osstWebResponse(appEventCd);
+            if (mockResponse.isLocalTest()) {
+                log.debug("[OsstWeb.callService] LOCAL branch: appEventCd={}", appEventCd);
+                if (mockResponse.isPassthroughSuccess()) {
+                    if (vo != null) {
+                        vo.setSuccess(true);
+                    }
                     result = true;
                     return result;
                 }
-
+                responseXml = mockResponse.responseXml();
             } else {
-                logger.info("*** M-PlatForm osstServiceCall Connect Start ***");
-                responseXml = HttpClientUtil.post(callUrl, data, "UTF-8", timeout);
-                logger.info("responseXml : " + responseXml);
+                log.info("*** M-PlatForm osstServiceCall Connect Start *** appEventCd={}, callUrl={}", appEventCd, callUrl);
+                // Use TOBE PRX OSST client; keep raw XML for existing CommonXmlVO parsing.
+                MspPrxSoapResponse response = msfmcpOsstPrxService.callOsstService(pMplatform, timeout);
+                responseXml = response.rawXml();
+                // AS-IS: 직접 getURL 생성 후 전송하던 방식. getURL 생성은 MspPrxClient에서 공통 처리한다.
+                // String getURL = this.getURL(pMplatform);
+                // NameValuePair[] data = { new NameValuePair("getURL", getURL) };
+                // MspPrxSoapResponse response = msfmcpOsstPrxService.callOsstService(pMplatform, getURL, timeout);
+                //responseXml = HttpClientUtil.post(callUrl, data, "UTF-8", timeout);
+                log.info("*** M-PlatForm osstServiceCall response length *** {}", responseXml == null ? 0 : responseXml.length());
+                log.info("responseXml : " + responseXml);
             }
 
+            log.debug("[OsstWeb.callService] response received: appEventCd={}, responseLength={}",
+                appEventCd, responseXml == null ? 0 : responseXml.length());
             if (responseXml == null || responseXml.isEmpty()) {
                 result = false;
                 throw new McpMplatFormException(MPLATFORM_RESPONEXML_EMPTY_EXCEPTION);
@@ -208,20 +93,17 @@ public class MsfMplatFormOsstWebServerAdapter {
                     result = true;
                     vo.setResponseXml(responseXml);
                     vo.toResponseParse();
+                    log.debug("[OsstWeb.callService] parse success: appEventCd={}, success={}, resultCode={}, globalNo={}",
+                        appEventCd, vo.isSuccess(), vo.getResultCode(), vo.getGlobalNo());
                 }
             }
 
         } catch (SelfServiceException e) {
+            log.warn("[OsstWeb.callService] self-service error: appEventCd={}, resultCode={}, globalNo={}, message={}",
+                param == null ? "" : param.get("appEventCd"), e.getResultCode(), e.getGlobalNo(), e.getMessage());
             // responseType값이 N이 아닌 경우
             throw e;
         } catch (SocketTimeoutException e) {
-            // OSST 연동 타임아웃 이력 INSERT
-            String customerId = param.get("custNo") != null ? param.get("custNo") : param.get("custId");
-            MpErrVO errVO = new MpErrVO(param.get("resNo"), param.get("appEventCd"));
-            errVO.setPrntsContractNo(param.get("prntsContractNo"));
-            errVO.setCustomerId(customerId);
-            errVO.setErrInfo(e);
-            mplatFormOsstDao.insertOsstErrLog(errVO);
             throw e;
         } catch (McpMplatFormException e) {
             // responseXml이 빈값인 경우
@@ -243,31 +125,36 @@ public class MsfMplatFormOsstWebServerAdapter {
             tmpParm.put("url", request.getRequestURI());
             tmpParm.put("mdlInd", NmcpServiceUtils.getDeviceType());
         } catch (Exception e) {
-            logger.debug("saveMplateSvcLog 연동 정보 저장 오류={}", e.getMessage());
+            log.debug("saveMplateSvcLog 연동 정보 저장 오류={}", e.getMessage());
         }
 
         return tmpParm;
     }
 
-    private String getURL(HashMap<String, String> param) {
+    //private String getURL(HashMap<String, String> param) {
+    //
+    //    String result = "";
+    //    Set<String> keySet = param.keySet();
+    //
+    //    for (String key: keySet) {
+    //        if (!result.equals("")) {
+    //            result = result.concat("&");
+    //        }
+    //        result = result.concat(key + "=" + param.get(key));
+    //    }
+    //
+    //    try {
+    //        result = URLEncoder.encode(result, "UTF-8");
+    //    } catch (UnsupportedEncodingException e) {
+    //        log.error("getURL UnsupportedEncodingException={}", e.getMessage());
+    //    }
+    //
+    //    return result;
+    //}
 
-        String result = "";
-        Set<String> keySet = param.keySet();
-
-        for (String key: keySet) {
-            if (!result.equals("")) {
-                result = result.concat("&");
-            }
-            result = result.concat(key + "=" + param.get(key));
-        }
-
-        try {
-            result = URLEncoder.encode(result, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            logger.error("getURL UnsupportedEncodingException={}", e.getMessage());
-        }
-
-        return result;
+    private String getMspPrxOsstServiceCallUrl() {
+        String baseUrl = externalServiceProperties.service(SERVICE_NAME_MSP_PRX).baseUrl();
+        return StringUtils.trimTrailingCharacter(baseUrl, '/') + MSP_PRX_OSST_SERVICE_CALL_PATH;
     }
 
 }

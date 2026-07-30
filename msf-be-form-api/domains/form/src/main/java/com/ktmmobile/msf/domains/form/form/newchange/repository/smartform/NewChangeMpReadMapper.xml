@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.form.form.newchange.repository.smartform.NewChangeMpReadMapper">
+
+
+  <select id="selectMsfRequestPC0Request" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeRequest"
+          resultType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeMpPC0Response">
+    SELECT
+        A.REQUEST_KEY
+      , A.REQ_BUY_TYPE_CD
+      , A.OPER_TYPE_CD
+      , LPAD(A.RES_NO, 14, '0') as MVNO_ORD_NO -- MVNO 오더번호
+      , 'KIS' as SLS_CMPN_CD -- 판매회사코드
+      , (CASE WHEN A.CSTMR_TYPE_CD = 'JP' THEN 'B'
+              WHEN A.CSTMR_TYPE_CD = 'GO' THEN 'G'
+              ELSE 'I' END ) as CUST_TYPE_CD -- 고객유형코드 (RCP9007 참고)
+      , (CASE WHEN (A.CSTMR_TYPE_CD = 'JP' or A.CSTMR_TYPE_CD = 'GO') THEN '02'
+              WHEN (A.CSTMR_TYPE_CD = 'FN' or A.CSTMR_TYPE_CD = 'FM') THEN '05'
+              ELSE '01' END) as CUST_IDNT_NO_IND_CD -- 고객식별번호구분코드 : 신분증유형코드로 매칭 (RCP2006 참고)
+      , (CASE WHEN A.CSTMR_TYPE_CD = 'NA' THEN B.CSTMR_NATIVE_RRN
+              WHEN A.CSTMR_TYPE_CD = 'NM' THEN B.CSTMR_NATIVE_RRN
+              WHEN A.CSTMR_TYPE_CD = 'FN' THEN B.CSTMR_FOREIGNER_RRN
+              WHEN A.CSTMR_TYPE_CD = 'FM' THEN B.CSTMR_FOREIGNER_RRN
+              ELSE B.CSTMR_JURIDICAL_BIZ_NO END) as CUST_IDNT_NO -- 고객식별번호 (법인 및 공공기관은 사업자번호)
+      , (CASE WHEN (A.CSTMR_TYPE_CD = 'JP' OR A.CSTMR_TYPE_CD = 'GO') THEN B.CSTMR_JURIDICAL_RRN ELSE '' END) as CRPR_NO -- 법인번호 (공공기관도 추가함 - 재변경)
+      --, (CASE WHEN A.CSTMR_TYPE_CD = 'JP' THEN B.CSTMR_JURIDICAL_RRN ELSE '' END) as CRPR_NO -- 법인번호 (공공기관은 법인번호가 없음)
+      , B.CSTMR_NM as CUST_NM -- 고객명
+      , (CASE WHEN A.SERVICE_TYPE_CD = 'PO' THEN 'R' ELSE 'I' END) as CNTR_USE_CD -- 계약용도코드
+      , (CASE WHEN C.MODEL_MONTHLY = '0' THEN 'N' ELSE 'Y' END) as INST_YN -- 할부여부
+      , (CASE WHEN C.RECYCLE_YN = 'Y' THEN 'Y' ELSE 'N' END) as SCNHND_PHON_INST_YN -- 중고폰할부여부
+      , 'Y' as MYSL_AGRE_YN -- 서식아이디 있는 경우 본인인증 N 값이 맞음. N 값은 안된데... Y 로 해야하네.
+      , (CASE WHEN A.CSTMR_TYPE_CD IN ('NA', 'FN') THEN
+                  CASE A.IDENTITY_TYPE_CD
+                      WHEN '01' THEN 'REGID'
+                      WHEN '02' THEN 'DRIVE'
+                      WHEN '03' THEN 'HANDI'
+                      WHEN '04' THEN 'MERIT'
+                      WHEN '05' THEN 'PPORT'
+                      WHEN '06' THEN 'FORGN' END
+              WHEN A.CSTMR_TYPE_CD IN ('NM','FM') THEN 'COURT'
+              WHEN (A.CSTMR_TYPE_CD IN ('JP','GO') AND COALESCE(B.CSTMR_VISIT_TYPE_CD,'')='VDP') THEN 'COURT'
+              ELSE '' END) as NATIVE_RLNAM_ATHN_EVDN_PPR_CD -- 고객식별번호구분코드 : 신분증유형코드로 매칭 (RCP2006 참고) - 법인과 공공기관은 제외처리 (2026.06.30) / 미성년자는 COURT 로 고정 (2026.07.10) / 공공기관 및 법인에 COURT
+      <!--, (CASE WHEN A.CSTMR_TYPE_CD IN ('NA', 'NM', 'FN', 'FM') THEN-->
+      <!--        CASE A.IDENTITY_TYPE_CD-->
+      <!--            WHEN '01' THEN 'REGID'-->
+      <!--            WHEN '02' THEN 'DRIVE'-->
+      <!--            WHEN '03' THEN 'HANDI'-->
+      <!--            WHEN '04' THEN 'MERIT'-->
+      <!--            WHEN '05' THEN 'PPORT'-->
+      <!--            WHEN '06' THEN 'FORGN' END-->
+      <!--    ELSE '' END) as NATIVE_RLNAM_ATHN_EVDN_PPR_CD &#45;&#45; 고객식별번호구분코드 : 신분증유형코드로 매칭 (RCP2006 참고) - 법인과 공공기관은 제외처리 (2026.06.30)-->
+      <!--, CASE WHEN (LENGTH(A.FATH_TEL_NO) > 9) THEN FATH_TEL_NO-->
+      <!--      WHEN (LENGTH(A.FATH_MOBILE_FN_NO||A.FATH_MOBILE_MN_NO||A.FATH_MOBILE_RN_NO) > 9)-->
+      <!--      THEN (A.FATH_MOBILE_FN_NO||A.FATH_MOBILE_MN_NO||A.FATH_MOBILE_RN_NO)-->
+      <!--    ELSE '' END as ATHN_RQSTCUST_CNTPLC_NO &#45;&#45; 인증요청고객연락처번호-->
+      , CASE WHEN (LENGTH(A.FATH_TEL_NO) > 9) THEN FATH_TEL_NO
+            WHEN (LENGTH(A.FATH_MOBILE_FN_NO||A.FATH_MOBILE_MN_NO||A.FATH_MOBILE_RN_NO) > 9)
+            THEN (A.FATH_MOBILE_FN_NO||A.FATH_MOBILE_MN_NO||A.FATH_MOBILE_RN_NO)
+            ELSE (B.CSTMR_MOBILE_FN_NO || B.CSTMR_MOBILE_MN_NO || B.CSTMR_MOBILE_RN_NO) END as ATHN_RQSTCUST_CNTPLC_NO -- 인증요청고객연락처번호 (안면인증 처리전까지 해당 값때문에 오류로 임시로 핸드폰번호로 세팅 요청 : 2026.07.09)
+      , (CASE WHEN (A.CSTMR_TYPE_CD = 'JP' or A.CSTMR_TYPE_CD = 'GO')
+              THEN B.CSTMR_JURIDICAL_BIZ_NO_ISSU_DATE
+              ELSE A.IDENTITY_ISSU_DATE END) as RSDCRT_ISSU_DATE -- 신분증발급일자 (법인,공공은 사업자교부일자, 그외는 신분증발급일자)
+      , (CASE WHEN A.IDENTITY_TYPE_CD = '02' THEN A.DRIVE_LICNS_NO ELSE '' END) as LCNS_NO -- 면허번호
+      , (CASE WHEN A.IDENTITY_TYPE_CD = '02' THEN A.IDENTITY_ISSU_REGION ELSE '' END) as LCNS_RGN_CD -- 면허지역코드
+      , (CASE WHEN A.IDENTITY_TYPE_CD = '04' THEN A.DRIVE_LICNS_NO ELSE '' END) as MRTR_PRSN_NO -- 유공자번호 :: (CASE WHEN A.IDENTITY_TYPE_CD = '04' THEN A.SELF_ISSU_NUM ELSE '' END)
+      , (CASE WHEN (A.CSTMR_TYPE_CD = 'FN' OR A.CSTMR_TYPE_CD = 'FM') THEN B.CSTMR_FOREIGNER_NATION ELSE '' END) as NATIONALITY_CD -- 국적코드
+      , (CASE WHEN (A.CSTMR_TYPE_CD = 'FN' OR A.CSTMR_TYPE_CD = 'FM') THEN B.CSTMR_FOREIGNER_BIRTH ELSE '' END) as FORN_BRTH_DATE -- 외국인생일일자 (여권인 경우 필수?)
+      , 'Y' as CRDT_INFO_AGRE_YN -- 신용정보동의여부
+      , 'Y' as INDV_INFO_INER_PRCUSE_AGRE_YN -- 개인정보내부활용동의여부
+      , (CASE WHEN A.CLAUSE_JEHU_YN='Y' THEN 'Y' ELSE 'N' END) AS CNSG_INFO_ADVR_RCV_AGRE_YN -- 위탁정보광고수신동의여부
+      , (CASE WHEN A.PERSONAL_INFO_COLLECT_AGREE_YN='Y' THEN 'Y' ELSE 'N' END) as OTHCMP_INFO_ADVR_RCV_AGRE_YN -- 타사정보광고수신동의여부
+      , (CASE WHEN A.CLAUSE_PRI_AD_YN='Y' THEN 'Y' ELSE 'N' END) as OTHCMP_INFO_ADVR_CNSG_AGRE_YN -- 타사정보광고위탁동의여부
+      --, (CASE WHEN A.OTHERS_TRNS_AGREE_YN='Y' THEN 'Y' ELSE 'N' END) as FNNC_DEAL_AGREE_YN -- 금융거래시 KT 고객 추가 금융 혜택을 위한 정보 제공 동의
+      , 'N' as FNNC_DEAL_AGREE_YN -- 금융거래시 KT 고객 추가 금융 혜택을 위한 정보 제공 동의 (2026.07.08 오류조치로 수정)
+      --, (CASE WHEN A.OTHERS_TRNS_KT_AGREE_YN='Y' THEN 'Y' ELSE 'N' END) as GRP_AGNT_BIND_SVC_SBSC_AGRE_YN -- 그룹사결합서비스가입동의여부
+      , 'N' as GRP_AGNT_BIND_SVC_SBSC_AGRE_YN -- 그룹사결합서비스가입동의여부 (2026.07.08 오류조치로 수정)
+      --, (CASE WHEN A.OTHERS_AD_RECEIVE_AGREE_YN='Y' THEN 'Y' ELSE 'N' END) as CARD_INSR_PRDC_AGRE_YN -- 카드보험상품동의여부
+      , 'N' as CARD_INSR_PRDC_AGRE_YN -- 카드보험상품동의여부 (2026.07.08 오류조치로 수정)
+      , 'N' as OLNG_DSCN_HYNMTR_AGRE_YN -- 주유할인현대자동차동의여부
+      , 'N' as WLFR_DSCN_APLY_AGRE_YN -- 복지할인신청동의여부
+      , 'N' as SPAM_PRVD_AGRE_YN -- 스팸제공동의여부
+      , (CASE WHEN A.PHONE_PAYMENT_YN='Y' THEN 'Y' ELSE 'N' END) as PRTTLP_STLM_USE_AGRE_YN -- 이동전화결제이용동의여부
+      , (CASE WHEN A.PHONE_PAYMENT_YN='Y' THEN 'Y' ELSE 'N' END) as PRTTLP_STLM_PWD_USE_AGRE_YN -- 이동전화결제비밀번호이용동의여부
+      , B.CSTMR_TEL_FN_NO || B.CSTMR_TEL_MN_NO || B.CSTMR_TEL_RN_NO as WRLN_TLPH_NO -- 유선전화번호
+      , B.CSTMR_MOBILE_FN_NO || B.CSTMR_MOBILE_MN_NO || B.CSTMR_MOBILE_RN_NO AS TLPH_NO /* 전화번호 (정의서에 취소선, 이력관리에 없음. 수정요청으로 추가 2026.06.26) */
+      , B.CSTMR_JURIDICAL_REP_NM as RPRS_PRSN_NM -- 대표자명
+      , (CASE WHEN (A.CSTMR_TYPE_CD = 'JP' OR A.CSTMR_TYPE_CD = 'GO') THEN B.UPJN_CD ELSE '' END ) AS UPJN_CD -- 업종코드
+      , (CASE WHEN (A.CSTMR_TYPE_CD = 'JP' OR A.CSTMR_TYPE_CD = 'GO') THEN B.BCU_SBST ELSE '' END ) AS BCU_SBST -- 업태내용
+      , B.CSTMR_ZIPCD as ZIP_NO -- 우편번호
+      , B.CSTMR_ADR as FNDT_CNTPLC_SBST -- 기본연락처내용
+      , B.CSTMR_ADR_DTL as MNT_CNTPLC_SBST -- 상세연락처내용
+      , B.CSTMR_NATIVE_BIRTH as BRTH_DATE -- 생일일자
+      , '' as BRTH_NNP_IND_CD -- 생일음양구분코드
+      , '' as JOB_CD -- 직업코드
+      , B.CSTMR_EMAIL_ADR as EML_ADRS_NM -- 이메일주소명
+      , '' as LSTD_IND_CD -- 상장구분코드
+      , '' as EMPL_CNT -- 사원수
+      , '' as SLNG_AMT -- 매출액
+      , '' as CPTL_AMNT -- 자본금액
+      , (CASE WHEN (A.CSTMR_TYPE_CD = 'JP' or A.CSTMR_TYPE_CD = 'GO') THEN B.UPJN_CD ELSE '' END ) as CRPR_UPJN_CD -- 법인업종코드 (공공기관도 항목 추가 - 2026.07.08)
+      , (CASE WHEN (A.CSTMR_TYPE_CD = 'JP' or A.CSTMR_TYPE_CD = 'GO') THEN B.BCU_SBST ELSE '' END ) as CRPR_BCU_SBST -- 법인업태내용 (공공기관도 항목 추가 - 2026.07.08)
+      , (CASE WHEN (A.CSTMR_TYPE_CD = 'JP' or A.CSTMR_TYPE_CD = 'GO') THEN B.CSTMR_ZIPCD ELSE '' END ) as CRPR_ZIP_NO -- 법인우편번호 (공공기관도 항목 추가 - 2026.07.08)
+      , (CASE WHEN (A.CSTMR_TYPE_CD = 'JP' or A.CSTMR_TYPE_CD = 'GO') THEN B.CSTMR_ADR ELSE '' END ) as CRPR_FNDT_CNTPLC_SBST -- 법인기본연락처내용 (공공기관도 항목 추가 - 2026.07.08)
+      , (CASE WHEN (A.CSTMR_TYPE_CD = 'JP' or A.CSTMR_TYPE_CD = 'GO') THEN B.CSTMR_ADR_DTL ELSE '' END ) as CRPR_MNT_CNTPLC_SBST -- 법인상세연락처내용 (공공기관도 항목 추가 - 2026.07.08)
+      , 'N' as CUST_INFO_CHNG_YN -- 고객정보변경여부
+      , 'N' as M2M_HNDSET_YN -- M2M단말여부 : 당연히 N 밖에 없음. (CASE WHEN NVL(CIM.PRDT_TYPE_CD, '02') IN ('01', '02') THEN 'N' ELSE 'Y' END) AS M2M_HNDSET_YN
+      , (CASE WHEN (A.CSTMR_TYPE_CD = 'NM' OR A.CSTMR_TYPE_CD = 'FM') THEN D.MINOR_AGENT_NM ELSE '' END ) as AGNT_CUST_NM -- 법정대리인 성명
+      -- , (CASE WHEN (A.CSTMR_TYPE_CD = 'NM' OR A.CSTMR_TYPE_CD = 'FM') THEN D.MINOR_AGENT_NM ELSE '' END ) as AGNT_CUST_IDFY_NO_TYPE -- 법정대리인 식별번호 종류 >> db 쿼리에서 직접 복호화할수는 없어서 service 에서 처리
+      , (CASE WHEN (A.CSTMR_TYPE_CD = 'NM' OR A.CSTMR_TYPE_CD = 'FM') THEN D.MINOR_AGENT_RRN ELSE '' END ) as AGNT_IDFY_NO_VAL -- 법정대리인 고객식별번호
+      -- , (CASE WHEN (A.CSTMR_TYPE_CD = 'NM' OR A.CSTMR_TYPE_CD = 'FM') THEN D.MINOR_AGENT_GENDER_CD ELSE '' END ) as AGNT_PERSON_SEX_DIV -- 법정대리인 성별 >> db 쿼리에서 직접 복호화할수는 없어서 service 에서 처리
+      , (CASE WHEN (A.CSTMR_TYPE_CD = 'NM' OR A.CSTMR_TYPE_CD = 'FM') THEN 'Y' ELSE '' END ) as AGNT_AGRE_YN -- 법정대리인 정보조회 동의여부
+      , (CASE WHEN (A.CSTMR_TYPE_CD = 'NM' OR A.CSTMR_TYPE_CD = 'FM') THEN 'M' ELSE '' END ) as AGNT_TEL_ATHN -- 법정대리인 연락처 종류 ( M : 모바일, I : 자택 )
+      , (CASE WHEN (A.CSTMR_TYPE_CD = 'NM' OR A.CSTMR_TYPE_CD = 'FM') THEN (D.MINOR_AGENT_TEL_FN_NO || D.MINOR_AGENT_TEL_MN_NO || D.MINOR_AGENT_TEL_RN_NO) ELSE '' END ) as AGNT_TEL_NO -- 법정대리인 연락처
+      , (CASE WHEN (A.CSTMR_TYPE_CD = 'NM' OR A.CSTMR_TYPE_CD = 'FM') THEN D.MINOR_AGENT_REL_TYPE_CD ELSE '' END ) as AGNT_TYPE_CD -- 법정대리인 유형
+      , (CASE WHEN (A.CSTMR_TYPE_CD = 'NM' OR A.CSTMR_TYPE_CD = 'FM') THEN A.IDENTITY_ISSU_DATE ELSE '' END ) as AGNT_RSDCRT_ISSU_DATE -- 법정대리인 식별번호 발급일자
+      , (CASE WHEN A.CSTMR_TYPE_CD IN ('NM', 'FM') THEN
+            CASE A.IDENTITY_TYPE_CD WHEN '01' THEN 'REGID' WHEN '02' THEN 'DRIVE' WHEN '03' THEN 'HANDI' WHEN '04' THEN 'MERIT' WHEN '05' THEN 'PPORT' WHEN '06' THEN 'FORGN' END
+          END) as AGNT_RLNAM_ATHN_EVDN_PPR_CD -- 법정대리인실명인증증빙서류코드 (내국인 미성년자 및 외국인 미성년자)
+      , (CASE WHEN (A.CSTMR_TYPE_CD = 'NM' OR A.CSTMR_TYPE_CD = 'FM') THEN A.IDENTITY_ISSU_REGION ELSE '' END ) as AGNT_LICNS_RGN_CD -- 법정대리인 면허지역코드
+      , (CASE WHEN (A.CSTMR_TYPE_CD = 'NM' OR A.CSTMR_TYPE_CD = 'FM') THEN A.DRIVE_LICNS_NO ELSE '' END ) as AGNT_LICNS_NO -- 법정대리인 면허번호
+      , (CASE WHEN A.CSTMR_TYPE_CD = 'NM' THEN 'KOR' WHEN A.CSTMR_TYPE_CD = 'FM' THEN B.CSTMR_FOREIGNER_NATION ELSE '' END ) as AGNT_NATIONALITY_CD -- 법정대리인 국적코드
+      , SUBSTRING(A.OPER_TYPE_CD, 1, 3) as ODER_TYPE_CD -- 오더유형코드 : 적용완료
+      , (CASE WHEN (A.CSTMR_TYPE_CD='NA' or A.CSTMR_TYPE_CD='FN') AND (B.CSTMR_PRIVATE_BIZ_NO != '') THEN 'Y' ELSE '' END) as INDV_BIZR_YN -- 개인사업자여부
+      , (CASE WHEN A.OPER_TYPE_CD='MNP3' THEN E.MOVE_MOBILE_FN_NO || E.MOVE_MOBILE_MN_NO || E.MOVE_MOBILE_RN_NO ELSE '' END) as NP_TLPH_NO -- 번호이동전화번호
+      , (CASE WHEN A.OPER_TYPE_CD='MNP3' THEN E.MOVE_COMPANY_CD ELSE '' END) as BCHNG_NP_COMM_CMPN_CD -- 변경전번호이동사업자코드
+      , (CASE WHEN A.OPER_TYPE_CD='MNP3' THEN 'N' ELSE 'N' END) as NP_RSTRTN_CONT_YN -- 번호이동제한예외여부 (Y:예외, N:대상아님) - 고객포탈도 고정값 N
+      , (CASE WHEN A.OPER_TYPE_CD='MNP3' THEN E.MOVE_REFUND_AGREE_YN ELSE 'N' END) as YTRPAY_SOFF_AGRE_YN -- 해지미환급금 상계동의여부
+      , '' as ATM_SEQ_NO -- ATM일련번호
+      , A.INDV_LOCA_PRV_AGREE_YN as INDV_LO_INFO_PRV_AGREE_YN -- 개인위치정보제공동의여부
+      <!--, (CASE WHEN (A.IDENTITY_CERT_TYPE_CD = 'K' OR A.IDENTITY_CERT_TYPE_CD = 'F') THEN A.KNOTE_SCAN_ID ELSE '' END) as FRMPAP_ID &#45;&#45; KNOTE 신분증 아이디 : FPC0-->
+      , (CASE WHEN (COALESCE(A.KNOTE_SCAN_ID,'') != '') THEN A.KNOTE_SCAN_ID ELSE A.FATH_TRANSAC_ID END) as FRMPAP_ID -- 2026.07.16 (knote서식지아이디 또는 트랜잭션 아이디)
+      , (CASE WHEN (COALESCE(A.KNOTE_SCAN_ID,'') = '' AND COALESCE(A.FATH_TRANSAC_ID,'') != '') THEN 'Y' END) as ISELF_FRMPAP_YN -- 자체 서식지 여부 2026.07.15
+      <!--, (CASE WHEN (A.IDENTITY_CERT_TYPE_CD = 'K' OR A.IDENTITY_CERT_TYPE_CD = 'F') THEN 'Y' ELSE '' END) as FRMPAP_USE_YN &#45;&#45; FPC0-->
+      , A.AGENT_CD as MNGM_AGNC_ID -- 관리대리점 : FPC0
+      , A.CPNT_ID as CNTPNT_CD -- 접점코드 : FPC0
+      , A.CPNT_ID as CPNT_ID -- 접점코드 : PC0
+      , '' as PHOTO_ATHN_TXN_SEQ -- 사진인증내역일련번호 : PC0
+      , A.FATH_TRANSAC_ID as FATH_TRANSAC_ID -- 안면인증 트랜잭션 아이디 : PC0
+      , '71' as ONLINE_ATHN_DIV_CD -- 본인인증 수단 : PC0 >> (SELECT ETC5 FROM CMN_GRP_CD_MST@DL_MSP WHERE GRP_ID = 'RCP2001' AND CD_VAL = A.ONLINE_AUTH_TYPE) AS onlineAthnDivCd /* 본인인증 수단 */ -- 삭제컬럼(ONLINE_AUTH_TYPE)
+      , 'N' as MYSLF_ATHN_YN -- 본인인증여부 : PC0
+      , '' as IPIN_CI -- 본인인증(CI) : PC0
+      , '' as DLVR_SEQ_NO -- 유심대면배송 주문접수번호 : PC0
+    FROM MSF_REQUEST_TEMP A
+        LEFT JOIN MSF_REQUEST_CSTMR_TEMP B ON A.REQUEST_KEY = B.REQUEST_KEY
+        LEFT JOIN MSF_REQUEST_SALE_TEMP C ON A.REQUEST_KEY = C.REQUEST_KEY
+        LEFT OUTER JOIN MSF_REQUEST_AGENT_TEMP D ON B.REQUEST_KEY = D.REQUEST_KEY
+        LEFT OUTER JOIN MSF_REQUEST_MOVE_TEMP E ON A.REQUEST_KEY = E.REQUEST_KEY
+    WHERE A.REQUEST_KEY = #{requestKey}
+  </select>
+
+
+  <select id="selectMsfRequestHC0InfoRequest" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeRequest"
+          resultType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeMpHC0Response">
+    SELECT
+        A.REQUEST_KEY
+        , A.REQ_BUY_TYPE_CD
+        , A.OPER_TYPE_CD
+        , LPAD(A.RES_NO, 14, '0') as MVNO_ORD_NO -- MVNO 오더번호
+        , A.CUST_ID AS CUST_NO -- 고객아이디
+        , A.CONTRACT_NUM AS SVC_CONT_ID --서비스계약번호
+        , A.OPEN_NO as TLPH_NO -- 전화번호 :: 기기변경 인증한 번호를 OPEN_NO 에 저장하기로 함.
+        , (CASE WHEN (C.ENGG_MNTH_CNT > '0') THEN 'H01' ELSE 'H11' END) as ODER_TYPE_CD -- 오더유형코드
+        , (CASE WHEN (C.ENGG_MNTH_CNT > '0') THEN 'Y' ELSE 'N' END) as INST_YN -- 할부여부 (우수기변일 경우에만 필수, 그외에 Y 라면 오류)
+        , 'Y' as INDV_INFO_INER_PRCUSE_AGRE_YN -- 개인정보내부활용동의여부
+        , 'Y' as CRDT_INFO_AGRE_YN -- 신용정보동의여부
+        , 'N' as SPAM_PRVD_AGRE_YN -- 스팸제공동의여부
+        , (CASE WHEN (A.CSTMR_TYPE_CD = 'JP' or A.CSTMR_TYPE_CD = 'GO') THEN '02'
+                WHEN (A.CSTMR_TYPE_CD = 'FN' or A.CSTMR_TYPE_CD = 'FM') THEN '05'
+                ELSE '01' END) as CUST_IDNT_NO_IND_CD -- 고객식별번호구분코드 : 신분증유형코드로 매칭 (RCP2006 참고)
+        , (CASE WHEN A.CSTMR_TYPE_CD = 'NA' THEN B.CSTMR_NATIVE_RRN
+                WHEN A.CSTMR_TYPE_CD = 'NM' THEN B.CSTMR_NATIVE_RRN
+                WHEN A.CSTMR_TYPE_CD = 'FN' THEN B.CSTMR_FOREIGNER_RRN
+                WHEN A.CSTMR_TYPE_CD = 'FM' THEN B.CSTMR_FOREIGNER_RRN
+                ELSE B.CSTMR_JURIDICAL_BIZ_NO END) as CUST_IDNT_NO -- 고객식별번호
+        , (CASE WHEN (A.CSTMR_TYPE_CD = 'JP' OR A.CSTMR_TYPE_CD = 'GO') THEN B.CSTMR_JURIDICAL_RRN ELSE '' END) as CRPR_NO -- 법인번호 (공공기관도 추가함)
+        , B.CSTMR_NM as CUST_NM -- 고객명
+        , (CASE WHEN (A.CSTMR_TYPE_CD = 'JP' or A.CSTMR_TYPE_CD = 'GO')
+                THEN B.CSTMR_JURIDICAL_BIZ_NO_ISSU_DATE
+                ELSE A.IDENTITY_ISSU_DATE END) as RSDCRT_ISSU_DATE -- 신분증발급일자 (법인,공공은 사업자교부일자, 그외는 신분증발급일자)
+        , (CASE WHEN A.CSTMR_TYPE_CD IN ('NA', 'FN') THEN
+                  CASE A.IDENTITY_TYPE_CD
+                      WHEN '01' THEN 'REGID'
+                      WHEN '02' THEN 'DRIVE'
+                      WHEN '03' THEN 'HANDI'
+                      WHEN '04' THEN 'MERIT'
+                      WHEN '05' THEN 'PPORT'
+                      WHEN '06' THEN 'FORGN' END
+                WHEN A.CSTMR_TYPE_CD IN ('NM','FM') THEN 'COURT'
+                WHEN (A.CSTMR_TYPE_CD IN ('JP','GO') AND COALESCE(B.CSTMR_VISIT_TYPE_CD,'')='VDP') THEN 'COURT'
+                ELSE '' END) as NATIVE_RLNAM_ATHN_EVDN_PPR_CD -- 고객식별번호구분코드 : 신분증유형코드로 매칭 (RCP2006 참고) - 법인과 공공기관은 제외처리 (2026.06.30) / 미성년자는 COURT 로 고정 (2026.07.10) / 공공기관 및 법인에 COURT (2026.07.21)
+        , (CASE WHEN A.IDENTITY_TYPE_CD = '02' THEN A.DRIVE_LICNS_NO ELSE '' END) as LCNS_NO -- 면허번호
+        , (CASE WHEN A.IDENTITY_TYPE_CD = '02' THEN A.IDENTITY_ISSU_REGION ELSE '' END) as LCNS_RGN_CD -- 면허지역코드
+        , (CASE WHEN A.IDENTITY_TYPE_CD = '04' THEN A.DRIVE_LICNS_NO ELSE '' END) as MRTR_PRSN_NO -- 유공자번호 :: (CASE WHEN A.IDENTITY_TYPE_CD = '04' THEN A.SELF_ISSU_NUM ELSE '' END)
+        , (CASE WHEN (A.CSTMR_TYPE_CD = 'FN' OR A.CSTMR_TYPE_CD = 'FM') THEN B.CSTMR_FOREIGNER_NATION ELSE '' END) as NATIONALITY_CD -- 국적코드
+        , (CASE WHEN (A.CSTMR_TYPE_CD = 'FN' OR A.CSTMR_TYPE_CD = 'FM') THEN B.CSTMR_FOREIGNER_BIRTH ELSE '' END) as FORN_BRTH_DATE -- 외국인생일일자
+        <!--, CASE WHEN (LENGTH(A.FATH_TEL_NO) > 9) THEN FATH_TEL_NO-->
+        <!--        WHEN (LENGTH(A.FATH_MOBILE_FN_NO||A.FATH_MOBILE_MN_NO||A.FATH_MOBILE_RN_NO) > 9) THEN (A.FATH_MOBILE_FN_NO||A.FATH_MOBILE_MN_NO||A.FATH_MOBILE_RN_NO)-->
+        <!--        ELSE '' END as ATHN_RQSTCUST_CNTPLC_NO &#45;&#45; 인증요청고객연락처번호-->
+        , CASE WHEN (LENGTH(A.FATH_TEL_NO) > 9) THEN FATH_TEL_NO
+              WHEN (LENGTH(A.FATH_MOBILE_FN_NO||A.FATH_MOBILE_MN_NO||A.FATH_MOBILE_RN_NO) > 9) THEN (A.FATH_MOBILE_FN_NO||A.FATH_MOBILE_MN_NO||A.FATH_MOBILE_RN_NO)
+              ELSE (B.CSTMR_MOBILE_FN_NO || B.CSTMR_MOBILE_MN_NO || B.CSTMR_MOBILE_RN_NO) END as ATHN_RQSTCUST_CNTPLC_NO -- 인증요청고객연락처번호
+        , 'Y' as MYSL_AGRE_YN -- 서식아이디 있는 경우 본인인증 N 값이 맞음. N 값은 안된데... Y 로 해야하네.
+        , (CASE WHEN (A.CSTMR_TYPE_CD = 'JP' or A.CSTMR_TYPE_CD = 'GO') THEN
+                      CASE WHEN (CSTMR_VISIT_TYPE_CD = 'VDP') THEN '04' ELSE '04' END
+                ELSE '' END) AS AGNT_RLTN_CD -- 대리인관계코드 (법인 및 공공기관의 본인/대표일 경우 04 고정 처리 (01 허용되지 않음) - 2026.07.08)
+        <!--, (CASE WHEN ( (CSTMR_VISIT_TYPE_CD = 'VDP') and (A.CSTMR_TYPE_CD = 'JP' or A.CSTMR_TYPE_CD = 'GO') )-->
+        <!--        THEN SUBSTRING(D.JRDCL_AGENT_RRN, 3, 6) ELSE '200101' END) AS AGNT_BRTH_DATE &#45;&#45;  대리인 생년월일 (YYMMDD) - 법인 및 공공기관의 본인/대표일 경우 200101 로 고정처리 - 2026.07.08-->
+        , (CASE WHEN (A.CSTMR_TYPE_CD = 'JP' or A.CSTMR_TYPE_CD = 'GO') THEN
+                CASE WHEN CSTMR_VISIT_TYPE_CD = 'VDP' THEN D.JRDCL_AGENT_RRN ELSE '20000101' END
+            END) AS JRDCL_AGENT_RRN --  대리인 생년월일 (YYMMDD) - 법인 및 공공기관의 대리인생년월일은 java 에서 복호화하여 처리필요 - 2026.07.24
+        , C.MODEL_ID AS INTM_MODEL_ID -- 기기모델아이디
+        , A.REQ_PHONE_SN as INTM_SRL_NO -- 기기일련번호
+        , C.SOC_CODE AS PRDC_CD -- 상품코드
+        , 'P' AS PRDC_TYPE_CD -- 상품타입코드 : 고정 (부가서비스는 프론트에서 제외함)
+        , (CASE WHEN (A.USIM_KINDS_CD='02' OR A.USIM_KINDS_CD='07' OR A.USIM_KINDS_CD='08') THEN A.REQ_USIM_SN ELSE '' END) as ICC_ID -- USIM  일련번호
+        , '' AS SPCL_SLS_NO -- 판매정책번호 :: 호출 전에 조회해서 추가해줌.
+        , 'KM1' AS SPNSR_TERM_TYPE_CD --스폰서약정 유형코드 :: 오더유형코드가 'H01'인 경우 필수 KM1 : 알뜰폰스폰서 , MC1 : 스마트스폰서(알뜰폰) , MC2 : 스마트할인(알뜰폰)
+        , (CASE WHEN (COALESCE(C.ENGG_MNTH_CNT, 0) = '0') THEN '0' ELSE C.ENGG_MNTH_CNT END) AS ENGG_MNTH_CNT -- 약정개월수
+        , C.SPRT_TYPE_CD AS SALE_ENGT_OPTN_CD -- 할인유형코드
+        , (CASE WHEN A.USIM_KINDS_CD='09' THEN 'Y' ELSE '' END) as ESIM_USE_YN -- eSIM 사용여부
+        , (CASE WHEN A.USIM_KINDS_CD='09' THEN A.EID ELSE '' END) as EUICC_ID -- EID
+        , A.CPNT_ID as CNTPNT_CD -- 접점코드
+        , (CASE WHEN (COALESCE(A.KNOTE_SCAN_ID,'') != '') THEN A.KNOTE_SCAN_ID ELSE A.FATH_TRANSAC_ID END) as FRMPAP_ID -- 2026.07.16 (knote서식지아이디 또는 트랜잭션 아이디)
+        , (CASE WHEN (COALESCE(A.KNOTE_SCAN_ID,'') = '' AND COALESCE(A.FATH_TRANSAC_ID,'') != '') THEN 'Y' END) as ISELF_FRMPAP_YN -- 자체 서식지 여부 2026.07.15
+        , 'N' as MYSLF_ATHN_YN -- 본인인증여부
+        , '' as IPIN_CI -- 본인인증(CI)
+        , '71' as ONLINE_ATHN_DIV_CD -- 본인인증 수단 >> (SELECT ETC5 FROM CMN_GRP_CD_MST@DL_MSP WHERE GRP_ID = 'RCP2001' AND CD_VAL = A.ONLINE_AUTH_TYPE) AS onlineAthnDivCd /* 본인인증 수단 */ -- 삭제컬럼(ONLINE_AUTH_TYPE)
+        , '' as PHOTO_ATHN_TXN_SEQ -- 사진인증내역일련번호
+        , A.FATH_TRANSAC_ID as FATH_TRANSAC_ID -- 안면인증 트랜잭션 아이디
+        , A.CPNT_ID as CPNT_ID -- 접점코드
+        , A.AGENT_CD -- 대리점코드
+    FROM MSF_REQUEST_TEMP A
+          LEFT JOIN MSF_REQUEST_CSTMR_TEMP B ON A.REQUEST_KEY = B.REQUEST_KEY
+          LEFT JOIN MSF_REQUEST_SALE_TEMP C ON A.REQUEST_KEY = C.REQUEST_KEY
+          LEFT OUTER JOIN MSF_REQUEST_AGENT_TEMP D ON B.REQUEST_KEY = D.REQUEST_KEY
+          LEFT OUTER JOIN MSF_REQUEST_MOVE_TEMP E ON A.REQUEST_KEY = E.REQUEST_KEY
+    WHERE A.REQUEST_KEY = #{requestKey}
+  </select>
+
+  <select id="selectMsfPreCheckInfoRequest" parameterType="java.lang.Long" resultType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeRequest">
+    SELECT
+        A.REQUEST_KEY
+      , A.REQ_BUY_TYPE_CD
+      , A.SERVICE_TYPE_CD
+      , A.USIM_KINDS_CD
+      , C.SPRT_TYPE_CD
+      , C.MODEL_MONTHLY
+      , C.ENGG_MNTH_CNT
+      , A.CSTMR_TYPE_CD
+      , B.CSTMR_NM
+      , B.CSTMR_NATIVE_RRN
+      , B.CSTMR_JURIDICAL_CNAME
+      , B.CSTMR_JURIDICAL_RRN
+      , B.CSTMR_FOREIGNER_RRN
+      , A.OPEN_NO
+      , B.CSTMR_TEL_FN_NO
+      , B.CSTMR_TEL_MN_NO
+      , B.CSTMR_TEL_RN_NO
+      , A.RES_NO
+      , A.KNOTE_SCAN_ID
+      , A.FATH_TRANSAC_ID
+      , A.AGENT_CD
+    FROM MSF_REQUEST_TEMP A, MSF_REQUEST_CSTMR_TEMP B, MSF_REQUEST_SALE_TEMP C
+    WHERE A.REQUEST_KEY = B.REQUEST_KEY AND B.REQUEST_KEY = C.REQUEST_KEY
+          AND A.REQUEST_KEY = #{requestKey}
+  </select>
+
+  <select id="selectMsfRequestAdditionVo" parameterType="java.lang.Long" resultType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestAdditionVo">
+    SELECT ADDITION_ID
+    FROM MSF_REQUEST_ADDITION_TEMP
+    WHERE REQUEST_KEY IN (SELECT REQUEST_KEY FROM MSF_REQUEST_TEMP WHERE REQUEST_KEY = #{requestKey})
+  </select>
+
+</mapper>

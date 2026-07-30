@@ -10,6 +10,7 @@
     select version
       , dn_url_adr as updateUrl
       , title || ':' || up_sbst as updateMsg
+      , must_up_cd
     from msf_app_version mav
     where 1=1
     and os_cd = #{os}
@@ -29,15 +30,21 @@
       , auto_login_yn
       , bio_login_yn
       , apv_sttus_cd
+      , bio_login_token
 		from msf_usr_app_info
 		where 1=1
 		and uuid = #{uuid}
+    <if test='apvSttusCd != null and apvSttusCd != ""'>
+    and apv_sttus_cd = 'A'
+    </if>
     order by amd_dt desc
   </select>
 
   <delete id="removeUserApp">
     update msf_usr_app_info
     set apv_sttus_cd = 'C'
+      , bio_login_yn = 'N'
+      , bio_login_token = ''
     where 1=1
 		and uuid = #{deviceUuid}
   </delete>
@@ -51,7 +58,7 @@
 
   <update id="updateBioSetting">
     update msf_usr_app_info
-    set bio_login_yn = #{bioLoginYn}
+    set cret_id = cret_id
     <if test='appNm != null and appNm != ""'>
       , app_nm = #{appNm}
     </if>
@@ -61,9 +68,84 @@
     <if test='autoLoginYn != null and autoLoginYn != ""'>
       , auto_login_yn = #{autoLoginYn}
     </if>
+    <if test='bioLoginYn != null and bioLoginYn != ""'>
+      , bio_login_yn = #{bioLoginYn}
+    </if>
+    <if test='osCd != null and osCd != ""'>
+      , os_cd = #{osCd}
+    </if>
+    <if test='version != null and version != ""'>
+      , version = #{version}
+    </if>
+    <if test='appOsVer != null and appOsVer != ""'>
+      , app_os_ver = #{appOsVer}
+    </if>
+    <if test='bioLoginToken != null'>
+      , bio_login_token = #{bioLoginToken}
+    </if>
     where 1=1
     and uuid = #{deviceUuid}
     and user_id = #{userId}
+  </update>
+
+  <select id="checkUserApp" resultType="java.lang.Integer">
+    select count(*)
+    from msf_user_info
+    where 1=1
+    and user_id = #{userId}
+    and user_sttus_cd = 'A'
+  </select>
+
+  <select id="selectAppDownloadList" resultType="com.ktmmobile.msf.domains.mobileapp.app.application.dto.IntroResponse">
+    (
+      select app_version_seq
+      , version
+      , dn_url_adr as updateUrl
+      , title || ':' || up_sbst as updateMsg
+      , must_up_cd
+      , os_cd
+      from msf_app_version mav
+      where 1=1
+      and use_yn = 'Y'
+      and os_cd = 'I'
+      order by app_version_seq desc
+      limit 1
+    )
+    union all
+    (
+      select app_version_seq
+      , version
+      , dn_url_adr as updateUrl
+      , title || ':' || up_sbst as updateMsg
+      , must_up_cd
+      , os_cd
+      from msf_app_version mav
+      where 1=1
+      and use_yn = 'Y'
+      and os_cd = 'A'
+      order by app_version_seq desc
+      limit 1
+    )
+  </select>
+
+  <insert id="insertAppTokenTxn">
+    INSERT INTO msf_usr_app_token_txn
+    (app_token_seq, user_id, login_div_cd, uuid, "token", token_reg_dt, token_valid_period)
+    VALUES
+    (NEXTVAL('smartform.sq_app_token_seq'), #{userId}, #{osCd}, #{deviceUuid}, #{bioLoginToken}, now(), '');
+  </insert>
+
+  <update id="updateAppTokenTxn">
+    UPDATE msf_usr_app_token_txn
+    SET token_valid_period = 'EXPIRED'
+    WHERE app_token_seq = (
+      SELECT app_token_seq
+      FROM msf_usr_app_token_txn
+      WHERE uuid = #{deviceUuid}
+      AND user_id = #{userId}
+      ORDER BY cret_dt DESC
+      LIMIT 1
+    )
   </update>
 
 </mapper>

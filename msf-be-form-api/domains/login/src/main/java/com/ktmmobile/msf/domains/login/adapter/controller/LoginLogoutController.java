@@ -22,6 +22,11 @@ public class LoginLogoutController {
     private final LoginSessionFlowProcessor loginSessionFlowProcessor;
     private final LoginRefreshTokenCookieManager refreshTokenCookieManager;
 
+    /**
+     * 현재 인증 사용자 로그아웃 처리
+     *
+     * @return Refresh Token 쿠키 삭제 응답
+     */
     @PostMapping("/logout")
     public ResponseEntity<CommonResponse<Void>> logout() {
         MsfUser user = AuthenticationUtils.getUser();

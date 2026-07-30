@@ -3,6 +3,7 @@ package com.ktmmobile.msf.commons.file.support.validator;
 import java.util.regex.Pattern;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -11,6 +12,7 @@ import com.ktmmobile.msf.commons.file.support.properties.FilePolicy;
 import com.ktmmobile.msf.commons.file.support.properties.FilePolicyProperties;
 
 @RequiredArgsConstructor
+@Slf4j
 @Component
 public class FilePolicyValidator {
 
@@ -28,21 +30,24 @@ public class FilePolicyValidator {
     }
 
     public void validate(FilePolicy filePolicy, String originalFileName, String detectedMimeType, Long fileSize) {
-        validateOriginalFileName(filePolicy, originalFileName);
+        validateOriginalFileName(originalFileName);
         validateFileSize(filePolicy, fileSize);
 
         String extension = StringUtils.getFilenameExtension(originalFileName);
         String normalizedExtension = extension == null ? "" : extension.toLowerCase();
 
-        boolean allowedExtension = filePolicy.allowedExtensions() != null
+        boolean extensionAllowed = filePolicy.allowedExtensions() != null
             && filePolicy.allowedExtensions().stream()
             .map(String::toLowerCase)
             .anyMatch(normalizedExtension::equals);
-        boolean allowedMimeType = filePolicy.allowedMimeTypes() != null
+        boolean mimeTypeAllowed = filePolicy.allowedMimeTypes() != null
             && filePolicy.allowedMimeTypes().stream()
             .anyMatch(detectedMimeType::equalsIgnoreCase);
 
-        if (!allowedExtension || !allowedMimeType) {
+        log.info("파일 정보: originalFileName={}, extension={}, mimeType={}, fileSize={}",
+            originalFileName, normalizedExtension, detectedMimeType, fileSize);
+
+        if (!extensionAllowed || !mimeTypeAllowed) {
             throw new SimpleDomainException(String.format("허용하지 않는 파일 형식입니다. extension=%s, mimeType=%s",
                 normalizedExtension, detectedMimeType
             ));
@@ -59,7 +64,7 @@ public class FilePolicyValidator {
         }
     }
 
-    private void validateOriginalFileName(FilePolicy filePolicy, String originalFileName) {
+    private void validateOriginalFileName(String originalFileName) {
         if (!StringUtils.hasText(originalFileName)) {
             throw new SimpleDomainException("원본 파일명이 유효하지 않습니다.");
         }

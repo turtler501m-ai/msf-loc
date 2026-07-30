@@ -74,8 +74,10 @@ const inputAttrs = computed(() => {
 
 // ID 결정
 const injectedId = inject('form-group-id', null)
+const fallbackId = useId() // 자동 id는 computed 밖에서 1번만 생성
+
 // 1순워: 직접넣은 ID / 2순위: 부모간 준 ID(Label연결용) / 3순위: 고유ID생성
-const switchId = computed(() => attrs.id || injectedId || useId())
+const switchId = computed(() => attrs.id || injectedId || fallbackId)
 
 const inputRef = ref(null)
 // 현재 iput의 상태 파악
@@ -238,7 +240,7 @@ const labelText = computed(() => {
   }
   /* 변형 (Point) */
   &.is-point {
-    --switch-active-bg: var(--color-point, #ff4d4f);
+    --switch-active-bg: var(--color-accent-base, #e0282f);
   }
 }
 </style>

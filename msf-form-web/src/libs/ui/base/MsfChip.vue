@@ -1,11 +1,15 @@
 <template>
   <div
-    role="group"
-    :aria-label="typeof label === 'string' ? label : ariaLabel"
+    :role="multiple ? 'group' : 'radiogroup'"
+    :aria-label="groupAriaLabel"
     v-bind="rootAttrs"
     :class="rootClasses"
   >
-    <div :class="['container', { gridColumns: columns !== 'auto' }]" :style="containerStyle">
+    <div
+      ref="msfChipGroupRef"
+      :class="['container', { gridColumns: columns !== 'auto' }]"
+      :style="containerStyle"
+    >
       <div v-for="(item, i) in dataList" :key="item.value" class="chip-item">
         <div :class="['chip', item.className]">
           <input
@@ -21,10 +25,10 @@
           />
           <label
             :for="`${name}-${baseId}-${i}`"
-            :class="['label', { disabled: item.disabled, readonly: item.readonly }]"
+            :class="['chip-label', { disabled: item.disabled, readonly: item.readonly }]"
           >
             <slot name="prefix" :item="item" :checked="selectedList.includes(item.value)"></slot>
-            <span class="text">{{ item.label }}</span>
+            <span class="chip-label-txt" :data-text="item.label">{{ item.label }}</span>
             <slot name="suffix" :item="item" :index="i"></slot>
           </label>
         </div>
@@ -35,7 +39,7 @@
 </template>
 
 <script setup>
-import { computed, onBeforeMount, ref, useId, useAttrs, watch } from 'vue'
+import { computed, inject, onBeforeMount, ref, useId, useAttrs, watch } from 'vue'
 import { getCommonCodeList } from '@/libs/utils/comn.utils'
 import { isEmpty } from '@/libs/utils/string.utils'
 
@@ -94,6 +98,21 @@ const props = defineProps({
   groupCode: { type: String, default: '' },
 })
 
+// 부모 FormGroup에서 전달한 레이블 텍스트
+const formGroupLabelText = inject('msf-form-group-label-text', null)
+// v-html 레이블에 포함된 태그 제거
+const stripHtml = (value) =>
+  String(value || '')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+// Chip 그룹에 적용할 접근성 레이블
+const groupAriaLabel = computed(() => {
+  if (props.ariaLabel) return props.ariaLabel
+  if (typeof props.label === 'string') return stripHtml(props.label)
+  return formGroupLabelText?.value || undefined
+})
+
 // 이벤트 등록
 const emit = defineEmits(['update:modelValue', 'change'])
 
@@ -104,8 +123,9 @@ const baseId = useId()
 
 // 선택된 값들을 배열로 정규화
 const selectedList = computed(() => {
-  if (props.modelValue === undefined) return []
-  return Array.isArray(props.modelValue) ? props.modelValue : [props.modelValue]
+  if (props.modelValue === undefined || props.modelValue === null) return []
+  const base = Array.isArray(props.modelValue) ? props.modelValue : [props.modelValue]
+  return base.map((v) => String(v))
 })
 
 // 체크박스/라디오 타입 결정
@@ -186,6 +206,14 @@ watch(
 onBeforeMount(() => {
   getDatasByGroupCode(props.groupCode)
 })
+
+const msfChipGroupRef = ref(null)
+defineExpose({
+  focus: () => {
+    console.log(msfChipGroupRef.value?.querySelector('input'))
+    msfChipGroupRef.value?.querySelector('input').focus()
+  },
+})
 </script>
 
 <style lang="scss" scoped>
@@ -229,14 +257,17 @@ onBeforeMount(() => {
   }
   .input {
     @include blind;
-    &:checked + .label {
+    &:checked + .chip-label {
       --chip-border-color: var(--color-foreground);
       --chip-text-color: var(--color-foreground);
       font-weight: var(--font-weight-regular);
       box-shadow: inset 0 0 0 1px var(--color-foreground);
     }
+    &:checked + .chip-label.disabled {
+      --chip-label-disabled-border-color: var(--color-foreground);
+    }
   }
-  .label {
+  .chip-label {
     min-width: var(--chip-min-width);
     position: relative;
     @include flex(flex, var(--chip-label-justify-contents), center);
@@ -268,20 +299,40 @@ onBeforeMount(() => {
 
 // variant
 .outlined {
-  --chip-text-color: var(--color-gray-700);
+  --chip-text-color: var(--color-foreground);
   --chip-outlined-checked-text-color: inherit;
   --chip-outlined-checked-font-weight: var(--font-weight-medium);
+  --chip-outlined-checked-font-weight-active: var(--font-weight-bold);
   --chip-outlined-padding: var(--spacing-x2) var(--spacing-x4);
   --chip-outlined-disabled-text-color: var(--color-gray-300);
-  .label {
+  .chip-label {
     padding: var(--chip-outlined-padding);
     min-width: var(--chip-min-width);
     min-height: var(--chip-min-height);
     font-weight: var(--chip-outlined-checked-font-weight);
+    // 레이블 텍스트 선택 시 볼드 스타일 적용으로 인한 너비 흔들림 개선
+    // 가상요소 content에 동일한 텍스트를 넣어서 너비를 확보한다.
+    .chip-label-txt {
+      display: inline-block;
+      position: relative;
+      line-height: 1;
+      &::after {
+        content: attr(data-text);
+        display: block;
+        font-weight: var(--chip-outlined-checked-font-weight-active);
+        height: 0;
+        line-height: 0;
+        overflow: hidden;
+        visibility: hidden;
+        white-space: inherit;
+        pointer-events: none;
+        user-select: none;
+      }
+    }
   }
-  .input:checked + .label {
+  .input:checked + .chip-label {
     color: var(--chip-outlined-checked-text-color);
-    font-weight: var(--font-weight-bold);
+    font-weight: var(--chip-outlined-checked-font-weight-active);
   }
 }
 // 기간설정
@@ -289,7 +340,7 @@ onBeforeMount(() => {
   --chip-min-width: #{rem(56px)};
   --chip-border-color: var(--color-gray-150);
   --chip-text-color: var(--color-background);
-  .label {
+  .chip-label {
     min-height: rem(52px);
     font-size: var(--font-size-16);
     line-height: var(--line-height-fit);
@@ -300,7 +351,7 @@ onBeforeMount(() => {
       border-color: var(--color-bg-disabled);
     }
   }
-  .input:checked + .label {
+  .input:checked + .chip-label {
     color: var(--color-white);
     background-color: var(--color-accent2-base);
     border-color: var(--color-accent2-base);
@@ -310,7 +361,7 @@ onBeforeMount(() => {
 
 // size
 .small {
-  .label {
+  .chip-label {
     font-size: var(--font-size-14);
     min-width: rem(52px);
     min-height: rem(42px);
@@ -319,7 +370,7 @@ onBeforeMount(() => {
   }
 }
 .medium {
-  .label {
+  .chip-label {
     font-size: var(--font-size-16);
     min-height: rem(52px);
     height: rem(52px);
@@ -330,7 +381,7 @@ onBeforeMount(() => {
   .container {
     gap: var(--spacing-x2);
   }
-  .label {
+  .chip-label {
     font-size: var(--font-size-16);
     min-height: rem(56px);
     height: rem(56px);
@@ -340,7 +391,7 @@ onBeforeMount(() => {
 
 //round
 .round {
-  .label {
+  .chip-label {
     border-radius: var(--border-radius-max);
     padding-inline: var(--spacing-x6);
   }

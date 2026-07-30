@@ -60,6 +60,7 @@ import { post } from '@/libs/api/msf.api'
 import { showAlert, showConfirm } from '@/libs/utils/comp.utils'
 import { useRouter } from 'vue-router'
 import { useMsfUserStore } from '@/stores/msf_user'
+import { getDeviceUuid } from '@/libs/utils/device.utils'
 
 const router = useRouter()
 const msfUserStore = useMsfUserStore()
@@ -67,17 +68,17 @@ const msfUserStore = useMsfUserStore()
 const loginSessionId = msfUserStore.getUserData()?.loginSessionId
 const userName = msfUserStore.getUserData()?.userInfo?.userName
 const localIp = msfUserStore.getUserData()?.userInfo?.clientIp
-const deviceUuid = msfUserStore.getDeviceUuid()
+const deviceUuid = getDeviceUuid()
 
 const formData = reactive({
   loginSessionId: loginSessionId,
   userNm: userName, //이름
   localIp: localIp, //아이피
   deviceUuid: deviceUuid, //단말 고유 ID
-  deptName: 'IT전략팀', //부서 // molo - 수정 필요
-  osCd: 'A', // molo - 수정 필요
-  version: '1.0', // molo - 수정 필요
-  appOsVer: '1.1.1', // molo - 수정 필요
+  osCd: localStorage.getItem('deviceType') || 'A',
+  version: localStorage.getItem('appVersion') || '1.0',
+  appOsVer: localStorage.getItem('appOsVersion') || '1.0.0',
+  deptName: msfUserStore.getUserData()?.userInfo?.organization?.shopName,
 })
 
 onMounted(async () => {

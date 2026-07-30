@@ -22,9 +22,15 @@ public record FormResponse<T>(
         return new FormResponse<>(message.getCode(), message.getMessage(), null);
     }
 
+    public static <T> FormResponse<T> of(ResponseMessage code, String message, T data) {
+        return new FormResponse<>(code.getCode(), message, data);
+    }
+
+
     public static <T> FormResponse<T> ok(T data) {
         return new FormResponse<>(ResponseMessage.SUCCESS.getCode(), ResponseMessage.SUCCESS.getMessage(), data);
     }
+
 
     //명의변경
 
@@ -52,5 +58,9 @@ public record FormResponse<T>(
 
     public static <T> FormResponse<T> of(ResSvcChgMessage message, String resMessage, T data) {
         return new FormResponse<>(message.getCode(), resMessage, data);
+    }
+
+    public static <T> FormResponse<T> of(String code, String resMessage, T data) {
+        return new FormResponse<>(code, resMessage, data);
     }
 }

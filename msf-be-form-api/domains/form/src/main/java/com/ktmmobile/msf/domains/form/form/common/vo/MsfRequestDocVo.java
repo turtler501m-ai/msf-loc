@@ -14,5 +14,6 @@ public class MsfRequestDocVo {
     String fileTypeCd;
     String filePathNm;
     String fileNm;
+    Integer filePageNo;
 
 }

@@ -35,15 +35,24 @@
     @selected="onSelected"
   >
     <template #buttons>
-      <!-- <MsfButton variant="subtle" active>열람하기</MsfButton>
-      <MsfButton variant="toggle" disabled>복사하기</MsfButton> -->
-      <MsfButton variant="toggle" active @click="onUpdate">복사하기</MsfButton>
+      <MsfButton variant="toggle" @click="onReplicate" :readonlyMsg="alertReplicateMsg"
+        >복사하기</MsfButton
+      >
+      <MsfButton variant="subtle" @click="onView" :readonlyMsg="alertViewMsg">열람하기</MsfButton>
     </template>
   </MsfDataTable>
+  <!-- 비밀번호 확인 모달 -->
+  <MsfPasswordInputModal
+    v-model="isModalOpen"
+    :form-type="appFormType"
+    :request-key="appFormKey"
+    :document-id="documentIds"
+  />
 </template>
 
 <script setup>
-import { onBeforeMount, ref } from 'vue'
+import { onBeforeMount, onUnmounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { post } from '@/libs/api/msf.api'
 import { storeToRefs } from 'pinia'
 import { showAlert } from '@/libs/utils/comp.utils'
@@ -51,11 +60,7 @@ import { showAlert } from '@/libs/utils/comp.utils'
 import { getCommonCodeList } from '@/libs/utils/comn.utils.js'
 import { formatDate } from '@/libs/utils/date.utils'
 import { storeReceiptPage } from '@/stores/receiptpage'
-
-const receiptPageStore = storeReceiptPage()
-const { formData } = storeToRefs(receiptPageStore)
-
-const formTypeCd = ref([])
+import { useMsfUserStore } from '@/stores/msf_user'
 
 const colDefsPaging = ref([
   {
@@ -84,7 +89,7 @@ const colDefsPaging = ref([
     cellStyle: {
       textAlign: 'center',
     },
-    cellRenderer: (params) => {
+    valueFormatter: (params) => {
       return renderFormType(params)
     },
   },
@@ -95,7 +100,7 @@ const colDefsPaging = ref([
     cellStyle: {
       textAlign: 'center',
     },
-    cellRenderer: (params) => {
+    valueFormatter: (params) => {
       return params.data.cstmrTypeCd?.title
     },
   },
@@ -114,7 +119,7 @@ const colDefsPaging = ref([
     cellStyle: {
       textAlign: 'center',
     },
-    cellRenderer: (params) => {
+    valueFormatter: (params) => {
       return params.data.procCd?.title
     },
   },
@@ -128,11 +133,18 @@ const colDefsPaging = ref([
   },
 ])
 
+const router = useRouter()
+const receiptPageStore = storeReceiptPage()
+const { formData } = storeToRefs(receiptPageStore)
+const formTypeCd = ref([])
 const isLoaded = ref(false)
 const pagingRef = ref()
 const selectedRowPaging = ref([])
 const selectedScriptSeq = ref(null)
 const selectedFormType = ref(null)
+const alertReplicateMsg = ref('복사할 항목을 선택해주세요.')
+const alertViewMsg = ref('열람할 항목을 선택해주세요.')
+const userStore = useMsfUserStore()
 
 const onClickSearch = () => {
   pagingRef.value.search()
@@ -142,10 +154,23 @@ const onSelected = (data) => {
   selectedRowPaging.value = data
   selectedFormType.value = data.formTypeCd?.code
   selectedScriptSeq.value = data?.requestKey ?? null
-  console.log('select: ' + selectedFormType.value)
+  if (
+    selectedScriptSeq.value &&
+    data?.cretId === userStore.userInfo?.userId &&
+    (selectedFormType.value === '1' || selectedFormType.value === '3')
+  ) {
+    alertReplicateMsg.value = ''
+  } else {
+    alertReplicateMsg.value = '복사할 항목을 선택해주세요.'
+  }
+  if (selectedScriptSeq.value) {
+    alertViewMsg.value = ''
+  } else {
+    alertViewMsg.value = '열람할 항목을 선택해주세요.'
+  }
 }
 
-const onUpdate = async () => {
+const onReplicate = async () => {
   if (!selectedScriptSeq.value) {
     showAlert('복사할 항목을 선택해주세요.')
     return
@@ -158,25 +183,50 @@ const onUpdate = async () => {
     requestKey: selectedScriptSeq.value,
   }
   if (selectedFormType.value === '1') {
-    const res = await post('/api/form/newchange/copyform', param)
+    const res = await post('/api/form/newchange/copyform', param, { skipAlert: true })
     if (res && res.code === '0000') {
-      showAlert('복사한 requestKey: ' + res.data?.resData?.requestKey)
+      // showAlert('복사한 requestKey: ' + res.data?.resData?.requestKey)
+      await router.push({
+        name: 'form',
+        params: { domain: 'newchange' },
+        state: {
+          requestKey: res.data?.resData?.requestKey,
+        },
+      })
     }
   } else if (selectedFormType.value === '3') {
-    showAlert('선택한 requestKey: ' + selectedScriptSeq.value)
+    // showAlert('선택한 requestKey: ' + selectedScriptSeq.value)
+    await router.push({
+      name: 'form',
+      params: { domain: 'ownerchange' },
+      state: {
+        requestKey: selectedScriptSeq.value,
+      },
+    })
   }
 }
 
-const renderFormType = (params) => {
-  if (params.data.formTypeCd?.code === '1') {
-    const formTypeCd = params.data.formTypeCd?.title
-    const reqBuyTypeCd = params.data.reqBuyTypeCd?.title
-    const operTypeCd = params.data.operTypeCd?.title
+const onView = () => {
+  onClikViewBtn()
+}
 
-    return formTypeCd + '(' + reqBuyTypeCd + '/' + operTypeCd + ')'
-  } else {
-    return params.data.formTypeCd?.title
+function renderFormType(params) {
+  if (!params?.data) return ''
+
+  const formType = params.data.formTypeCd
+  const reqBuyType = params.data.reqBuyTypeCd
+  const operType = params.data.operTypeCd
+
+  if (formType?.code === '1') {
+    // 내부 속성이 없을 경우를 대비해 기본값('-') 처리
+    const formTitle = formType?.title ?? ''
+    const reqBuyTitle = reqBuyType?.title ?? '-'
+    const operTitle = operType?.title ?? '-'
+
+    return `${formTitle}(${reqBuyTitle}/${operTitle})`
   }
+
+  return formType?.title ?? ''
 }
 
 const pushFormTypeCd = async () => {
@@ -189,8 +239,18 @@ const pushFormTypeCd = async () => {
 
 onBeforeMount(() => {
   pushFormTypeCd()
-  setRange({ months: 0, days: 7 })
+  formData.value.searchWord = ''
+  if (!formData.value.startDt || !formData.value.endDt) {
+    setRange({ months: 0, days: 7 })
+  }
   isLoaded.value = true
+})
+
+onUnmounted(() => {
+  formData.value.startDt = ''
+  formData.value.endDt = ''
+  formData.value.formTypeOne = '0'
+  formData.value.searchWord = ''
 })
 
 const setRange = (val) => {
@@ -203,9 +263,20 @@ const setRange = (val) => {
   if (val.days > 0) {
     start.setDate(start.getDate() - val.days)
   }
-
   formData.value.startDt = formatDate(start)
   formData.value.endDt = formatDate(end)
+}
+
+const isModalOpen = ref(false)
+const appFormType = ref('')
+const appFormKey = ref('')
+const documentIds = ref('')
+
+const onClikViewBtn = () => {
+  isModalOpen.value = true
+  appFormType.value = selectedRowPaging.value.formTypeCd.code
+  appFormKey.value = String(selectedRowPaging.value.requestKey)
+  documentIds.value = selectedRowPaging.value.scanId ?? ''
 }
 </script>
 

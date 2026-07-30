@@ -10,7 +10,7 @@
  * 예: import { pageScrollToTop } from '...' -> pageScrollToTop();
  */
 
-import { ref, watch } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import { useScrollLock } from '@/hooks/useScrollLock'
 
 // 0. 전체공통 레이아웃 스크롤영역 (전체 레이아웃 에서 등록)
@@ -28,14 +28,23 @@ export const modalScrollRef = ref(null)
 //   mainScrollRef.value?.scrollTo({ top: 0, behavior })
 // }
 export const pageScrollToTop = (behavior = 'smooth') => {
-  // 1순위: 특정 뷰(StepView 등)에 스크롤이 있으면 그걸 올린다.
-  if (mainScrollRef.value) {
-    mainScrollRef.value.scrollTo({ top: 0, behavior })
-  }
-  // 2순위: 그게 없으면 기본 레이아웃 스크롤을 올린다.
-  else {
-    layoutScrollRef.value?.scrollTo({ top: 0, behavior })
-  }
+  // DOM이 데이터 변경 사항을 반영해 새로 그려질 때까지 기다렸다가 실행
+  nextTick().then(() => {
+    requestAnimationFrame(() => {
+      // 1순위: 특정 뷰(StepView 등)에 스크롤이 있으면 그걸 올린다.
+      if (mainScrollRef.value?.scrollTo) {
+        mainScrollRef.value.scrollTo({ top: 0, behavior })
+      }
+      // 2순위: 그게 없으면 기본 레이아웃 스크롤을 올린다.
+      else if (layoutScrollRef.value?.scrollTo) {
+        layoutScrollRef.value.scrollTo({ top: 0, behavior })
+      }
+      // 3순위: 등록된 스크롤 영역이 없으면 브라우저 기본 스크롤을 올린다.
+      else {
+        window.scrollTo({ top: 0, behavior })
+      }
+    })
+  })
 }
 
 /**
@@ -43,7 +52,9 @@ export const pageScrollToTop = (behavior = 'smooth') => {
  * @param {string} behavior - 'smooth' 또는 'auto'
  */
 export const modalScrollToTop = (behavior = 'smooth') => {
-  modalScrollRef.value?.scrollTo({ top: 0, behavior })
+  if (modalScrollRef.value?.scrollTo) {
+    modalScrollRef.value.scrollTo({ top: 0, behavior })
+  }
 }
 
 //  레이아웃 잠금 상태 (true면 잠금)

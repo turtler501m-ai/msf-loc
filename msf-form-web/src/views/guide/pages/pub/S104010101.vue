@@ -19,7 +19,14 @@
         />
       </MsfFormGroup>
       <!-- 법인/공공기관만 항목 노출 -->
-      <MsfFormGroup label="방문 고객" tag="div" required>
+      <MsfFormGroup
+        label="방문 고객"
+        tag="div"
+        required
+        v-if="
+          formData.customerType === 'customerType5' || formData.customerType === 'customerType6'
+        "
+      >
         <MsfChip
           v-model="formData.visitCustomer"
           name="inp-visitCustomer"
@@ -30,6 +37,20 @@
         />
       </MsfFormGroup>
       <!-- // 법인/공공기관만 항목 노출 -->
+      <!-- 위치이동__20260520 -->
+      <MsfFormGroup label="대리점" tag="div" required>
+        <MsfSelect
+          title="대리점 선택"
+          v-model="formData.agencyName"
+          :options="[
+            { label: '대리점1', value: 'agencyName1' },
+            { label: '대리점2', value: 'agencyName2' },
+          ]"
+          class="ut-w-300"
+          placeholder="대리점 선택"
+        />
+      </MsfFormGroup>
+      <!-- // 위치이동__20260520 -->
     </MsfStack>
     <!-- // 고객 유형 -->
     <!-- 신분증 확인 -->
@@ -104,29 +125,42 @@
       </MsfFormGroup>
       <MsfFormGroup label="해지<br/>휴대폰번호" required>
         <MsfStack type="field">
-          <MsfNumberInput v-model="formData.cancelPhone1" placeholder="앞 3자리" readonly />
+          <MsfMobileInput
+            v-model:number1="formData.cancelPhone1"
+            v-model:number2="formData.cancelPhone2"
+            v-model:number3="formData.cancelPhone3"
+          />
+          <!-- <MsfNumberInput
+            v-model="formData.cancelPhone1"
+            placeholder="앞 3자리"
+            maxLength="3"
+            readonly
+          />
           <span class="unit-sep">-</span>
           <MsfNumberInput
             v-model="formData.cancelPhone2"
             id="inp-cancelPhone2"
             placeholder="가운데 4자리"
+            maxLength="4"
           />
           <span class="unit-sep">-</span>
           <MsfNumberInput
             v-model="formData.cancelPhone3"
             id="inp-cancelPhone3"
             placeholder="뒤 4자리"
-          />
+            maxLength="4"
+          /> -->
           <MsfButton variant="toggle" disabled>인증번호 발송</MsfButton>
           <MsfButton variant="toggle">인증번호 발송</MsfButton>
           <MsfButton variant="toggle">인증번호 재발송</MsfButton>
           <MsfButton variant="toggle" active>인증 완료</MsfButton>
         </MsfStack>
         <MsfStack type="field">
-          <MsfInput
+          <MsfNumberInput
             v-model="formData.cancelPhoneAuth"
             id="inp-cancelPhoneAuth"
             placeholder="인증번호 입력"
+            maxLength="6"
           />
           <span class="remain-time">남은시간 <em>02:33</em></span>
           <MsfButton variant="toggle">인증번호 확인</MsfButton>
@@ -164,10 +198,16 @@
       </MsfFormGroup>
       <MsfFormGroup label="연락처(휴대폰)" required>
         <MsfStack type="field">
-          <MsfNumberInput
+          <MsfMobileInput
+            v-model:number1="formData.repPhone1"
+            v-model:number2="formData.repPhone2"
+            v-model:number3="formData.repPhone3"
+          />
+          <!-- <MsfNumberInput
             v-model="formData.repPhone1"
             placeholder="앞자리"
             ariaLabel="연락처(휴대폰) 앞자리"
+            maxLength="3"
             readonly
           />
           <span class="unit-sep">-</span>
@@ -176,6 +216,7 @@
             id="inp-repPhone2"
             placeholder="가운데 4자리"
             ariaLabel="연락처(휴대폰) 가운데 4자리"
+            maxLength="4"
           />
           <span class="unit-sep">-</span>
           <MsfNumberInput
@@ -183,17 +224,19 @@
             id="inp-repPhone3"
             placeholder="뒤 4자리"
             ariaLabel="연락처(휴대폰) 뒤 4자리"
-          />
+            maxLength="4"
+          /> -->
           <MsfButton variant="toggle" disabled>인증번호 발송</MsfButton>
           <MsfButton variant="toggle">인증번호 발송</MsfButton>
           <MsfButton variant="toggle">인증번호 재발송</MsfButton>
           <MsfButton variant="toggle" active>인증 완료</MsfButton>
         </MsfStack>
         <MsfStack type="field">
-          <MsfInput
+          <MsfNumberInput
             v-model="formData.repPhoneAuth"
             id="inp-repPhoneAuth"
             placeholder="인증번호 입력"
+            maxLength="6"
           />
           <span class="remain-time">남은시간 <em>02:33</em></span>
           <MsfButton variant="toggle">인증번호 확인</MsfButton>
@@ -207,13 +250,13 @@
       type="default"
       v-model="formData.repAgree"
       label="본인은 안내사항을 확인하였습니다"
-      required
+      :required="true"
       popTitle="법정대리인 안내사항 확인 및 동의"
       content="법정대리인 안내사항 확인 및 동의 내용"
     />
     <!-- // 법정대리인 안내사항 확인 및 동의 -->
-    <!-- 대리인 위임정보 -->
-    <MsfTitleArea title="대리인 위임정보" />
+    <!-- 대리인 위임 정보 -->
+    <MsfTitleArea title="대리인 위임 정보" />
     <MsfStack vertical type="formgroups">
       <MsfFormGroup label="위임받은<br/>고객 이름" required>
         <MsfInput v-model="formData.agentName" placeholder="이름" class="ut-w-300" />
@@ -251,18 +294,28 @@
       </MsfFormGroup>
       <MsfFormGroup label="연락처" required>
         <MsfStack type="field">
-          <MsfNumberInput v-model="formData.agentPhone1" placeholder="앞자리" />
-          <span class="unit-sep">-</span>
           <MsfNumberInput
-            v-model="formData.agentPhone2"
-            id="inp-agentPhone2"
-            placeholder="가운데 4자리"
+            v-model="formData.agentPhone1"
+            placeholder="앞자리"
+            maxLength="3"
+            @maxlength="agentPhone2Input?.focus()"
           />
           <span class="unit-sep">-</span>
           <MsfNumberInput
+            ref="agentPhone2Input"
+            v-model="formData.agentPhone2"
+            id="inp-agentPhone2"
+            placeholder="가운데 4자리"
+            maxLength="4"
+            @maxlength="agentPhone3Input?.focus()"
+          />
+          <span class="unit-sep">-</span>
+          <MsfNumberInput
+            ref="agentPhone3Input"
             v-model="formData.agentPhone3"
             id="inp-agentPhone3"
             placeholder="뒤 4자리"
+            maxLength="4"
           />
         </MsfStack>
       </MsfFormGroup>
@@ -281,15 +334,29 @@
     <MsfStack vertical type="formgroups">
       <MsfFormGroup label="연락 전화번호" required helpText="※ 개통신청서 발송">
         <MsfStack type="field">
-          <MsfNumberInput v-model="formData.afterTel1" placeholder="010/지역번호" />
+          <MsfNumberInput
+            v-model="formData.afterTel1"
+            placeholder="010/지역번호"
+            maxLength="3"
+            @maxlength="afterTel2Input?.focus()"
+          />
           <span class="unit-sep">-</span>
           <MsfNumberInput
+            ref="afterTel2Input"
             v-model="formData.afterTel2"
             id="inp-afterTel2"
             placeholder="가운데 4자리"
+            maxLength="4"
+            @maxlength="afterTel3Input?.focus()"
           />
           <span class="unit-sep">-</span>
-          <MsfNumberInput v-model="formData.afterTel3" id="inp-afterTel3" placeholder="뒤 4자리" />
+          <MsfNumberInput
+            ref="afterTel3Input"
+            v-model="formData.afterTel3"
+            id="inp-afterTel3"
+            placeholder="뒤 4자리"
+            maxLength="4"
+          />
         </MsfStack>
       </MsfFormGroup>
       <MsfFormGroup label="해지 후 연락 수단" tag="div">
@@ -304,29 +371,17 @@
       </MsfFormGroup>
     </MsfStack>
     <!-- // 해지 후 연락처 -->
-    <!-- 가입유형 선택 -->
-    <MsfTitleArea title="가입유형 선택" />
+    <!-- 가입유형 선택__타이틀변경__20260520-->
+    <MsfTitleArea title="해지 휴대폰 정보" />
     <MsfStack vertical type="formgroups">
       <MsfFormGroup label="개통일자 확인">
         <MsfInput v-model="formData.openingDate" class="ut-w-300" disabled />
-      </MsfFormGroup>
-      <MsfFormGroup label="대리점" tag="div" required>
-        <MsfSelect
-          title="대리점 선택"
-          v-model="formData.agencyName"
-          :options="[
-            { label: '대리점1', value: 'agencyName1' },
-            { label: '대리점2', value: 'agencyName2' },
-          ]"
-          class="ut-w-300"
-          placeholder="대리점 선택"
-        />
       </MsfFormGroup>
     </MsfStack>
     <!-- // 가입유형 선택 -->
     <!-- 약관 동의  -->
     <MsfTitleArea title="약관 동의" />
-    <MsfAgreementGroup policy="join" ref="agreementRef" required />
+    <!-- <MsfAgreementGroup policy="join" ref="agreementRef" required /> -->
     <!-- // 약관 동의 -->
   </div>
 </template>
@@ -338,6 +393,13 @@ import { ref, watch, reactive } from 'vue'
 const emit = defineEmits(['complete'])
 
 const isComplete = ref('')
+
+// 대리인 위임 정보 연락처영역 input focus
+const agentPhone2Input = ref(null)
+const agentPhone3Input = ref(null)
+// 해지 후 연락처영역 input focus
+const afterTel2Input = ref(null)
+const afterTel3Input = ref(null)
 
 // 값이 변할 때마다 상위 컴포넌트에게 필수 입력 결과를 알려준다.
 watch(
@@ -385,7 +447,7 @@ const formData = reactive({
   userName: '', //이름
   userBirthDate: '', //생년월일
   userGender: '', //성별
-  cancelPhone1: '', // 해지연락처1
+  cancelPhone1: '010', // 해지연락처1
   cancelPhone2: '', // 해지연락처2
   cancelPhone3: '', // 해지연락처3
   cancelPhoneAuth: '', //인증번호입력
@@ -394,7 +456,7 @@ const formData = reactive({
   repRegistrationNo1: '', //주민등록번호1
   repRegistrationNo2: '', //주민등록번호2
   repRelation: '', //관계
-  repPhone1: '', // 연락처1
+  repPhone1: '010', // 연락처1
   repPhone2: '', // 연락처2
   repPhone3: '', // 연락처3
   repPhoneAuth: '', //인증번호입력

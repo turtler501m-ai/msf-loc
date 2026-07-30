@@ -14,7 +14,9 @@ import com.ktmmobile.msf.domains.form.common.code.ReqBuyType;
 public class ProductInfoRequest {
 
     private ReqBuyType plcySctnCd;//REQ_BUY_TYPE_CD >> MM : 휴대폰, UU : 유심
-    private ReqBuyType reqBuyTypeCd = ReqBuyType.MOBILE; //REQ_BUY_TYPE_CD >> MM : 휴대폰, UU : 유심
+    //private ReqBuyType reqBuyTypeCd = ReqBuyType.MOBILE; //REQ_BUY_TYPE_CD >> MM : 휴대폰, UU : 유심
+    private ReqBuyType reqBuyTypeCd = ReqBuyType.UNDEFINED; //REQ_BUY_TYPE_CD >> MM : 휴대폰, UU : 유심
+    private String operTypeCd; //가입유형
 
     private String agentCd; //선택한 대리점코드
 
@@ -47,6 +49,8 @@ public class ProductInfoRequest {
     private String prdtId;
     private String rateCd;
     private String rateType; //CMN0047 >> 01 : 단말요금제 / 02 : USIM요금제
+
+    private String modelMonthly;
 
     private String payClCd; //PAY_CL_CD : 후불(PO)
     private String serviceType; //SERVICE_TYPE : 구분 (P: 요금제)

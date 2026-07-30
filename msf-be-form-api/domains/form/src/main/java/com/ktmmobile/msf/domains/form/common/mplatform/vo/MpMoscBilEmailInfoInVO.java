@@ -5,7 +5,6 @@ import java.text.ParseException;
 import org.jdom.Element;
 
 import com.ktmmobile.msf.domains.form.common.util.MaskingUtil;
-import com.ktmmobile.msf.domains.form.common.util.SessionUtils;
 import com.ktmmobile.msf.domains.form.common.util.StringUtil;
 import com.ktmmobile.msf.domains.form.common.util.XmlParse;
 
@@ -52,22 +51,11 @@ public class MpMoscBilEmailInfoInVO extends CommonXmlVO{
             // 이메일 마스킹 적용 2022.10.05
             String email= XmlParse.getChildValue(outInfoDto, "email");
 
-            // 마스킹해제 인증 안했을시
-            if(SessionUtils.getMaskingSession() == 0) {
-                if (StringUtil.isNotEmpty(ctn)) {
-                    this.setCtn(MaskingUtil.getMaskedTelNo(StringUtil.getMobileFullNum(ctn)));
-                }
-                if(StringUtil.isNotEmpty(email)) {
-                    this.setMaskedEmail(MaskingUtil.getMaskedEmail2(email));
-                }
-            }else {
-                if (StringUtil.isNotEmpty(ctn)) {
-                    this.setCtn(StringUtil.getMobileFullNum(StringUtil.NVL(ctn,"")));
-                }
-
-                if(StringUtil.isNotEmpty(email)) {
-                    this.setMaskedEmail(email);
-                }
+            if (StringUtil.isNotEmpty(ctn)) {
+                this.setCtn(MaskingUtil.getMaskedTelNo(StringUtil.getMobileFullNum(ctn)));
+            }
+            if(StringUtil.isNotEmpty(email)) {
+                this.setMaskedEmail(MaskingUtil.getMaskedEmail2(email));
             }
 
 

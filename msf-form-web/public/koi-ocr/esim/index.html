@@ -1,0 +1,746 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>eSIM 인식 모듈</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+        background: #000;
+        color: #fff;
+        overflow: hidden;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+      }
+
+      .container {
+        width: 100vw;
+        height: 100vh;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* === 메인 화면 (시작 화면) === */
+      .main-screen {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, #1a1a1a 0%, #000 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px;
+        text-align: center;
+        z-index: 300;
+      }
+
+      .main-screen.hidden {
+        display: none;
+      }
+
+      .main-icon {
+        font-size: 64px;
+        color: #00ff88;
+        margin-bottom: 24px;
+        animation: icon-float 3s ease-in-out infinite;
+      }
+
+      @keyframes icon-float {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-10px);
+        }
+      }
+
+      .main-title {
+        font-size: 44px;
+        font-weight: 600;
+        margin-bottom: 12px;
+      }
+
+      .main-desc {
+        font-size: 16px;
+        opacity: 0.8;
+        margin-bottom: 40px;
+        line-height: 1.5;
+        word-break: keep-all;
+      }
+
+      .desc-line {
+        display: block; /* 브라우저 너비와 상관없이 강제 줄바꿈 */
+        margin-bottom: 8px; /* 문장 사이의 미세한 간격 조절 가능 */
+      }
+
+      /* Esim 개수 선택 */
+      .esim-count-selector {
+        margin-bottom: 32px;
+      }
+
+      .selector-label {
+        font-size: 18px;
+        opacity: 0.7;
+        margin-bottom: 16px;
+        color: #00ff88;
+      }
+
+      .count-options {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .count-option {
+        width: 60px;
+        height: 60px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        font-size: 18px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+      }
+
+      .count-option:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+      }
+
+      .count-option.active {
+        border-color: #00ff88;
+        background: rgba(0, 255, 136, 0.2);
+        color: #00ff88;
+      }
+
+      /* 시작 버튼 */
+      .start-btn {
+        background: linear-gradient(135deg, #00ff88, #00cc6a);
+        color: #000;
+        border: none;
+        padding: 16px 40px;
+        border-radius: 12px;
+        font-size: 22px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        min-width: 200px;
+      }
+
+      .start-btn:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 255, 136, 0.3);
+      }
+
+      .start-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      /* === 촬영 화면 === */
+      .scan-screen {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: none;
+        flex-direction: column;
+      }
+
+      .scan-screen.active {
+        display: flex;
+      }
+
+      /* 상단 헤더 - 간소화 */
+      .header {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        padding: 20px 24px;
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6), transparent);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .header-title {
+        font-size: 32px;
+        font-weight: 500;
+        opacity: 0.9;
+      }
+
+      .close-btn {
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        color: #fff;
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        font-size: 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(10px);
+      }
+
+      /* 카메라 뷰어 - 심플하게 */
+      .camera-viewer {
+        flex: 1;
+        width: 100%;
+        height: 100%;
+        position: relative;
+        background: #000;
+        overflow: hidden;
+      }
+
+      #camera-feed {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        /* transform: scaleX(-1);
+        -webkit-transform: scaleX(-1); */
+      }
+
+      /* 간단한 중앙 표시점 */
+      .center-marker {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 60px;
+        height: 60px;
+        border: 2px solid rgba(0, 255, 136, 0.3);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+      }
+
+      .center-dot {
+        width: 8px;
+        height: 8px;
+        background: #00ff88;
+        border-radius: 50%;
+      }
+
+      /* 상태 오버레이 - 여백에 배치 */
+      .status-overlay {
+        position: absolute;
+        top: 80px; /* 헤더 아래 */
+        left: 24px;
+        right: 24px;
+        z-index: 90;
+        pointer-events: none;
+      }
+
+      .progress-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+
+      .progress-text {
+        font-size: 22px;
+        opacity: 0.8;
+        color: #00ff88;
+      }
+
+      .progress-count {
+        font-size: 22px;
+        font-weight: 600;
+        color: #00ff88;
+      }
+
+      .progress-bar {
+        width: 100%;
+        height: 6px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 2px;
+        overflow: hidden;
+        margin-bottom: 12px;
+      }
+
+      .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #00ff88, #00cc6a);
+        border-radius: 2px;
+        transition: width 0.3s ease;
+      }
+
+      .esim-status-simple {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+      }
+
+      /* 개별 아이콘 기본 스타일 */
+      .esim-icon-simple {
+        width: 36px;
+        height: 36px;
+        border-radius: 12px; /* 원형보다는 약간 각진 부드러운 사각형이 더 현대적입니다 */
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        color: rgba(255, 255, 255, 0.3);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      /* 현재 인식 대상 아이콘 (강조) */
+      .esim-icon-simple.current {
+        background: rgba(255, 170, 0, 0.2);
+        border-color: #ffaa00;
+        color: #ffaa00;
+        box-shadow: 0 0 15px rgba(255, 170, 0, 0.2);
+        animation: icon-pulse 1.5s infinite ease-in-out;
+      }
+
+      /* 인식 성공 아이콘 */
+      .esim-icon-simple.detected {
+        background: #28a745;
+        border-color: #28a745;
+        color: #fff;
+        transform: scale(1);
+        box-shadow: 0 0 20px rgba(40, 167, 69, 0.4);
+      }
+
+      /* 애니메이션 */
+      @keyframes icon-pulse {
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: 0.8;
+        }
+        50% {
+          transform: scale(1.1);
+          opacity: 1;
+        }
+      }
+
+      @keyframes popIn {
+        0% {
+          transform: scale(0.5) rotate(-45deg);
+          opacity: 0;
+        }
+        70% {
+          transform: scale(1.2) rotate(5deg);
+        }
+        100% {
+          transform: scale(1) rotate(0);
+          opacity: 1;
+        }
+      }
+
+      /* 하단 상태 바 - 간결하게 */
+      .status-bar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 40px 20px;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 30%, transparent);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+      }
+
+      /* 상단 안내 메시지 */
+      .status-text {
+        font-size: 16px;
+        color: #00ff88;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        font-weight: 400;
+      }
+
+      /* 아이콘과 타이머를 포함하는 하단 컨트롤 */
+      .status-controls {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+      }
+
+      /* 타이머 전용 배지 스타일 */
+      .timer-badge {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 6px 14px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #00ff88; /* 타이머만 녹색으로 강조 */
+        font-family: "monospace"; /* 숫자 가독성 */
+        font-weight: bold;
+        font-size: 18px;
+	    margin-left: 20px;
+      }
+
+      .timer-badge i {
+        font-size: 14px;
+        opacity: 0.8;
+      }
+
+      .highlight {
+        color: #00ff88;
+        font-weight: 600;
+      }
+
+      /* 결과 오버레이 - 간단하게 */
+      .result-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.95);
+        z-index: 200;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        text-align: center;
+        padding: 40px;
+      }
+
+      .result-overlay.show {
+        display: flex;
+        animation: fade-in 0.3s ease;
+      }
+
+      @keyframes fade-in {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      .result-icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+      }
+
+      .result-icon.success {
+        color: #00ff88;
+      }
+
+      .result-title {
+        font-size: 28px;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+
+      .result-message {
+        font-size: 18px;
+        opacity: 0.8;
+        margin-bottom: 24px;
+        word-break: keep-all;
+      }
+
+      .result-data-container {
+        width: 100%;
+        max-width: 320px;
+        margin: 20px 0;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 15px;
+        text-align: left;
+        max-height: 250px;
+        overflow-y: auto;
+      }
+
+      .data-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .data-row:last-child {
+        border-bottom: none;
+      }
+
+      .data-label {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 13px;
+        font-weight: 500;
+      }
+
+      .data-value {
+        color: #00ff88;
+        font-size: 14px;
+        font-family: "monospace";
+        word-break: break-all;
+        text-align: right;
+        margin-left: 10px;
+      }
+      .btn {
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-size: 20px;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        transition: all 0.3s ease;
+        min-width: 150px;
+      }
+
+      .btn-primary {
+        background: #00ff88;
+        color: #000;
+      }
+
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.2);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+
+      /* 태블릿 최적화 - 간결하게 */
+      @media (min-width: 768px) {
+        .main-title {
+          font-size: 28px;
+        }
+
+        .main-desc {
+          font-size: 18px;
+        }
+
+        .count-option {
+          width: 70px;
+          height: 70px;
+          font-size: 22px;
+        }
+
+        .start-btn {
+          padding: 18px 48px;
+          font-size: 18px;
+        }
+
+        .header {
+          padding: 30px 40px;
+        }
+
+        .header-title {
+          font-size: 22px;
+        }
+
+        .close-btn {
+          width: 44px;
+          height: 44px;
+          font-size: 18px;
+        }
+
+        .status-overlay {
+          top: 100px;
+          left: 40px;
+          right: 40px;
+        }
+
+        .progress-text {
+          font-size: 16px;
+        }
+
+        .progress-count {
+          font-size: 18px;
+        }
+
+        .progress-bar {
+          height: 6px;
+        }
+
+        .esim-icon-simple {
+          width: 32px;
+          height: 32px;
+          font-size: 14px;
+        }
+
+        .status-bar {
+          padding: 32px 40px;
+        }
+
+        .status-message {
+          font-size: 16px;
+        }
+
+        .result-icon {
+          font-size: 64px;
+        }
+
+        .result-title {
+          font-size: 24px;
+        }
+
+        .result-message {
+          font-size: 16px;
+        }
+
+        .btn {
+          padding: 16px 28px;
+          font-size: 16px;
+          min-width: 120px;
+        }
+      }
+
+      /* 터치 피드백 */
+      .touch-feedback {
+        position: absolute;
+        width: 40px;
+        height: 40px;
+        border: 2px solid #00ff88;
+        border-radius: 50%;
+        pointer-events: none;
+        opacity: 0;
+        transform: scale(0.5);
+        transition: all 0.3s ease;
+      }
+
+      .touch-feedback.show {
+        opacity: 1;
+        transform: scale(1);
+      }
+      /* ====================================
+        kt m mobile 스타일 적용
+        (팝업 스크롤 없이 사용하기 위해 전체적으로 간격, 폰트사이즈 줄임)
+      ====================================== */
+      .main-icon,
+      .result-icon {
+        font-size: 40px;
+        margin-bottom: 4px;
+      }
+      .main-title {
+        font-size: 28px;
+        margin-bottom: 8px;
+      }
+      .main-desc {
+        margin-bottom: 8px;
+      }
+      .main-desc .desc-line {
+        margin-bottom: 4px;
+      }
+      .esim-count-selector {
+        margin-bottom: 24px;
+      }
+      .esim-count-selector .selector-label {
+        font-size: 16px;
+        margin-bottom: 12px;
+      }
+      .result-data-container:empty{
+        padding: 0;
+        margin: 0;
+      }
+      .result-overlay[style*="display"][style*="block"] {
+        padding-top: 70px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- === 메인 화면 === -->
+      <div class="main-screen" id="mainScreen">
+        <div class="main-icon">
+          <i class="fas fa-sim-card"></i>
+        </div>
+        <h1 class="main-title">eSIM 인식</h1>
+        <p class="main-desc">
+          <span class="desc-line">카메라를 통해 eSIM을 간편하게 인식하세요</span>
+          <span class="desc-line">여러 개의 eSIM을 한 번에 처리할 수 있습니다</span>
+        </p>
+        <div class="esim-count-selector">
+          <div class="selector-label">인식할 eSIM 개수를 선택하세요</div>
+          <div class="count-options" id="countOptions">
+            <button class="count-option" data-count="1">1</button>
+            <button class="count-option" data-count="2">2</button>
+	        <button class="count-option" data-count="3">3</button>
+            <button class="count-option" data-count="4">4</button>
+          </div>
+        </div>
+
+        <!--<button class="start-btn" id="startBtn" disabled>스캔 시작</button>-->
+      </div>
+
+      <!-- === 촬영 화면 === -->
+      <div class="scan-screen" id="scanScreen">
+
+        <main class="camera-viewer">
+          <video id="camera-feed" autoplay playsinline></video>
+
+          <!-- 간단한 중앙 표시점 -->
+          <div class="center-marker">
+            <div class="center-dot"></div>
+          </div>
+
+          <!-- 로딩 인디켜터 -->
+          <div class="loading-indicator" id="loadingIndicator">
+            <div class="loading-spinner"></div>
+          </div>
+
+          <!-- 터치 피드백 -->
+          <div class="touch-feedback" id="touchFeedback"></div>
+        </main>
+
+        <footer class="status-bar">
+          <div class="status-text" id="statusText">eSIM을 스캔하고 있습니다</div>
+
+          <div class="status-controls">
+            <div class="esim-status-simple" id="esimStatusSimple"></div>
+            <div class="timer-badge" id="timerBadge">
+              <i class="fas fa-clock"></i>
+              <span id="timerSeconds">60</span>s
+            </div>
+          </div>
+        </footer>
+      </div>
+
+      <!-- 결과 오버레이 -->
+      <div class="result-overlay" id="resultOverlay">
+        <div class="result-icon" id="resultIcon">
+          <i class="fas fa-check-circle"></i>
+        </div>
+        <h2 class="result-title" id="resultTitle">인식 완료</h2>
+        <p class="result-message" id="resultMessage">모든 eSIM이 성공적으로 인식되었습니다.</p>
+        <div class="result-data-container" id="resultDataContainer"></div>
+        <div class="result-actions">
+          <!-- <button class="btn btn-primary" onclick="completeProcess()">확인</button> -->
+          <button class="btn btn-secondary" onclick="retryCapture()">재시도</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="wasm/koiEsim.js"></script>
+    <script src="js/EsimProcessor.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>

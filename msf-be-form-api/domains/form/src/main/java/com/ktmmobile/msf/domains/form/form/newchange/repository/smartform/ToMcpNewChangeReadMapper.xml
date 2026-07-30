@@ -1,0 +1,399 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.form.form.newchange.repository.smartform.ToMcpNewChangeReadMapper">
+
+  <select id="selectMsfRequestToMcp" parameterType="java.lang.Long"
+          resultType="com.ktmmobile.msf.domains.form.form.common.vo.McpRequestVo">
+      SELECT x.REQUEST_KEY
+        , <include refid="msfRequestColumnsToMcp"></include>
+      FROM MSF_REQUEST x, MSF_REQUEST_BILL_REQ y
+      WHERE x.REQUEST_KEY = y.REQUEST_KEY
+          AND x.REQUEST_KEY = #{requestKey}
+  </select>
+  <select id="selectMsfRequestTempToMcp" parameterType="java.lang.Long"
+          resultType="com.ktmmobile.msf.domains.form.form.common.vo.McpRequestVo">
+    SELECT x.REQUEST_KEY
+          , <include refid="msfRequestColumnsToMcp"></include>
+    FROM MSF_REQUEST_TEMP x
+        LEFT JOIN MSF_REQUEST_BILL_REQ_TEMP y ON x.REQUEST_KEY = y.REQUEST_KEY
+    WHERE x.REQUEST_KEY = #{requestKey}
+  </select>
+  <sql id="msfRequestColumnsToMcp">
+          x.CRET_IP
+        , x.CRET_DT
+        , x.CRET_ID
+        , x.AMD_DT
+        , x.AMD_ID
+        , MANAGER_CD
+        , AGENT_CD
+        , SHOP_CD
+        , SHOP_NM
+        , REAL_SHOP_NM
+        , CPNT_ID
+        , CNTPNT_SHOP_CD
+        , REQ_BUY_TYPE_CD
+        , SERVICE_TYPE_CD
+        , OPER_TYPE_CD
+        , CSTMR_TYPE_CD
+        , FATH_TRG_YN
+        , FATH_TRANSAC_ID
+        , FATH_CMPLT_NTFY_DATE
+        , AUTH_INFO
+        , OPEN_NO
+        , CONTRACT_NUM
+        , PROD_TYPE_CD
+        , PROD_ID
+        , PROD_NM
+        , REQ_PHONE_SN
+        , REQ_MODEL_NM
+        , SNTY_CAPAC_CD
+        , SNTY_COLOR_CD
+        , REQ_MODEL_COLOR
+        , SHOP_USM_ID
+        , USIM_KINDS_CD
+        , REQ_USIM_SN
+        , REQ_USIM_NM
+        , EID
+        , IMEI1
+        , IMEI2
+        , ESIM_PHONE_ID
+        , UPLOAD_PHONE_SRL_NO
+        , REQ_WANT_FN_NO
+        , REQ_WANT_MN_NO
+        , REQ_WANT_RN_NO
+        , INSR_CD
+        , INSR_PROD_CD
+        , CLAUSE_INSURANCE_YN
+        , CLAUSE_INSR_PROD_YN
+        , INSR_AUTH_INFO
+        , PRNTS_CONTRACT_NUM
+        , JEHU_PARTNER_TYPE_CD
+        , JEHU_PROD_TYPE_CD
+        , REQ_ADDITION_LIST_NM
+        , REQ_ADDITION_PRICE
+        , PHONE_PAYMENT_YN
+        , y.REQ_PAY_TYPE_CD
+        , ON_OFF_TYPE_CD
+        , SO_CD
+        , OPEN_REQ_DT
+        , REQ_IN_DT
+        , CLAUSE_PRI_COLLECT_YN
+        , CLAUSE_PRI_OFFER_YN
+        , CLAUSE_ESS_COLLECT_YN
+        , CLAUSE_PRI_TRUST_YN
+        , CLAUSE_PRI_AD_YN
+        , CLAUSE_CONFIDENCE_YN
+        , CLAUSE_FATH_YN
+        , NW_BLCK_AGRM_YN
+        , APP_BLCK_AGRM_YN
+        , BLCK_APP_DIV_CD
+        , SO_TRNS_AGRM_YN
+        , CLAUSE_JEHU_YN
+        , CLAUSE_RENTAL_MODEL_CP_YN
+        , CLAUSE_RENTAL_MODEL_CP_PR_YN
+        , CLAUSE_RENTAL_SERVICE_YN
+        , CLAUSE_MPPS35_YN
+        , CLAUSE_FINANCE_YN
+        , CLAUSE_5G_COVERAGE_YN
+        , PERSONAL_INFO_COLLECT_AGREE_YN
+        , OTHERS_TRNS_AGREE_YN
+        , CLAUSE_SENSI_COLLECT_YN
+        , CLAUSE_SENSI_OFFER_YN
+        , CLAUSE_PARTNER_OFFER_YN
+        , OTHERS_TRNS_KT_AGREE_YN
+        , OTHERS_AD_RECEIVE_AGREE_YN
+        , KT_COUNSEL_AGREE_YN
+        , COMBINE_SOLO_TYPE_YN
+        , COMBINE_SOLO_YN
+        , ETC_SPECIAL_SBST
+        , MEMO
+        , REC_YN
+        , RES_CD
+        , RES_MSG
+        , RES_NO
+        , PRO_STTUS_CD
+        , SBSC_PRO_CD
+        , SCAN_ID
+        , APP_FORM_YN
+        , APP_FORM_XML_YN
+        , FILE_NM
+        , FILE_MASK_NM
+        , FAX_YN
+        , FAX_NO
+        , PARENT_SCAN_ID
+        , INDV_LOCA_PRV_AGREE_YN
+        , DIS_PRMT_ID
+  </sql>
+  <select id="selectMsfRequestCstmrToMcp" parameterType="java.lang.Long"
+          resultType="com.ktmmobile.msf.domains.form.form.common.vo.McpRequestCstmrVo">
+    SELECT
+          x.REQUEST_KEY
+        , <include refid="msfRequestCstmrColumnsToMcp" />
+    FROM MSF_REQUEST x
+        LEFT JOIN MSF_REQUEST_CSTMR y ON x.REQUEST_KEY = y.REQUEST_KEY
+        LEFT JOIN MSF_REQUEST_BILL_REQ z ON x.REQUEST_KEY = z.REQUEST_KEY
+    WHERE x.REQUEST_KEY = #{requestKey}
+  </select>
+  <select id="selectMsfRequestCstmrTempToMcp" parameterType="java.lang.Long"
+          resultType="com.ktmmobile.msf.domains.form.form.common.vo.McpRequestCstmrVo">
+    SELECT
+        x.REQUEST_KEY
+        , <include refid="msfRequestCstmrColumnsToMcp" />
+    FROM MSF_REQUEST_TEMP x
+        LEFT JOIN MSF_REQUEST_CSTMR_TEMP y ON x.REQUEST_KEY = y.REQUEST_KEY
+        LEFT JOIN MSF_REQUEST_BILL_REQ_TEMP z ON x.REQUEST_KEY = z.REQUEST_KEY
+    WHERE x.REQUEST_KEY = #{requestKey}
+  </select>
+  <sql id="msfRequestCstmrColumnsToMcp">
+        x.CRET_DT
+      , x.AMD_DT
+      , x.AMD_ID
+      , CSTMR_NM
+      , CSTMR_NATIVE_RRN
+      , CSTMR_PRIVATE_CNAME
+      , CSTMR_PRIVATE_BIZ_NO
+      , CSTMR_FOREIGNER_RRN
+      , CSTMR_FOREIGNER_BIRTH
+      , CSTMR_FOREIGNER_PN
+      , CSTMR_FOREIGNER_NATION
+      , CSTMR_FOREIGNER_VISA_NO
+      , CSTMR_FOREIGNER_VDATE_START_DATE
+      , CSTMR_FOREIGNER_VDATE_END_DATE
+      , CSTMR_JURIDICAL_CNAME
+      , CSTMR_JURIDICAL_RRN
+      , CSTMR_JURIDICAL_BIZ_NO
+      , UPJN_CD
+      , BCU_SBST
+      , CSTMR_VISIT_TYPE_CD
+      , x.FATH_MOBILE_FN_NO
+      , x.FATH_MOBILE_MN_NO
+      , x.FATH_MOBILE_RN_NO
+      , x.IDENTITY_ISSU_DATE
+      , x.SELF_ISSU_NO
+      , CSTMR_TEL_FN_NO
+      , CSTMR_TEL_MN_NO
+      , CSTMR_TEL_RN_NO
+      , CSTMR_MOBILE_FN_NO
+      , CSTMR_MOBILE_MN_NO
+      , CSTMR_MOBILE_RN_NO
+      , CSTMR_ZIPCD
+      , CSTMR_ADR
+      , CSTMR_ADR_DTL
+      , CSTMR_ADR_BJD
+      , z.CSTMR_BILL_SEND_TYPE_CD
+      , y.CSTMR_EMAIL_ADR
+      , CSTMR_EMAIL_RECEIVE_YN
+      , CSTMR_RECEIVE_TEL_FN_NO
+      , CSTMR_RECEIVE_TEL_NM_NO
+      , CSTMR_RECEIVE_TEL_RN_NO
+      , z.OTHERS_PAYMENT_YN
+      , z.OTHERS_PAYMENT_NM
+      , z.OTHERS_PAYMENT_RRN
+      , z.OTHERS_PAYMENT_REL_TYPE_CD
+      , z.OTHERS_PAYMENT_REQ_NM
+      , x.PRNTS_MOBILE_NO
+  </sql>
+  <select id="selectMsfRequestAgentToMcp" parameterType="java.lang.Long"
+          resultType="com.ktmmobile.msf.domains.form.form.common.vo.McpRequestAgentVo">
+    SELECT
+          x.REQUEST_KEY
+          , x.CRET_DT
+          , x.AMD_DT
+          , x.AMD_ID
+          , MINOR_AGENT_NM
+          , MINOR_AGENT_RRN
+          , MINOR_AGENT_REL_TYPE_CD
+          , MINOR_AGENT_TEL_FN_NO
+          , MINOR_AGENT_TEL_MN_NO
+          , MINOR_AGENT_TEL_RN_NO
+          , MINOR_AGENT_AGRM_YN
+          , MINOR_AGENT_SELF_INQRY_AGRM_YN
+          , MINOR_AGENT_SELF_CERT_TYPE_CD
+          , IDENTITY_ISSU_DATE
+          , SELF_ISSU_NO
+          , JRDCL_AGENT_NM
+          , JRDCL_AGENT_RRN
+          , JRDCL_AGENT_TEL_FN_NO
+          , JRDCL_AGENT_TEL_MN_NO
+          , JRDCL_AGENT_TEL_RN_NO
+    FROM MSF_REQUEST x, MSF_REQUEST_AGENT y
+    WHERE x.REQUEST_KEY = y.REQUEST_KEY
+        AND x.REQUEST_KEY = #{requestKey}
+  </select>
+
+  <select id="selectMsfRequestBillReqToMcp" parameterType="java.lang.Long"
+          resultType="com.ktmmobile.msf.domains.form.form.common.vo.McpRequestReqVo">
+    SELECT
+          x.REQUEST_KEY
+          , x.CRET_DT
+          , x.AMD_DT
+          , x.AMD_ID
+          , REQ_BANK_CD
+          , REQ_ACCOUNT_NM
+          , REQ_ACCOUNT_RRN
+          , REQ_ACCOUNT_REL_TYPE_CD
+          , REQ_ACCOUNT_NO
+          , REQ_CARD_NM
+          , REQ_CARD_RRN
+          , REQ_CARD_COMPANY_CD
+          , REQ_CARD_NO
+          , REQ_CARD_YY
+          , REQ_CARD_MM
+          , REQ_WIRE_TYPE_CD
+          , OTHERS_PAYMENT_YN
+          , OTHERS_PAYMENT_TEL_FN_NO
+          , OTHERS_PAYMENT_TEL_MN_NO
+          , OTHERS_PAYMENT_TEL_RN_NO
+          , PRNTS_BILL_NO
+    FROM MSF_REQUEST x, MSF_REQUEST_BILL_REQ y
+    WHERE x.REQUEST_KEY = y.REQUEST_KEY
+        AND x.REQUEST_KEY = #{requestKey}
+  </select>
+
+  <select id="selectMsfRequestSaleinfoToMcp" parameterType="java.lang.Long"
+          resultType="com.ktmmobile.msf.domains.form.form.common.vo.McpRequestSaleinfoVo">
+    SELECT
+          x.REQUEST_KEY
+          , <include refid="msfRequestSaleColumnsToMcp" />
+    FROM MSF_REQUEST x LEFT JOIN MSF_REQUEST_SALE y ON x.REQUEST_KEY = y.REQUEST_KEY
+    WHERE x.REQUEST_KEY = #{requestKey}
+  </select>
+  <select id="selectMsfRequestSaleinfoTempToMcp" parameterType="java.lang.Long"
+          resultType="com.ktmmobile.msf.domains.form.form.common.vo.McpRequestSaleinfoVo">
+    SELECT
+    x.REQUEST_KEY
+    , <include refid="msfRequestSaleColumnsToMcp" />
+    FROM MSF_REQUEST_TEMP x LEFT JOIN MSF_REQUEST_SALE_TEMP y ON x.REQUEST_KEY = y.REQUEST_KEY
+    WHERE x.REQUEST_KEY = #{requestKey}
+  </select>
+  <sql id="msfRequestSaleColumnsToMcp">
+      x.AMD_DT
+    , x.AMD_ID
+    , MODEL_ID
+    , MODEL_MONTHLY
+    , MODEL_INSTAMT
+    , MODEL_SALE_POLICY_CD
+    , MODEL_PRICE_VAT
+    , MODEL_DISCOUNT1
+    , MODEL_SPRT
+    , MODEL_PRICE
+    , MODEL_DISCOUNT3
+    , REAL_MDL_INSTAMT
+    , HNDSET_SALE_PRICE
+    , SPRT_TYPE_CD
+    , DC_AMT
+    , MAX_APD_SPRT
+    , ADD_DC_AMT
+    , ENGG_MNTH_CNT
+    , RECYCLE_YN
+    , USIM_PRICE_TYPE_CD
+    , USIM_PRICE
+    , USIM_PAY_MTHD_CD
+    , SESPLS_YN
+    , JOIN_PRICE_TYPE_CD
+    , JOIN_PAY_MTHD_CD
+    , JOIN_PRICE
+    , SOC_CODE
+  </sql>
+
+  <select id="selectMsfRequestAdditionToMcp" parameterType="java.lang.Long"
+          resultType="com.ktmmobile.msf.domains.form.form.common.vo.McpRequestAdditionVo">
+    SELECT
+        x.REQUEST_KEY
+        , ADDITION_KEY
+        , ADDITION_NM
+        , RANTAL
+        , PROC_YN
+    FROM MSF_REQUEST_ADDITION x
+    WHERE x.REQUEST_KEY IN (SELECT REQUEST_KEY FROM MSF_REQUEST WHERE REQUEST_KEY = #{requestKey})
+  </select>
+
+  <select id="selectMsfRequestDvcChgToMcp" parameterType="java.lang.Long"
+          resultType="com.ktmmobile.msf.domains.form.form.common.vo.McpRequestDvcChgVo">
+    SELECT
+          x.REQUEST_KEY
+        , x.CRET_DT
+        , x.AMD_DT
+        , x.AMD_ID
+        , DVC_CHG_TYPE_CD
+        , DVC_CHG_RSN_CD
+        , DVC_CHG_RSN_DTL_CD
+    FROM MSF_REQUEST x, MSF_REQUEST_DVC_CHG y
+    WHERE x.REQUEST_KEY = y.REQUEST_KEY
+      AND x.REQUEST_KEY = #{requestKey}
+  </select>
+
+  <select id="selectMsfRequestMoveToMcp" parameterType="java.lang.Long"
+          resultType="com.ktmmobile.msf.domains.form.form.common.vo.McpRequestMoveVo">
+    SELECT
+        x.REQUEST_KEY
+        , <include refid="msfRequestMoveColumnsToMcp" />
+    FROM MSF_REQUEST x LEFT JOIN MSF_REQUEST_MOVE y ON x.REQUEST_KEY = y.REQUEST_KEY
+    WHERE x.REQUEST_KEY = #{requestKey}
+  </select>
+  <select id="selectMsfRequestMoveTempToMcp" parameterType="java.lang.Long"
+          resultType="com.ktmmobile.msf.domains.form.form.common.vo.McpRequestMoveVo">
+    SELECT
+    x.REQUEST_KEY
+    , <include refid="msfRequestMoveColumnsToMcp" />
+    FROM MSF_REQUEST_TEMP x LEFT JOIN MSF_REQUEST_MOVE_TEMP y ON x.REQUEST_KEY = y.REQUEST_KEY
+    WHERE x.REQUEST_KEY = #{requestKey}
+  </select>
+  <sql id="msfRequestMoveColumnsToMcp">
+        x.CRET_DT
+      , x.AMD_ID
+      , x.AMD_DT
+      , MOVE_COMPANY_CD
+      , MOVE_MOBILE_FN_NO
+      , MOVE_MOBILE_MN_NO
+      , MOVE_MOBILE_RN_NO
+      , MOVE_AUTH_TYPE_CD
+      , MOVE_AUTH_NO
+      , MOVE_THISMONTH_PAY_TYPE_CD
+      , MOVE_ALLOTMENT_STTUS_CD
+      , MOVE_REFUND_AGREE_YN
+      , REQ_GUIDE_YN
+      , REQ_GUIDE_FN_NO
+      , REQ_GUIDE_RN_NO
+      , REQ_GUIDE_MN_NO
+      , OSST_PAY_DATE
+      , OSST_PAY_TYPE_CD
+      , MOVE_PENALTY
+  </sql>
+
+  <select id="selectMsfUploadPhoneInfoToMcp" parameterType="java.lang.Long"
+          resultType="com.ktmmobile.msf.domains.form.form.common.vo.McpUploadPhoneInfoVo">
+    SELECT /** eSIM 업로드 내용 조회 **/
+        UPLOAD_PHONE_SRL_NO
+        --, REQ_MODEL_NM as REQ_MODEL_NAME
+        , REQ_MODEL_NM
+        , MODEL_ID
+        , REQ_PHONE_SN
+        , EID
+        , IMEI1
+        , IMEI2
+        --, UPLOAD_PHONE_IMG_NM AS UPLOAD_PHONE_IMG
+        , UPLOAD_PHONE_IMG_NM
+        , ACCESS_IP
+        , USER_ID
+        --, CRET_DT AS SYS_DT
+        --, CRET_DT as SYS_RDATE
+        , CRET_DT
+        --, MOVE_COMPANY_CD AS MOVE_TLCM_IND_CD
+        , MOVE_COMPANY_CD
+        , MOVE_CMNC_GNRT_IND_CD
+        , RST_CD
+        , EVENT_CD as EVNT_CD
+        , RSLT_CD
+        , RSLT_YN
+        , RSLT_MSG
+        , PRNTS_CONTRACT_NUM AS PRNTS_CONTRACT_NO
+    FROM MSF_UPLOAD_PHONE_INFO
+    WHERE UPLOAD_PHONE_SRL_NO = #{uploadPhoneSrlNo}
+  </select>
+
+
+
+</mapper>

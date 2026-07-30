@@ -1,6 +1,7 @@
 <template>
   <span v-bind="rootAttrs" :class="rootClasses">
     <input
+      ref="msfCheckboxRef"
       v-bind="inputAttrs"
       type="checkbox"
       class="checkbox-input"
@@ -12,11 +13,10 @@
       :aria-invalid="error"
       @change="handleChange"
     />
-    <label v-if="label" :for="checkboxId" class="checkbox-label">
+    <label v-if="label || $slots.label" :for="checkboxId" class="checkbox-label">
       <span class="checkbox-icon"></span>
       <span :class="{ 'ut-blind': hideLabel }">
-        <slot name="label-prepend"></slot>
-        {{ label }}
+        <slot name="label-prepend"></slot> <slot name="label">{{ label }}</slot>
         <slot name="label-append"></slot>
       </span>
     </label>
@@ -24,7 +24,7 @@
 </template>
 
 <script setup>
-import { computed, useId, useAttrs } from 'vue'
+import { computed, ref, useId, useAttrs } from 'vue'
 
 // 부모(root)에 바로 상속되지 않도록 설정
 defineOptions({ inheritAttrs: false })
@@ -42,6 +42,8 @@ const inputAttrs = computed(() => {
   delete rest.style
   return rest
 })
+
+const msfCheckboxRef = ref(null)
 
 const props = defineProps({
   modelValue: { type: [Boolean, Array, String, Number], default: false },
@@ -118,8 +120,15 @@ const rootClasses = computed(() => [
     'is-error': props.error, // 클래스명도 에러로 통일
     'is-checked': isChecked.value,
     'is-blockPadding': props.blockPadding,
+    'is-hideLabel': props.hideLabel,
   },
 ])
+
+defineExpose({
+  focus: () => {
+    msfCheckboxRef.value?.focus()
+  },
+})
 </script>
 
 <style lang="scss" scoped>
@@ -217,7 +226,7 @@ const rootClasses = computed(() => [
     --checkbox-icon-color: var(--color-text-disabled);
     --checkbox-border-color: var(--color-bg-disabled);
     --checkbox-background-color: var(--color-bg-disabled);
-    color: var(--color-gray-900);
+    color: var(--color-gray-500); // 기본 비활성화 색상보다 좀더 진하게 설정함
   }
 
   // variants
@@ -246,6 +255,17 @@ const rootClasses = computed(() => [
       --checkbox-background-color: transparent;
       color: var(--color-gray-900);
     }
+    // 비활성화 스타일 (lined)
+    .checkbox-input:disabled + label,
+    .checkbox-input:checked:disabled + label {
+      --checkbox-border-color: transparent;
+      --checkbox-background-color: transparent;
+      --checkbox-border-radius: 0;
+    }
+    .checkbox-input:checked:disabled + label {
+      --checkbox-icon-color: var(--color-accent2-base);
+      color: var(--color-text-disabled);
+    }
   }
 
   // sizes
@@ -261,6 +281,10 @@ const rootClasses = computed(() => [
 
   &.is-blockPadding {
     padding-block: rem(14px);
+  }
+
+  &.is-hideLabel {
+    --checkbox-inset: 0;
   }
 }
 </style>

@@ -1,32 +1,5 @@
 package com.ktmmobile.msf.domains.form.form.newchange.service;
 
-import com.ktds.crypto.exception.CryptoException;
-
-import com.ktmmobile.msf.domains.form.form.newchange.dao.AppformDao;
-import com.ktmmobile.msf.domains.form.common.constants.Constants;
-import com.ktmmobile.msf.domains.form.common.dto.McpIpStatisticDto;
-import com.ktmmobile.msf.domains.form.common.dto.UserSessionDto;
-import com.ktmmobile.msf.domains.form.common.dto.NmcpCdDtlDto;
-import com.ktmmobile.msf.domains.form.common.exception.McpCommonJsonException;
-import com.ktmmobile.msf.domains.form.common.service.IpStatisticService;
-import com.ktmmobile.msf.domains.form.common.util.*;
-
-import org.springframework.util.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.w3c.dom.Document;
-import org.xml.sax.InputSource;
-
-import javax.xml.XMLConstants;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -36,8 +9,40 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
-import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.*;
+import com.ktds.crypto.exception.CryptoException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+import org.w3c.dom.Document;
+import org.xml.sax.InputSource;
+
+import com.ktmmobile.msf.domains.form.common.constants.Constants;
+import com.ktmmobile.msf.domains.form.common.dto.McpIpStatisticDto;
+import com.ktmmobile.msf.domains.form.common.dto.NmcpCdDtlDto;
+import com.ktmmobile.msf.domains.form.common.dto.UserSessionDto;
+import com.ktmmobile.msf.domains.form.common.exception.McpCommonJsonException;
+import com.ktmmobile.msf.domains.form.common.service.IpStatisticService;
+import com.ktmmobile.msf.domains.form.common.util.EncryptUtil;
+import com.ktmmobile.msf.domains.form.common.util.MultipartUtility;
+import com.ktmmobile.msf.domains.form.common.util.NmcpServiceUtils;
+import com.ktmmobile.msf.domains.form.common.util.SessionUtils;
+import com.ktmmobile.msf.domains.form.common.util.StringUtil;
+import com.ktmmobile.msf.domains.form.form.newchange.dao.AppformDao;
+
+import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.ACE_256_DECRYPT_EXCEPTION;
+import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.SCAN_SERVER_SEND_EXCEPTION;
+import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.SCAN_XML_SAVE_EXCEPTION;
 
 @Service
 public class ScanSvcImpl implements ScanSvc {
@@ -47,13 +52,13 @@ public class ScanSvcImpl implements ScanSvc {
 
     AppformDao appformDao;
 
-    @Value("${scan.app.path}")
+    @Value("${scan.app.path:}")
     private String scanPath;
 
-    @Value("${scan.url}")
+    @Value("${scan.url:}")
     private String scanUrl;
 
-    @Value("${scan.V25.url}")
+    @Value("${scan.V25.url:}")
     private String scanUrlV25;
 
 
@@ -316,13 +321,12 @@ public class ScanSvcImpl implements ScanSvc {
         // 혜택 제공을 위한 제3자 제공 동의(엠모바일), 혜택 제공을 위한 제3자 제공 동의(KT)
         // 둘 다 동의라면 전체 동의만 체크
         reqMapData.put("OTHERS_TRNS_ALL_AGREE", "N");
-        if (reqMapData.containsKey("OTHERS_TRNS_AGREE") && StringUtils.hasText(reqMapData.get("OTHERS_TRNS_AGREE"))
-            && reqMapData.containsKey("OTHERS_TRNS_KT_AGREE") && StringUtils.hasText(reqMapData.get("OTHERS_TRNS_KT_AGREE"))) {
-            if ("Y".equals(reqMapData.get("OTHERS_TRNS_AGREE")) && "Y".equals(reqMapData.get("OTHERS_TRNS_KT_AGREE"))) {
-                reqMapData.put("OTHERS_TRNS_AGREE", "N");
-                reqMapData.put("OTHERS_TRNS_KT_AGREE", "N");
-                reqMapData.put("OTHERS_TRNS_ALL_AGREE", "Y");
-            }
+        if (reqMapData.containsKey("OTHERS_TRNS_AGREE") && StringUtils.hasText(reqMapData.get("OTHERS_TRNS_AGREE")) && reqMapData.containsKey(
+            "OTHERS_TRNS_KT_AGREE") && StringUtils.hasText(reqMapData.get("OTHERS_TRNS_KT_AGREE"))
+            && "Y".equals(reqMapData.get("OTHERS_TRNS_AGREE")) && "Y".equals(reqMapData.get("OTHERS_TRNS_KT_AGREE"))) {
+            reqMapData.put("OTHERS_TRNS_AGREE", "N");
+            reqMapData.put("OTHERS_TRNS_KT_AGREE", "N");
+            reqMapData.put("OTHERS_TRNS_ALL_AGREE", "Y");
         }
     }
 
@@ -407,6 +411,7 @@ public class ScanSvcImpl implements ScanSvc {
         }
     }
 
+    @SuppressWarnings("PMD.AvoidMultipleUnaryOperators")
     public void createXml(long requestKey, String userId, Map<String, String> requestData) {
         File folderPath = new File(scanPath);
         if (!folderPath.exists()) {
@@ -503,10 +508,9 @@ public class ScanSvcImpl implements ScanSvc {
                 String deleteTempValue = String.valueOf(requestData.get("CLAUSE_FINANCE_FLAG"));
                 if (deleteTempValue.equals("Y")) { //Y일때만 서명 입력
                     //법정대리인 서명 여부
-                    if ("MINOR".equals(codeData)) {
-                        if (!StringUtils.hasText(requestData.get("MINOR_AGENT_NAME")) || !StringUtils.hasText(requestData.get("MINOR_AGENT_RRN"))) {
-                            continue;
-                        }
+                    if ("MINOR".equals(codeData)
+                        && (!StringUtils.hasText(requestData.get("MINOR_AGENT_NAME")) || !StringUtils.hasText(requestData.get("MINOR_AGENT_RRN")))) {
+                        continue;
                     }
                 } else {
                     continue;
@@ -519,10 +523,9 @@ public class ScanSvcImpl implements ScanSvc {
 
                 if (deleteTempValue.equals("Y")) { //Y일때만 서명 입력
                     //법정대리인 서명 여부
-                    if ("MINOR".equals(codeData)) {
-                        if (!StringUtils.hasText(requestData.get("MINOR_AGENT_NAME")) || !StringUtils.hasText(requestData.get("MINOR_AGENT_RRN"))) {
-                            continue;
-                        }
+                    if ("MINOR".equals(codeData)
+                        && (!StringUtils.hasText(requestData.get("MINOR_AGENT_NAME")) || !StringUtils.hasText(requestData.get("MINOR_AGENT_RRN")))) {
+                        continue;
                     }
                 } else {
                     continue;
@@ -612,103 +615,97 @@ public class ScanSvcImpl implements ScanSvc {
             }
 
             //데이터 생성 여부
-            if (xmlCreate) {
-                if (StringUtil.isNotNull(appFormInsertData)) {
-                    inputDataXml.append("<DATA XPosition='".concat(String.valueOf(metaLine)).concat("' YPosition='")
-                        .concat(String.valueOf(metaRow)).concat("'><![CDATA[").concat(appFormInsertData).concat("]]></DATA>"));
+            if (xmlCreate && StringUtil.isNotNull(appFormInsertData)) {
+                inputDataXml.append("<DATA XPosition='".concat(String.valueOf(metaLine)).concat("' YPosition='")
+                    .concat(String.valueOf(metaRow)).concat("'><![CDATA[").concat(appFormInsertData).concat("]]></DATA>"));
 
-                }
             }
 
         }
         inputDataXml.append("</INPUT_DATA>");
 
         // 단말보험가입동의 여부
-        if (!(requestData.get("CLAUSE_INSR_PROD_FLAG") == null || "".equals(requestData.get("CLAUSE_INSR_PROD_FLAG")))) {
-            if ("Y".equals(requestData.get("CLAUSE_INSR_PROD_FLAG"))) {
-                List<HashMap<String, String>> insrProdAppPointInfoList = null;
-                String insrProdCd = requestData.get("INSR_PROD_CD");
+        if (!(requestData.get("CLAUSE_INSR_PROD_FLAG") == null || "".equals(requestData.get("CLAUSE_INSR_PROD_FLAG")))
+            && "Y".equals(requestData.get("CLAUSE_INSR_PROD_FLAG"))) {
+            List<HashMap<String, String>> insrProdAppPointInfoList = null;
+            String insrProdCd = requestData.get("INSR_PROD_CD");
 
-                if ("|PL214L310|PL214L312|PL214L316|PL214L317|PL214L319|PL245L235|PL245L236|PL245L237|PL245L233|PL245L234|".indexOf(insrProdCd) > 0) {
-                    //|PL214L310|PL214L312|PL214L316|PL214L317|PL214L319
-                    //이동통신 단말기 보험 상품 설명서 14Page 정보
-                    /*
-                      기존
-                      부가상품 / 휴대폰안심보험 안드로이드 플래티넘 / PL214L310
-                      부가상품 / 휴대폰안심보험 안드로이드 프리미엄 / PL214L312
-                      부가상품 / 휴대폰안심보험 아이폰 프리미엄 / PL214L316
-                      부가상품 / 휴대폰안심보험 아이폰 베이직 / PL214L317
-                      부가상품 / 휴대폰안심보험 아이폰 플래티넘 / PL214L319
+            if ("|PL214L310|PL214L312|PL214L316|PL214L317|PL214L319|PL245L235|PL245L236|PL245L237|PL245L233|PL245L234|".indexOf(insrProdCd) > 0) {
+                //|PL214L310|PL214L312|PL214L316|PL214L317|PL214L319
+                //이동통신 단말기 보험 상품 설명서 14Page 정보
+                /*
+                  기존
+                  부가상품 / 휴대폰안심보험 안드로이드 플래티넘 / PL214L310
+                  부가상품 / 휴대폰안심보험 안드로이드 프리미엄 / PL214L312
+                  부가상품 / 휴대폰안심보험 아이폰 프리미엄 / PL214L316
+                  부가상품 / 휴대폰안심보험 아이폰 베이직 / PL214L317
+                  부가상품 / 휴대폰안심보험 아이폰 플래티넘 / PL214L319
 
-                      신규 24년 7월 02일
-                      i-분실파손 150  PL245L235  685
-                      i-분실파손 90   PL245L236  1045
-                      i-분실파손 50   PL245L237  1435
-                      중고 파손 100   PL245L233  1800
-                      중고 파손 40    PL245L234  2185
+                  신규 24년 7월 02일
+                  i-분실파손 150  PL245L235  685
+                  i-분실파손 90   PL245L236  1045
+                  i-분실파손 50   PL245L237  1435
+                  중고 파손 100   PL245L233  1800
+                  중고 파손 40    PL245L234  2185
 
-                    */
-                    insrProdAppPointInfoList = appformDao.getAppFormPointList("I002");
-                } else {
-                    //이동통신 단말기 보험 상품 설명서 12Page 정보
-                    insrProdAppPointInfoList = appformDao.getAppFormPointList("I001");
-                }
-
-                for (int i = 0; i < insrProdAppPointInfoList.size(); i++) {
-                    HashMap<String, String> appPointInfo = insrProdAppPointInfoList.get(i);
-
-                    String appFormColunmName = appPointInfo.get("COLUMN_NAME"); //데이터 저장 칼럼명
-                    int metaRow = Integer.parseInt(appPointInfo.get("METAROW"));
-                    int metaLine = Integer.parseInt(appPointInfo.get("METALINE"));
-                    String codeDataYn = String.valueOf(StringUtil.NVL(appPointInfo.get("CODEDATA_YN"), ""));
-                    String codeData = String.valueOf(StringUtil.NVL(appPointInfo.get("CODEDATA"), ""));
-                    String pageCode = String.valueOf(StringUtil.NVL(appPointInfo.get("PAGE_CODE"), ""));
-                    String appFormInsertData = String.valueOf(requestData.get(appFormColunmName));
-
-                    if (i == 0) {
-                        inputDataXml.append("<INPUT_DATA pagecode='".concat(pageCode).concat("'>"));
-                        tempPageCode = pageCode;
-                        totalPage++;
-                    }
-
-                    if (!pageCode.equals(tempPageCode)) {
-                        inputDataXml.append("</INPUT_DATA>");
-                        inputDataXml.append("<INPUT_DATA pagecode='".concat(pageCode).concat("'>"));
-                        tempPageCode = pageCode;
-                        totalPage++;
-                    }
-
-                    //법정대리인 서명 여부
-                    if ("CSTMR_NAME".equals(appPointInfo.get("COLUMN_NAME"))) {
-                        if (!(!StringUtils.hasText(requestData.get("MINOR_AGENT_NAME")))) {
-                            continue;
-                        }
-                    }
-
-                    //메타 데이터 여부
-                    if (codeDataYn.equals("Y")) {
-                        //데이터와 메타 정보가 동일 한지 확인한다.
-                        if (appFormInsertData.equals(codeData)) { // 메타데이터를 V로 변환한다.
-                            xmlCreate = true;
-                            appFormInsertData = "V";
-                        } else {
-                            xmlCreate = false;
-                        }
-                    } else {
-                        xmlCreate = true;
-                    }
-
-                    //데이터 생성 여부
-                    if (xmlCreate) {
-                        if (StringUtil.isNotNull(appFormInsertData)) {
-                            inputDataXml.append("<DATA XPosition='".concat(String.valueOf(metaLine)).concat("' YPosition='")
-                                .concat(String.valueOf(metaRow)).concat("'><![CDATA[").concat(appFormInsertData).concat("]]></DATA>"));
-                        }
-                    }
-                }
-                inputDataXml.append("</INPUT_DATA>");
-
+                */
+                insrProdAppPointInfoList = appformDao.getAppFormPointList("I002");
+            } else {
+                //이동통신 단말기 보험 상품 설명서 12Page 정보
+                insrProdAppPointInfoList = appformDao.getAppFormPointList("I001");
             }
+
+            for (int i = 0; i < insrProdAppPointInfoList.size(); i++) {
+                HashMap<String, String> appPointInfo = insrProdAppPointInfoList.get(i);
+
+                String appFormColunmName = appPointInfo.get("COLUMN_NAME"); //데이터 저장 칼럼명
+                int metaRow = Integer.parseInt(appPointInfo.get("METAROW"));
+                int metaLine = Integer.parseInt(appPointInfo.get("METALINE"));
+                String codeDataYn = String.valueOf(StringUtil.NVL(appPointInfo.get("CODEDATA_YN"), ""));
+                String codeData = String.valueOf(StringUtil.NVL(appPointInfo.get("CODEDATA"), ""));
+                String pageCode = String.valueOf(StringUtil.NVL(appPointInfo.get("PAGE_CODE"), ""));
+                String appFormInsertData = String.valueOf(requestData.get(appFormColunmName));
+
+                if (i == 0) {
+                    inputDataXml.append("<INPUT_DATA pagecode='".concat(pageCode).concat("'>"));
+                    tempPageCode = pageCode;
+                    totalPage++;
+                }
+
+                if (!pageCode.equals(tempPageCode)) {
+                    inputDataXml.append("</INPUT_DATA>");
+                    inputDataXml.append("<INPUT_DATA pagecode='".concat(pageCode).concat("'>"));
+                    tempPageCode = pageCode;
+                    totalPage++;
+                }
+
+                //법정대리인 서명 여부
+                if ("CSTMR_NAME".equals(appPointInfo.get("COLUMN_NAME"))
+                    && !(!StringUtils.hasText(requestData.get("MINOR_AGENT_NAME")))) {
+                    continue;
+                }
+
+                //메타 데이터 여부
+                if (codeDataYn.equals("Y")) {
+                    //데이터와 메타 정보가 동일 한지 확인한다.
+                    if (appFormInsertData.equals(codeData)) { // 메타데이터를 V로 변환한다.
+                        xmlCreate = true;
+                        appFormInsertData = "V";
+                    } else {
+                        xmlCreate = false;
+                    }
+                } else {
+                    xmlCreate = true;
+                }
+
+                //데이터 생성 여부
+                if (xmlCreate && StringUtil.isNotNull(appFormInsertData)) {
+                    inputDataXml.append("<DATA XPosition='".concat(String.valueOf(metaLine)).concat("' YPosition='")
+                        .concat(String.valueOf(metaRow)).concat("'><![CDATA[").concat(appFormInsertData).concat("]]></DATA>"));
+                }
+            }
+            inputDataXml.append("</INPUT_DATA>");
+
         }
 
         //자급제 보상서비스 관련
@@ -755,11 +752,9 @@ public class ScanSvcImpl implements ScanSvc {
                 }
 
                 //데이터 생성 여부
-                if (xmlCreate) {
-                    if (StringUtil.isNotNull(appFormInsertData)) {
-                        inputDataXml.append("<DATA XPosition='".concat(String.valueOf(metaLine)).concat("' YPosition='")
-                            .concat(String.valueOf(metaRow)).concat("'><![CDATA[").concat(appFormInsertData).concat("]]></DATA>"));
-                    }
+                if (xmlCreate && StringUtil.isNotNull(appFormInsertData)) {
+                    inputDataXml.append("<DATA XPosition='".concat(String.valueOf(metaLine)).concat("' YPosition='")
+                        .concat(String.valueOf(metaRow)).concat("'><![CDATA[").concat(appFormInsertData).concat("]]></DATA>"));
                 }
             }
             inputDataXml.append("</INPUT_DATA>");
@@ -786,6 +781,7 @@ public class ScanSvcImpl implements ScanSvc {
     public void xmlFileSend(long requestKey) {
         //요청 Url
         String requestUrl = scanUrl;
+        // FIXME: SessionUtils 의존성 제거
         UserSessionDto userSessionDto = SessionUtils.getUserCookieBean();
         boolean isV25 = false;
 

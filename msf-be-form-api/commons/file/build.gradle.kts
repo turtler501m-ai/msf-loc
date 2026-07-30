@@ -10,4 +10,5 @@ dependencies {
     implementation("software.amazon.awssdk:s3")
     implementation("software.amazon.awssdk:apache-client")
     implementation("org.apache.tika:tika-core:${property("tika.version")}")
+    implementation("com.twelvemonkeys.imageio:imageio-tiff:${property("twelvemonkeys.imageio.version")}")
 }

@@ -7,6 +7,9 @@ import org.springframework.core.Ordered;
  */
 public interface CommonGroupHttpClientInterceptorFactory extends Ordered {
 
+    /**
+     * HTTP client groupName을 포함한 공통 interceptor 생성
+     */
     CommonHttpClientInterceptor create(String groupName);
 
     @Override

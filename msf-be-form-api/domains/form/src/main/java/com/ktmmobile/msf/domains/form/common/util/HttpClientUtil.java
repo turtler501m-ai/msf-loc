@@ -1,20 +1,22 @@
 package com.ktmmobile.msf.domains.form.common.util;
 
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.SocketTimeoutException;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.methods.PostMethod;
 
+@Slf4j
 public class HttpClientUtil {
 
     public static String post(String url ,NameValuePair[] data, String encode) throws SocketTimeoutException  {
         return post(url,data,encode,10000);
     }
-
 
     public static String post(String url ,NameValuePair[] data, String encode , int timeout) throws SocketTimeoutException  {
         String result = "";
@@ -46,19 +48,20 @@ public class HttpClientUtil {
         } catch (SocketTimeoutException e){
             throw e;
         } catch (Exception e) {
-            e.getStackTrace();
+            log.error("HttpClientUtil.post() failed", e);
         } finally {
 
             method.releaseConnection();
             client.getHttpConnectionManager().closeIdleConnections(0);
-            client = null;
-            if(br != null) try { br.close(); } catch (Exception fe) {fe.getStackTrace();}
+            if (br != null) {
+                try {
+                    br.close();
+                } catch (Exception e) {
+                    log.error("HttpClientUtil.post() failed to close reader", e);
+                }
+            }
         }
-
-
 
         return result;
     }
-
-
 }

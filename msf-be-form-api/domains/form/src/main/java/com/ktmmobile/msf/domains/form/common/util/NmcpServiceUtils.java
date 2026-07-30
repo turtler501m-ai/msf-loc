@@ -1,7 +1,38 @@
 package com.ktmmobile.msf.domains.form.common.util;
 
+
+import java.io.IOException;
+import java.io.Reader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import jakarta.servlet.http.HttpServletRequest;
+
+import lombok.extern.slf4j.Slf4j;
+import org.apache.ibatis.io.Resources;
+import org.springframework.context.ApplicationContext;
+import org.springframework.web.context.ContextLoaderListener;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.context.support.WebApplicationContextUtils;
+import org.springframework.web.servlet.FrameworkServlet;
+
+import com.ktmmobile.msf.domains.form.common.cache.DbCacheHandler;
+import com.ktmmobile.msf.domains.form.common.dto.AcesAlwdDto;
+import com.ktmmobile.msf.domains.form.common.dto.BannerDto;
+import com.ktmmobile.msf.domains.form.common.dto.BannerFloatDto;
+import com.ktmmobile.msf.domains.form.common.dto.BannerTextDto;
+import com.ktmmobile.msf.domains.form.common.dto.NmcpCdDtlDto;
+import com.ktmmobile.msf.domains.form.common.dto.PopupDto;
+import com.ktmmobile.msf.domains.form.common.dto.SiteMenuDto;
+import com.ktmmobile.msf.domains.form.common.dto.WorkNotiDto;
+import com.ktmmobile.msf.domains.form.common.exception.McpCommonException;
+import com.ktmmobile.msf.domains.form.common.service.FCommonSvc;
+
 import static com.ktmmobile.msf.domains.form.common.constants.CacheConstants.CACHE_ACESALWD;
-import static com.ktmmobile.msf.domains.form.common.constants.CacheConstants.CACHE_BANNER;
 import static com.ktmmobile.msf.domains.form.common.constants.CacheConstants.CACHE_BANNERAPD;
 import static com.ktmmobile.msf.domains.form.common.constants.CacheConstants.CACHE_BANNERFLOAT;
 import static com.ktmmobile.msf.domains.form.common.constants.CacheConstants.CACHE_BANNERTEXT;
@@ -12,47 +43,14 @@ import static com.ktmmobile.msf.domains.form.common.constants.CacheConstants.CAC
 import static com.ktmmobile.msf.domains.form.common.constants.CacheConstants.CACHE_RATE_ADSVC_GDNC_VERSION;
 import static com.ktmmobile.msf.domains.form.common.constants.CacheConstants.CACHE_WORKNOTI;
 import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.COMMON_EXCEPTION;
-import java.io.IOException;
-import java.io.Reader;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import jakarta.servlet.http.HttpServletRequest;
-import org.apache.ibatis.io.Resources;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationContext;
-import org.springframework.dao.DataAccessException;
-import org.springframework.web.context.ContextLoaderListener;
-import org.springframework.web.context.WebApplicationContext;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-import org.springframework.web.context.support.WebApplicationContextUtils;
-import org.springframework.web.servlet.FrameworkServlet;
-import com.ktmmobile.msf.domains.form.common.cache.DbCacheHandler;
-import com.ktmmobile.msf.domains.form.common.dto.AcesAlwdDto;
-import com.ktmmobile.msf.domains.form.common.dto.BannerDto;
-import com.ktmmobile.msf.domains.form.common.dto.BannerFloatDto;
-import com.ktmmobile.msf.domains.form.common.dto.BannerTextDto;
-import com.ktmmobile.msf.domains.form.common.dto.PopupDto;
-import com.ktmmobile.msf.domains.form.common.dto.SiteMenuDto;
-import com.ktmmobile.msf.domains.form.common.dto.UserSessionDto;
-import com.ktmmobile.msf.domains.form.common.dto.WorkNotiDto;
-import com.ktmmobile.msf.domains.form.common.dto.BannAccessTxnDto;
-import com.ktmmobile.msf.domains.form.common.dto.NmcpCdDtlDto;
-import com.ktmmobile.msf.domains.form.common.exception.McpCommonException;
-import com.ktmmobile.msf.domains.form.common.service.BannerStatService;
-import com.ktmmobile.msf.domains.form.common.service.FCommonSvc;
 
+@Slf4j
 public class NmcpServiceUtils {
 
-    private static final Logger logger = LoggerFactory.getLogger(NmcpServiceUtils.class);
+    public final static String MNP800_GROUP_ID = "MNP800"; // MNP800 그룹 ID
+    public final static String MNP800_DTL_CD = "01"; // MNP800 상세 CD
 
-    public final static String MNP800_GROUP_ID  		= "MNP800"; // MNP800 그룹 ID
-    public final static String MNP800_DTL_CD      		= "01"; // MNP800 상세 CD
-
-     /**
+    /**
      * <pre>
      * 설명     : 그룹 코드에 대한 상세코드 정보를 가져온다.
      * @param param
@@ -70,9 +68,9 @@ public class NmcpServiceUtils {
             codeList = codeMap.get(grpCd);
             codeRstList = new ArrayList<NmcpCdDtlDto>();
 
-            if(codeList !=null && !codeList.isEmpty()) {
-                for(NmcpCdDtlDto bean : codeList) {
-                    if(DateTimeUtil.checkValidDate(bean.getPstngStartDate(), bean.getPstngEndDate())) {
+            if (codeList != null && !codeList.isEmpty()) {
+                for (NmcpCdDtlDto bean: codeList) {
+                    if (DateTimeUtil.checkValidDate(bean.getPstngStartDate(), bean.getPstngEndDate())) {
                         codeRstList.add(bean);
                     }
                 }
@@ -89,15 +87,14 @@ public class NmcpServiceUtils {
         List<SiteMenuDto> codeMap = (List<SiteMenuDto>) dbCacheHandler.getValue(CACHE_MENU);
         if (codeMap != null) {
             menuList = new ArrayList<SiteMenuDto>();
-            for(SiteMenuDto menu : codeMap) {
-                if(DateTimeUtil.checkValidDate(menu.getPstngStartDate(), menu.getPstngEndDate())) {
-                    if("".equals(menuOutputCd)) {
+            for (SiteMenuDto menu: codeMap) {
+                if (DateTimeUtil.checkValidDate(menu.getPstngStartDate(), menu.getPstngEndDate())) {
+                    if ("".equals(menuOutputCd)) {
                         menuList.add(menu);
                     } else {
-                        if(menu.getMenuOutputCd().trim().equals(menuOutputCd)) {
-                            if("Y".equals(menu.getStatVal())) {
-                                menuList.add(menu);
-                            }
+                        if (menu.getMenuOutputCd().trim().equals(menuOutputCd)
+                            && "Y".equals(menu.getStatVal())) {
+                            menuList.add(menu);
                         }
                     }
                 }
@@ -107,15 +104,15 @@ public class NmcpServiceUtils {
     }
 
     /**
-    * <pre>
-    * 설명     : 모바일, 앱 메뉴리스트 가져온다.
-    * @param menuOutputCd 메뉴코드
-    * @param mobileMenuUseYn 모바일 메뉴 사용여부
-    * @param appMenuUseYn 앱 메뉴 사용여부
-    * @return
-    * </pre>
-    */
-    public static List<SiteMenuDto> getMobileMenuList(String menuOutputCd, String mobileMenuUseYn , String appMenuUseYn) {
+     * <pre>
+     * 설명     : 모바일, 앱 메뉴리스트 가져온다.
+     * @param menuOutputCd 메뉴코드
+     * @param mobileMenuUseYn 모바일 메뉴 사용여부
+     * @param appMenuUseYn 앱 메뉴 사용여부
+     * @return
+     * </pre>
+     */
+    public static List<SiteMenuDto> getMobileMenuList(String menuOutputCd, String mobileMenuUseYn, String appMenuUseYn) {
         List<SiteMenuDto> menuList = null;
         DbCacheHandler dbCacheHandler = getBean(DbCacheHandler.class);
         String platFormCd = "";
@@ -124,17 +121,17 @@ public class NmcpServiceUtils {
         List<SiteMenuDto> codeMap = (List<SiteMenuDto>) dbCacheHandler.getValue(CACHE_MENU);
         if (codeMap != null) {
             menuList = new ArrayList<SiteMenuDto>();
-            for(SiteMenuDto menu : codeMap) {
-                if(DateTimeUtil.checkValidDate(menu.getPstngStartDate(), menu.getPstngEndDate())) {
-                    if("".equals(menuOutputCd)) {
+            for (SiteMenuDto menu: codeMap) {
+                if (DateTimeUtil.checkValidDate(menu.getPstngStartDate(), menu.getPstngEndDate())) {
+                    if ("".equals(menuOutputCd)) {
                         menuList.add(menu);
                     } else {
-                        if(menu.getMenuOutputCd().trim().equals(menuOutputCd)) {
+                        if (menu.getMenuOutputCd().trim().equals(menuOutputCd)) {
                             platFormCd = getPlatFormCd();
-                            if("Y".equals(menu.getStatVal())) {
-                                if("M".equals(platFormCd) && menu.getMobileMenuUseYn().equals(mobileMenuUseYn)) {
+                            if ("Y".equals(menu.getStatVal())) {
+                                if ("M".equals(platFormCd) && menu.getMobileMenuUseYn().equals(mobileMenuUseYn)) {
                                     menuList.add(menu);
-                                }else if("A".equals(platFormCd) && menu.getAppMenuUseYn().equals(appMenuUseYn)) {
+                                } else if ("A".equals(platFormCd) && menu.getAppMenuUseYn().equals(appMenuUseYn)) {
                                     menuList.add(menu);
                                 }
                             }
@@ -150,7 +147,7 @@ public class NmcpServiceUtils {
         List<SiteMenuDto> menuList = null;
         DbCacheHandler dbCacheHandler = getBean(DbCacheHandler.class);
 
-        if("".equals(menuOutputCd)) {
+        if ("".equals(menuOutputCd)) {
             return menuList;
         }
 
@@ -158,13 +155,11 @@ public class NmcpServiceUtils {
         List<SiteMenuDto> codeMap = (List<SiteMenuDto>) dbCacheHandler.getValue(CACHE_MENU);
         if (codeMap != null) {
             menuList = new ArrayList<SiteMenuDto>();
-            for(SiteMenuDto menu : codeMap) {
-                if(DateTimeUtil.checkValidDate(menu.getPstngStartDate(), menu.getPstngEndDate())) {
-                    if(menu.getMenuOutputCd().trim().equals(menuOutputCd) && menu.getDepthKey() == depth  ) {
-                        if("Y".equals(menu.getStatVal())) {
-                            menuList.add(menu);
-                        }
-                    }
+            for (SiteMenuDto menu: codeMap) {
+                if (DateTimeUtil.checkValidDate(menu.getPstngStartDate(), menu.getPstngEndDate())
+                    && menu.getMenuOutputCd().trim().equals(menuOutputCd)
+                    && menu.getDepthKey() == depth && "Y".equals(menu.getStatVal())) {
+                    menuList.add(menu);
                 }
             }
         }
@@ -182,89 +177,24 @@ public class NmcpServiceUtils {
         List<SiteMenuDto> codeMap = (List<SiteMenuDto>) dbCacheHandler.getValue(CACHE_MENUAUTH);
         if (codeMap != null) {
             menuList = new ArrayList<SiteMenuDto>();
-            for(SiteMenuDto menu : codeMap) {
-                if(DateTimeUtil.checkValidDate(menu.getPstngStartDate(), menu.getPstngEndDate())) {
-                    // admin에서 메뉴링크코드를 빈메뉴로 등록하는 경우 urlAdr는 null
-                    if(menu.getUrlAdr() != null && menu.getUrlAdr().trim().equals(chkUrl)) {
-                        menuList.add(menu);
-                        if(menu.getAutGradeCd().equals(authGrade)) {
-                            retVal = true;
-                        }
+            for (SiteMenuDto menu: codeMap) {
+                // admin에서 메뉴링크코드를 빈메뉴로 등록하는 경우 urlAdr는 null
+                if (DateTimeUtil.checkValidDate(menu.getPstngStartDate(), menu.getPstngEndDate())
+                    && menu.getUrlAdr() != null && menu.getUrlAdr().trim().equals(chkUrl)) {
+                    menuList.add(menu);
+                    if (menu.getAutGradeCd().equals(authGrade)) {
+                        retVal = true;
                     }
                 }
             }
         }
 
-        if(menuList.size() == 0) {
+        if (menuList.size() == 0) {
             retVal = true;
         }
 
         return retVal;
     }
-
-    public static List<BannerDto> getBannerList(String bannCtg) {
-        List<BannerDto> bannerList = null;
-        DbCacheHandler dbCacheHandler = getBean(DbCacheHandler.class);
-
-        @SuppressWarnings("unchecked")
-        List<BannerDto> codeMap = (List<BannerDto>) dbCacheHandler.getValue(CACHE_BANNER);
-        if (codeMap != null) {
-            bannerList = new ArrayList<BannerDto>();
-            for(BannerDto banner : codeMap) {
-                if (DateTimeUtil.checkValidDate(banner.getPstngStartDateSec(), banner.getPstngEndDateSec())) {
-                    banner.setBannImg(banner.getBannImgSec());
-                    banner.setImgDesc(banner.getImgDescSec());
-                    banner.setBgColor(banner.getBgColorSec());
-                    banner.setMobileBannImgNm(banner.getMobileBannImgNmSec());
-                    banner.setPstngStartDate(banner.getPstngStartDateSec());
-                    banner.setPstngEndDate(banner.getPstngEndDateSec());
-                }
-
-                if(DateTimeUtil.checkValidDate(banner.getPstngStartDate(), banner.getPstngEndDate())) {
-                    if("".equals(bannCtg)) {
-                        bannerList.add(banner);
-                    } else {
-                        if(banner.getBannCtg().trim().equals(bannCtg)) {
-                            bannerList.add(banner);
-                        }
-                    }
-                }
-            }
-        }
-
-        try {
-
-            BannerStatService bannerStatService = getBean(BannerStatService.class);
-            BannAccessTxnDto bannAccessTxnDto = new BannAccessTxnDto();
-            SiteMenuDto curmenu = SessionUtils.getCurrentMenuDto();
-
-            if(curmenu != null) {
-
-                bannAccessTxnDto.setBannSeq(0);
-                bannAccessTxnDto.setPlatformCd(curmenu.getPlatformCd());
-                bannAccessTxnDto.setBannCtg(bannCtg);
-                bannAccessTxnDto.setMenuSeq(0);
-                bannAccessTxnDto.setAccessIp("");
-                bannAccessTxnDto.setUrlSeq(0);
-
-                UserSessionDto userSessionDto = SessionUtils.getUserCookieBean();
-                String userId = "";
-                if (userSessionDto != null) {
-                    userId = userSessionDto.getUserId();
-                }
-                bannAccessTxnDto.setUserId(userId);
-                bannAccessTxnDto.setReqTrtCd("LOAD");
-                bannerStatService.insertBannAccessTxn(bannAccessTxnDto);
-            }
-
-        } catch(DataAccessException e) {
-            logger.error("Exception e : {}", e.getMessage());
-        } catch(Exception e) {
-            logger.error("Exception e : {}", e.getMessage());
-        }
-
-        return bannerList;
-   }
 
     public static List<BannerDto> getBannerApdList(String bannSeq) {
         List<BannerDto> bannerApdList = null;
@@ -274,13 +204,13 @@ public class NmcpServiceUtils {
         List<BannerDto> codeMap = (List<BannerDto>) dbCacheHandler.getValue(CACHE_BANNERAPD);
         if (codeMap != null) {
             bannerApdList = new ArrayList<BannerDto>();
-            for(BannerDto banner : codeMap) {
-                if(DateTimeUtil.checkValidDate(banner.getPstngStartDate(), banner.getPstngEndDate())) {
-                    if("".equals(bannSeq)) {
+            for (BannerDto banner: codeMap) {
+                if (DateTimeUtil.checkValidDate(banner.getPstngStartDate(), banner.getPstngEndDate())) {
+                    if ("".equals(bannSeq)) {
                         bannerApdList.add(banner);
                     } else {
                         int iBannSeq = Integer.parseInt(bannSeq);
-                        if(banner.getBannSeq() == iBannSeq) {
+                        if (banner.getBannSeq() == iBannSeq) {
                             bannerApdList.add(banner);
                         }
                     }
@@ -288,7 +218,7 @@ public class NmcpServiceUtils {
             }
         }
         return bannerApdList;
-   }
+    }
 
     public static List<PopupDto> getPopupList(String popupShowUrl) {
         List<PopupDto> popupList = null;
@@ -304,39 +234,40 @@ public class NmcpServiceUtils {
         if (codeMap != null) {
             popupList = new ArrayList<PopupDto>();
 
-            for(PopupDto popup : codeMap) {
+            for (PopupDto popup: codeMap) {
                 if (!device.equals(popup.getDevice())) {
                     continue;
                 }
 
-                if(DateTimeUtil.checkValidDate(popup.getPstngStartDate(), popup.getPstngEndDate())) {
+                if (DateTimeUtil.checkValidDate(popup.getPstngStartDate(), popup.getPstngEndDate())) {
                     // 일회성 팝업인 경우
-                    if("O".equals(popup.getUsageType()) && !isOnlyGet ) {
+                    if ("O".equals(popup.getUsageType()) && !isOnlyGet) {
                         String oneTimePopupGrp = popup.getOneTimePopupGrp();
                         // 공통코드 조회
                         List<NmcpCdDtlDto> urlList = NmcpServiceUtils.getCodeList(oneTimePopupGrp);
-                        if(urlList.size() > 0 ) {
+                        if (urlList.size() > 0) {
                             // 일회성그룹 공통코드의 상세코드설명에 존재 시 popupList에 추가
-                            for(NmcpCdDtlDto nmcpCdDtlDto : urlList) {
-                                if( -1 < popupShowUrl.indexOf(nmcpCdDtlDto.getExpnsnStrVal1().trim())) {
+                            for (NmcpCdDtlDto nmcpCdDtlDto: urlList) {
+                                if (-1 < popupShowUrl.indexOf(nmcpCdDtlDto.getExpnsnStrVal1().trim())) {
                                     //일회성 팝업이 존재하는 경우의 URL이면 팝업이 일회성팝업만 노출되어야 하기때문에 popupList를 클리어
                                     //popupList.clear();
 
                                     // 세션이 없는경우 (일회성 팝업 첫 노출을 위해 popupList에 넣고 세션에 값 넣어 다음엔 노출되지 않도록)
-                                    if(!oneTimePopupGrp.equals(SessionUtils.getOneTimePopup())) {
+                                    // FIXME: SessionUtils 의존성 제거
+                                    if (!oneTimePopupGrp.equals(SessionUtils.getOneTimePopup())) {
                                         popupList.add(popup);
                                         SessionUtils.saveOneTimePopup(oneTimePopupGrp);
                                     }
                                     isOnlyGet = true;  // 죄초 한개만.   저장 ...  by papier
-                                    break ;
+                                    break;
                                 }
                             }
                         }
                     } else {
-                        if("".equals(popupShowUrl)) {
+                        if ("".equals(popupShowUrl)) {
                             popupList.add(popup);
                         } else {
-                            if(popup.getPopupShowUrl().trim().equals(popupShowUrl)) {
+                            if (popup.getPopupShowUrl().trim().equals(popupShowUrl)) {
                                 popupList.add(popup);
                             }
                         }
@@ -355,17 +286,17 @@ public class NmcpServiceUtils {
         List<WorkNotiDto> codeMap = (List<WorkNotiDto>) dbCacheHandler.getValue(CACHE_WORKNOTI);
         if (codeMap != null) {
             //workNoti (작업공지) / mustLogin(로그인필수여부)
-            if("workNoti".equals(cdChkY)) {
+            if ("workNoti".equals(cdChkY)) {
                 workNotiList = new ArrayList<WorkNotiDto>();
-                for(WorkNotiDto noti : codeMap) {
-                    if("Y".equals(StringUtil.NVL(noti.getSysWorkNotiRegYn(),""))) {
+                for (WorkNotiDto noti: codeMap) {
+                    if ("Y".equals(StringUtil.NVL(noti.getSysWorkNotiRegYn(), ""))) {
                         workNotiList.add(noti);
                     }
                 }
-            } else if("mustLogin".equals(cdChkY)) {
+            } else if ("mustLogin".equals(cdChkY)) {
                 workNotiList = new ArrayList<WorkNotiDto>();
-                for(WorkNotiDto noti : codeMap) {
-                    if("Y".equals(StringUtil.NVL(noti.getLoginMustYn(),""))) {
+                for (WorkNotiDto noti: codeMap) {
+                    if ("Y".equals(StringUtil.NVL(noti.getLoginMustYn(), ""))) {
                         workNotiList.add(noti);
                     }
                 }
@@ -382,19 +313,20 @@ public class NmcpServiceUtils {
 
         String chkUrl = "";
 
+        // FIXME: SessionUtils 의존성 제거
         SiteMenuDto curmenu = SessionUtils.getCurrentMenuDto();
-        if(curmenu != null) {
+        if (curmenu != null) {
             chkUrl = curmenu.getUrlAdr();
         }
 
-        if(!"".equals(StringUtil.NVL(chkUrl, ""))) {
+        if (!"".equals(StringUtil.NVL(chkUrl, ""))) {
             workNotiList = new ArrayList<WorkNotiDto>();
 
             @SuppressWarnings("unchecked")
             List<WorkNotiDto> codeMap = (List<WorkNotiDto>) dbCacheHandler.getValue(CACHE_WORKNOTI);
             if (codeMap != null) {
-                for(WorkNotiDto noti : codeMap) {
-                    if(chkUrl.equals(StringUtil.NVL(noti.getUrl(),""))) {
+                for (WorkNotiDto noti: codeMap) {
+                    if (chkUrl.equals(StringUtil.NVL(noti.getUrl(), ""))) {
                         workNotiList.add(noti);
                     }
                 }
@@ -408,13 +340,13 @@ public class NmcpServiceUtils {
         boolean retVal = false;
         DbCacheHandler dbCacheHandler = getBean(DbCacheHandler.class);
 
-        if(!"".equals(StringUtil.NVL(accessIp, ""))) {
+        if (!"".equals(StringUtil.NVL(accessIp, ""))) {
 
             @SuppressWarnings("unchecked")
             List<AcesAlwdDto> codeMap = (List<AcesAlwdDto>) dbCacheHandler.getValue(CACHE_ACESALWD);
             if (codeMap != null) {
-                for(AcesAlwdDto noti : codeMap) {
-                    if(accessIp.equals(StringUtil.NVL(noti.getAcesAlwdIp(),""))) {
+                for (AcesAlwdDto noti: codeMap) {
+                    if (accessIp.equals(StringUtil.NVL(noti.getAcesAlwdIp(), ""))) {
                         retVal = true;
                         break;
                     }
@@ -433,13 +365,13 @@ public class NmcpServiceUtils {
         List<BannerTextDto> codeMap = (List<BannerTextDto>) dbCacheHandler.getValue(CACHE_BANNERTEXT);
         if (codeMap != null) {
             bannerTextList = new ArrayList<BannerTextDto>();
-            for(BannerTextDto bannerText : codeMap) {
-                if(DateTimeUtil.checkValidDate(bannerText.getBannPstngStartDate(), bannerText.getBannPstngEndDate())
+            for (BannerTextDto bannerText: codeMap) {
+                if (DateTimeUtil.checkValidDate(bannerText.getBannPstngStartDate(), bannerText.getBannPstngEndDate())
                     && DateTimeUtil.checkValidDate(bannerText.getTxtPstngStartDate(), bannerText.getTxtPstngEndDate())) {
-                    if("".equals(bannTxtType)) {
+                    if ("".equals(bannTxtType)) {
                         bannerTextList.add(bannerText);
                     } else {
-                        if(bannTxtType.equals(bannerText.getBannTxtType())) {
+                        if (bannTxtType.equals(bannerText.getBannTxtType())) {
                             bannerTextList.add(bannerText);
                         }
                     }
@@ -457,11 +389,10 @@ public class NmcpServiceUtils {
         List<BannerFloatDto> codeMap = (List<BannerFloatDto>) dbCacheHandler.getValue(CACHE_BANNERFLOAT);
         if (codeMap != null) {
             bannerFloatList = new ArrayList<BannerFloatDto>();
-            for(BannerFloatDto bannerFloat : codeMap) {
-                if(DateTimeUtil.checkValidDate(bannerFloat.getPstngStartDate(), bannerFloat.getPstngEndDate())) {
-                    if(bannerFloat.getNtcartSeq() == ntcartSeq) {
-                        bannerFloatList.add(bannerFloat);
-                    }
+            for (BannerFloatDto bannerFloat: codeMap) {
+                if (DateTimeUtil.checkValidDate(bannerFloat.getPstngStartDate(), bannerFloat.getPstngEndDate())
+                    && bannerFloat.getNtcartSeq() == ntcartSeq) {
+                    bannerFloatList.add(bannerFloat);
                 }
             }
         }
@@ -486,7 +417,7 @@ public class NmcpServiceUtils {
         if (codeMap != null) {
             codeList = codeMap.get(grpCd);
             if (codeList != null) {
-                for (NmcpCdDtlDto bean : codeList) {
+                for (NmcpCdDtlDto bean: codeList) {
                     if (bean.getDtlCd().equals(dtlCd)) {
                         return bean.getDtlCdNm();
                     }
@@ -507,7 +438,7 @@ public class NmcpServiceUtils {
      */
     public static NmcpCdDtlDto getCodeNmDto(String grpCd, String dtlCd) {
 
-        NmcpCdDtlDto result = null;
+        //NmcpCdDtlDto result = null;
 
         List<NmcpCdDtlDto> codeList = null;
         DbCacheHandler dbCacheHandler = getBean(DbCacheHandler.class);
@@ -517,7 +448,7 @@ public class NmcpServiceUtils {
         if (codeMap != null) {
             codeList = codeMap.get(grpCd);
             if (codeList != null) {
-                for (NmcpCdDtlDto bean : codeList) {
+                for (NmcpCdDtlDto bean: codeList) {
                     if (bean.getDtlCd().equals(dtlCd)) {
                         return bean;
                     }
@@ -545,7 +476,7 @@ public class NmcpServiceUtils {
         if (codeMap != null) {
             codeList = codeMap.get(nmcpCdDtlDto.getCdGroupId());
             if (codeList != null) {
-                for (NmcpCdDtlDto bean : codeList) {
+                for (NmcpCdDtlDto bean: codeList) {
                     if (bean.getDtlCd().equals(nmcpCdDtlDto.getDtlCd())) {
                         return bean;
                     }
@@ -558,7 +489,7 @@ public class NmcpServiceUtils {
     /** 상세 코드명으로 공통코드 상세 조회 (중복 시 정렬순서가 가장 빠른 값 리턴) */
     public static NmcpCdDtlDto getCodeByDtlCdNm(String grpCd, String dtlCdNm) {
 
-        if(StringUtil.isEmpty(dtlCdNm)){
+        if (StringUtil.isEmpty(dtlCdNm)) {
             return null;
         }
 
@@ -569,7 +500,7 @@ public class NmcpServiceUtils {
         if (codeMap != null) {
             codeList = codeMap.get(grpCd);
             if (codeList != null) {
-                for (NmcpCdDtlDto bean : codeList) {
+                for (NmcpCdDtlDto bean: codeList) {
                     if (DateTimeUtil.checkValidDate(bean.getPstngStartDate(), bean.getPstngEndDate()) &&
                         dtlCdNm.equals(bean.getDtlCdNm())) {
                         return bean;
@@ -590,18 +521,39 @@ public class NmcpServiceUtils {
      * </pre>
      */
     public static String getFtranPrice() {
-        String rtnVal = "800"  ;
+        String rtnVal = "800";
         String tmp = getCodeNm(NmcpServiceUtils.MNP800_GROUP_ID, NmcpServiceUtils.MNP800_DTL_CD);
-        if( tmp != null) {
+        if (tmp != null) {
             rtnVal = tmp;
         }
         return rtnVal;
     }
 
-    public static <T> T getBean( Class<T> calssType) {
+    public static <T> T getBean(Class<T> calssType) {
         WebApplicationContext applicationContext = ContextLoaderListener.getCurrentWebApplicationContext();
-        ApplicationContext context = WebApplicationContextUtils.getWebApplicationContext(applicationContext.getServletContext(),FrameworkServlet.SERVLET_CONTEXT_PREFIX +"appServlet");
-        return context.getBean(calssType);
+        if (applicationContext != null) {
+            ApplicationContext context = WebApplicationContextUtils.getWebApplicationContext(applicationContext.getServletContext(),
+                FrameworkServlet.SERVLET_CONTEXT_PREFIX + "appServlet");
+            if (context != null) {
+                return context.getBean(calssType);
+            }
+            return applicationContext.getBean(calssType);
+        }
+
+        RequestAttributes attributes = RequestContextHolder.getRequestAttributes();
+        if (attributes instanceof ServletRequestAttributes) {
+            ServletRequestAttributes requestAttributes = (ServletRequestAttributes) attributes;
+            ApplicationContext context = WebApplicationContextUtils.getWebApplicationContext(requestAttributes.getRequest().getServletContext(),
+                FrameworkServlet.SERVLET_CONTEXT_PREFIX + "appServlet");
+            if (context == null) {
+                context = WebApplicationContextUtils.getWebApplicationContext(requestAttributes.getRequest().getServletContext());
+            }
+            if (context != null) {
+                return context.getBean(calssType);
+            }
+        }
+
+        throw new IllegalStateException("Spring WebApplicationContext is unavailable.");
     }
 
 
@@ -669,9 +621,11 @@ public class NmcpServiceUtils {
             int intDd = Integer.parseInt(dd);
 
             // 년도 붙이기
-            if (Integer.parseInt(custNo.substring(6, 7)) == 1 || Integer.parseInt(custNo.substring(6, 7)) == 2 || Integer.parseInt(custNo.substring(6, 7)) == 5 || Integer.parseInt(custNo.substring(6, 7)) == 6) {
+            if (Integer.parseInt(custNo.substring(6, 7)) == 1 || Integer.parseInt(custNo.substring(6, 7)) == 2 || Integer.parseInt(custNo.substring(6,
+                7)) == 5 || Integer.parseInt(custNo.substring(6, 7)) == 6) {
                 birYear = 1900 + birYear;
-            } else if (Integer.parseInt(custNo.substring(6, 7)) == 3 || Integer.parseInt(custNo.substring(6, 7)) == 4 || Integer.parseInt(custNo.substring(6, 7)) == 7 || Integer.parseInt(custNo.substring(6, 7)) == 8) {
+            } else if (Integer.parseInt(custNo.substring(6, 7)) == 3 || Integer.parseInt(custNo.substring(6,
+                7)) == 4 || Integer.parseInt(custNo.substring(6, 7)) == 7 || Integer.parseInt(custNo.substring(6, 7)) == 8) {
                 birYear = 2000 + birYear;
             }
 
@@ -728,7 +682,7 @@ public class NmcpServiceUtils {
             // 나이 월 계산
             if (toMonth < birMonth) {
                 toYear = toYear - 1;
-            //} else {
+                //} else {
 
             }
             // 나이 년도 계산
@@ -757,9 +711,11 @@ public class NmcpServiceUtils {
              * 5 : 1900년대6: 1900 년대
                 7, 8 :2000년대
              */
-            if ( Integer.parseInt(custNo.substring(6, 7)) == 1 || Integer.parseInt(custNo.substring(6, 7)) == 2 || Integer.parseInt(custNo.substring(6, 7)) == 5 || Integer.parseInt(custNo.substring(6, 7)) == 6 ) {
+            if (Integer.parseInt(custNo.substring(6, 7)) == 1 || Integer.parseInt(custNo.substring(6, 7)) == 2 || Integer.parseInt(custNo.substring(6,
+                7)) == 5 || Integer.parseInt(custNo.substring(6, 7)) == 6) {
                 rtnStr = "19" + custNo.substring(0, 6);  //
-            } else if (Integer.parseInt(custNo.substring(6, 7)) == 3 || Integer.parseInt(custNo.substring(6, 7)) == 4 || Integer.parseInt(custNo.substring(6, 7)) == 7 || Integer.parseInt(custNo.substring(6, 7)) == 8 ) {
+            } else if (Integer.parseInt(custNo.substring(6, 7)) == 3 || Integer.parseInt(custNo.substring(6,
+                7)) == 4 || Integer.parseInt(custNo.substring(6, 7)) == 7 || Integer.parseInt(custNo.substring(6, 7)) == 8) {
                 rtnStr = "20" + custNo.substring(0, 6);
             } else {
                 rtnStr = "19" + custNo.substring(0, 6);  //
@@ -782,12 +738,12 @@ public class NmcpServiceUtils {
         try {
             HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
 
-            if(request.getHeader("User-Agent") != null){
-                if( request.getHeader("User-Agent").indexOf("M-Mobile-App") != -1) {
+            if (request.getHeader("User-Agent") != null) {
+                if (request.getHeader("User-Agent").indexOf("M-Mobile-App") != -1) {
                     rtnDeviceType = "APP";
-                }else{
-                    for(String tmp : filters){
-                        if ( request.getHeader("User-Agent").toLowerCase().indexOf(tmp) != -1) {
+                } else {
+                    for (String tmp: filters) {
+                        if (request.getHeader("User-Agent").toLowerCase().indexOf(tmp) != -1) {
                             rtnDeviceType = "MOB";
                             break;
                         } else {
@@ -810,30 +766,30 @@ public class NmcpServiceUtils {
     public static String getPlatFormCd() {
 
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-        String curUri = request.getRequestURI().toString();
-        String chkParam = StringUtil.NVL(request.getParameter("PCTURN"),"");
+        //String curUri = request.getRequestURI();
+        String chkParam = StringUtil.NVL(request.getParameter("PCTURN"), "");
 
         String rtnPlatFormCd = "P";
 
         try {
-            if("APP".equals(NmcpServiceUtils.getDeviceType())){
+            if ("APP".equals(NmcpServiceUtils.getDeviceType())) {
                 rtnPlatFormCd = "A";
-            } else if("MOB".equals(NmcpServiceUtils.getDeviceType())){
+            } else if ("MOB".equals(NmcpServiceUtils.getDeviceType())) {
                 rtnPlatFormCd = "M";
             } else {
                 rtnPlatFormCd = "P";
             }
-        } catch(McpCommonException e) {
-            logger.error("McpCommonException e : {}", e.getMessage());
+        } catch (McpCommonException e) {
+            log.error("McpCommonException e : {}", e.getMessage());
         } catch (Exception e) {
             throw new McpCommonException(COMMON_EXCEPTION);
         }
 
         //pc/mobile 보기
-        if(!"".equals(chkParam)) {
-            if("M".equals(chkParam)) {
+        if (!"".equals(chkParam)) {
+            if ("M".equals(chkParam)) {
                 rtnPlatFormCd = "M";
-            } else if("A".equals(chkParam)) {
+            } else if ("A".equals(chkParam)) {
                 rtnPlatFormCd = "A";
             } else {
                 rtnPlatFormCd = "P";
@@ -849,17 +805,17 @@ public class NmcpServiceUtils {
         try {
             HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
 
-            if(request.getHeader("User-Agent") != null){
-                if ( request.getHeader("User-Agent").toLowerCase().indexOf("android") != -1) {
+            if (request.getHeader("User-Agent") != null) {
+                if (request.getHeader("User-Agent").toLowerCase().indexOf("android") != -1) {
                     rtnPhoneOs = "A";
-                } else if ( request.getHeader("User-Agent").toLowerCase().indexOf("iphone") != -1
-                            || request.getHeader("User-Agent").toLowerCase().indexOf("ipad") != -1) {
+                } else if (request.getHeader("User-Agent").toLowerCase().indexOf("iphone") != -1
+                    || request.getHeader("User-Agent").toLowerCase().indexOf("ipad") != -1) {
                     rtnPhoneOs = "I";
                 }
             }
-        } catch(IllegalStateException e ) {
+        } catch (IllegalStateException e) {
             throw new McpCommonException(COMMON_EXCEPTION);
-        } catch(Exception e) {
+        } catch (Exception e) {
             throw new McpCommonException(COMMON_EXCEPTION);
         }
         return rtnPhoneOs;
@@ -875,54 +831,52 @@ public class NmcpServiceUtils {
         try {
             HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
 
-            if(request.getHeader("User-Agent") != null){
-                if ( request.getHeader("User-Agent").toLowerCase().indexOf("android") != -1) {
+            if (request.getHeader("User-Agent") != null) {
+                if (request.getHeader("User-Agent").toLowerCase().indexOf("android") != -1) {
                     rtnPhoneOs = "A";
-                } else if ( request.getHeader("User-Agent").toLowerCase().indexOf("iphone") != -1
-                            || request.getHeader("User-Agent").toLowerCase().indexOf("ipad") != -1) {
+                } else if (request.getHeader("User-Agent").toLowerCase().indexOf("iphone") != -1
+                    || request.getHeader("User-Agent").toLowerCase().indexOf("ipad") != -1) {
                     rtnPhoneOs = "I";
                 }
             }
 
-            if(!"O".equals(rtnPhoneOs)) {
+            if (!"O".equals(rtnPhoneOs)) {
                 int iv1 = 0;
                 int iv2 = 0;
 
-                if("A".equals(rtnPhoneOs)) {
+                if ("A".equals(rtnPhoneOs)) {
                     // 안드로이드는 OCR 가능
                     rtnOCRchk = "Y";
                 } else { // I
                     String uagent = request.getHeader("User-Agent");
                     String[] appOsVer = uagent.split(" ");
-                    String[] iOsVer = {"0","0"};
+                    String[] iOsVer = {"0", "0"};
 
-                    for(String ss : appOsVer) {
-                        if(ss.contains("appOsVer")) {
+                    for (String ss: appOsVer) {
+                        if (ss.contains("appOsVer")) {
                             String[] ver = ss.split("=");
-                            if(ver.length > 1) {
+                            if (ver.length > 1) {
                                 iOsVer = ver[1].split("[.]");
-                                if(iOsVer.length > 1) {
-                                    iv1 = Integer.parseInt(StringUtil.NVL(iOsVer[0],"0"));
-                                    iv2 = Integer.parseInt(StringUtil.NVL(iOsVer[1],"0"));
-                                } else if(iOsVer.length == 1) {
-                                    iv1 = Integer.parseInt(StringUtil.NVL(iOsVer[0],"0"));
+                                if (iOsVer.length > 1) {
+                                    iv1 = Integer.parseInt(StringUtil.NVL(iOsVer[0], "0"));
+                                    iv2 = Integer.parseInt(StringUtil.NVL(iOsVer[1], "0"));
+                                } else if (iOsVer.length == 1) {
+                                    iv1 = Integer.parseInt(StringUtil.NVL(iOsVer[0], "0"));
                                 }
                                 break;
                             }
                         }
                     }
                     // IOS 는 os version 13.5 이상 OCR 가능
-                    if(iv1 > 13) {
+                    if (iv1 > 13) {
                         rtnOCRchk = "Y";
-                    } else if(iv1 == 13) {
-                        if(iv2 >= 5) {
-                            rtnOCRchk = "Y";
-                        }
+                    } else if (iv1 == 13 && iv2 >= 5) {
+                        rtnOCRchk = "Y";
                     }
                 }
             }
 
-        } catch(NumberFormatException e) {
+        } catch (NumberFormatException e) {
             throw new McpCommonException(COMMON_EXCEPTION);
         } catch (Exception e) {
             throw new McpCommonException(COMMON_EXCEPTION);
@@ -937,20 +891,20 @@ public class NmcpServiceUtils {
     public static String isMobile() {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
 
-        String chkParam = StringUtil.NVL(request.getParameter("PCTURN"),"");
+        String chkParam = StringUtil.NVL(request.getParameter("PCTURN"), "");
 
-        String curUri = request.getRequestURI().toString();
+        String curUri = request.getRequestURI();
 
         String retStr = "N";
-        if(curUri != null && curUri.toLowerCase().contains("/m/")) {
+        if (curUri != null && curUri.toLowerCase().contains("/m/")) {
             retStr = "Y";
         }
 
         //pc/mobile 보기
-        if(!"".equals(chkParam)) {
-            if("M".equals(chkParam)) {
+        if (!"".equals(chkParam)) {
+            if ("M".equals(chkParam)) {
                 retStr = "Y";
-            } else if("A".equals(chkParam)) {
+            } else if ("A".equals(chkParam)) {
                 retStr = "Y";
             } else {
                 retStr = "N";
@@ -958,7 +912,7 @@ public class NmcpServiceUtils {
         }
 
         return retStr;
-       }
+    }
 
 
     public static String getPropertiesVal(String id) {
@@ -971,12 +925,12 @@ public class NmcpServiceUtils {
             properties.load(reader);
             retStr = properties.getProperty(id);
         } catch (IOException e) {
-            logger.error(e.getMessage());
+            log.error(e.getMessage());
         } finally {
             try {
                 reader.close();
             } catch (IOException e) {
-                logger.error(e.getMessage());
+                log.error(e.getMessage());
             }
         }
         return retStr;
@@ -1013,7 +967,7 @@ public class NmcpServiceUtils {
             // 나이 월 계산
             if (toMonth < birMonth) {
                 toYear = toYear - 1;
-            //} else {
+                //} else {
 
             }
             // 나이 년도 계산
@@ -1025,31 +979,40 @@ public class NmcpServiceUtils {
 
     public static List<NmcpCdDtlDto> getSimpleAuthList(String controlYn, String reqAuth) {
 
-        String grpCd= null;
-        if("P".equals(NmcpServiceUtils.getPlatFormCd())) grpCd= "pSimpleAuth";
-        else grpCd= "mSimpleAuth";
+        String grpCd = null;
+        if ("P".equals(NmcpServiceUtils.getPlatFormCd())) {
+            grpCd = "pSimpleAuth";
+        } else {
+            grpCd = "mSimpleAuth";
+        }
 
-        FCommonSvc fCommonSvc= getBean(FCommonSvc.class);
-        List<NmcpCdDtlDto> simpleAuthList= fCommonSvc.getAllDtlCdList(grpCd);
+        FCommonSvc fCommonSvc = getBean(FCommonSvc.class);
+        List<NmcpCdDtlDto> simpleAuthList = fCommonSvc.getAllDtlCdList(grpCd);
 
-        if(simpleAuthList == null || simpleAuthList.size() == 0){
+        if (simpleAuthList == null || simpleAuthList.size() == 0) {
             return simpleAuthList;
         }
 
         // controlYn : 공통코드에 의해 제어(Y), reqAuth에 해당하는 본인인증 수단 전체표출(N)
-        List<NmcpCdDtlDto> rtnAuthList= new ArrayList<>();
-        if("Y".equalsIgnoreCase(controlYn)){
+        List<NmcpCdDtlDto> rtnAuthList = new ArrayList<>();
+        if ("Y".equalsIgnoreCase(controlYn)) {
 
-            for(NmcpCdDtlDto cdDtlDto : simpleAuthList){
-                if("N".equalsIgnoreCase(cdDtlDto.getUseYn())) continue;
-                if(!DateTimeUtil.checkValidDate(cdDtlDto.getPstngStartDate(), cdDtlDto.getPstngEndDate())) continue;
+            for (NmcpCdDtlDto cdDtlDto: simpleAuthList) {
+                if ("N".equalsIgnoreCase(cdDtlDto.getUseYn())) {
+                    continue;
+                }
+                if (!DateTimeUtil.checkValidDate(cdDtlDto.getPstngStartDate(), cdDtlDto.getPstngEndDate())) {
+                    continue;
+                }
                 rtnAuthList.add(cdDtlDto);
             }
 
-        }else{
-            if(!StringUtil.isEmpty(reqAuth)){
-                for(NmcpCdDtlDto cdDtlDto : simpleAuthList){
-                    if(reqAuth.indexOf(cdDtlDto.getDtlCd()) > -1) rtnAuthList.add(cdDtlDto);
+        } else {
+            if (!StringUtil.isEmpty(reqAuth)) {
+                for (NmcpCdDtlDto cdDtlDto: simpleAuthList) {
+                    if (reqAuth.indexOf(cdDtlDto.getDtlCd()) > -1) {
+                        rtnAuthList.add(cdDtlDto);
+                    }
                 }
             }
         }
@@ -1076,7 +1039,7 @@ public class NmcpServiceUtils {
         if (codeMap != null) {
             codeList = codeMap.get(grpCd);
             if (codeList != null) {
-                for (NmcpCdDtlDto bean : codeList) {
+                for (NmcpCdDtlDto bean: codeList) {
                     if (bean.getDtlCd().equals(dtlCd)) {
                         return bean.getCdGroupDesc();
                     }

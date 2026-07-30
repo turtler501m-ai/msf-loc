@@ -4,7 +4,9 @@
     :class="{
       'is-hideHeader': props.hideHeader,
       'is-hideCount': props.hideCount,
+      'is-less-rows': rowDatas?.length < rows,
       'is-setMaxHeight': !isShowPaging,
+      'is-flex-mode': props.flexGrid,
     }"
   >
     <div v-if="!props.hideHeader" class="msf-grid-header">
@@ -27,12 +29,13 @@
         :row-data="rowDatas"
         :column-types="columnTypes"
         :column-defs="props.columns"
+        :data-type-definitions="dataTypeDefinitions"
         :rowSelection="props.showMulti ? multiOptions : singleOptions"
         class="msf-grid-table"
         :class="{ 'is-single-check': props.showSingleCheck }"
         @grid-ready="onGridReady"
         @selection-changed="onSelectionChanged"
-        :domLayout="isShowPaging ? 'autoHeight' : 'normal'"
+        :domLayout="isShowPaging || !rowDatas?.length ? 'autoHeight' : 'normal'"
       />
       <MsfPagination
         v-if="isShowPaging"
@@ -50,8 +53,9 @@ import { themeAlpine } from 'ag-grid-community'
 import { AG_GRID_LOCALE_KR } from './ag-grid.locale.kr'
 import { AgGridVue } from 'ag-grid-vue3'
 import { formatDate, formatDatetime } from '@/libs/utils/date.utils'
-import { formatCurrency } from '@/libs/utils/string.utils'
+import { formatCurrency, formatTelephone } from '@/libs/utils/string.utils'
 import { post } from '@/libs/api/msf.api'
+import inlineSpinner from '@/assets/images/loading_spinner.svg?inline' // 로딩이미지
 
 const props = defineProps({
   columns: {
@@ -90,7 +94,7 @@ const props = defineProps({
   },
   rows: {
     type: Number,
-    default: 10, //페이징모드의 기본값 10 || 페이징아닐때는 rows로 설정하여 최대 높이값지정하여 스크롤지정
+    default: 10,
   },
   // 테이블 헤더 숨기기
   hideHeader: {
@@ -110,6 +114,11 @@ const props = defineProps({
     default: false,
   },
   isSearch: {
+    type: Boolean,
+    default: false,
+  },
+  // 감싸는 영역 기준(100%)으로 높이 유동적으로 넣고 싶은경우(감싸는 태그의 높이가 지정되어있어야함)
+  flexGrid: {
     type: Boolean,
     default: false,
   },
@@ -133,6 +142,16 @@ const columnTypes = ref({
   },
   datetime: {
     valueFormatter: (params) => formatDatetime(params.value),
+  },
+  telephone: {
+    valueFormatter: (params) => formatTelephone(params.value),
+  },
+})
+const dataTypeDefinitions = ref({
+  commoncode: {
+    baseDataType: 'object',
+    extendsDataType: 'object',
+    valueFormatter: (params) => params.value?.title ?? '',
   },
 })
 
@@ -195,6 +214,18 @@ const gridOptions = reactive({
     <div class="nodata-wrap">조회 결과가 없습니다.</div>
   </div>
   `,
+  // 로딩 커스텀 디자인
+  overlayLoadingTemplate: `
+    <div class="msf-grid-overlay-loading"></div>
+  `,
+  // 로딩 커스텀 디자인 (스피너 포함 : 현재 api로딩과 겹쳐보임으로 dim만 처리함, 필요시 사용)
+  // overlayLoadingTemplate: `
+  //   <div class="msf-grid-overlay-loading">
+  //     <div class="inline-spinner">
+  //       <img src="${inlineSpinner}" alt="Loading..." class="spin-img" />
+  //     </div>
+  //   </div>
+  // `,
 })
 
 const searchInternal = () => {
@@ -298,6 +329,10 @@ defineExpose({
   &.is-hideHeader {
     margin-top: 0;
   }
+  /** 헤더 스타일 */
+  :deep(.ag-header) {
+    border-bottom-color: var(--color-gray-75);
+  }
   /* 중앙 정렬 클래스 */
   :deep(.ag-center-header) {
     .ag-header-cell-label {
@@ -321,6 +356,11 @@ defineExpose({
     margin-bottom: rem(8px);
     .msf-grid-header-left {
       flex: 1;
+      // 왼쪽 슬롯에 MsfTitlearea 사용시 마진블럭 삭제
+      :deep([class^='title-area-root']) {
+        width: 100%;
+        margin-block: 0;
+      }
     }
     .msf-grid-header-right {
       flex-shrink: 0;
@@ -366,6 +406,9 @@ defineExpose({
     border-right: none;
     border-color: var(--color-gray-150);
     border-radius: 0;
+    // 보더 스타일 지정
+    border-top-color: var(--color-gray-150);
+    border-bottom-color: var(--color-gray-75);
   }
   // 상단 정보 영역
   .total-count {
@@ -424,6 +467,84 @@ defineExpose({
     font-size: var(--font-size-16);
   }
 
+  /* 실제 눈에 보이는 세로 스플리터 구분선 스타일 */
+  :deep(.ag-header-cell-resize) {
+    width: 10px; /* 기본값보다 넓게 설정하여 잡기 편하게 변경 */
+    z-index: 1; /* 다른 요소에 가려지지 않도록 설정 */
+    &::after {
+      width: 0 !important; /* 선의 두께 */
+      height: 100% !important; /* 선의 높이 (헤더 높이 대비) */
+      top: 0; /* 중앙 정렬을 위한 위치 조정 */
+      background-color: var(--color-gray-75); /* 선 색상 */
+    }
+  }
+  /* 마지막 row에 보더 컬러 지정 */
+  :deep(.ag-row-last) {
+    border-bottom-color: transparent !important;
+  }
+  /* 데이터 없음의 경우 (무조건 최소 높이값을 초기화) */
+  &:has(.nodata-wrap) {
+    --ag-max-height: auto;
+  }
+
+  // 그리드 설정된 rows보다 데이터 row갯수가 적을때 스타일
+  &.is-less-rows {
+    :deep(.ag-row-last) {
+      border-bottom-color: var(--color-gray-75) !important; /* 선 색상 */
+    }
+    :deep(.ag-center-cols-container),
+    :deep(.ag-center-cols-viewport) {
+      min-height: auto;
+    }
+    // 데이터 없음의 경우
+    &:has(.nodata-wrap) {
+      :deep(.ag-row-last) {
+        border-bottom-color: transparent !important; /* 선 색상 */
+      }
+      // 데이터 없음 표시 최소 높이지정
+      :deep(.ag-center-cols-container),
+      :deep(.ag-center-cols-viewport) {
+        min-height: rem(180px);
+      }
+    }
+  }
+  /* 툴팁 스타일 */
+  :global(.ag-tooltip) {
+    font-size: var(--font-size-13);
+    line-height: var(--line-height-heading);
+    color: var(--color-gray-900) !important;
+    padding: rem(10px) rem(20px) !important;
+    background-color: var(--color-white) !important;
+    border: 1px solid var(--color-gray-75) !important;
+    /* 너비 및 최대 너비 설정 */
+    box-sizing: border-box;
+    /* 너비 제어: 짧을 땐 내용에 맞게, 길어지면 화면 너비에서 여백을 뺀 만큼만 */
+    width: max-content !important;
+    /* 양옆에 각각 20px(합계 40px)의 물리적 여백 */
+    max-width: calc(100% - rem(40px)) !important;
+    margin-left: rem(-20px);
+  }
+  /* 커스텀 로딩 스타일 */
+  :deep(.ag-root-wrapper:has(.msf-grid-overlay-loading)) {
+    border-top-color: var(--color-gray-75);
+  }
+  :deep(.msf-grid-overlay-loading) {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.4);
+    @include flex($h: center, $v: flex-start);
+    pointer-events: auto; // 로딩 중일때 해당 영역 클릭 방지
+    .inline-spinner {
+      margin: 0;
+      padding: 0;
+      min-height: var(--ag-header-height);
+      --loading-spinner-size: #{rem(40px)};
+    }
+  }
+
   // 스크롤바 테마
   :deep(.ag-body-vertical-scroll-viewport) {
     @include scrollbar();
@@ -453,6 +574,27 @@ defineExpose({
   /* 5. iOS에서 스크롤 시 부드러운 움직임 유지 */
   :deep(.ag-body-viewport) {
     -webkit-overflow-scrolling: touch;
+  }
+  // props: flexGrid - 감싸는 영역 기준으로 높이 유동적으로 넣고 싶은경우
+  &.is-flex-mode {
+    @include flex($d: column);
+    height: 100%; // 팝업 내 가변 영역을 100% 채움
+    :deep(.ag-row-last) {
+      border-bottom-color: var(--color-gray-75) !important; /* 선 색상 */
+    }
+    .msf-grid-content {
+      flex: 1;
+      min-height: 0; // 그리드가 영역을 벗어나지 않게 제어
+      @include flex($d: column);
+    }
+    .msf-grid-table {
+      flex: 1;
+      height: 100% !important;
+    }
+    // flexGrid 데이터 없음의 경우
+    &:has(.nodata-wrap) {
+      height: auto;
+    }
   }
 }
 </style>

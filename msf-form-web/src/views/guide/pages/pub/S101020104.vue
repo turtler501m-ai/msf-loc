@@ -86,7 +86,7 @@ const userPhone = reactive({
   p2: '',
   p3: '',
 })
-const idSelection = ref('') // 신분증 선택_추가_20260519
+const idSelection = ref('') // 신분증 선택_추가_20260520
 
 const props = defineProps({
   modelValue: Boolean,
@@ -104,30 +104,5 @@ const onClose = () => {
 </script>
 
 <style lang="scss" scoped>
-.doc-list-wrap {
-  width: 100%;
-  margin-top: rem(16px);
-  border-top: var(--border-width-base) solid var(--color-gray-150);
-  border-bottom: var(--border-width-base) solid var(--color-gray-75);
-  .doc-list {
-    & > li {
-      padding-block: rem(16px);
-      padding-inline: rem(24px);
-      @include flex($v: center, $h: space-between) {
-        gap: rem(16px);
-      }
-      border-top: var(--border-width-base) solid var(--color-gray-75);
-      & > p:first-child {
-        flex: 1;
-        @include flex($v: center, $w: wrap) {
-          gap: rem(4px);
-        }
-      }
-      & > :last-child {
-        flex-shrink: 0;
-        flex-grow: 0;
-      }
-    }
-  }
-}
+// doc-list-wrap 스타일 _common.scss로 이동__20260514
 </style>

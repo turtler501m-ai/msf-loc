@@ -8,6 +8,9 @@ import org.springframework.web.util.HtmlUtils;
 import com.ktmmobile.msf.domains.cache.terms.domain.entity.TermsInfo;
 import com.ktmmobile.msf.domains.cache.terms.domain.entity.TermsType;
 
+/**
+ * 약관 캐시 조회 응답
+ */
 public record TermsCacheResponse(
     String groupCode,
     String groupName,
@@ -25,6 +28,7 @@ public record TermsCacheResponse(
     String content
 ) {
 
+    /** 약관 캐시 원천 데이터의 응답 변환 */
     public static TermsCacheResponse of(TermsType type, TermsInfo info, String docVer, String docContent, List<TermsCacheRequest.SpecTerms> specTermsList) {
         String dtlCdNm = info.getDtlCdNm();
         if ("Y".equals(info.getDtlCdDesc()) && specTermsList != null && !specTermsList.isEmpty()) {

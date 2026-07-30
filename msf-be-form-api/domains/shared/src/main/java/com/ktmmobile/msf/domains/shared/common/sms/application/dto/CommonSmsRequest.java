@@ -10,6 +10,9 @@ public record CommonSmsRequest(
     String token,
     String name,
     String phone,
-    String value
+    String value,
+    String title,
+    String message,
+    String url
 ) {
 }

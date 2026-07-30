@@ -4,6 +4,8 @@ import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgCo
 
 import java.io.IOException;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.jdom.Element;
 import org.jdom.JDOMException;
@@ -12,7 +14,9 @@ import com.ktmmobile.msf.domains.form.common.exception.McpCommonException;
 import com.ktmmobile.msf.domains.form.common.util.StringUtil;
 import com.ktmmobile.msf.domains.form.common.util.XmlParse;
 
-public abstract class CommonXmlNoSelfServiceException implements ParseVO{
+@JsonIgnoreProperties(value = {"body", "root"}, ignoreUnknown = true)
+public abstract class CommonXmlNoSelfServiceException implements ParseVO {
+
     protected final static String HEADER = "commHeader";
     protected final static String BODY = "outDto";
     protected final static String RESULTCODE = "responseType";
@@ -26,79 +30,100 @@ public abstract class CommonXmlNoSelfServiceException implements ParseVO{
     protected String responseXml;
     protected String subBodyStr = "body";
     protected String enckey;
-    protected String svcName        ;//안내 메시지
-    protected String svcMsg ;
+    protected String svcName;//안내 메시지
+    protected String svcMsg;
     protected boolean isSuccess = false;
+    @JsonIgnore
     protected Element body;
+    @JsonIgnore
     protected Element root;
-    protected String globalNo ;
+    protected String globalNo;
 
     public String getResultCode() {
         return resultCode;
     }
+
     public void setResultCode(String resultCode) {
         this.resultCode = resultCode;
     }
+
     public String getResponseXml() {
         return responseXml;
     }
+
     public void setResponseXml(String responseXml) {
         this.responseXml = responseXml;
     }
+
     public boolean isSuccess() {
         return isSuccess;
     }
+
     public void setSuccess(boolean isSuccess) {
         this.isSuccess = isSuccess;
     }
+
+    @JsonIgnore
     public Element getBody() {
         return body;
     }
+
+    @JsonIgnore
     public void setBody(Element body) {
         this.body = body;
     }
+
     public String getEnckey() {
         return enckey;
     }
+
     public void setEnckey(String enckey) {
         this.enckey = enckey;
     }
+
     public String getSubBodyStr() {
         return subBodyStr;
     }
+
     public void setSubBodyStr(String subBodyStr) {
         this.subBodyStr = subBodyStr;
     }
+
     public String getSvcName() {
         return svcName;
     }
+
     public void setSvcName(String svcName) {
         this.svcName = svcName;
     }
+
     public String getSvcMsg() {
         return svcMsg;
     }
+
     public void setSvcMsg(String svcMsg) {
         this.svcMsg = svcMsg;
     }
+
     public String getGlobalNo() {
         return globalNo;
     }
+
     public void setGlobalNo(String globalNo) {
         this.globalNo = globalNo;
     }
 
     public void toResponseParse() throws JDOMException, IOException {
         // TEST
-        Element root = XmlParse.getRootElement("<?xml version=\"1.0\" encoding=\"euc-kr\"?>"+this.responseXml);
+        Element root = XmlParse.getRootElement("<?xml version=\"1.0\" encoding=\"euc-kr\"?>" + this.responseXml);
         Element rtn = XmlParse.getReturnElement(root);
 
         Element commHeader = XmlParse.getChildElement(rtn, HEADER);
-        this.resultCode= XmlParse.getChildValue(commHeader, RESULTCODE);
-        this.globalNo= XmlParse.getChildValue(commHeader, "globalNo");
+        this.resultCode = XmlParse.getChildValue(commHeader, RESULTCODE);
+        this.globalNo = XmlParse.getChildValue(commHeader, "globalNo");
         this.isSuccess = StringUtil.equals(resultCode, CommonXmlNoSelfServiceException.RESULTCODE_SUCCESS);
 
-        if(this.isSuccess) {
+        if (this.isSuccess) {
             this.root = rtn;
             this.body = XmlParse.getChildElement(rtn, BODY);
 
@@ -110,7 +135,7 @@ public abstract class CommonXmlNoSelfServiceException implements ParseVO{
             }
         } else {
             this.svcMsg = XmlParse.getChildValue(commHeader, "responseBasic");
-            this.resultCode= XmlParse.getChildValue(commHeader, RESULTCODE_REAL);
+            this.resultCode = XmlParse.getChildValue(commHeader, RESULTCODE_REAL);
         }
 
     }
@@ -119,7 +144,7 @@ public abstract class CommonXmlNoSelfServiceException implements ParseVO{
         return ToStringBuilder.reflectionToString(this);
     }
 
-    public String extractValue( String tagName) {
+    public String extractValue(String tagName) {
         String openTag = "<" + tagName + ">";
         String closeTag = "</" + tagName + ">";
         int start = responseXml.indexOf(openTag) + openTag.length();

@@ -8,6 +8,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class TerminationRemainChargeReqDto {
+    private Long requestKey;
     private String ncn;     // 계약번호
     private String ctn;     // 휴대폰번호
     private String custId;  // 고객ID

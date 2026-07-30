@@ -102,6 +102,7 @@ onMounted(updateColumnNames)
   --tbl-head-color: var(--color-gray-25);
   --tbl-head-weight: var(--font-weight-bold);
   --tbl-body-bg: var(--color-background);
+  --tbl-font-size: var(--font-size-16);
 
   width: 100%;
   .base-table-wrapper {
@@ -141,6 +142,7 @@ onMounted(updateColumnNames)
     border-collapse: separate;
     border-spacing: 0;
     table-layout: fixed;
+    font-size: var(--tbl-font-size);
     /* [추가] 가로 스크롤이 발생하는 임계점 */
     min-width: rem(650px);
     :deep(tbody) {

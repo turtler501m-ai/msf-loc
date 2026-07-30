@@ -5,6 +5,7 @@
     v-model="model"
     inputmode="numeric"
     :placeholder="props.placeholder"
+    :maxlength="props.maxlength"
     class="msf-number-input-value"
     @input="onInput"
   />
@@ -23,6 +24,7 @@ const model = defineModel({ type: [String, Number], default: '' })
 
 const props = defineProps({
   placeholder: String,
+  maxlength: [String, Number],
 })
 
 const emit = defineEmits(['update:modelValue', 'maxlength'])
@@ -41,9 +43,7 @@ const onInput = (e) => {
   emit('update:modelValue', sanitizedValue)
 
   // 4. maxlength에 도달하면 이벤트를 발생시킵니다.
-  const maxlength = e.target.getAttribute('maxlength')
-  console.log('maxlength:', maxlength)
-  if (maxlength && e.target.value.length >= parseInt(maxlength, 10)) {
+  if (props.maxlength && e.target.value.length >= parseInt(props.maxlength, 10)) {
     emit('maxlength')
   }
 }

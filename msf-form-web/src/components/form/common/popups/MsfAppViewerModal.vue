@@ -3,12 +3,19 @@
     v-bind="$attrs"
     :is-open="modelValue"
     title="신청서 열람"
+    size="xlarge"
     @open="emit('open')"
     @close="onClose"
   >
     <!-- 팝업 내용 -->
-    <MsfTitleArea title="신청서" level="2" noline />
-    <div class="img-area" style="height: 436px">신청서 이미지</div>
+    <div class="eformsign-flex-layout">
+      <MsfTitleArea title="신청서" level="2" bold noline />
+      <MsfEformPreview
+        ref="eformImgRef"
+        class="eform-frame"
+        :document-id="props.documentId"
+      />
+    </div>
     <!-- 하단 고정 -->
     <template #footer>
       <MsfButtonGroup>
@@ -19,8 +26,11 @@
 </template>
 
 <script setup>
+import { MsfDialog } from '@/libs/ui/index.js'
+
 const props = defineProps({
   modelValue: Boolean,
+  documentId: { type: Array, default: () => [] },
 })
 
 const emit = defineEmits(['update:modelValue', 'open', 'close'])

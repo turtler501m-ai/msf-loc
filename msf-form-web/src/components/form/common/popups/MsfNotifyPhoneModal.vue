@@ -13,6 +13,7 @@
         v-model="formData.phoneNumber"
         placeholder="통보 휴대폰번호 입력 (필수)"
         class="ut-w100p"
+        maxlength="11"
       />
     </MsfFormGroup>
 
@@ -20,7 +21,12 @@
     <template #footer>
       <MsfButtonGroup>
         <MsfButton variant="secondary" @click="onClose">취소</MsfButton>
-        <MsfButton v-if="props.settingData?.addSvcSettingCompleted" variant="tertiary" @click="onReset">초기화</MsfButton>
+        <MsfButton
+          v-if="props.settingData?.showChangeCancel"
+          variant="tertiary"
+          @click="onReset"
+          >변경취소</MsfButton
+        >
         <MsfButton variant="primary" @click="onConfirm">확인</MsfButton>
       </MsfButtonGroup>
     </template>
@@ -28,13 +34,16 @@
 </template>
 
 <script setup>
-import { reactive, ref, watch } from 'vue'
+import { reactive, watch } from 'vue'
 import { showAlert } from '@/libs/utils/comp.utils'
-import { normalizePhone, isValidMobileNumber } from '@/libs/utils/string.utils'
+import { normalizePhone } from '@/libs/utils/string.utils'
+
+const isValidMobileNumber2 = (value) => /^01\d{9}$/.test(normalizePhone(value))
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
   settingData: { type: Object, default: () => ({}) },
+  initialSettingData: { type: Object, default: () => ({}) },
 })
 
 const emit = defineEmits(['update:modelValue', 'open', 'close', 'confirm'])
@@ -45,26 +54,41 @@ const formData = reactive({
 })
 
 // 기존 설정값에서 초기값 복원
-const initializeFromSettingData = () => {
-  const { ftrNewParam, phoneNumber } = props.settingData
+const initializeFromSettingData = (settingData = props.settingData) => {
+  const { paramSbst, ftrNewParam, phoneNumber } = settingData
 
   if (ftrNewParam) {
     formData.phoneNumber = normalizePhone(ftrNewParam)
   } else if (phoneNumber) {
     formData.phoneNumber = normalizePhone(phoneNumber)
   } else {
-    formData.phoneNumber = ''
+    if (paramSbst) {
+      // 키 매핑 정의
+      const keyMap = {
+        INFO_SBST1: 'phoneNumber',
+      }
+      paramSbst.split('|').forEach((item) => {
+        const [key, value] = item.split('=')
+        if (key && keyMap[key]) {
+          const fieldName = keyMap[key]
+          formData[fieldName] = (value || '').trim()
+        }
+      })
+    } else {
+      formData.phoneNumber = ''
+    }
   }
 }
 
-const isFormReset = ref(false)
-
-watch(() => props.modelValue, (isOpen) => {
-  if (isOpen) {
-    isFormReset.value = false
-    initializeFromSettingData()
-  }
-}, { immediate: true })
+watch(
+  () => props.modelValue,
+  (isOpen) => {
+    if (isOpen) {
+      initializeFromSettingData()
+    }
+  },
+  { immediate: true },
+)
 
 // 닫힘 이벤트
 const onClose = () => {
@@ -75,17 +99,13 @@ const onClose = () => {
 }
 
 const onReset = () => {
-  isFormReset.value = true
-  formData.phoneNumber = ''
+  initializeFromSettingData(
+    Object.keys(props.initialSettingData).length ? props.initialSettingData : props.settingData,
+  )
 }
 
 // 확인 버튼 클릭
 const onConfirm = () => {
-  if (isFormReset.value) {
-    emit('confirm', { isReset: true })
-    onClose()
-    return
-  }
   const phoneNumber = normalizePhone(formData.phoneNumber)
 
   if (!phoneNumber) {
@@ -93,7 +113,7 @@ const onConfirm = () => {
     return
   }
 
-  if (!isValidMobileNumber(phoneNumber)) {
+  if (!isValidMobileNumber2(phoneNumber)) {
     showAlert('유효한 휴대폰번호를 입력해 주세요.')
     return
   }

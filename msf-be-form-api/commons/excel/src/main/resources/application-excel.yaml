@@ -1,0 +1,5 @@
+#### Common Profile
+excel:
+  header-row:
+    # Apache POI org.apache.poi.ss.usermodel.IndexedColors 값 참고
+    background-color: GREY_25_PERCENT

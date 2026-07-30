@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link type="text/css" rel="stylesheet" href="../css/koi.css" />
+    <title>Koi Module</title>
+  </head>
+  <body>
+    <!-- KOI OCR 모듈 -->
+    <koi-module id="koiModule"></koi-module>
+
+    <!-- 수동 촬영 버튼 그룹 -->
+    <div id="cameraBtnGroup">
+      <button id="cap_btn" class="btn3">
+        <div class="inner-circle"></div>
+      </button>
+      <button id="switch_btn" class="btn3">
+        <div class="inner-circle"></div>
+      </button>
+    </div>
+
+    <script type="module">
+      import { APP_VERSION } from "../js/lib/version.js";
+      import { loadConfig } from "./lib/configLoader.js";
+      import { loadUtils } from "./lib/utilLoader.js";
+
+      let Utils, main, config;
+
+      const OcrModuleState = {
+        koiModule: null,
+        isStandalone: null,
+        ocrMsg: null,
+        config: null,
+        buttons: {},
+        useCapOcr: null,
+        ocrType: null,
+        options: null,
+      };
+
+      window.addEventListener("DOMContentLoaded", async () => {
+        const [cfg, utils] = await Promise.all([loadConfig(), loadUtils()]);
+
+        config = cfg;
+        Utils = utils;
+
+        OcrModuleState.config = config;
+        const [mainModule] = await Promise.all([import(`./ui/main/koi-views.js?v=${APP_VERSION}`), import(`./modules/koi-module.js?v=${APP_VERSION}`)]);
+
+        main = mainModule;
+
+        if (main.ready) {
+          await main.ready;
+        }
+
+        // KOI 모듈 참조
+        OcrModuleState.koiModule = document.querySelector("#koiModule");
+
+        // 메시지 타입
+        OcrModuleState.ocrMsg = config.MSG_EVENT;
+
+        // 독립 실행 여부 판단
+        const isIframe = window.self !== window.top;
+        const isPopup = !!window.opener && !isIframe;
+        OcrModuleState.isStandalone = !isIframe || isPopup;
+
+        // 버튼 이벤트 등록
+        registerButtons();
+
+        // KOI OCR 이벤트 리스너 등록
+        registerOcrEventListeners();
+
+        // 독립 실행일 경우 자동 시작
+        if (OcrModuleState.isStandalone) {
+          const options = config.koiOptions.default;
+          await OcrModuleState.koiModule.startKoiOcr(options);
+          await OcrModuleState.koiModule.capture();
+        } else {
+          document.querySelector(".back-btn").style.display = "flex"; // 페이지 이전 버튼
+        }
+        window.parent.postMessage({ type: OcrModuleState.ocrMsg.READY }, "*");
+      });
+
+      function applyOcrViewConfig(useCapOcr) {
+        const viewCfg = config.viewStack[useCapOcr];
+
+        // cfg 생성 (없으면 모두 false)
+        const cfg = viewCfg ? { ...viewCfg, switch: viewCfg.switch } : { capture: false, switch: false };
+
+        setCameraButtonsView(cfg);
+      }
+
+      function setCameraButtonsView(cfg) {
+        const { capture, switch: switchBtn } = OcrModuleState.buttons;
+
+        // cfg가 없으면 모든 버튼 숨김
+        const showCapture = cfg?.capture ?? false;
+        const showSwitch = cfg?.switch ?? false;
+
+        if (capture) capture.style.display = showCapture ? "block" : "none";
+        if (switchBtn) switchBtn.style.display = showSwitch ? "block" : "none";
+      }
+
+      /** 수동 버튼 이벤트 등록 */
+      function registerButtons() {
+        const capBtn = document.querySelector("#cap_btn");
+        const switchBtn = document.querySelector("#switch_btn");
+
+        OcrModuleState.buttons.capture = capBtn;
+        OcrModuleState.buttons.switch = switchBtn;
+
+        capBtn.addEventListener("click", handleCaptureButton);
+        switchBtn.addEventListener("click", handleSwitchButton);
+        applyOcrViewConfig();
+      }
+
+      /** KOI OCR 이벤트 등록 */
+      function registerOcrEventListeners() {
+        const { koiModule, config } = OcrModuleState;
+        const EVENTS = config.KOI_OCR_EVENT;
+
+        koiModule.addEventListener(EVENTS.RESULT, handleOcrResult);
+        koiModule.addEventListener(EVENTS.READY, () => Utils.logInfo("KOI_OCR_EVENT.READY"));
+        koiModule.addEventListener(EVENTS.CAPTURE, () => Utils.logInfo("KOI_OCR_EVENT.CAPTURE"));
+        koiModule.addEventListener(EVENTS.CAPTUREONLY, handleCaptureResult);
+        koiModule.addEventListener(EVENTS.PROGRESS, () => Utils.logInfo("KOI_OCR_EVENT.PROGRESS"));
+        koiModule.addEventListener(EVENTS.TIMEOUT, handleTimeout);
+      }
+
+      window.addEventListener("message", (event) => {
+        if (event.data?.type === OcrModuleState.ocrMsg.START_OCR) {
+          const options = event.data.options;
+          OcrModuleState.options = options;
+          OcrModuleState.useCapOcr = options.cameraOptions.useCapOcr;
+          OcrModuleState.ocrType = options.cameraOptions.ocrType;
+          applyOcrViewConfig(OcrModuleState.useCapOcr);
+          (async () => {
+            try {
+              await OcrModuleState.koiModule.ready();
+
+              await OcrModuleState.koiModule.startKoiOcr(options);
+
+              window.parent.postMessage({ type: OcrModuleState.ocrMsg.READY_OCR }, "*");
+            } catch (err) {
+              console.error("startKoiOcr failed:", err);
+              alert("startKoiOcr failed:" + err);
+
+              window.parent.postMessage(
+                {
+                  type: OcrModuleState.ocrMsg.ERROR,
+                  error: err?.message || String(err),
+                },
+                "*",
+              );
+            }
+          })();
+        }
+        if (event.data?.type === OcrModuleState.ocrMsg.START_CAMERA) {
+          OcrModuleState.koiModule.capture();
+        }
+        if (event.data?.type === OcrModuleState.ocrMsg.STOP_CAMERA) {
+          console.log("stop");
+          OcrModuleState.koiModule.unload();
+        }
+        if (event.data?.type === OcrModuleState.ocrMsg.FILE_UPLOAD) {
+          handleFileUpload(event.data.imageData, event.data.ocrType);
+        }
+      });
+
+      window.addEventListener("message", (event) => {
+        if (event.data === "close_ocr_iframe") {
+          if (window.history.length > 1) {
+            window.history.back();
+          }
+        }
+      });
+
+      async function handleFileUpload(imageData, ocrType) {
+        const eventDetail = {
+          cropData: imageData,
+          imageWidth: imageData.width,
+          imageHeight: imageData.height,
+          currentCount: 1,
+          totalCount: 1,
+          ocrType: ocrType,
+        };
+
+        const event = new CustomEvent("fileUpload", { detail: eventDetail });
+        window.dispatchEvent(event);
+      }
+
+      /** 캡처 버튼 클릭 */
+      async function handleCaptureButton() {
+        Utils.hide("cap_btn");
+        Utils.hide("switch_btn");
+        OcrModuleState.koiModule.capture();
+      }
+
+      /** 스위치 버튼 클릭 (수동 OCR) */
+      async function handleSwitchButton() {
+        // MANUAL 로 변경
+        Utils.hide("cap_btn");
+        Utils.hide("switch_btn");
+        OcrModuleState.useCapOcr = config.rtcType.MANUAL;
+
+        const options = OcrModuleState.options;
+
+        options.cameraOptions.useCapOcr = OcrModuleState.useCapOcr;
+
+        requestAnimationFrame(() => {
+          OcrModuleState.koiModule
+            .startKoiOcr(options)
+            .then(() => {
+              window.parent.postMessage({ type: OcrModuleState.ocrMsg.READY_OCR }, "*");
+            })
+            .catch((err) => {
+              window.parent.postMessage({ type: OcrModuleState.ocrMsg.ERROR, error: err.message }, "*");
+            });
+        });
+      }
+
+      /** OCR 결과 이벤트 */
+      function handleOcrResult(event) {
+        const result = event.detail;
+        Utils.logInfo("OCR Result:", result);
+
+        // 버튼 숨기기
+        OcrModuleState.buttons.capture.style.display = "none";
+        OcrModuleState.buttons.switch.style.display = "none";
+
+        // 결과 화면 렌더링
+        if (OcrModuleState.isStandalone) {
+          viewOcrResult(result);
+        } else {
+          window.parent.postMessage({ type: OcrModuleState.ocrMsg.RESULT, result }, "*");
+        }
+      }
+
+      /** Timeout 이벤트 처리 */
+      function handleTimeout(event) {
+        if (OcrModuleState.koiModule) {
+          OcrModuleState.koiModule.unload();
+        }
+        Utils.clearCanvas("kwcCanvas");
+
+        const errorMessage = event.detail?.error || "timeout";
+
+        window.parent.postMessage(
+          {
+            type: OcrModuleState.ocrMsg.ERROR,
+            error: errorMessage,
+          },
+          "*",
+        );
+      }
+
+      function handleCaptureResult(event) {
+        const result = event.detail.ocrResult;
+        if (OcrModuleState.koiModule) {
+          OcrModuleState.koiModule.unload();
+        }
+        Utils.clearCanvas("kwcCanvas");
+
+        const cropBase64 = Utils.convertImageDataToBase64(result.cropData);
+        const originBase64 = Utils.convertImageDataToBase64(result.originData);
+
+        // 3. 최종 반환 객체 구성
+        const capturePayload = {
+          captureMode: result.captureMode,
+          isManualCapture: result.isManualCapture,
+          rtcToken: result.rtcToken,
+          images: {
+            crop: cropBase64,     /* 크롭 이미지 (Base64) */
+            origin: originBase64  /* 원본 전체 이미지 (Base64) */
+          }
+        };
+
+        // 4. 부모 윈도우(Main App)로 이벤트 전송
+        // 기존의 RESULT와 섞이지 않도록 신규 메시지 타입(CAPTURE_SUCCESS 등)을 정의해서 던지는 게 안전합니다.
+        const msgType = OcrModuleState.ocrMsg.CAPTURE_SUCCESS || "CAPTURE_SUCCESS";
+        window.parent.postMessage({ type: msgType, result: capturePayload }, "*");
+
+      }
+
+      /** OCR 결과 화면 렌더링 예시 */
+      function viewOcrResult(result) {
+        let resultItems = "";
+        const ocrResult = result.ocrResult;
+        if (ocrResult) {
+          const fieldResults = ocrResult.resultJSON.formResult.fieldResults;
+          for (let i = 0; i < fieldResults.length; i++) {
+            const fieldResult = fieldResults[i];
+            const value = fieldResult.value;
+            resultItems += `<tr>
+                              <td>${fieldResult.displayName}</td>
+                              <td>${value}</td>
+                            </tr>`;
+          }
+
+          const table = document.createElement("table");
+          table.className = "result_content";
+          table.innerHTML = `
+            <thead>
+              <tr>
+                <th>인식 타입</th>
+                <th>인식 결과</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${resultItems}
+            </tbody>
+          `;
+          document.body.appendChild(table);
+        }
+      }
+    </script>
+  </body>
+</html>

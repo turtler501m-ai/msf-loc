@@ -1,5 +1,7 @@
 <script setup>
 import { provide, useId, computed } from 'vue'
+import { useMsfFormGroupLabelProvider } from '@/hooks/useMsfFormGroupLabel'
+import { useMsfFormGroupValidation } from '@/hooks/useFormGroupValidation'
 
 const props = defineProps({
   /** 외부에서 직접 지정할 ID (없으면 자동 생성) */
@@ -16,6 +18,8 @@ const props = defineProps({
   required: Boolean,
   /** 에러 메시지 */
   error: { type: String, default: '' },
+  /** 선택입력 자동 검증 실패 시 이 FormGroup에 우선 적용할 메시지 */
+  optionalMessage: { type: String, default: '' },
   /** 헬프 텍스트 */
   helpText: { type: String, default: '' },
   /** 그룹 여부 (레이블태그 미사용 여부) */
@@ -27,14 +31,40 @@ const props = defineProps({
   },
 })
 
+// v-html 레이블에 포함된 태그 제거
+const stripHtml = (value) =>
+  String(value || '')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+// 자식 그룹형 컨트롤에 전달할 레이블 텍스트
+const formGroupLabelText = computed(() => stripHtml(props.label))
+// MsfChip 등 그룹형 컨트롤에서 접근성 레이블로 사용
+provide('msf-form-group-label-text', formGroupLabelText)
+
 // label 태그 미사용 태그 렌더링
 const isLabelTag = computed(() => props.tag === 'label')
 
 // [ID 결정 로직]
 const generatedId = props.id || useId()
 
+// label / input 연결 전용 context
+const { labelFor } = useMsfFormGroupLabelProvider(isLabelTag, generatedId)
+
 // 레이블 태그일 때만 ID를 공유하고, 아니면 null을 전송
 provide('form-group-id', isLabelTag.value ? generatedId : null)
+
+// 선택입력 검증을 위한 FormGroup 컨텍스트 등록
+const { registerInput, updateInput, unregisterInput } = useMsfFormGroupValidation(
+  props,
+  generatedId,
+)
+// 하위 MsfInput 상태를 수집해 MsfForm 선택입력 검증에 등록
+provide('msf-form-group-context', {
+  registerInput,
+  updateInput,
+  unregisterInput,
+})
 </script>
 
 <template>
@@ -43,7 +73,7 @@ provide('form-group-id', isLabelTag.value ? generatedId : null)
     :class="{ 'has-error': !!props.error, 'is-vertical': props.vertical }"
   >
     <div v-if="props.label" class="label-area">
-      <component :is="props.tag" :for="isLabelTag ? generatedId : undefined" class="group-label">
+      <component :is="props.tag" :for="labelFor" class="group-label">
         <!-- {{ props.label }}
         <span v-if="props.required" class="required-dot">*</span> -->
         <slot name="label">
@@ -55,7 +85,7 @@ provide('form-group-id', isLabelTag.value ? generatedId : null)
 
     <div class="group-content">
       <!-- <slot :id="generatedId"></slot> -->
-      <slot :id="isLabelTag ? generatedId : undefined"></slot>
+      <slot :id="isLabelTag ? labelFor : undefined"></slot>
       <div v-if="props.error || props.helpText" class="etc-text">
         <p v-if="props.error" class="error-message">{{ props.error }}</p>
         <p v-else-if="props.helpText" class="help-text">{{ props.helpText }}</p>

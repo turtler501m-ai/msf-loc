@@ -5,6 +5,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 import javax.sql.DataSource;
 
 import org.apache.ibatis.plugin.Interceptor;
@@ -18,7 +21,7 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
 import com.ktmmobile.msf.commons.mybatis.typehandler.DefaultEnumTypeHandler;
 
-abstract class MyBatisConfigSupport {
+class MyBatisConfigSupport {
 
     private static final PathMatchingResourcePatternResolver RESOURCE_RESOLVER =
         new PathMatchingResourcePatternResolver();
@@ -37,24 +40,47 @@ abstract class MyBatisConfigSupport {
     protected SqlSessionFactory createSqlSessionFactory(
         DataSource dataSource,
         List<String> mapperLocationPatterns
-    ) throws Exception {
+    ) {
+        return createSqlSessionFactory(dataSource, mapperLocationPatterns, _ -> { });
+    }
+
+    protected SqlSessionFactory createSqlSessionFactory(
+        DataSource dataSource,
+        List<String> mapperLocationPatterns,
+        Consumer<Configuration> configurationCustomizer
+    ) {
+        return createSqlSessionFactory(dataSource, mapperLocationPatterns, _ -> true, configurationCustomizer);
+    }
+
+    protected SqlSessionFactory createSqlSessionFactory(
+        DataSource dataSource,
+        List<String> mapperLocationPatterns,
+        Predicate<Interceptor> interceptorFilter,
+        Consumer<Configuration> configurationCustomizer
+    ) {
         SqlSessionFactoryBean factoryBean = new SqlSessionFactoryBean();
+        Configuration configuration = defaultConfiguration();
+        configurationCustomizer.accept(configuration);
+
         factoryBean.setDataSource(dataSource);
         factoryBean.setTypeAliasesPackage(properties.getTypeAliasesPackage());
         factoryBean.setTypeHandlersPackage(properties.getTypeHandlersPackage());
-        factoryBean.setConfiguration(defaultConfiguration());
+        factoryBean.setConfiguration(configuration);
 
         Interceptor[] interceptors = interceptorsProvider.getIfAvailable();
         if (interceptors != null && interceptors.length > 0) {
-            factoryBean.setPlugins(interceptors);
+            factoryBean.setPlugins(filterInterceptors(interceptors, interceptorFilter));
         }
 
-        Resource[] mapperLocations = resolveMapperLocations(mapperLocationPatterns);
-        if (mapperLocations.length > 0) {
-            factoryBean.setMapperLocations(mapperLocations);
+        try {
+            Resource[] mapperLocations = resolveMapperLocations(mapperLocationPatterns);
+            if (mapperLocations.length > 0) {
+                factoryBean.setMapperLocations(mapperLocations);
+            }
+            return factoryBean.getObject();
+        } catch (Exception ex) {
+            throw new IllegalStateException("Failed to create SqlSessionFactory", ex);
         }
-
-        return factoryBean.getObject();
     }
 
     private Configuration defaultConfiguration() {
@@ -62,10 +88,17 @@ abstract class MyBatisConfigSupport {
         configuration.setMapUnderscoreToCamelCase(true);
         configuration.setAutoMappingBehavior(AutoMappingBehavior.FULL);
         configuration.setDefaultEnumTypeHandler(DefaultEnumTypeHandler.class);
+        configuration.setJdbcTypeForNull(org.apache.ibatis.type.JdbcType.NULL);
         Properties variables = new Properties();
         variables.setProperty("org.apache.ibatis.parsing.PropertyParser.enable-default-value", "true");
         configuration.setVariables(variables);
         return configuration;
+    }
+
+    private Interceptor[] filterInterceptors(Interceptor[] interceptors, Predicate<Interceptor> interceptorFilter) {
+        return Stream.of(interceptors)
+            .filter(interceptorFilter)
+            .toArray(Interceptor[]::new);
     }
 
     private Resource[] resolveMapperLocations(List<String> mapperLocationPatterns) throws IOException {

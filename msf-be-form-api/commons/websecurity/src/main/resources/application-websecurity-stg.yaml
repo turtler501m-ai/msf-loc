@@ -1,0 +1,26 @@
+#### STG Profile
+spring:
+  config.activate.on-profile: stg
+
+  ## Security
+  security:
+    jwt:
+      secret-key: ENC(...)
+
+
+## 외부 서비스 인증 (Inbound)
+external-service-auth:
+  services:
+    eformsign: ## eFormSign
+      api-key: ENC(HGHGNUWRk5/ig0NhbjySM/0NWYWTmvZvySbJL8v4u4Y8z7nopjOHbWexm+0J1sl4uxaFF8S+NgSDGVVR+/PHr9n/MvJX8of3ZsxFmw1v/tshHtr4L+0OYx6+tU9y2mcfPzpmEycAK2O6yRPbw+wUBg==)
+      allowed-ip-addresses: [] ## 허용 IP 목록 (단일 IP, CIDR 가능)
+    koi-idcard: ## KOI 모바일신분증 인증
+      api-key: ENC(1NwvGjuOlRv3Zik4POfYHWhAn30awLtEr22u/gkPIE4qWwwom+0fWJGTJ3CrOORGlYlS/xJpr6yMKDkCdlbZhZhLKfM9Lh1QpxFPgVjNtg4AMeTt9OVas8iSyxbTOlg5gonL4v567IZyAPvBFzSm9A==)
+      allowed-ip-addresses: [] ## 허용 IP 목록 (단일 IP, CIDR 가능)
+
+
+## Response Handling
+response-handling:
+  exception:
+    className: false
+    message: true

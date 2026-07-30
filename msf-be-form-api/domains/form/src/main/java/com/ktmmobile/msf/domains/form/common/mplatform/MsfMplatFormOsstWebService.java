@@ -1,33 +1,31 @@
 package com.ktmmobile.msf.domains.form.common.mplatform;
 
+
 import java.net.SocketTimeoutException;
 import java.util.HashMap;
 
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.ObjectMapper;
 
-import com.ktmmobile.msf.domains.form.common.dto.UserSessionDto;
 import com.ktmmobile.msf.domains.form.common.exception.SelfServiceException;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MplatFormFMC0InfoResponse;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.OsstMcnChgPrecheckResponse;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.RetvUsimChgAcceptPsblVO;
-import com.ktmmobile.msf.domains.form.common.util.SessionUtils;
+import com.ktmmobile.msf.commons.websecurity.security.auth.util.AuthenticationUtils;
 import com.ktmmobile.msf.domains.form.common.util.StringUtil;
 
 import static com.ktmmobile.msf.domains.form.common.constants.Constants.EVENT_CODE_NAME_CHG_PRE_CHK;
 import static com.ktmmobile.msf.domains.form.common.constants.Constants.EVENT_CODE_REPLACE_USIM_PRE_CHK;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MsfMplatFormOsstWebService {
 
     private final MsfMplatFormOsstWebServerAdapter mplatFormOsstWebServerAdapter;
     private final ObjectMapper objectMapper;
-
-    private static final Logger logger = LoggerFactory.getLogger(MsfMplatFormOsstWebService.class);
 
     /** T01.유심무상교체 접수 가능 여부조회 */
     public RetvUsimChgAcceptPsblVO retvUsimChgAcceptPsbl(String ncn, String ctn, String custId) throws SelfServiceException, SocketTimeoutException {
@@ -58,21 +56,18 @@ public class MsfMplatFormOsstWebService {
             param.put("userid", userId);
             param.put("appEventCd", eventCd);
         } catch (Exception e) {
-            logger.error(e.getMessage());
+            log.error(e.getMessage());
         }
 
         return param;
     }
 
     private String sesUserId() {
-        String retId = "";
-
-        UserSessionDto userSessionDto = SessionUtils.getUserCookieBean();
-        if (userSessionDto != null) {
-            retId = StringUtil.NVL(userSessionDto.getUserId(), "");
+        try {
+            return StringUtil.NVL(AuthenticationUtils.getUser().getUserId(), "");
+        } catch (RuntimeException e) {
+            return "";
         }
-
-        return retId;
     }
 
 }

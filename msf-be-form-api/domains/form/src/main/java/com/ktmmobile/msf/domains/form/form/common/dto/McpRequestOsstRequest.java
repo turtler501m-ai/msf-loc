@@ -8,12 +8,13 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class McpRequestOsstRequest {
+
     private String mvnoOrdNo;
     private String prgrStatCd;
     private String rsltCd;
 
     //
-    private long requestKey;
+    private Long requestKey;
     private String reqWantNumber;
 
     private String managerCode;

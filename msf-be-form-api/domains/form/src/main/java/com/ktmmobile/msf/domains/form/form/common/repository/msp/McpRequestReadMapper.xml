@@ -15,7 +15,7 @@
         WHERE A.REQUEST_KEY = B.REQUEST_KEY
             AND A.REQ_IN_DAY <![CDATA[>=]]> trunc(SYSDATE - #{limitDay})
             AND A.OPER_TYPE = 'MNP3'
-            AND A.ON_OFF_TYPE IN ('5', '7')
+            <!--AND A.ON_OFF_TYPE IN ('5', '7')-->
             AND B.MOVE_MOBILE_FN || B.MOVE_MOBILE_MN || B.MOVE_MOBILE_RN = #{moveMobileNo}
     </select>
 
@@ -35,6 +35,38 @@
     SELECT
       SQ_RCP_RES_NO_01.NEXTVAL@DL_MCP
     FROM DUAL
+  </select>
+
+  <select id="selectMcpRequest" parameterType="java.lang.Long" resultType="java.lang.Integer">
+    SELECT COUNT(*) cnt FROM MCP_REQUEST@DL_MCP WHERE REQUEST_KEY = #{requestKey}
+  </select>
+
+  <select id="selectMcpRequestCstmr" parameterType="java.lang.Long" resultType="java.lang.Integer">
+    SELECT COUNT(*) cnt FROM MCP_REQUEST_CSTMR@DL_MCP WHERE REQUEST_KEY = #{requestKey}
+  </select>
+
+  <select id="selectMcpRequestAgent" parameterType="java.lang.Long" resultType="java.lang.Integer">
+    SELECT COUNT(*) cnt FROM MCP_REQUEST_AGENT@DL_MCP WHERE REQUEST_KEY = #{requestKey}
+  </select>
+
+  <select id="selectMcpRequestReq" parameterType="java.lang.Long" resultType="java.lang.Integer">
+    SELECT COUNT(*) cnt FROM MCP_REQUEST_REQ@DL_MCP WHERE REQUEST_KEY = #{requestKey}
+  </select>
+
+  <select id="selectMcpRequestSaleinfo" parameterType="java.lang.Long" resultType="java.lang.Integer">
+    SELECT COUNT(*) cnt FROM MCP_REQUEST_SALEINFO@DL_MCP WHERE REQUEST_KEY = #{requestKey}
+  </select>
+
+  <select id="selectMcpRequestMove" parameterType="java.lang.Long" resultType="java.lang.Integer">
+    SELECT COUNT(*) cnt FROM MCP_REQUEST_MOVE@DL_MCP WHERE REQUEST_KEY = #{requestKey}
+  </select>
+
+  <select id="selectMcpRequestDvcChg" parameterType="java.lang.Long" resultType="java.lang.Integer">
+    SELECT COUNT(*) cnt FROM MCP_REQUEST_DVC_CHG@DL_MCP WHERE REQUEST_KEY = #{requestKey}
+  </select>
+
+  <select id="selectMcpRequestAddition" parameterType="java.lang.Long" resultType="java.lang.Integer">
+    SELECT COUNT(*) cnt FROM MCP_REQUEST_ADDITION@DL_MCP WHERE REQUEST_KEY = #{requestKey}
   </select>
 
 </mapper>

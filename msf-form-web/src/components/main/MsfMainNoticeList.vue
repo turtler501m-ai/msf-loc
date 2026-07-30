@@ -28,7 +28,7 @@
         <div class="notice-title">
           <p class="notice-tit">[{{ item.category?.title }}] {{ item.title }}</p>
           <MsfFlag
-            v-if="diffDays(Date.now(), item.writeDate) <= 3"
+            v-if="diffDays(new Date(), item.writeDate) <= 3"
             data="NEW"
             color="accent2"
             size="small"
@@ -112,6 +112,9 @@ onBeforeMount(async () => {
   })
   totalCount.value = data.meta.page.totalCount
   list.value = data.data
+  list.value.forEach((v) => {
+    console.log(v.writeDate, diffDays(new Date(), v.writeDate))
+  })
 })
 </script>
 

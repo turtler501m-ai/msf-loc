@@ -1,19 +1,28 @@
 import axios from 'axios'
 import { useMsfUserStore } from '@/stores/msf_user'
+import { useMsfLoadingStore } from '@/stores/msf_loading'
 import { isTokenExpired } from '@/libs/utils/auth.utils'
-import { showAlert } from '@/libs/utils/comp.utils'
+import { showAlertWithId } from '@/libs/utils/comp.utils'
+import { registerPendingApiRequest, releasePendingApiRequest } from '@/libs/api/msf_request'
 
 axios.defaults.headers['Content-Type'] = 'application/json'
 axios.defaults.headers['Accept'] = 'application/json'
-axios.defaults.withCredentials = true
+
+const msfApiUrl = import.meta.env.VITE_MSF_BASE_URL || ''
+const useLocalProxy = import.meta.env.MODE === 'loc' && msfApiUrl.indexOf('localhost:') === -1
+const apiBaseUrl = useLocalProxy ? '' : msfApiUrl
+const isLocalApi = useLocalProxy || !msfApiUrl || msfApiUrl.indexOf('localhost:') > -1
+const credentialsConfig = useLocalProxy ? {} : { withCredentials: true }
 
 const api = axios.create({
-  baseURL: `${import.meta.env.VITE_MSF_API_URL}`,
-  timeout: import.meta.env.VITE_MSF_API_URL.indexOf('localhost:') > -1 ? 600000 : 5000,
+  baseURL: apiBaseUrl,
+  timeout: isLocalApi ? 600000 : 60000,
+  ...credentialsConfig,
 })
 
 const auth = axios.create({
-  baseURL: `${import.meta.env.VITE_MSF_API_URL}`,
+  baseURL: apiBaseUrl,
+  ...credentialsConfig,
 })
 
 // =========================================================================
@@ -21,6 +30,14 @@ const auth = axios.create({
 // =========================================================================
 let isRefreshing = false // 현재 토큰 갱신 진행 여부
 let refreshQueue = [] // 대기열 (Promise의 resolve, reject를 보관)
+let isLoginAlertOpen = false // 로그인 이동 alert 중복 방지
+
+const hideRequestLoading = (config) => {
+  if (!config?.skipLoading) {
+    useMsfLoadingStore().hideLoading(config?.__msfLoadingGeneration)
+  }
+  releasePendingApiRequest(config)
+}
 
 // 대기열에 쌓인 요청들을 일괄 처리하는 함수
 const processQueue = (error, token = null) => {
@@ -39,6 +56,10 @@ const processQueue = (error, token = null) => {
 // ---------------------------------------------------------
 api.interceptors.request.use(
   async (config) => {
+    if (!config.skipLoading) {
+      config.__msfLoadingGeneration = useMsfLoadingStore().showLoading() // 모든 요청에서 로딩 표시
+      registerPendingApiRequest(config)
+    }
     if (config.url.startsWith('/api/n/')) {
       return config
     }
@@ -72,8 +93,8 @@ api.interceptors.request.use(
         const response = await auth.post('/api/n/auth/refresh')
         if (response.data.code !== '0000') {
           refreshQueue = [] // 대기열 초기화
-          msfUserStore.clearUserInfo()
-          window.location.href = '/login' // 로그인 페이지로 이동
+          goToLoginPage(response.data?.message)
+          return Promise.reject(response.data)
         }
         // 스토리지에 새 토큰 저장 (구현된 로직에 따라 적용)
         msfUserStore.setUserTokenInfo(response.data.data)
@@ -83,8 +104,7 @@ api.interceptors.request.use(
       } catch (error) {
         // 갱신 실패 (리프레시 토큰 만료 등)
         processQueue(error, null)
-        msfUserStore.clearUserInfo()
-        window.location.href = '/login'
+        goToLoginPage(undefined, { skipLoginAlert: true }) // alert없이 바로 이동
         return Promise.reject(error)
       } finally {
         isRefreshing = false
@@ -106,14 +126,25 @@ api.interceptors.request.use(
 // =========================================================================
 api.interceptors.response.use(
   (response) => {
+    hideRequestLoading(response.config) // 모든 요청에서 로딩 숨김
     return response
   },
   async (error) => {
+    hideRequestLoading(error.config) // 모든 요청에서 로딩 숨김
     // error.config 에는 이전에 실패했던 요청의 모든 정보(url, method, data 등)가 들어있습니다.
     const originalRequest = error.config
 
+    // 로그인 만료 처리 중에는 추가 에러 처리를 막음
+    if (isLoginAlertOpen) {
+      return Promise.reject(error)
+    }
+
     // HTTP 상태 코드가 401(토큰 만료)이고, 한 번도 재시도한 적이 없는 요청인지 확인 (_retry 플래그)
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !originalRequest.url?.endsWith('/logout')
+    ) {
       const msfUserStore = useMsfUserStore()
 
       // 이미 갱신 중이라면 대기열에 탑승
@@ -136,8 +167,8 @@ api.interceptors.response.use(
         const response = await auth.post('/api/n/auth/refresh')
         if (response.data.code !== '0000') {
           refreshQueue = [] // 대기열 초기화
-          msfUserStore.clearUserInfo()
-          window.location.href = '/login' // 로그인 페이지로 이동
+          goToLoginPage(response.data?.message)
+          return Promise.reject(response.data)
         }
         // 스토리지에 새 토큰 저장 (구현된 로직에 따라 적용)
         msfUserStore.setUserTokenInfo(response.data.data)
@@ -150,8 +181,7 @@ api.interceptors.response.use(
         return api(originalRequest)
       } catch (refreshError) {
         processQueue(refreshError, null)
-        msfUserStore.clearUserInfo()
-        window.location.href = '/login'
+        goToLoginPage(refreshError.response?.data?.message)
         return Promise.reject(refreshError)
       } finally {
         isRefreshing = false
@@ -163,7 +193,7 @@ api.interceptors.response.use(
   },
 )
 
-export const post = async (url, params, config = {}) => {
+export const post = async (url, params, config = { skipAlert: false }) => {
   const isBlob = config.responseType === 'blob'
 
   return await api
@@ -183,24 +213,45 @@ export const post = async (url, params, config = {}) => {
 
       // 1. 백엔드 시스템 에러 체크
       if (resData.code !== '0000') {
-        showAlert(resData.message || '시스템 오류가 발생했습니다.')
+        console.log(
+          'api.response.code:',
+          resData?.code,
+          ', api.response.message:',
+          resData?.message,
+        )
+        if (!config.skipAlert) {
+          showInternalAlert(resData.message || '시스템 오류가 발생했습니다.')
+        }
         return resData
       }
 
       // 2. 비즈니스 에러 체크 (resCode가 존재하고 '0000'이 아닌 경우)
-      if (resData.data?.resCode === '0000') {
-        if (resData.data.resMessage) showAlert(resData.data.resMessage)
-      } else if (resData.data?.resCode && resData.data.resCode !== '0000') {
-        showAlert(resData.data.resMessage || '업무 처리 중 오류가 발생했습니다.')
+      if (!config.skipAlert) {
+        if (resData.data?.resCode === '0000') {
+          if (resData.data.resMessage) showInternalAlert(resData.data.resMessage)
+        } else if (resData.data?.resCode && resData.data.resCode !== '0000') {
+          showInternalAlert(resData.data.resMessage || '업무 처리 중 오류가 발생했습니다.')
+        }
       }
 
       return resData
     })
     .catch((err) => {
-      const resData = err.response?.data
-      if (resData?.code !== '0000') {
-        showAlert(resData?.message || '시스템 오류가 발생했습니다.')
+      if (err.config?.__msfLongLoadingAbort) {
+        return { code: '9999', message: '요청이 취소되었습니다.' }
       }
+
+      const resData = err.response?.data
+      // 로그인 만료 처리 중에는 후속 API 처리를 멈춰 중복 alert를 막음
+      if (isLoginAlertOpen) {
+        return new Promise(() => {})
+      }
+
+      console.log('api.response.code:', resData?.code, ', api.response.message:', resData?.message)
+      if (!config.skipAlert && !url?.endsWith('/logout') && resData?.code !== '0000') {
+        showInternalAlert(resData?.message || '시스템 오류가 발생했습니다.')
+      }
+
       return err.response?.data ? err.response.data : { code: '9999', message: err.message }
     })
 }
@@ -223,4 +274,31 @@ export const refreshToken = async () => {
     .catch((err) =>
       err.response?.data ? err.response.data : { code: '9999', message: err.message },
     )
+}
+
+const showInternalAlert = (message, callback) => {
+  // 로그인 이동 alert 우선
+  if (isLoginAlertOpen && !callback) {
+    return
+  }
+  showAlertWithId('msf-api-alert', message || '시스템 오류가 발생했습니다.', callback)
+}
+
+// 로그인 페이지로 이동
+const goToLoginPage = (message, options = {}) => {
+  const { skipLoginAlert = false } = options
+
+  if (isLoginAlertOpen) return
+  isLoginAlertOpen = true
+
+  const moveToLogin = () => {
+    useMsfUserStore().clearUserInfo()
+    window.location.href = '/login'
+  }
+
+  if (skipLoginAlert) {
+    moveToLogin()
+    return
+  }
+  showInternalAlert(message || '로그인 정보가 유효하지 않습니다. 다시 로그인해주세요.', moveToLogin)
 }

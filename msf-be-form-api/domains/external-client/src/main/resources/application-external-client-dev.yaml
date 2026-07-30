@@ -1,0 +1,36 @@
+## HTTP Client
+http-client:
+  proxy:
+    host: 172.28.130.8
+    port: 3128
+
+
+
+## 내부 서비스 (Outbound)
+internal-service:
+  services:
+    eformsign: ## eFormSign
+      base-url: http://d-smartform-eform.ktmmobile.com:8080
+      properties:
+        member-id: test@forcs.com
+        api-key: ENC(JQqKDvGAb2e10KlEvnGxEedNxfD+TV9cWY9mpJkMd/cY+Y1jUGVUE5QEJVJJXGo+WHCeuY4sgYVMz91uSpCJ8AiZwxwcmNSKb38QJSLTaI8=)
+        private-key: ENC(gCHRJhqN7LRkeCjehOctfO8ARRDLdFt/qSfjqwZwohC+iZ8UywXVAPXAkfSSvjBUsMagzY+Ubyqpf/PHw2TuEyBMXi9OfOxtAmxAEwHnX+CfqFeNoBoDTVsTn6wgbKWg9ayW25zucmtHXi3q/mQVw44L68nLYpypP+HhXWgIFVR41EIEnmTA7OLqc+iO5PBEzTGRFZ/nruQRTqVCfsDDNMaP4mUbh7hl7EcAsDlECl0=)
+
+
+
+## 외부 서비스 (Outbound)
+external-service:
+  services:
+    msp-prx: ## MSP PRX
+      base-url: https://dmcpprxstg.ktmmobile.com:27006  # STG 환경 연동 (PRX는 DEV 환경 없음)
+    nice-api: ## NICE API
+      base-url: https://secure.nuguya.com
+      properties:
+        svc-pwd: ENC(AVc+24vY5uQC22Q45KL9d1nqvNxCDfYFKORIWQQCxeXkWR8duwD3ctnCVgNKAid2)
+    image-system: ## 이미지 시스템
+      base-url: https://scnimgstg.ktmmobile.com:9312  # STG 환경 사용
+    juso: ## 주소 검색
+      base-url: https://business.juso.go.kr
+      properties:
+        api-key: ENC(IHZC15rVEaO06D7p7uTjfHIY6zdQyYlI8e52QXEhF6xRjYlzobcZ4mPJfyEfkXWw+07B96Btck9Yz63faNVBpE1YFObFWYkWJTrgbT0Me1I=)
+        coord-api-key: ENC(ZUx4EscdaCr9vxD2+c8342qlptQLSfK/tqJz45rVsSa2NsPSGTQHu60uH+TVId+9fqA0IASV5cTnGNhbvQf+Lm5WdP5umC5vKEW7XaF7Ahk=)

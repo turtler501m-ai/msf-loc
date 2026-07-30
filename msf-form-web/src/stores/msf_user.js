@@ -9,6 +9,7 @@ export const useMsfUserStore = defineStore('msfUser', {
     userInfo: null,
     deviceInfo: null,
     userData: null,
+    _refreshLock: null, // 내부용 refresh 중복 방지용 대기 잠금
   }),
   getters: {
     /**
@@ -44,13 +45,31 @@ export const useMsfUserStore = defineStore('msfUser', {
      * 사용자 정보 조회
      */
     async loadUserInfo() {
-      const response = await refreshToken()
-      if (response.code !== '0000') {
-        window.location.href = '/login'
-      } else {
-        // 성공적으로 새 토큰 발급
-        this.setUserTokenInfo(response.data)
-      }
+      // refresh 중이면 기존 요청 결과를 그대로 재사용
+      if (this._refreshLock) return this._refreshLock
+
+      // refreshToken은 한 번만 실행하고 결과를 공유
+      this._refreshLock = (async () => {
+        try {
+          const response = await refreshToken()
+          // 실패하면 사용자 상태 초기화
+          if (response.code !== '0000') {
+            this.clearUserInfo()
+            return false
+          }
+          // 성공적으로 새 토큰 발급
+          this.setUserTokenInfo(response.data)
+          return true
+        } catch (e) {
+          // 에러 발생 시도 동일하게 로그아웃 처리
+          this.clearUserInfo()
+          return false
+        }
+      })()
+
+      const result = await this._refreshLock // refresh 완료까지 대기
+      this._refreshLock = null // 다음 refresh를 위해 잠금 해제
+      return result // 실패 시 로그인 이동은 router에서 처리
     },
     /**
      * 사용자 정보 초기화 (로그아웃 등)
@@ -61,12 +80,6 @@ export const useMsfUserStore = defineStore('msfUser', {
     },
     setDeviceInfo(deviceInfo) {
       this.deviceInfo = deviceInfo
-    },
-    getDeviceInfo() {
-      return this.deviceInfo
-    },
-    clearDeviceInfo() {
-      this.deviceInfo = null
     },
     setUserData(userData) {
       this.userData = userData
@@ -120,39 +133,6 @@ export const useMsfUserStore = defineStore('msfUser', {
         this.userData = null
         return { type: 'complete', url: '/' }
       }
-    },
-
-    async initDeviceUuid() {
-      const uuid = await this.resolveDeviceUuid()
-      this.setDeviceUuid(uuid)
-      return uuid
-    },
-
-    async resolveDeviceUuid() {
-      const allowUuidOverride = import.meta.env.VITE_MSF_ALLOW_DEVICE_UUID_OVERRIDE === 'true'
-      const storageUuid = allowUuidOverride ? localStorage.getItem('MSF_DEVICE_UUID')?.trim() : null
-      if (storageUuid) return storageUuid
-
-      const appBridge = window.MSF_APP
-      if (!appBridge) return null
-
-      const uuid =
-        typeof appBridge.getDeviceUuid === 'function'
-          ? await appBridge.getDeviceUuid()
-          : appBridge.deviceUuid
-      return typeof uuid === 'string' ? uuid.trim() : uuid
-    },
-
-    setDeviceUuid(uuid) {
-      this.deviceUuid = uuid || null
-    },
-
-    getDeviceUuid() {
-      return this.deviceUuid
-    },
-
-    clearDeviceUuid() {
-      this.deviceUuid = null
     },
   },
 })

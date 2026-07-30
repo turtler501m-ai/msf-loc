@@ -285,8 +285,8 @@
             END AS AUTH_LABEL,
             RC.PROC_CD,
             CASE
-                WHEN RC.PROC_CD = 'RC' THEN '접수완료'
-                WHEN RC.PROC_CD = 'RQ' THEN '처리요청'
+                WHEN RC.PROC_CD = 'RQ' THEN '접수처리중'
+                WHEN RC.PROC_CD = 'RC' THEN '처리완료'
                 WHEN RC.PROC_CD = 'CP' THEN '처리완료'
                 WHEN RC.PROC_CD = 'BK' THEN '반려'
                 ELSE COALESCE(RC.PROC_CD, '-')
@@ -303,14 +303,15 @@
             RC.LAST_SUM_AMT,
             RC.RES_CD,
             RC.RES_MSG,
-            RC.RES_NO
+            RC.RES_NO,
+            RC.PARENT_SCAN_ID AS parentScanId
         FROM MSF_REQUEST_CANCEL RC
         LEFT JOIN MSF_REQUEST_CSTMR C ON RC.REQUEST_KEY = C.REQUEST_KEY
         WHERE RC.REQUEST_KEY = #{requestKey}
     </select>
 
     <!-- 처리 가능 여부 확인 — PROC_CD 조회 -->
-    <!-- ASIS: getCustStatus → PROC_CD='CP' 이면 이미 처리완료 -->
+    <!-- ASIS: getCustStatus → PROC_CD='RC' 이면 이미 처리완료 -->
     <select id="selectApplicationStatus"
             parameterType="java.lang.Long"
             resultType="com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto$ProcessStatusDto">
@@ -332,18 +333,41 @@
         WHERE REQUEST_KEY = #{requestKey}
     </select>
 
-    <!-- PROC_CD 변경 UPDATE — 접수완료(CP)/완료취소(RC) 공통 사용 -->
+    <!-- PROC_CD 변경 UPDATE — 처리완료(RC)/완료취소(RQ)/반려(BK) 공통 사용
+         PROC_DT: 상태 변경 시각(M전산 개통처리결과 수신 처리 일시) -->
     <update id="updateCanCustProcCd"
             parameterType="com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto$ProcessUpdateDto">
         UPDATE MSF_REQUEST_CANCEL
         SET
             PROC_CD = #{procCd},
+            PROC_DT = NOW(),
+            RES_CD  = COALESCE(#{resCd}, RES_CD),
+            RES_MSG = COALESCE(#{resMsg}, RES_MSG),
+            RES_NO  = COALESCE(#{resNo}, RES_NO),
+            MEMO    = COALESCE(NULLIF(#{memo}, ''), MEMO)
+        WHERE REQUEST_KEY = #{requestKey}
+          AND PROC_CD != #{procCd}
+    </update>
+
+    <!-- 해지 처리 실패/오류 시 상태는 유지하고 처리결과만 저장한다. -->
+    <update id="updateCanCustProcessResult"
+            parameterType="com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto$ProcessUpdateDto">
+        UPDATE MSF_REQUEST_CANCEL
+        SET
+            PROC_DT = NOW(),
             RES_CD  = #{resCd},
             RES_MSG = #{resMsg},
             RES_NO  = #{resNo},
-            MEMO    = #{memo}
+            MEMO    = COALESCE(NULLIF(#{memo}, ''), MEMO)
         WHERE REQUEST_KEY = #{requestKey}
-          AND PROC_CD != #{procCd}
+    </update>
+
+    <!-- OPEN_REQ_DT(개통MP 호출일시) UPDATE — EP0(개통처리) 호출 성공 시에만 사용 -->
+    <update id="updateCancelOpenReqDt"
+            parameterType="java.lang.Long">
+        UPDATE MSF_REQUEST_CANCEL
+        SET OPEN_REQ_DT = NOW()
+        WHERE REQUEST_KEY = #{requestKey}
     </update>
 
 </mapper>

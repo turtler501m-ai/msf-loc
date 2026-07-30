@@ -49,9 +49,9 @@ public class MsfRequestCancelVo {
     String clauseCntrDelYn;
     String etcAgreeYn;
     String memo;
-    String regDate;
+    String openReqDt;
     String regstId;
-    String regDt;
+    String reqInDt;
     String procDt;
     String procCd;
     String recYn;
@@ -63,5 +63,6 @@ public class MsfRequestCancelVo {
     String appFormXmlYn;
     String fileNm;
     String fileMaskNm;
+    String parentScanId;
 
 }

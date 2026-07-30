@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -205,6 +206,14 @@ public class RedisCacheService<T> implements CacheService<T> {
     public List<T> getValues(String pattern, int limit) {
         Set<String> keys = getRealKeys(pattern, limit);
         return redisTemplate.opsForValue().multiGet(keys);
+    }
+
+    /** Value 또는 Hash 캐시 Key의 남은 만료 시간을 조회 */
+    @Override
+    public Duration getTimeToLive(String key) {
+        Long ttlMillis = redisTemplate.getExpire(getRealKey(key), TimeUnit.MILLISECONDS);
+        long ttl = requireNonNull(ttlMillis, "RedisTemplate.getExpire()");
+        return ttl < 0L ? null : Duration.ofMillis(ttl);
     }
 
     /** Value 또는 Hash 캐시 Key 존재 여부를 조회 */

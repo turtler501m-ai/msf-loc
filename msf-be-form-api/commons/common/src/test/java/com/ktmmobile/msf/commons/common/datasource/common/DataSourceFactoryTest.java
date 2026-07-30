@@ -70,6 +70,7 @@ class DataSourceFactoryTest {
         return new DataSourceItemProperties(URL, USERNAME, PASSWORD, readOnly, new HikariConfig());
     }
 
+    @SafeVarargs
     private static Binder binder(Map.Entry<String, String>... entries) {
         return new Binder(new MapConfigurationPropertySource(Map.ofEntries(entries)));
     }

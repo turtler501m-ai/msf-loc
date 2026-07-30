@@ -16,7 +16,11 @@
       etc2 AS "detail.etcValue2",
       etc3 AS "detail.etcValue3"
     FROM MCP_CODE@DL_MCP mcp_code
-    WHERE NOT EXISTS (
+    WHERE code_sys IN
+    <foreach collection="groupIds" item="groupId" open="(" separator="," close=")">
+      #{groupId}
+    </foreach>
+    AND NOT EXISTS (
       SELECT 1
       FROM NMCP_CD_DTL@DL_MCP nmcp_cd_dtl
       WHERE nmcp_cd_dtl.cd_group_id = mcp_code.code_sys
@@ -41,6 +45,10 @@
       pstng_start_date AS "detail.startDate",
       pstng_end_date AS "detail.endDate"
     FROM NMCP_CD_DTL@DL_MCP
+    WHERE cd_group_id IN
+    <foreach collection="groupIds" item="groupId" open="(" separator="," close=")">
+      #{groupId}
+    </foreach>
     ORDER BY cd_group_id, indc_odrg, dtl_cd
   </select>
 

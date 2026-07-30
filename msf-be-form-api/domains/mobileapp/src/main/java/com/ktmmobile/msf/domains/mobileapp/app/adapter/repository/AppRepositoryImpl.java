@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.ktmmobile.msf.domains.mobileapp.app.adapter.repository.mybatis.smartform.mapper.AppIntroMapper;
+import com.ktmmobile.msf.domains.mobileapp.app.application.dto.AppDownloadRequest;
 import com.ktmmobile.msf.domains.mobileapp.app.application.dto.AppInitRequest;
 import com.ktmmobile.msf.domains.mobileapp.app.application.dto.AppRegistRequest;
 import com.ktmmobile.msf.domains.mobileapp.app.application.dto.IntroRequest;
@@ -24,8 +25,8 @@ public class AppRepositoryImpl implements AppRepository {
     }
 
     @Override
-    public List<UsrAppInfoVo> getUserApp(String uuid) {
-        return appIntroMapper.selectUserApp(uuid);
+    public List<UsrAppInfoVo> getUserApp(String uuid, String apvSttusCd) {
+        return appIntroMapper.selectUserApp(uuid, apvSttusCd);
     }
 
     @Override
@@ -41,5 +42,25 @@ public class AppRepositoryImpl implements AppRepository {
     @Override
     public Integer modifyBioSetting(AppRegistRequest request) {
         return appIntroMapper.updateBioSetting(request);
+    }
+
+    @Override
+    public List<IntroResponse> getDownloadList() {
+        return appIntroMapper.selectAppDownloadList();
+    }
+
+    @Override
+    public void insertAppTokenTxn(AppRegistRequest request) {
+        appIntroMapper.insertAppTokenTxn(request);
+    }
+
+    @Override
+    public void updateAppTokenTxn(AppRegistRequest request) {
+        appIntroMapper.updateAppTokenTxn(request);
+    }
+
+    @Override
+    public Integer checkUserApp(AppDownloadRequest request) {
+        return appIntroMapper.checkUserApp(request);
     }
 }

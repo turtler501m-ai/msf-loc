@@ -97,7 +97,7 @@ public class NewChangeInfoResponse {
     String onOffTypeCd;
     String soCd;
     LocalDateTime openReqDt;
-    LocalDateTime reqInDay;
+    LocalDateTime reqInDt;
     String clausePriCollectYn;
     String clausePriOfferYn;
     String clauseEssCollectYn;
@@ -151,6 +151,7 @@ public class NewChangeInfoResponse {
     String cstmrNativeGenderCd;
     String cstmrPrivateCname;
     String cstmrPrivateBizNo;
+    String cstmrPrivateBizNoIssuDate;
     String cstmrForeignerRrn;
     String cstmrForeignerBirth;
     String cstmrForeignerGenderCd;
@@ -163,6 +164,7 @@ public class NewChangeInfoResponse {
     String cstmrJuridicalCname;
     String cstmrJuridicalRrn;
     String cstmrJuridicalBizNo;
+    String cstmrJuridicalBizNoIssuDate;
     String cstmrJuridicalRepNm;
     String upjnCd;
     String bcuSbst;
@@ -233,6 +235,7 @@ public class NewChangeInfoResponse {
     String socCode;
     String socNm;
     Long socBaseChrgAmt;
+    Long disPrmtAmt;
 
     //MSF_REQUEST_BILL_REQ
     String reqPayTypeCd;

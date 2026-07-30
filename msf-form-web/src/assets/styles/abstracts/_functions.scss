@@ -19,5 +19,8 @@
 
 // px 단위를 가진 값을 rem 단위 값으로 변경하는 데 사용
 @function rem($px, $base: 16px) {
-  @return (remove-unit(math.div($px, $base))) * 1rem;
+  // @return (remove-unit(math.div($px, $base))) * 1rem;
+  // 계산된 값을 바로 반환하지 않고, 소수점 4자리에서 반올림으로 수정__20260608
+  $rem-value: math.div(remove-unit($px), remove-unit($base));
+  @return math.div(math.round($rem-value * 10000), 10000) * 1rem;
 }

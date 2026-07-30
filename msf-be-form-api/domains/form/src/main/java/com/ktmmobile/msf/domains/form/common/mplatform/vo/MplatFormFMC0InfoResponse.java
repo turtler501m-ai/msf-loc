@@ -86,8 +86,11 @@ public class MplatFormFMC0InfoResponse {
     private String agntLicnsRgnCd;         // 대리인 면허지역
     private String agntLicnsNo;            // 대리인 면허번호
     private String homeTlphNo;             // 자택전화
+    private String myslfAthnYn;             // 본인인증여부 (필수)
+    private String fathTransacId;           // 안면인증
     private String fnncDealAgreeYn;        // 금융거래동의
     private String indvLoInfoPrvAgreeYn;   // 위치정보동의
+    private String cpntId;                  // 접점 아이디
     // =========================
 
     // =========================

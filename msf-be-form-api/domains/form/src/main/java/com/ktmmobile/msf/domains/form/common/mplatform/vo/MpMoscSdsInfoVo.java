@@ -1,9 +1,6 @@
 package com.ktmmobile.msf.domains.form.common.mplatform.vo;
 
 import java.io.UnsupportedEncodingException;
-import org.jdom.Element;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.ktmmobile.msf.domains.form.common.util.XmlParse;
 

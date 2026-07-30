@@ -17,10 +17,12 @@ public enum CommonCodeSourceGroup {
         this.cacheName = cacheName;
     }
 
+    /** 데이터소스 그룹의 물리 캐시 이름 반환 */
     public String cacheName() {
         return cacheName;
     }
 
+    /** 모든 데이터소스 그룹의 물리 캐시 이름 목록 반환 */
     public static List<String> cacheNames() {
         return Arrays.stream(values())
             .map(CommonCodeSourceGroup::cacheName)

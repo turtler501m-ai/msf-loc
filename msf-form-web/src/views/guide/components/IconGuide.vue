@@ -15,6 +15,56 @@
       </template>
 
       <template #cases>
+        <!-- SVG 아이콘 등록 사용 가이드 -->
+        <div class="icon-usage-guide">
+          <p class="guide-title">MsfIcon 컴포넌트 아이콘 등록 및 사용 방식</p>
+          <ol class="guide-steps">
+            <li>
+              <strong>SVG 파일 준비</strong>
+              <span>추가하려는 아이콘의 원본 SVG 파일을 준비</span>
+            </li>
+            <li>
+              <strong>SVG 변환</strong>
+              <span>
+                <a
+                  href="https://yoksel.github.io/url-encoder/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  SVG URL Encoder
+                </a>
+                에서 SVG를 변환한 뒤 'Ready for CSS' 값을 복사
+              </span>
+            </li>
+            <li>
+              <strong>SVG 등록</strong>
+              <span>
+                <code>src/assets/styles/abstracts/_icons.scss</code>의 <code>$icons</code>에 이름과
+                원본 크기를 추가
+              </span>
+            </li>
+            <li>
+              <strong>아이콘 이름 등록</strong>
+              <span>
+                <code>src/libs/ui/base/MsfIcon.vue</code>의 <code>ICON_NAMES</code>에 같은 이름을
+                추가
+              </span>
+            </li>
+            <li>
+              <strong>MsfIcon 사용</strong>
+              <span><code>&lt;MsfIcon name="arrowRight" size="small" /&gt;</code></span>
+            </li>
+            <li>
+              <strong>화면 확인</strong>
+              <span>가이드 또는 실제 화면에서 아이콘 이름, 크기, 색상을 확인</span>
+            </li>
+          </ol>
+          <div class="guide-meta">
+            <span><strong>크기</strong> xsmall · small · medium · large</span>
+            <span><strong>색상</strong> CSS color 또는 <code>--icon-color</code></span>
+          </div>
+        </div>
+        <!-- // SVG 아이콘 등록 사용 가이드 -->
         <div class="icon-grid-layout">
           <div v-for="iconName in ICON_NAMES" :key="iconName" class="icon-card-static">
             <div class="icon-visual">
@@ -91,10 +141,72 @@ const componentState = {
   display: grid;
   /* 세로형일 때는 가로를 조금 더 좁게 배치 (한 줄에 더 많이 보이게) */
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  margin-top: 32px;
   border: 1px solid #f0f0f0;
+}
+.icon-add-info {
+  margin-top: 48px;
+  .guide-title {
+    font-weight: 500;
+    margin-top: 0;
+    & + * {
+      margin-top: 12px;
+    }
+  }
 }
 
 /* 세로형 아이콘 카드 */
+.icon-usage-guide {
+  padding: 24px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f6f8fa;
+  .guide-title {
+    margin-top: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #111;
+  }
+  .guide-steps {
+    display: grid;
+    gap: 12px;
+    margin: 16px 0 0;
+    padding-left: 20px;
+    li {
+      line-height: 1.5;
+      color: #555;
+      strong {
+        margin-right: 8px;
+        color: #111;
+      }
+    }
+  }
+  .guide-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px solid #eee;
+    color: #555;
+    line-height: 1.5;
+    strong {
+      color: #111;
+    }
+  }
+  code {
+    padding: 2px 4px;
+    border-radius: 3px;
+    background: #f5f5f5;
+    color: #e83e8c;
+    font-size: 12px;
+  }
+  a {
+    color: #2563eb;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+}
 .icon-card-static {
   display: flex;
   flex-direction: column; // 세로 배치

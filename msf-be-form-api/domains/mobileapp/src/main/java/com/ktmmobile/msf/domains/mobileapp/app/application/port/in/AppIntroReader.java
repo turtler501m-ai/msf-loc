@@ -1,7 +1,9 @@
 package com.ktmmobile.msf.domains.mobileapp.app.application.port.in;
 
-import jakarta.validation.Valid;
 
+import java.util.List;
+
+import com.ktmmobile.msf.domains.mobileapp.app.application.dto.AppDownloadRequest;
 import com.ktmmobile.msf.domains.mobileapp.app.application.dto.AppInitRequest;
 import com.ktmmobile.msf.domains.mobileapp.app.application.dto.AppInitResponse;
 import com.ktmmobile.msf.domains.mobileapp.app.application.dto.AppRegistRequest;
@@ -19,4 +21,6 @@ public interface AppIntroReader {
     Integer registModel(AppRegistRequest request);
 
     Integer modifyBioSetting(AppRegistRequest request);
+
+    List<IntroResponse> appDownload(AppDownloadRequest request);
 }

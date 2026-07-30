@@ -7,7 +7,21 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
+@SuppressWarnings("PMD.FieldNamingConventions")
 public class NiceAccountRequest {
+
+    //to-be Request : 신규/변경
+    private String operTypeCd; //가입유형 구분 (NAC3, MNP3, HDN3)
+    private String cstmrTypeCd; //고객구분
+    private String cstmrNm; //가입하려고 하는 고객명
+    private String customerSsn; //가입하려고 하는 고객식별번호 - 개통이력확인을 위한 고객 식별번호 //CSTMR_NATIVE_RRN, CSTMR_FOREIGNER_RRN
+    private String reqBankCd; //신청정보계좌이체은행코드
+    private String reqAccountNo; //계좌번호
+    private String reqAccountNm; //계좌예금주명
+    private String reqAccountRrn; //신청정보계좌이체예금주주민번호
+    private String othersPaymentYn; //타인납부여부 Y(타인납부)  N(본인납부)
+
+
     private String EncodeData;
     private String param_r1;
     private String param_r2;

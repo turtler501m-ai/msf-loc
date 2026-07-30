@@ -8,10 +8,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
 
 import com.ktmmobile.msf.commons.auditing.aspect.annotation.AuditingEntity;
+import com.ktmmobile.msf.commons.auditing.aspect.annotation.AuditingModifierResolver;
 import com.ktmmobile.msf.commons.common.context.LoginContextHolder;
 import com.ktmmobile.msf.commons.common.data.entity.user.MsfUser;
 import com.ktmmobile.msf.commons.websecurity.security.auth.util.AuthenticationUtils;
-import com.ktmmobile.msf.commons.websecurity.web.util.RequestUtils;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Slf4j
@@ -36,11 +36,15 @@ public class AuditingUtils {
     }
 
     public static void setAudit(AuditingEntity auditingEntity, String modifier) {
+        setAudit(auditingEntity, modifier, false);
+    }
+
+    public static void setAudit(AuditingEntity auditingEntity, String modifier, boolean fallbackClientIp) {
         if (auditingEntity == null || auditingEntity.isAlreadySet()) {
             return;
         }
         String resolvedModifier = StringUtils.hasText(modifier) ? modifier : getAuditModifier();
-        auditingEntity.setAudit(resolvedModifier, RequestUtils.getClientIp());
+        auditingEntity.setAudit(resolvedModifier, AuditingModifierResolver.resolveClientIp(fallbackClientIp));
     }
 
     private static Optional<String> getAuthenticatedUserId() {

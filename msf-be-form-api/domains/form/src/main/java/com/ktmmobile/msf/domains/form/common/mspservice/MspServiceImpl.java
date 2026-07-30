@@ -1,8 +1,6 @@
 package com.ktmmobile.msf.domains.form.common.mspservice;
 
-import static com.ktmmobile.msf.domains.form.form.common.constant.PhoneConstant.PHONE_FOR_MSP;
-import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.NO_EXSIST_SALE_PLCY_CD_EXCEPTION;
-import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.NO_EXSIST_SALE_PRDT;
+
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -10,14 +8,20 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import com.ktmmobile.msf.domains.form.form.common.constant.PhoneConstant;
+
+import com.ktmmobile.msf.commons.common.utils.env.EnvironmentUtils;
+import com.ktmmobile.msf.domains.form.common.dto.MspRateMstDto;
+import com.ktmmobile.msf.domains.form.common.dto.MspSaleAgrmMst;
+import com.ktmmobile.msf.domains.form.common.dto.MspSalePlcyMstDto;
+import com.ktmmobile.msf.domains.form.common.dto.MspSalePrdtMstDto;
+import com.ktmmobile.msf.domains.form.common.dto.MspSaleSubsdMstDto;
 import com.ktmmobile.msf.domains.form.common.dto.PhoneMspDto;
 import com.ktmmobile.msf.domains.form.common.exception.McpCommonException;
 import com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant;
@@ -25,14 +29,14 @@ import com.ktmmobile.msf.domains.form.common.mspservice.dao.MspDao;
 import com.ktmmobile.msf.domains.form.common.mspservice.dto.CmnGrpCdMst;
 import com.ktmmobile.msf.domains.form.common.mspservice.dto.MspNoticSupportMstDto;
 import com.ktmmobile.msf.domains.form.common.mspservice.dto.MspOrgDto;
-import com.ktmmobile.msf.domains.form.common.dto.MspRateMstDto;
-import com.ktmmobile.msf.domains.form.common.dto.MspSaleAgrmMst;
 import com.ktmmobile.msf.domains.form.common.mspservice.dto.MspSaleDto;
-import com.ktmmobile.msf.domains.form.common.dto.MspSalePlcyMstDto;
-import com.ktmmobile.msf.domains.form.common.dto.MspSalePrdtMstDto;
-import com.ktmmobile.msf.domains.form.common.dto.MspSaleSubsdMstDto;
 import com.ktmmobile.msf.domains.form.common.util.NmcpServiceUtils;
 import com.ktmmobile.msf.domains.form.common.util.ObjectUtils;
+import com.ktmmobile.msf.domains.form.form.common.constant.PhoneConstant;
+
+import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.NO_EXSIST_SALE_PLCY_CD_EXCEPTION;
+import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.NO_EXSIST_SALE_PRDT;
+import static com.ktmmobile.msf.domains.form.form.common.constant.PhoneConstant.PHONE_FOR_MSP;
 
 
 /**
@@ -42,34 +46,30 @@ import com.ktmmobile.msf.domains.form.common.util.ObjectUtils;
  * @author : ant
  * @Create Date : 2016. 1. 12.
  */
+@Slf4j
 @Service
 public class MspServiceImpl implements MspService {
 
-    private static final Logger logger = LoggerFactory.getLogger(MspServiceImpl.class);
-
     /**자급제 조직 코드  */
-    @Value("${sale.sesplsOrgnId}")
+    @Value("${sale.sesplsOrgnId:}")
     private String sesplsOrgnId;
 
-    @Value("${api.interface.server}")
+    @Value("${api.interface.server:}")
     private String apiInterfaceServer;
-
-    @Value("${SERVER_NAME}")
-    private String serverName;
 
     @Autowired
     MspDao mspDao;
 
-     /* (non-Javadoc)
+    /* (non-Javadoc)
      * @see com.ktmmobile.mcp.phone.service.PhoneService#findMspOrgList(com.ktmmobile.mcp.phone.dto.MspOrgDto)
      */
     @Override
     public List<MspOrgDto> findMspOrgList(MspOrgDto mspOrgDto) {
         RestTemplate restTemplate = new RestTemplate();
-        logger.debug("apiInterfaceServer:{}:findMspOrgList, mspOrgDto:{}", apiInterfaceServer, ObjectUtils.convertObjectToString(mspOrgDto));
+        log.debug("apiInterfaceServer:{}:findMspOrgList, mspOrgDto:{}", apiInterfaceServer, ObjectUtils.convertObjectToString(mspOrgDto));
         MspOrgDto[] resultList = restTemplate.postForObject(apiInterfaceServer + "/msp/orgnMnfctMst", mspOrgDto, MspOrgDto[].class);
         List<MspOrgDto> retList = Arrays.asList(resultList);
-        return retList ;
+        return retList;
     }
 
     @Override
@@ -77,14 +77,14 @@ public class MspServiceImpl implements MspService {
         RestTemplate restTemplate = new RestTemplate();
         MspOrgDto[] resultList = restTemplate.postForObject(apiInterfaceServer + "/msp/orgnMnfctMstRe", prodType, MspOrgDto[].class);
         List<MspOrgDto> retList = Arrays.asList(resultList);
-        if(retList !=null && !retList.isEmpty()) {
-            for(MspOrgDto dto : retList ) {
+        if (retList != null && !retList.isEmpty()) {
+            for (MspOrgDto dto: retList) {
                 String mnfctNm = dto.getMnfctNm();
                 mnfctNm = mnfctNm.replaceAll("&amp;", "&");
                 dto.setMnfctNm(mnfctNm);
             }
         }
-        return retList ;
+        return retList;
     }
 
     /* (non-Javadoc)
@@ -92,7 +92,7 @@ public class MspServiceImpl implements MspService {
      */
     @Override
     public List<MspSalePlcyMstDto> findMspSalePlcyMst(MspSalePlcyMstDto mspSalePlcyMstDto) {
-        List<MspSalePlcyMstDto> plcyMstList =  mspDao.findMspSalePlcyMst(mspSalePlcyMstDto);
+        List<MspSalePlcyMstDto> plcyMstList = mspDao.findMspSalePlcyMst(mspSalePlcyMstDto);
         if (plcyMstList == null) {
             throw new McpCommonException(NO_EXSIST_SALE_PLCY_CD_EXCEPTION);
         }
@@ -103,8 +103,10 @@ public class MspServiceImpl implements MspService {
      * @see com.ktmmobile.mcp.phone.service.PhoneService#getMspSale(java.lang.String, com.ktmmobile.mcp.phone.dto.msp.MspSalePlcyMstDto)
      */
     @Override
-    public MspSaleDto getMspSale(String prdtId,
-            MspSalePlcyMstDto mspSalePlcyMstDto) throws McpCommonException {
+    public MspSaleDto getMspSale(
+        String prdtId,
+        MspSalePlcyMstDto mspSalePlcyMstDto
+    ) throws McpCommonException {
 
         //return 할 msp 판매정책정보및 상품정보 set
         MspSaleDto mspSaleDtoRtn = new MspSaleDto();
@@ -119,10 +121,10 @@ public class MspServiceImpl implements MspService {
         String salePlcyCd = ""; //정책코드
         String orgnId2 = mspSalePlcyMstDto.getOrgnId();//기관코드
 
-        if (resultSalePlcyMst.size() > 1) {	//정책코드가 2개 이상일경우에는 단말할인을 기본값으로 선택해서 정책정보를 가져온다.
+        if (resultSalePlcyMst.size() > 1) {    //정책코드가 2개 이상일경우에는 단말할인을 기본값으로 선택해서 정책정보를 가져온다.
             for (MspSalePlcyMstDto baket: resultSalePlcyMst) {
 
-                if(orgnId2.contentEquals(sesplsOrgnId)) {
+                if (orgnId2.contentEquals(sesplsOrgnId)) {
                     // 자급제인 경우 강제로 변환 처리
                     salePlcyCd = baket.getSalePlcyCd();
                     mspSaleDtoRtn.setMspSalePlcyMstDtoSimbol(baket); // 1개 정책 세팅
@@ -133,14 +135,14 @@ public class MspServiceImpl implements MspService {
 
                     if (PhoneConstant.PHONE_DISCOUNT_FOR_MSP.equals(baket.getSprtTp())) {
                         salePlcyCd = baket.getSalePlcyCd();
-                        mspSaleDtoRtn.setMspSalePlcyMstDtoSimbol(baket);		//2개이상의 정책이 조회 되었기떄문에 대표정책을 할당한다.(단품할인)
+                        mspSaleDtoRtn.setMspSalePlcyMstDtoSimbol(baket);        //2개이상의 정책이 조회 되었기떄문에 대표정책을 할당한다.(단품할인)
                         break;
                     }
                 }
             }
         } else {
             salePlcyCd = resultSalePlcyMst.get(0).getSalePlcyCd();
-            mspSaleDtoRtn.setMspSalePlcyMstDtoSimbol(resultSalePlcyMst.get(0));	//대표정책 할당
+            mspSaleDtoRtn.setMspSalePlcyMstDtoSimbol(resultSalePlcyMst.get(0));    //대표정책 할당
         }
 
 
@@ -177,7 +179,6 @@ public class MspServiceImpl implements MspService {
     }
 
 
-
     @Override
     public List<MspSaleAgrmMst> listMspSaleAgrmMst2(MspSaleAgrmMst mspSaleAgrmMst) {
         RestTemplate restTemplate = new RestTemplate();
@@ -194,11 +195,14 @@ public class MspServiceImpl implements MspService {
      * @see com.ktmmobile.mcp.mspservice.service.MspService#listMspSaleSubsdMst(com.ktmmobile.mcp.mspservice.dto.MspSalePlcyMstDto)
      */
     public List<MspSaleSubsdMstDto> listMspSaleSubsdMst(
-            MspSaleSubsdMstDto mspSaleSubsdMstDto) {
+        MspSaleSubsdMstDto mspSaleSubsdMstDto
+    ) {
 
         //---- API 호출 S ----//
         RestTemplate restTemplate = new RestTemplate();
-        MspSaleSubsdMstDto[] resultList = restTemplate.postForObject(apiInterfaceServer + "/msp/mspSaleSubsdMstList", mspSaleSubsdMstDto, MspSaleSubsdMstDto[].class);
+        MspSaleSubsdMstDto[] resultList = restTemplate.postForObject(apiInterfaceServer + "/msp/mspSaleSubsdMstList",
+            mspSaleSubsdMstDto,
+            MspSaleSubsdMstDto[].class);
         List<MspSaleSubsdMstDto> list = Arrays.asList(resultList);
         //---- API 호출 E ----//
         return list;
@@ -219,26 +223,40 @@ public class MspServiceImpl implements MspService {
      * @see com.ktmmobile.mcp.mspservice.service.MspService#listChargeSort(java.lang.String, java.lang.String, java.lang.String, java.lang.String)
      */
     @Override
-    public List<MspSaleSubsdMstDto> listChargeInfo(String prdtId,
-            MspSaleDto mspSaleDto, String oldYn, String orgnId,String operType,String instNom,String rateCd,String noArgmYn) {
+    public List<MspSaleSubsdMstDto> listChargeInfo(
+        String prdtId,
+        MspSaleDto mspSaleDto, String oldYn, String orgnId, String operType, String instNom, String rateCd, String noArgmYn
+    ) {
 
         //약정 개월 , 단말기 할부 개월 동일 하게 처리   8
-        return listChargeInfo(prdtId,mspSaleDto, oldYn,orgnId,operType,instNom,instNom,rateCd, noArgmYn) ;
+        return listChargeInfo(prdtId, mspSaleDto, oldYn, orgnId, operType, instNom, instNom, rateCd, noArgmYn);
     }
 
     @Override
-    public List<MspSaleSubsdMstDto> listChargeInfo(String prdtId,
-            MspSaleDto mspSaleDto, String oldYn, String orgnId,String operType,String instNom,String modelMonthly,String rateCd,String noArgmYn ) {
-      //약정 개월 , 단말기 할부 개월 동일 하게 처리    9
-        return listChargeInfo(prdtId,mspSaleDto, oldYn,orgnId,operType,instNom,modelMonthly,rateCd, noArgmYn,"") ;
+    public List<MspSaleSubsdMstDto> listChargeInfo(
+        String prdtId,
+        MspSaleDto mspSaleDto, String oldYn, String orgnId, String operType, String instNom, String modelMonthly, String rateCd, String noArgmYn
+    ) {
+        //약정 개월 , 단말기 할부 개월 동일 하게 처리    9
+        return listChargeInfo(prdtId, mspSaleDto, oldYn, orgnId, operType, instNom, modelMonthly, rateCd, noArgmYn, "");
 
     }
 
     @Override
-    public List<MspSaleSubsdMstDto> listChargeInfo(String prdtId,
-            MspSaleDto mspSaleDto, String oldYn, String orgnId,String operType,String instNom,String modelMonthly,String rateCd,String noArgmYn ,String onOffType) {
+    public List<MspSaleSubsdMstDto> listChargeInfo(
+        String prdtId,
+        MspSaleDto mspSaleDto,
+        String oldYn,
+        String orgnId,
+        String operType,
+        String instNom,
+        String modelMonthly,
+        String rateCd,
+        String noArgmYn,
+        String onOffType
+    ) {
         //모집경로 추가    10
-        CmnGrpCdMst cdInfo = findCmnGrpCdMst("CMN0051", "20");	//할부수수료 default 값
+        CmnGrpCdMst cdInfo = findCmnGrpCdMst("CMN0051", "20");    //할부수수료 default 값
         BigDecimal defaultInstRate = new BigDecimal(cdInfo.getEtc1());
 
         List<MspSaleSubsdMstDto> mergeList = new ArrayList<MspSaleSubsdMstDto>();
@@ -263,20 +281,20 @@ public class MspServiceImpl implements MspService {
         }
 
         //for문을 돌면서 가져온 모든 정책정보에 해당하는 요금제 정보를 list 에 담는다.
-        for (MspSalePlcyMstDto mspSalePlcyMstDto : mspSaleDto.getMspSalePlcyMstDto()) {
+        for (MspSalePlcyMstDto mspSalePlcyMstDto: mspSaleDto.getMspSalePlcyMstDto()) {
             mspSaleSubsdMstDto.setPlcySctnCd(PHONE_FOR_MSP);
             mspSaleSubsdMstDto.setSalePlcyCd(mspSalePlcyMstDto.getSalePlcyCd());
 
-            BigDecimal instRate = mspSalePlcyMstDto.getInstRate();						//정책정보의 할부수수료값
-            List<MspSaleSubsdMstDto> list = listMspSaleSubsdMst(mspSaleSubsdMstDto);	//요금제 리스트 조회
-            for (MspSaleSubsdMstDto bakset : list) {	//요즘제 정보에 정책할부수수료와,기본수수료값을 세팅한다.
+            BigDecimal instRate = mspSalePlcyMstDto.getInstRate();                        //정책정보의 할부수수료값
+            List<MspSaleSubsdMstDto> list = listMspSaleSubsdMst(mspSaleSubsdMstDto);    //요금제 리스트 조회
+            for (MspSaleSubsdMstDto bakset: list) {    //요즘제 정보에 정책할부수수료와,기본수수료값을 세팅한다.
                 bakset.setInstRate(instRate);
                 bakset.setDefaultInstRate(defaultInstRate);
                 if (instNom != null) {
-                    bakset.setModelMonthly(Integer.parseInt(modelMonthly));	//입력받은 할부기간
+                    bakset.setModelMonthly(Integer.parseInt(modelMonthly));    //입력받은 할부기간
                 }
             }
-            mergeList.addAll(list);	//요금제 merge
+            mergeList.addAll(list);    //요금제 merge
         }
         return mergeList;
     }
@@ -285,9 +303,11 @@ public class MspServiceImpl implements MspService {
      * @see com.ktmmobile.mcp.mspservice.service.MspService#listRateByOrgnInfos(java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String)
      */
     @Override
-    public List<MspRateMstDto> listRateByOrgnInfos(String orgnId,
-            String sprtTp, String plcySctnCd, String prdtSctnCd,
-            String plcyTypeCd) {
+    public List<MspRateMstDto> listRateByOrgnInfos(
+        String orgnId,
+        String sprtTp, String plcySctnCd, String prdtSctnCd,
+        String plcyTypeCd
+    ) {
 
         MspSalePlcyMstDto mspSalePlcyMstDto = new MspSalePlcyMstDto();
         mspSalePlcyMstDto.setOrgnId(orgnId);
@@ -319,22 +339,25 @@ public class MspServiceImpl implements MspService {
      */
     @Override
     public List<MspSalePlcyMstDto> listMspSalePlcyInfoByOnlyOrgn(
-            MspSalePlcyMstDto mspSalePlcyMstDto) {
+        MspSalePlcyMstDto mspSalePlcyMstDto
+    ) {
         return mspDao.listMspSalePlcyInfoByOnlyOrgn(mspSalePlcyMstDto);
     }
 
     @Override
-    public MspSaleSubsdMstDto getLowPriceChargeInfoByProdList(String prdtId
-            ,MspSalePlcyMstDto mspSalePlcyMstDto
-            , String oldYn
-            , String orgnId
-            , String operType
-            , String instNom
-            , String rateCd
-            , String noArgmYn
-            , CmnGrpCdMst cmnGrpCdMst ) {
+    public MspSaleSubsdMstDto getLowPriceChargeInfoByProdList(
+        String prdtId
+        , MspSalePlcyMstDto mspSalePlcyMstDto
+        , String oldYn
+        , String orgnId
+        , String operType
+        , String instNom
+        , String rateCd
+        , String noArgmYn
+        , CmnGrpCdMst cmnGrpCdMst
+    ) {
 
-       if (mspSalePlcyMstDto == null) {
+        if (mspSalePlcyMstDto == null) {
             throw new McpCommonException(ExceptionMsgConstant.NO_EXSIST_SALE_PLCY_CD_EXCEPTION);
         }
 
@@ -342,27 +365,27 @@ public class MspServiceImpl implements MspService {
         //할부수수료 default 값
         BigDecimal defaultInstRate = new BigDecimal(cmnGrpCdMst.getEtc1());
 
-       MspSaleSubsdMstDto mspSaleSubsdMstDto = new MspSaleSubsdMstDto();
-       mspSaleSubsdMstDto.setPrdtId(prdtId);
-       mspSaleSubsdMstDto.setSalePlcyCd(mspSalePlcyMstDto.getSalePlcyCd());
-       mspSaleSubsdMstDto.setOldYn(oldYn);
-       mspSaleSubsdMstDto.setOrgnId(orgnId);
-       mspSaleSubsdMstDto.setOperType(operType);//가입유형
-       mspSaleSubsdMstDto.setAgrmTrm(instNom);//입력받은 할부기간을 약정기간으로 세팅한다.
-       mspSaleSubsdMstDto.setRateCd(rateCd);//요금제코드
-       mspSaleSubsdMstDto.setNoArgmYn(noArgmYn);
-       mspSaleSubsdMstDto.setForFrontFastYn(""); //성능 개선을 위한 최소 컬럼을 호출하기 위한 처리 SQL 호출을 위한 flag
+        MspSaleSubsdMstDto mspSaleSubsdMstDto = new MspSaleSubsdMstDto();
+        mspSaleSubsdMstDto.setPrdtId(prdtId);
+        mspSaleSubsdMstDto.setSalePlcyCd(mspSalePlcyMstDto.getSalePlcyCd());
+        mspSaleSubsdMstDto.setOldYn(oldYn);
+        mspSaleSubsdMstDto.setOrgnId(orgnId);
+        mspSaleSubsdMstDto.setOperType(operType);//가입유형
+        mspSaleSubsdMstDto.setAgrmTrm(instNom);//입력받은 할부기간을 약정기간으로 세팅한다.
+        mspSaleSubsdMstDto.setRateCd(rateCd);//요금제코드
+        mspSaleSubsdMstDto.setNoArgmYn(noArgmYn);
+        mspSaleSubsdMstDto.setForFrontFastYn(""); //성능 개선을 위한 최소 컬럼을 호출하기 위한 처리 SQL 호출을 위한 flag
 
-       BigDecimal instRate = mspSalePlcyMstDto.getInstRate();       //정책정보의 할부수수료값
-       MspSaleSubsdMstDto mspSaleSubsdMst = mspDao.getMspSaleSubsdMst(mspSaleSubsdMstDto);
+        BigDecimal instRate = mspSalePlcyMstDto.getInstRate();       //정책정보의 할부수수료값
+        MspSaleSubsdMstDto mspSaleSubsdMst = mspDao.getMspSaleSubsdMst(mspSaleSubsdMstDto);
 
-       if (mspSaleSubsdMst != null) {
-           mspSaleSubsdMst.setInstRate(instRate);
-           mspSaleSubsdMst.setDefaultInstRate(defaultInstRate);
-           mspSaleSubsdMst.setModelMonthly(Integer.parseInt(instNom));
-       }
+        if (mspSaleSubsdMst != null) {
+            mspSaleSubsdMst.setInstRate(instRate);
+            mspSaleSubsdMst.setDefaultInstRate(defaultInstRate);
+            mspSaleSubsdMst.setModelMonthly(Integer.parseInt(instNom));
+        }
 
-       return mspSaleSubsdMst;
+        return mspSaleSubsdMst;
     }
 
     /* (non-Javadoc)
@@ -391,23 +414,21 @@ public class MspServiceImpl implements MspService {
 
     @Override
     public boolean checkKid(String contractNum) {
-        String customerSsn = mspDao.getCustomerSsn(contractNum) ;
+        String customerSsn = mspDao.getCustomerSsn(contractNum);
 
-// PNB_확인필요        
-//        try {
-//            customerSsn = EncryptUtil.ace256Dec(customerSsn);
-//        } catch (CryptoException e) {
-//            throw new McpCommonException(ACE_256_DECRYPT_EXCEPTION);
-//        }
+        // PNB_확인필요
+        //        try {
+        //            customerSsn = EncryptUtil.ace256Dec(customerSsn);
+        //        } catch (CryptoException e) {
+        //            throw new McpCommonException(ACE_256_DECRYPT_EXCEPTION);
+        //        }
 
         // 개발계 DB 데이터 없을 경우
-        if ("LOCAL".equals(serverName) || "DEV".equals(serverName) || "STG".equals(serverName) ) {
-            if(customerSsn.equals("")) {
-                customerSsn = "7001011234567";
-            }
+        if (!EnvironmentUtils.isProduction() && customerSsn.equals("")) {
+            customerSsn = "7001011234567";
         }
 
-        if ("LOCAL".equals(serverName) || "DEV".equals(serverName) || "STG".equals(serverName) ) {
+        if (!EnvironmentUtils.isProduction()) {
             /*개발계 DB에서 주민번호가 700101******* 표현 으로 오류 발생 */
             customerSsn = customerSsn.replaceAll("[*]", "1");
         }
@@ -422,50 +443,65 @@ public class MspServiceImpl implements MspService {
         }
     }
 
-     @Override
-     public MspRateMstDto getMspRateMst(String rateCd) {
-         return mspDao.getMspRateMst(rateCd);
-     }
+    @Override
+    public MspRateMstDto getMspRateMst(String rateCd) {
+        return mspDao.getMspRateMst(rateCd);
+    }
 
-     @Override
-     public List<MspSaleSubsdMstDto> listMspSaleMst(
-             MspSaleSubsdMstDto mspSaleSubsdMstDto) {
-         return mspDao.listMspSaleMst(mspSaleSubsdMstDto);
-     }
+    @Override
+    public List<MspSaleSubsdMstDto> listMspSaleMst(
+        MspSaleSubsdMstDto mspSaleSubsdMstDto
+    ) {
+        return mspDao.listMspSaleMst(mspSaleSubsdMstDto);
+    }
 
     @Override
     public List<MspSaleAgrmMst> mspSaleAgrmMstSing(String salePlcyCd) {
-        List<MspSaleAgrmMst> mspSaleAgrmMsts= this.mspDao.findMspSaleMnth(salePlcyCd);
+        List<MspSaleAgrmMst> mspSaleAgrmMsts = this.mspDao.findMspSaleMnth(salePlcyCd);
         return mspSaleAgrmMsts;
     }
 
     @Override
-    public MspSaleSubsdMstDto getLowPriceChargeInfoByProdList(String prdtId,
-                                                              MspSalePlcyMstDto mspSalePlcyMstDto,
-                                                              String oldYn,
-                                                              String orgnId,
-                                                              String operType,
-                                                              String instNom,
-                                                              String rateCd,
-                                                              String noArgmYn,
-                                                              CmnGrpCdMst cmnGrpCdMst,
-                                                              String onOffType) {
+    public MspSaleSubsdMstDto getLowPriceChargeInfoByProdList(
+        String prdtId,
+        MspSalePlcyMstDto mspSalePlcyMstDto,
+        String oldYn,
+        String orgnId,
+        String operType,
+        String instNom,
+        String rateCd,
+        String noArgmYn,
+        CmnGrpCdMst cmnGrpCdMst,
+        String onOffType
+    ) {
 
-        return getLowPriceChargeInfoByProdList(prdtId,mspSalePlcyMstDto,oldYn,orgnId,operType,instNom,rateCd,noArgmYn,cmnGrpCdMst,onOffType,instNom) ;
+        return getLowPriceChargeInfoByProdList(prdtId,
+            mspSalePlcyMstDto,
+            oldYn,
+            orgnId,
+            operType,
+            instNom,
+            rateCd,
+            noArgmYn,
+            cmnGrpCdMst,
+            onOffType,
+            instNom);
     }
 
     @Override
-    public MspSaleSubsdMstDto getLowPriceChargeInfoByProdList(String prdtId,
-                                                              MspSalePlcyMstDto mspSalePlcyMstDto,
-                                                              String oldYn,
-                                                              String orgnId,
-                                                              String operType,
-                                                              String instNom,
-                                                              String rateCd,
-                                                              String noArgmYn,
-                                                              CmnGrpCdMst cmnGrpCdMst
-                                                              , String onOffType
-                                                              , String  modelMonthly   ) {
+    public MspSaleSubsdMstDto getLowPriceChargeInfoByProdList(
+        String prdtId,
+        MspSalePlcyMstDto mspSalePlcyMstDto,
+        String oldYn,
+        String orgnId,
+        String operType,
+        String instNom,
+        String rateCd,
+        String noArgmYn,
+        CmnGrpCdMst cmnGrpCdMst
+        , String onOffType
+        , String modelMonthly
+    ) {
         if (mspSalePlcyMstDto == null) {
             throw new McpCommonException(ExceptionMsgConstant.NO_EXSIST_SALE_PLCY_CD_EXCEPTION);
         }

@@ -1,7 +1,7 @@
 package com.ktmmobile.msf.commons.cachecore.application.service;
 
-import java.time.Instant;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -16,20 +16,21 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import com.ktmmobile.msf.commons.cachecore.application.dto.CacheMetadata;
 import com.ktmmobile.msf.commons.cachecore.application.dto.CacheLoadResult;
+import com.ktmmobile.msf.commons.cachecore.application.dto.CacheMetadata;
+import com.ktmmobile.msf.commons.cachecore.application.port.out.CacheExtensionLoader;
 import com.ktmmobile.msf.commons.cachecore.application.port.out.CacheLoader;
 import com.ktmmobile.msf.commons.cachecore.domain.code.CacheStoreType;
 import com.ktmmobile.msf.commons.cachecore.support.exception.CacheException;
+import com.ktmmobile.msf.commons.cachecore.support.properties.CacheProperties;
+import com.ktmmobile.msf.commons.cachecore.support.store.CacheStoreReader;
+import com.ktmmobile.msf.commons.cachecore.support.store.CacheStoreWriter;
 import com.ktmmobile.msf.commons.cachecore.support.util.CacheKeyGenerator;
 import com.ktmmobile.msf.commons.cachecore.support.util.CacheLoadDistributedLock;
 import com.ktmmobile.msf.commons.cachecore.support.util.CacheLoadStampedeGuard;
 import com.ktmmobile.msf.commons.cachecore.support.util.CacheLoadTimeFormatter;
 import com.ktmmobile.msf.commons.cachecore.support.util.CacheMetadataKeyGenerator;
 import com.ktmmobile.msf.commons.cachecore.support.util.CacheRedisWriteLock;
-import com.ktmmobile.msf.commons.cachecore.support.properties.CacheProperties;
-import com.ktmmobile.msf.commons.cachecore.support.store.CacheStoreReader;
-import com.ktmmobile.msf.commons.cachecore.support.store.CacheStoreWriter;
 
 /**
  * 캐시 적재와 Redis 반영 처리 서비스
@@ -68,8 +69,8 @@ public class CacheLoadService {
                 () -> isCacheAvailable(cacheLoader),
                 () -> loadWithDistributedLock(cacheLoader)
             );
-        } catch (RuntimeException ex) {
-            throw CacheException.wrap("Cache load failed. cacheName=" + cacheName, ex);
+        } catch (RuntimeException e) {
+            throw CacheException.wrap("Cache load failed. cacheName=" + cacheName, e);
         }
     }
 
@@ -96,8 +97,8 @@ public class CacheLoadService {
                     return loadWithDistributedLock(cacheLoader);
                 }
             );
-        } catch (RuntimeException ex) {
-            throw CacheException.wrap("Cache load failed. cacheName=" + cacheName, ex);
+        } catch (RuntimeException e) {
+            throw CacheException.wrap("Cache load failed. cacheName=" + cacheName, e);
         }
     }
 
@@ -116,8 +117,8 @@ public class CacheLoadService {
                 () -> isCacheValueAvailable(cacheLoader, key),
                 () -> loadOne(cacheLoader, key)
             );
-        } catch (RuntimeException ex) {
-            throw CacheException.wrap("Cache value load failed. cacheName=" + cacheName + ", key=" + key, ex);
+        } catch (RuntimeException e) {
+            throw CacheException.wrap("Cache value load failed. cacheName=" + cacheName + ", key=" + key, e);
         }
     }
 
@@ -138,6 +139,7 @@ public class CacheLoadService {
             cacheLocalStore.replace(cacheLoader, cacheValues);
             cacheLocalStore.setMetadata(cacheLoader, metadata);
             writeCacheValuesToRedisLazily(cacheLoader, cacheValues, metadata);
+            replaceExtensionCaches(cacheLoader, values, startedAt, finishedAt);
 
             CacheLoadResult result = CacheLoadResult.success(
                 cacheLoader.cacheName(),
@@ -148,8 +150,8 @@ public class CacheLoadService {
             log.info(">>> Cache Load Success. cacheName={}, count={}, elapsed={}ms",
                 result.cacheName(), result.count(), result.elapsed().toMillis());
             return result;
-        } catch (Exception ex) {
-            throw CacheException.wrap("Cache load failed. cacheName=" + cacheLoader.cacheName(), ex);
+        } catch (Exception e) {
+            throw CacheException.wrap("Cache load failed. cacheName=" + cacheLoader.cacheName(), e);
         }
     }
 
@@ -198,9 +200,9 @@ public class CacheLoadService {
     private void sleepBeforeRedisHydrationRetry() {
         try {
             Thread.sleep(cacheProperties.loadLock().retryInterval().toMillis());
-        } catch (InterruptedException ex) {
+        } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new CacheException("Interrupted while waiting for Redis cache hydration.", ex);
+            throw new CacheException("Interrupted while waiting for Redis cache hydration.", e);
         }
     }
 
@@ -238,9 +240,49 @@ public class CacheLoadService {
             setMetadata(cacheLoader, metadata);
             return;
         }
+        if (cacheLoader.storeType() == CacheStoreType.SINGLE_VALUE) {
+            cacheValues.values().stream()
+                .findFirst()
+                .ifPresent(value -> setSingleValueCache(cacheLoader, value));
+            setMetadata(cacheLoader, metadata);
+            return;
+        }
 
         cacheValues.forEach((key, value) -> setValueCache(cacheLoader, key, value));
         setMetadata(cacheLoader, metadata);
+    }
+
+    private void replaceExtensionCaches(
+        CacheLoader<?> cacheLoader,
+        Map<String, ?> sourceValues,
+        Instant startedAt,
+        Instant finishedAt
+    ) {
+        for (CacheExtensionLoader<?, ?> extensionLoader: cacheLoader.extensionLoaders()) {
+            replaceExtensionCache(extensionLoader, sourceValues, startedAt, finishedAt);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private <S, V> void replaceExtensionCache(
+        CacheExtensionLoader<S, V> extensionLoader,
+        Map<String, ?> sourceValues,
+        Instant startedAt,
+        Instant finishedAt
+    ) {
+        Map<String, V> values = extensionLoader.load((Map<String, S>) sourceValues);
+        Map<String, Object> cacheValues = toCacheValues(values);
+        CacheMetadata metadata = createMetadata(
+            extensionLoader,
+            FULL_LOAD_TYPE,
+            values.size(),
+            startedAt,
+            finishedAt
+        );
+        cacheLocalStore.replace(extensionLoader, cacheValues);
+        cacheLocalStore.setMetadata(extensionLoader, metadata);
+        writeCacheValuesToRedisLazily(extensionLoader, cacheValues, metadata);
+        log.info(">>> Extension Cache Load Success. cacheName={}, count={}", extensionLoader.cacheName(), values.size());
     }
 
     @SuppressWarnings("unchecked")
@@ -261,7 +303,7 @@ public class CacheLoadService {
             cacheLocalStore.setMetadata(cacheLoader, metadata);
             writeCacheValueToRedisLazily(cacheLoader, key, value, metadata);
         });
-        return loaded.map(value -> (Object) value);
+        return loaded.map(Object.class::cast);
     }
 
     private void writeCacheValueToRedisLazily(
@@ -298,6 +340,10 @@ public class CacheLoadService {
             setHashCache(cacheLoader, key, value);
             return;
         }
+        if (cacheLoader.storeType() == CacheStoreType.SINGLE_VALUE) {
+            setSingleValueCache(cacheLoader, value);
+            return;
+        }
         setValueCache(cacheLoader, key, value);
     }
 
@@ -308,6 +354,10 @@ public class CacheLoadService {
     private void setValueCache(CacheLoader<?> cacheLoader, String key, Object value) {
         String cacheKey = cacheKeyGenerator.generate(cacheLoader.cacheName(), key);
         cacheStoreWriter.setValue(cacheKey, value, cacheLoader.ttl());
+    }
+
+    private void setSingleValueCache(CacheLoader<?> cacheLoader, Object value) {
+        cacheStoreWriter.setValue(cacheLoader.cacheName(), value, cacheLoader.ttl());
     }
 
     private CacheMetadata createMetadata(
@@ -392,6 +442,9 @@ public class CacheLoadService {
         if (cacheLocalStore.hasCache(cacheLoader)) {
             return true;
         }
+        if (cacheLoader.storeType() == CacheStoreType.SINGLE_VALUE) {
+            return cacheStoreReader.hasValueKey(cacheLoader.cacheName());
+        }
         if (cacheLoader.storeType() != CacheStoreType.HASH) {
             return false;
         }
@@ -404,8 +457,8 @@ public class CacheLoadService {
                     cacheLoader.cacheName(), count);
             }
             return available;
-        } catch (RuntimeException ex) {
-            log.warn("Cache availability check failed. cacheName={}", cacheLoader.cacheName(), ex);
+        } catch (RuntimeException e) {
+            log.warn("Cache availability check failed. cacheName={}", cacheLoader.cacheName(), e);
             return false;
         }
     }
@@ -416,6 +469,9 @@ public class CacheLoadService {
         }
         if (cacheLoader.storeType() == CacheStoreType.HASH) {
             return cacheStoreReader.hasHashKey(cacheLoader.cacheName(), key);
+        }
+        if (cacheLoader.storeType() == CacheStoreType.SINGLE_VALUE) {
+            return cacheStoreReader.hasValueKey(cacheLoader.cacheName());
         }
         return cacheStoreReader.hasValueKey(cacheKeyGenerator.generate(cacheLoader.cacheName(), key));
     }

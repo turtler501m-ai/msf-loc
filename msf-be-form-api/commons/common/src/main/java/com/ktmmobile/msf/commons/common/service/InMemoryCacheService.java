@@ -162,6 +162,19 @@ public class InMemoryCacheService<T> implements CacheService<T> {
         return values;
     }
 
+    /** Value 또는 Hash 캐시 Key의 남은 만료 시간을 조회 */
+    @Override
+    public Duration getTimeToLive(String key) {
+        purgeIfExpired(key);
+        Entry<T> valueEntry = valueStore.get(key);
+        if (valueEntry != null) {
+            return valueEntry.timeToLive();
+        }
+
+        Entry<Map<String, T>> hashEntry = hashStore.get(key);
+        return hashEntry == null ? null : hashEntry.timeToLive();
+    }
+
     /** Value 또는 Hash 캐시 Key 존재 여부를 조회 */
     @Override
     public boolean hasKey(String key) {
@@ -258,11 +271,6 @@ public class InMemoryCacheService<T> implements CacheService<T> {
     @Override
     public long decrement(String key, long delta) {
         return updateNumberValue(key, -delta);
-    }
-
-    /** 패턴과 일치하는 캐시 Key 목록을 조회 */
-    private Set<String> getRealKeys(String pattern) {
-        return getRealKeys(pattern, 0);
     }
 
     /** 패턴과 일치하는 캐시 Key 목록을 지정한 개수만큼 조회 */
@@ -417,7 +425,8 @@ public class InMemoryCacheService<T> implements CacheService<T> {
     /** long 값을 캐시 값 타입으로 변환 */
     @SuppressWarnings("unchecked")
     private T castNumber(long value) {
-        return (T) Long.valueOf(value);
+        Long boxedValue = value;
+        return (T) boxedValue;
     }
 
     /** 캐시 값을 long으로 변환 */
@@ -449,6 +458,16 @@ public class InMemoryCacheService<T> implements CacheService<T> {
         /** 엔트리 만료 여부를 조회 */
         private boolean isExpired() {
             return expiresAt != null && Instant.now().isAfter(expiresAt);
+        }
+
+        /** 남은 만료 시간을 조회 */
+        private Duration timeToLive() {
+            if (expiresAt == null) {
+                return null;
+            }
+
+            Duration remaining = Duration.between(Instant.now(), expiresAt);
+            return remaining.isNegative() ? Duration.ZERO : remaining;
         }
     }
 }

@@ -125,8 +125,8 @@
         VALUES
         (
             #{requestKey, jdbcType=NUMERIC}
-            , CAST(TO_TIMESTAMP(#{sysRdate, jdbcType=VARCHAR}, 'YYYY-MM-DD HH24:MI:SS.FF6') AS DATE)
-            , CAST(TO_TIMESTAMP(#{rvisnDttm, jdbcType=VARCHAR}, 'YYYY-MM-DD HH24:MI:SS.FF6') AS DATE)
+            , #{sysRdate, jdbcType=TIMESTAMP}
+            , #{rvisnDttm, jdbcType=TIMESTAMP}
             , #{rvisnId, jdbcType=VARCHAR}
             , #{cstmrName, jdbcType=VARCHAR}
             , #{cstmrNativeRrn, jdbcType=VARCHAR}
@@ -184,36 +184,36 @@
             parameterType="com.ktmmobile.msf.domains.form.form.common.vo.McpRequestVo">
         INSERT /* AppformMapper.insertMcpRequest 서식지 정보 저장  */
         INTO MCP_REQUEST@DL_MCP (
-            REQUEST_KEY              &#45;&#45;가입신청_키
-            , MANAGER_CODE             &#45;&#45;매니저_코드
-            , AGENT_CODE               &#45;&#45;대리점_코드
-            , SERVICE_TYPE             &#45;&#45;서비스구분
-            , OPER_TYPE                &#45;&#45;업무구분
-            , CSTMR_TYPE               &#45;&#45;고객구분
-            , RES_CODE                 &#45;&#45;예약등록_코드
-            , RES_MSG                  &#45;&#45;예약등록_메세지
-            , RES_NO                   &#45;&#45;예약등록_예약번호
-            , CLAUSE_PRI_COLLECT_FLAG  &#45;&#45;약관_개인정보_수집_동의
-            , CLAUSE_PRI_OFFER_FLAG    &#45;&#45;약관_개인정보_제공_동의
-            , CLAUSE_ESS_COLLECT_FLAG  &#45;&#45;약관_고유식별정보_수집이용제공_동의
-            , CLAUSE_PRI_TRUST_FLAG    &#45;&#45;약관_개인정보_위탁_동의
-            , CLAUSE_PRI_AD_FLAG       &#45;&#45;개인정보 처리 위탁 및 고객 혜택 제공을 위한 광고 수신 동의
-            , CLAUSE_CONFIDENCE_FLAG   &#45;&#45;약관_신용정보_이용_동의
-            , CLAUSE_JEHU_FLAG         &#45;&#45;제휴_서비스동의
-            , ONLINE_AUTH_TYPE         &#45;&#45;온라인_인증방식
-            , ONLINE_AUTH_INFO         &#45;&#45;온라인_인증정보
-            , PSTATE                   &#45;&#45;신청서_상태
-            , REQUEST_STATE_CODE       &#45;&#45;가입진행_코드
-            , OPEN_NO                  &#45;&#45;개통번호
-            , FILE01                   &#45;&#45;파일01
-            , FILE01_MASK              &#45;&#45;파일01_마스크
-            , FAXYN                    &#45;&#45;팩스사용여부
-            , FAXNUM                   &#45;&#45;팩스번호
-            , SCAN_ID                  &#45;&#45;스캐너아이디
-            , ON_OFF_TYPE              &#45;&#45;온라인오프라인구분
-            , RIP                      &#45;&#45;등록아이피
-            , OPEN_REQ_DATE            &#45;&#45;
-            , SYS_RDATE                &#45;&#45;등록일시
+            REQUEST_KEY              --가입신청_키
+            , MANAGER_CODE             --매니저_코드
+            , AGENT_CODE               --대리점_코드
+            , SERVICE_TYPE             --서비스구분
+            , OPER_TYPE                --업무구분
+            , CSTMR_TYPE               --고객구분
+            , RES_CODE                 --예약등록_코드
+            , RES_MSG                  --예약등록_메세지
+            , RES_NO                   --예약등록_예약번호
+            , CLAUSE_PRI_COLLECT_FLAG  --약관_개인정보_수집_동의
+            , CLAUSE_PRI_OFFER_FLAG    --약관_개인정보_제공_동의
+            , CLAUSE_ESS_COLLECT_FLAG  --약관_고유식별정보_수집이용제공_동의
+            , CLAUSE_PRI_TRUST_FLAG    --약관_개인정보_위탁_동의
+            , CLAUSE_PRI_AD_FLAG       --개인정보 처리 위탁 및 고객 혜택 제공을 위한 광고 수신 동의
+            , CLAUSE_CONFIDENCE_FLAG   --약관_신용정보_이용_동의
+            , CLAUSE_JEHU_FLAG         --제휴_서비스동의
+            , ONLINE_AUTH_TYPE         --온라인_인증방식
+            , ONLINE_AUTH_INFO         --온라인_인증정보
+            , PSTATE                   --신청서_상태
+            , REQUEST_STATE_CODE       --가입진행_코드
+            , OPEN_NO                  --개통번호
+            , FILE01                   --파일01
+            , FILE01_MASK              --파일01_마스크
+            , FAXYN                    --팩스사용여부
+            , FAXNUM                   --팩스번호
+            , SCAN_ID                  --스캐너아이디
+            , ON_OFF_TYPE              --온라인오프라인구분
+            , RIP                      --등록아이피
+            , OPEN_REQ_DATE            --
+            , SYS_RDATE                --등록일시
             , REQ_WANT_NUMBER
             , REQ_WANT_NUMBER2
             , REQ_WANT_NUMBER3
@@ -226,65 +226,65 @@
             , REQ_ADDITION
             , SHOP_CD
             , APP_FORM_YN
-            , REQ_IN_DAY               &#45;&#45;가입신청일
+            , REQ_IN_DAY               --가입신청일
             , CONTRACT_NUM
-            , ETC_SPECIAL              &#45;&#45;기타/특약사항
-            , REQ_USIM_NAME            &#45;&#45;USIM 모델명
-            , PHONE_PAYMENT            &#45;&#45;휴대폰결제 이용여부
-            , REQ_ADDITION_PRICE       &#45;&#45;부가서비스금액
-            , CNTPNT_SHOP_ID           &#45;&#45;채널점아이디_판매점코드
+            , ETC_SPECIAL              --기타/특약사항
+            , REQ_USIM_NAME            --USIM 모델명
+            , PHONE_PAYMENT            --휴대폰결제 이용여부
+            , REQ_ADDITION_PRICE       --부가서비스금액
+            , CNTPNT_SHOP_ID           --채널점아이디_판매점코드
             , OPEN_MARKET_REFERER
-            , NW_BLCK_AGRM_YN          &#45;&#45;네트워크차단동의여부
-            , APP_BLCK_AGRM_YN         &#45;&#45;어플리케이션차단동의여부
-            , APP_CD                   &#45;&#45;APP구분코드
-            , PROD_ID                  &#45;&#45;상품아이디
-            , BANNER_CD                &#45;&#45;배너코드
-            , CRET_ID                  &#45;&#45;생성자아이디(로그인아이디)
-            , SNTY_COLOR_CD            &#45;&#45;색상코드
-            , SNTY_CAPAC_CD            &#45;&#45;단품용량코드
-            , PROD_TYPE                &#45;&#45; 상품 분류 (일반 :01, 0원 상품 :02)
-            , CLAUSE_RENTAL_SERVICE    &#45;&#45;중고렌탈 프로그램 서비스 이용에 대한 동의서
-            , CLAUSE_RENTAL_MODEL_CP   &#45;&#45;단말배상금 안내사항
-            , CLAUSE_RENTAL_MODEL_CP_PR &#45;&#45;단말배상금(부분파손) 안내사항
-            , CLAUSE_MPPS35_FLAG        &#45;&#45;선불 M PPS 요금제_동의
-            , CLAUSE_FINANCE_FLAG       &#45;&#45;개인(신용)정보 처리 및 보험가입 동의서
-            , PROMOTION_CD              &#45;&#45;프로모션코드
-            , INSR_CD                   &#45;&#45;보험코드
-            , CLAUSE_INSURANCE_FLAG     &#45;&#45; 단체보험동의
-            , APP_FORM_XML_YN           &#45;&#45; 스캔 서버 연동 여부
-            , PROD_NM                   &#45;&#45;상품명(NMCP_PROD_BAS.PROD_NM)
-            , INSR_PROD_CD              &#45;&#45;단말보험코드
-            , CLAUSE_INSR_PROD_FLAG     &#45;&#45;단말보험가입동의
-            , INSR_AUTH_INFO            &#45;&#45;단말보험인증정보
-            , RWD_PROD_CD               &#45;&#45;자급제 보상 서비스 코드
-            , CLAUSE_RWD_FLAG           &#45;&#45;자급제 보상 서비스 동의
-            , RWD_AUTH_INFO             &#45;&#45;자급제 보상 서비스 인증 정보
-            , CLAUSE_5G_COVERAGE_FLAG   &#45;&#45; 5g 커버리지 확인 및 가입 동의
-            , KTM_REFERER               &#45;&#45; 최초유입경 인자값
-            , USIM_KINDS_CD             &#45;&#45; 유심종류(RCP2035)
-            , EID                       &#45;&#45; eSIM EID
-            , IMEI1                     &#45;&#45; eSIM IMEI1
-            , IMEI2                     &#45;&#45; eSIM IMEI2
-            , UPLOAD_PHONE_SRL_NO       &#45;&#45; eSIM OCR 등록 FK
-            , ESIM_PHONE_ID             &#45;&#45; eSIM phone id
-            , PRNTS_CONTRACT_NO         &#45;&#45; 모회선 계약번호
-            , PERSONAL_INFO_COLLECT_AGREE &#45;&#45; 고객 혜택 제공을 위한 개인정보 수집 및 이용 관련 동의
-            , OTHERS_TRNS_AGREE &#45;&#45; 혜택 제공을 위한 제3자 제공 동의 : M모바일
+            , NW_BLCK_AGRM_YN          --네트워크차단동의여부
+            , APP_BLCK_AGRM_YN         --어플리케이션차단동의여부
+            , APP_CD                   --APP구분코드
+            , PROD_ID                  --상품아이디
+            , BANNER_CD                --배너코드
+            , CRET_ID                  --생성자아이디(로그인아이디)
+            , SNTY_COLOR_CD            --색상코드
+            , SNTY_CAPAC_CD            --단품용량코드
+            , PROD_TYPE                -- 상품 분류 (일반 :01, 0원 상품 :02)
+            , CLAUSE_RENTAL_SERVICE    --중고렌탈 프로그램 서비스 이용에 대한 동의서
+            , CLAUSE_RENTAL_MODEL_CP   --단말배상금 안내사항
+            , CLAUSE_RENTAL_MODEL_CP_PR --단말배상금(부분파손) 안내사항
+            , CLAUSE_MPPS35_FLAG        --선불 M PPS 요금제_동의
+            , CLAUSE_FINANCE_FLAG       --개인(신용)정보 처리 및 보험가입 동의서
+            , PROMOTION_CD              --프로모션코드
+            , INSR_CD                   --보험코드
+            , CLAUSE_INSURANCE_FLAG     -- 단체보험동의
+            , APP_FORM_XML_YN           -- 스캔 서버 연동 여부
+            , PROD_NM                   --상품명(NMCP_PROD_BAS.PROD_NM)
+            , INSR_PROD_CD              --단말보험코드
+            , CLAUSE_INSR_PROD_FLAG     --단말보험가입동의
+            , INSR_AUTH_INFO            --단말보험인증정보
+            , RWD_PROD_CD               --자급제 보상 서비스 코드
+            , CLAUSE_RWD_FLAG           --자급제 보상 서비스 동의
+            , RWD_AUTH_INFO             --자급제 보상 서비스 인증 정보
+            , CLAUSE_5G_COVERAGE_FLAG   -- 5g 커버리지 확인 및 가입 동의
+            , KTM_REFERER               -- 최초유입경 인자값
+            , USIM_KINDS_CD             -- 유심종류(RCP2035)
+            , EID                       -- eSIM EID
+            , IMEI1                     -- eSIM IMEI1
+            , IMEI2                     -- eSIM IMEI2
+            , UPLOAD_PHONE_SRL_NO       -- eSIM OCR 등록 FK
+            , ESIM_PHONE_ID             -- eSIM phone id
+            , PRNTS_CONTRACT_NO         -- 모회선 계약번호
+            , PERSONAL_INFO_COLLECT_AGREE -- 고객 혜택 제공을 위한 개인정보 수집 및 이용 관련 동의
+            , OTHERS_TRNS_AGREE -- 혜택 제공을 위한 제3자 제공 동의 : M모바일
             , DIS_PRMT_ID
             , CLAUSE_PARTNER_OFFER_FLAG
             , JEHU_PROD_TYPE
             , OPEN_MARKET_ID
             , JEHU_PARTNER_TYPE
-            , OTHERS_TRNS_KT_AGREE         &#45;&#45;혜택 제공을 위한 제3자 제공 동의 : KT
-            , OTHERS_AD_RECEIVE_AGREE      &#45;&#45;제3자 제공관련 광고 수신 동의
+            , OTHERS_TRNS_KT_AGREE         --혜택 제공을 위한 제3자 제공 동의 : KT
+            , OTHERS_AD_RECEIVE_AGREE      --제3자 제공관련 광고 수신 동의
             , EVNT_CD_PRMT
-            , FATH_TRG_YN                  &#45;&#45;안면인증 대상여부
-            , CLAUSE_FATH_FLAG             &#45;&#45;안면인증 동의여부
-            , FATH_TRANSAC_ID              &#45;&#45;안면인증 트랜잭션ID
-            , FATH_CMPLT_NTFY_DT           &#45;&#45;안면인증 완료일시
+            , FATH_TRG_YN                  --안면인증 대상여부
+            , CLAUSE_FATH_FLAG             --안면인증 동의여부
+            , FATH_TRANSAC_ID              --안면인증 트랜잭션ID
+            , FATH_CMPLT_NTFY_DT           --안면인증 완료일시
             , CPNT_ID
-            , COMBINE_SOLO_TYPE            &#45;&#45;아무나SOLO 결합여부
-            , COMBINE_SOLO_FLAG            &#45;&#45;아무나SOLO 결합동의
+            , COMBINE_SOLO_TYPE            --아무나SOLO 결합여부
+            , COMBINE_SOLO_FLAG            --아무나SOLO 결합동의
         ) VALUES (
             #{requestKey}
             , #{managerCode}
@@ -389,4 +389,542 @@
             , #{combineSoloFlag}
         )
     </insert>
+
+    <insert id="insertMcpRequestState"
+            parameterType="com.ktmmobile.msf.domains.form.common.dto.McpRequestStateDto">
+        INSERT INTO MCP_REQUEST_STATE@DL_MCP
+        (
+            REQUEST_STATE_KEY
+            , REQUEST_STATE_CODE
+            , DLVRY_NO
+            , OPEN_NO
+            , MEMO
+            , SYS_RDATE
+            , RIP
+            , RID
+            , VIEW_FLAG
+            , RES_NO
+            , REQUEST_KEY
+            , TB_CD
+        )
+        VALUES
+        (
+            SQ_RCP_REQUEST_STATE_01.NEXTVAL@DL_MCP
+            , #{requestStateCode, jdbcType=VARCHAR}
+            , #{dlvryNo, jdbcType=VARCHAR}
+            , #{openNo, jdbcType=VARCHAR}
+            , #{memo, jdbcType=VARCHAR}
+            , SYSDATE
+            , #{rip, jdbcType=VARCHAR}
+            , NVL(#{rid, jdbcType=VARCHAR}, 'SYSTEM')
+            , NVL(#{viewFlag, jdbcType=VARCHAR}, 'Y')
+            , #{resNo, jdbcType=VARCHAR}
+            , #{requestKey, jdbcType=NUMERIC}
+            , #{tbCd, jdbcType=VARCHAR}
+        )
+    </insert>
+
+    <insert id="insertMcpRequestOsstIfAbsent"
+            parameterType="com.ktmmobile.msf.domains.form.common.dto.McpRequestOsstDto">
+        INSERT INTO MCP_REQUEST_OSST@DL_MCP
+        (
+            MVNO_ORD_NO
+            , SEQ
+            , OSST_ORD_NO
+            , PRGR_STAT_CD
+            , RSLT_CD
+            , RSLT_MSG
+            , RSLT_DT
+            , NSTEP_GLOBAL_ID
+            , PRDC_CHK_NOTI_MSG
+            , IF_TYPE
+            , REGST_DTTM
+        )
+        SELECT
+            LPAD(#{mvnoOrdNo, jdbcType=VARCHAR}, 14, '0')
+            , NVL((SELECT MAX(SEQ) + 1 FROM MCP_REQUEST_OSST@DL_MCP WHERE MVNO_ORD_NO = LPAD(#{mvnoOrdNo, jdbcType=VARCHAR}, 14, '0')), 1)
+            , #{osstOrdNo, jdbcType=VARCHAR}
+            , #{prgrStatCd, jdbcType=VARCHAR}
+            , #{rsltCd, jdbcType=VARCHAR}
+            , #{rsltMsg, jdbcType=VARCHAR}
+            , TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')
+            , #{nstepGlobalId, jdbcType=VARCHAR}
+            , #{prdcChkNotiMsg, jdbcType=VARCHAR}
+            , NVL(#{ifType, jdbcType=VARCHAR}, 'WEB')
+            , SYSDATE
+        FROM DUAL
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM MCP_REQUEST_OSST@DL_MCP
+            WHERE MVNO_ORD_NO = LPAD(#{mvnoOrdNo, jdbcType=VARCHAR}, 14, '0')
+              AND PRGR_STAT_CD = #{prgrStatCd, jdbcType=VARCHAR}
+              AND NVL(NSTEP_GLOBAL_ID, ' ') = NVL(#{nstepGlobalId, jdbcType=VARCHAR}, ' ')
+              AND NVL(OSST_ORD_NO, ' ') = NVL(#{osstOrdNo, jdbcType=VARCHAR}, ' ')
+        )
+    </insert>
+
+    <insert id="insertOsstErrLog"
+            parameterType="com.ktmmobile.msf.domains.form.common.mplatform.vo.MpErrVO">
+        <selectKey keyProperty="seq" resultType="long" order="BEFORE">
+            SELECT TO_NUMBER(TO_CHAR(SYSDATE, 'YYYYMMDD') || TRIM(TO_CHAR(SQ_OSST_ERR_LOG_SEQ.NEXTVAL@DL_MCP, '000000'))) FROM DUAL
+        </selectKey>
+        INSERT INTO NMCP_OSST_ERR_LOG@DL_MCP
+        (
+            SEQ
+            , RES_NO
+            , PRGR_STAT_CD
+            , PRNTS_CONTRACT_NO
+            , CUSTOMER_ID
+            , ERR_TYPE
+            , ERR_MSG
+            , REGST_DT
+            , REGST_DTTM
+        )
+        VALUES
+        (
+            #{seq, jdbcType=NUMERIC}
+            , LTRIM(#{resNo, jdbcType=VARCHAR}, '0')
+            , #{prgrStatCd, jdbcType=VARCHAR}
+            , #{prntsContractNo, jdbcType=VARCHAR}
+            , #{customerId, jdbcType=VARCHAR}
+            , #{errType, jdbcType=VARCHAR}
+            , #{errMsg, jdbcType=VARCHAR}
+            , TO_CHAR(SYSDATE, 'YYYYMMDD')
+            , SYSDATE
+        )
+    </insert>
+
+  <insert id="insertNmcpCustReqMst">
+    INSERT INTO NMCP_CUST_REQUEST_MST@DL_MCP (
+      CUST_REQ_SEQ,         <!-- 신청시퀀스번호 -->
+      REQ_TYPE,             <!-- 신청타입 -->
+      USERID,               <!-- 아이디 -->
+      CSTMR_NAME,           <!-- 고객명 -->
+      MOBILE_NO,            <!-- 휴대폰번호 -->
+      CSTMR_NATIVE_RRN,     <!-- 주민번호 (암호화 권장) -->
+      CONTRACT_NUM,         <!-- 계약번호 -->
+      CSTMR_TYPE,           <!-- 고객타입 -->
+      CUSTOMER_TYPE,
+      ONLINE_AUTH_TYPE,     <!-- 온라인인증타입 -->
+      ONLINE_AUTH_INFO,     <!-- 온라인인증정보 -->
+      CRET_ID,              <!-- 생성자아이디 -->
+      SYS_RDATE,            <!-- 생성일자 -->
+      ETC_MOBILE            <!-- 기타연락처 -->
+    ) VALUES (
+      #{requestKey},        <!-- 신청시퀀스번호 -->
+      #{reqType},            <!-- 신청타입 -->
+      null,             <!-- 아이디 -->
+      #{custNm, jdbcType=VARCHAR},          <!-- 고객명(양도인) -->
+      #{mobileNo, jdbcType=VARCHAR},           <!-- 휴대폰번호(양도인) -->
+      #{cstmrNativeRrn},                   <!-- 주민번호 -->
+      #{ncn, jdbcType=VARCHAR},               <!-- 계약번호 -->
+      #{cstmrType, jdbcType=VARCHAR},          <!-- 고객타입 -->
+      #{customerType, jdbcType=VARCHAR},
+      null,                 <!-- 온라인인증타입 -->
+      null,          <!-- 온라인인증정보 -->
+      #{cretId},             <!-- 생성자아이디 -->
+      SYSDATE,               <!-- 생성일자 (시스템 현재시간) -->
+      #{etcMobile, jdbcType=VARCHAR}          <!-- 기타연락처 -->
+    )
+  </insert>
+
+  <insert id="insertNmcpCustReqNameChg">
+    INSERT INTO NMCP_CUST_REQUEST_NAME_CHG@DL_MCP (
+      CUST_REQ_SEQ                     <!-- 시퀀스 -->
+      , CSTMR_NAME                     <!-- 고객명 -->
+      , SCAN_ID                        <!-- parentScanId -->
+      , CSTMR_TYPE                     <!-- 고객유형 -->
+      , CSTMR_NATIVE_RRN               <!-- 주민번호 (암호화 권장) -->
+      , ONLINE_AUTH_TYPE               <!-- 본인인증_방법 -->
+      , ONLINE_AUTH_INFO               <!-- 본인인증_인증정보 -->
+      , CLAUSE_CNTR_DEL_FLAG           <!-- 약관_고객정보삭제동의_양도인 -->
+      , CLAUSE_PRI_COLLECT_FLAG        <!-- 약관_개인정보 수집동의 -->
+      , CLAUSE_PRI_OFFER_FLAG          <!-- 약관_개인정보 제공동의 -->
+      , CLAUSE_ESS_COLLECT_FLAG        <!-- 약관_고유식별 정보수집이용동의 -->
+      , CLAUSE_PRI_AD_FLAG             <!-- 개인정보 처리 위탁 및 광고 수신 동의 -->
+      , CLAUSE_JEHU_FLAG               <!-- 약관_제휴서비스를 위한 동의 -->
+      , REQ_INFO_CHG_YN                <!-- 가입정보변경여부 -->
+      , SOC                            <!-- 요금제 -->
+      , SOC_NM                         <!-- 요금제명 -->
+      , CSTMR_POST                     <!-- 우편번호 -->
+      , CSTMR_ADDR                     <!-- 주소 -->
+      , CSTMR_ADDR_DTL                 <!-- 상세주소 -->
+      , CSTMR_BILL_SEND_CODE           <!-- 명세서종류 -->
+      , CSTMR_MAIL                     <!-- 이메일 -->
+      , REQ_PAY_TYPE                   <!-- 요금납부방법 -->
+      , REQ_BANK                       <!-- 계좌이체_은행코드 -->
+      , REQ_ACCOUNT_NUMBER             <!-- 계좌이체_계좌번호 -->
+      , REQ_CARD_COMPANY               <!-- 신용카드_카드사 -->
+      , REQ_CARD_NO                    <!-- 신용카드_번호 -->
+      , REQ_CARD_YY                    <!-- 신용카드_유효년 -->
+      , REQ_CARD_MM                    <!-- 신용카드_유효월 -->
+      , SELF_CERT_TYPE                 <!-- 신분증인증_유형 -->
+      , SELF_ISSU_EXPR_DT              <!-- 신분증인증_발급/만료일자 -->
+      , SELF_ISSU_NUM                  <!-- 신분증인증_발급번호 -->
+      , CSTMR_RECEIVE_TEL_FN           <!-- 연락가능연락처_첫자리 -->
+      , CSTMR_RECEIVE_TEL_MN           <!-- 연락가능연락처_중간자리 -->
+      , CSTMR_RECEIVE_TEL_RN           <!-- 연락가능연락처_끝자리 -->
+      , PROC_CD                        <!-- 처리결과 -->
+      , CRET_ID                        <!-- 등록자 -->
+      , CRET_DTTM                      <!-- 등록일 -->
+      , JEHU_PROD_TYPE                 <!-- 요금제 제휴처 -->
+      , PERSONAL_INFO_COLLECT_AGREE    <!-- 고객 혜택 제공을 위한 개인정보 수집 동의 -->
+      , OTHERS_TRNS_AGREE              <!-- 혜택 제공을 위한 제3자 제공 동의(M모바일) -->
+      , OTHERS_TRNS_KT_AGREE           <!-- 혜택 제공을 위한 제3자 제공 동의(KT) -->
+      , OTHERS_AD_RECEIVE_AGREE        <!-- 제3자 제공관련 광고 수신 동의 -->
+      , INDV_LOCA_PRV_AGREE            <!-- 개인위치정보 제 3자 제공 동의 -->
+      , CSTMR_FOREIGNER_NATION         <!-- 고객정보_외국인_국적 -->
+      , SELF_INQRY_AGRM_YN             <!-- 본인인증조회동의 -->
+      , MCN_STAT_RSN_CD                <!-- 명변 사유코드 -->
+      , USIM_SUCC_YN                   <!-- USIM 승계 여부 -->
+      , ICC_ID                         <!-- USIM 일련번호 -->
+      , MCN_RES_NO                     <!-- 명의변경 예약번호 -->
+      , MCN_STATE_CODE                 <!-- 진행상태 -->
+      , AGNT_TEL_NO                    <!-- 법정대리인연락처 -->
+      , CLAUSE_FATH_FLAG               <!-- 안면인증 동의여부 -->
+      , SELF_CSTMR_CI                  <!-- 본인인증CI -->
+      , FATH_TRANSAC_ID                <!-- 안면인증 트랜잭션ID -->
+      , FATH_CMPLT_NTFY_DT             <!-- FS9 안면인증 완료일 -->
+      , FATH_TRG_YN                    <!-- 안면인증 대상여부 -->
+      , FATH_TEL_NO                    <!-- 안면인증URL전송 전화번호 -->
+    ) VALUES (
+      #{requestKey}                    <!-- 시퀀스 -->
+      , #{trnsTrnsfeNm, jdbcType=VARCHAR}                    <!-- 고객명 -->
+      , #{parentScanId, jdbcType=VARCHAR}                    <!-- parentScanId -->
+      , #{cstmrType, jdbcType=VARCHAR}                    <!-- 고객유형 -->
+      , #{cstmrNativeRrn, jdbcType=VARCHAR}                 <!-- 주민번호 -->
+      , null                          <!-- 본인인증_방법 -->
+      , #{teAuthInfo, jdbcType=VARCHAR}                     <!-- 본인인증_인증정보 -->
+      , #{clauseCntrDelYn, jdbcType=VARCHAR}            <!-- 약관_고객정보삭제동의_양도인 -->
+      , #{clausePriCollectYn, jdbcType=VARCHAR}         <!-- 약관_개인정보 수집동의 -->
+      , #{clausePriOfferYn, jdbcType=VARCHAR}           <!-- 약관_개인정보 제공동의 -->
+      , #{clauseEssCollectYn, jdbcType=VARCHAR}         <!-- 약관_고유식별 정보수집이용동의 -->
+      , #{clausePriAdYn, jdbcType=VARCHAR}              <!-- 개인정보 처리 위탁 및 광고 수신 동의 -->
+      , #{clauseJehuYn, jdbcType=VARCHAR}               <!-- 약관_제휴서비스를 위한 동의 -->
+      , #{reqInfoChgYn, jdbcType=VARCHAR}                 <!-- 가입정보변경여부 -->
+      , #{soc, jdbcType=VARCHAR}                          <!-- 요금제 -->
+      , #{socNm, jdbcType=VARCHAR}                        <!-- 요금제명 -->
+      , #{cstmrZipcd, jdbcType=VARCHAR}                    <!-- 우편번호 -->
+      , #{cstmrAdr, jdbcType=VARCHAR}                    <!-- 주소 -->
+      , #{cstmrAdrDtl, jdbcType=VARCHAR}                 <!-- 상세주소 -->
+      , #{cstmrBillSendTypeCd, jdbcType=VARCHAR}            <!-- 명세서종류 -->
+      , #{cstmrEmailAdr, jdbcType=VARCHAR}                    <!-- 이메일 -->
+      , #{reqPayTypeCd, jdbcType=VARCHAR}                   <!-- 요금납부방법 -->
+      , #{reqBankCd, jdbcType=VARCHAR}                      <!-- 계좌이체_은행코드 -->
+      , #{reqAccountNo, jdbcType=VARCHAR}             <!-- 계좌이체_계좌번호 -->
+      , #{reqCardCompanyCd, jdbcType=VARCHAR}               <!-- 신용카드_카드사 -->
+      , #{reqCardNo, jdbcType=VARCHAR}                    <!-- 신용카드_번호 -->
+      , #{reqCardYy, jdbcType=VARCHAR}                    <!-- 신용카드_유효년 -->
+      , #{reqCardMm, jdbcType=VARCHAR}                    <!-- 신용카드_유효월 -->
+      , #{teIdentityTypeCd, jdbcType=VARCHAR}             <!-- 신분증인증_유형 selfCertType -->
+      , #{teIdentityIssuDate, jdbcType=VARCHAR}               <!-- 신분증인증_발급/만료일자 -->
+      , #{teSelfIssuNo, jdbcType=VARCHAR}                  <!-- 신분증인증_발급번호 -->
+      , #{trnsTrnsfeMobileNo1, jdbcType=VARCHAR}            <!-- 연락가능연락처_첫자리 -->
+      , #{trnsTrnsfeMobileNo2, jdbcType=VARCHAR}            <!-- 연락가능연락처_중간자리 -->
+      , #{trnsTrnsfeMobileNo3, jdbcType=VARCHAR}            <!-- 연락가능연락처_끝자리 -->
+      , 'RQ'                            <!-- 처리결과 (RQ: 신청 고정값) -->
+      , #{userId, jdbcType=VARCHAR}                       <!-- 등록자 (USERID 매핑) -->
+      , SYSDATE                         <!-- 등록일 (시스템 현재시간) -->
+      , #{jehuProdTypeCd, jdbcType=VARCHAR}                 <!-- 요금제 제휴처 -->
+      , #{personalInfoCollectAgreeYn, jdbcType=VARCHAR}     <!-- 고객 혜택 제공을 위한 개인정보 수집 동의 -->
+      , #{othersTrnsAgreeYn, jdbcType=VARCHAR}              <!-- 혜택 제공을 위한 제3자 제공 동의(M모바일) -->
+      , #{othersTrnsKtAgreeYn, jdbcType=VARCHAR}            <!-- 혜택 제공을 위한 제3자 제공 동의(KT) -->
+      , #{othersAdReceiveAgreeYn, jdbcType=VARCHAR}         <!-- 제3자 제공관련 광고 수신 동의 -->
+      , #{indvLocaPrvAgreeYn, jdbcType=VARCHAR}         <!-- 개인위치정보 제 3자 제공 동의 -->
+      , #{cstmrForeignerNation, jdbcType=VARCHAR}         <!-- 고객정보_외국인_국적 -->
+      , #{minorAgentSelfInqryAgrmYn, jdbcType=VARCHAR}              <!-- 본인인증조회동의 -->
+      , #{mcnStatRsnCd, jdbcType=VARCHAR}                 <!-- 명변 사유코드 -->
+      , #{usimSuccYn, jdbcType=VARCHAR}                   <!-- USIM 승계 여부 -->
+      , #{iccId, jdbcType=VARCHAR}                        <!-- USIM 일련번호 -->
+      , #{mcnResNo, jdbcType=VARCHAR}                     <!-- 명의변경 예약번호 -->
+      , '00'                            <!-- 진행상태 (00 고정값) -->
+      , #{minorAgentTelMnNo, jdbcType=VARCHAR}                    <!-- 법정대리인연락처 -->
+      , #{clauseFathYn, jdbcType=VARCHAR}               <!-- 안면인증 동의여부 -->
+      , null                          <!-- 본인인증CI selfCstmrCi -->
+      , #{teFathTransacId, jdbcType=VARCHAR}                <!-- 안면인증 트랜잭션ID -->
+      , #{teFathCmpltNtfyDate, jdbcType=VARCHAR}              <!-- FS9 안면인증 완료일 -->
+      , #{teFathTrgYn, jdbcType=VARCHAR}                    <!-- 안면인증 대상여부 -->
+      , #{teFathTelNo, jdbcType=VARCHAR}                    <!-- 안면인증URL전송 전화번호 -->
+    )
+  </insert>
+  <insert id="insertNmcpCustReqNameChgAgent">
+    INSERT INTO NMCP_CUST_REQ_NAME_CHG_AGENT@DL_MCP (
+      CUST_REQ_SEQ                     <!-- 시퀀스 -->
+      , NEE_AGENT_NAME                 <!-- 양수인 법정대리인 성명 -->
+      , NEE_AGENT_RRN                  <!-- 양수인 법정대리인 식별번호 (주민번호 암호화 권장) -->
+      , NEE_AGENT_ONLINE_AUTH_TYPE     <!-- 양수인 법정대리인 본인인증 방법 -->
+      , NEE_AGENT_ONLINE_AUTH_INFO     <!-- 양수인 법정대리인 본인인증 인증정보 -->
+      , NEE_AGENT_TYPE_CD              <!-- 양수인 법정대리인 유형 -->
+      , NEE_AGENT_SELF_INQRY_AGRM_YN   <!-- 양수인 법정대리인 본인인증조회동의 -->
+      , NEE_AGENT_SELF_CERT_TYPE       <!-- 양수인 법정대리인 실명인증증빙서류코드 -->
+      , NEE_AGENT_SELF_ISSU_EXPR_DT    <!-- 양수인 법정대리인 식별번호 발급일자 -->
+      , NEE_AGENT_SELF_ISSU_NUM        <!-- 양수인 법정대리인 면허번호 -->
+      , NEE_AGENT_FOREIGNER_NATION     <!-- 양수인 법정대리인 국적코드 -->
+      , NEE_AGENT_TEL_NO               <!-- 양수인 법정대리인 연락처 -->
+      , NEE_AGENT_SELF_CSTMR_CI        <!-- 양수인 법정대리인 본인인증CI -->
+      , NOR_AGENT_NAME                 <!-- 양도인 법정대리인 성명 -->
+      , NOR_AGENT_RRN                  <!-- 양도인 법정대리인 식별번호 (주민번호 암호화 권장) -->
+      , NOR_AGENT_ONLINE_AUTH_TYPE     <!-- 양도인 법정대리인 본인인증 방법 -->
+      , NOR_AGENT_ONLINE_AUTH_INFO     <!-- 양도인 법정대리인 본인인증 인증정보 -->
+      , NOR_AGENT_TYPE_CD              <!-- 양도인 법정대리인 유형 -->
+      , NOR_AGENT_SELF_INQRY_AGRM_YN   <!-- 양도인 법정대리인 본인인증조회동의 -->
+      , NOR_AGENT_TEL_NO               <!-- 양도인 법정대리인 연락처 -->
+      , CRET_ID                        <!-- 등록자ID -->
+      , CRET_DTTM                      <!-- 등록일시 -->
+    ) VALUES (
+      #{requestKey}                    <!-- 시퀀스 -->
+      , #{minorAgentNm, jdbcType=VARCHAR}              <!-- 양수인 법정대리인 성명 -->
+      , #{minorAgentRrn, jdbcType=VARCHAR}           <!-- 양수인 법정대리인 식별번호 -->
+      , null                      <!-- 양수인 법정대리인 본인인증 방법 onlineAuthType -->
+      , #{teAuthInfo, jdbcType=VARCHAR}              <!-- 양수인 법정대리인 본인인증 인증정보 -->
+      , #{jrdclAgentRelTypeCd, jdbcType=VARCHAR}          <!-- 양수인 법정대리인 유형 -->
+      , #{minorAgentSelfInqryAgrmYn, jdbcType=VARCHAR}            <!-- 양수인 법정대리인 본인인증조회동의 -->
+      , #{teIdentityTypeCd, jdbcType=VARCHAR}                <!-- 양수인 법정대리인 실명인증증빙서류코드 -->
+      , #{teIdentityIssuDate, jdbcType=VARCHAR}              <!-- 양수인 법정대리인 식별번호 발급일자 -->
+      , #{teDriveLicnsNo, jdbcType=VARCHAR}                <!-- 양수인 법정대리인 면허번호 -->
+      , #{cstmrForeignerNation, jdbcType=VARCHAR}        <!-- 양수인 법정대리인 국적코드 -->
+      , #{minorAgentTelNo, jdbcType=VARCHAR}               <!-- 양수인 법정대리인 연락처 -->
+      , null                          <!-- 양수인 법정대리인 본인인증CI selfCstmrCi -->
+      , #{trMinorAgentNm, jdbcType=VARCHAR}            <!-- 양도인 법정대리인 성명 -->
+      , #{trMinorAgentRrn, jdbcType=VARCHAR}                          <!-- 양도인 법정대리인 식별번호 grMinorAgentRrn -->
+      , null            <!-- 양도인 법정대리인 본인인증 방법 grOnlineAuthType -->
+      , #{trAuthInfo, jdbcType=VARCHAR}                <!-- 양도인 법정대리인 본인인증 인증정보 -->
+      , #{trMinorAgentRelTypeCd, jdbcType=VARCHAR}        <!-- 양도인 법정대리인 유형 -->
+      , #{trMinorAgentSelfInqryAgrmYn, jdbcType=VARCHAR}          <!-- 양도인 법정대리인 본인인증조회동의 -->
+      , #{trMinorAgentTelNo, jdbcType=VARCHAR}             <!-- 양도인 법정대리인 연락처 -->
+      , #{userId, jdbcType=VARCHAR}                      <!-- 등록자ID (USERID 매핑) -->
+      , SYSDATE                        <!-- 등록일시 (시스템 현재시간) -->
+    )
+  </insert>
+
+  <update id="updateNmcpCustReqMst">
+    UPDATE NMCP_CUST_REQUEST_MST@DL_MCP
+    SET ONLINE_AUTH_TYPE = ''
+    , ONLINE_AUTH_INFO = ''
+    WHERE CUST_REQ_SEQ = #{requestKey}
+  </update>
+
+  <update id="updateNmcpCustReqNameChg">
+    UPDATE NMCP_CUST_REQUEST_NAME_CHG@DL_MCP
+    SET ONLINE_AUTH_TYPE = ''
+    , ONLINE_AUTH_INFO = ''
+    , SELF_CERT_TYPE = ''
+    , SELF_ISSU_EXPR_DT = ''
+    , SELF_ISSU_NUM = ''
+    , SELF_CSTMR_CI = ''
+    WHERE CUST_REQ_SEQ = #{requestKey}
+  </update>
+
+  <!-- 가입신청서 출력요청(NMCP_CUST_REQUEST_INSR) insert -->
+  <insert id="insertCustRequestInsr">
+    INSERT INTO /*McpRequestWriteMapper.insertCustRequestInsr*/
+    NMCP_CUST_REQUEST_INSR@DL_MCP
+    (
+    CUST_REQ_SEQ,
+    INSR_CD,
+    ETC_MEMO,
+    CRET_ID,
+    SYS_RDATE
+    )
+    VALUES
+    (
+    #{requestKey, jdbcType=INTEGER},
+    #{insrProdCd, jdbcType=VARCHAR},
+    #{etcMobile, jdbcType=VARCHAR},
+    #{cretId, jdbcType=VARCHAR},
+    SYSDATE
+    )
+  </insert>
+
+  <!--     AppformMapper."insertMcpSelfUsimChg" 유심셀프변경 등록  -->
+  <insert id="insertMcpSelfUsimChg">
+    <selectKey keyProperty="mvnoOrdNo" resultType="java.lang.String" order="BEFORE">
+      SELECT TO_CHAR(SYSDATE, 'YYYYMMDD') || LPAD(SQ_MCP_SELF_USIM_CHG_KEY.NEXTVAL@DL_MCP, 6, '0') FROM DUAL
+    </selectKey>
+    INSERT INTO MCP_SELF_USIM_CHG@DL_MCP (
+    MVNO_ORD_NO
+    , CUST_NO
+    , TLPH_NO
+    , SVC_CONT_ID
+    , ODER_TYPE_CD
+    , USIM_PYMN_MTHD_CD
+    , ICC_ID
+    , CNTPNT_CD
+    , SLS_PRSN_ID
+    , USIM_CHG_RSN_CD
+    , PRGR_STAT_CD
+    , TRGT_ATRIB_SBST
+    , TRGT_FALU_MSG
+    , TRGT_INSUR_MSG
+    , RSLT_CD
+    , RSLT_MSG
+    , CRET_ID
+    , AMD_ID
+    , CRET_DT
+    , AMD_DT
+    ) VALUES (
+    #{mvnoOrdNo}
+    , #{custNo}
+    , #{tlphNo}
+    , #{svcContId}
+    , #{oderTypeCd}
+    , #{usimPymnMthdCd}
+    , #{iccId}
+    , #{cntpntCd}
+    , #{slsPrsnId}
+    , #{usimChgRsnCd}
+    , 'UC0'
+    , ''
+    , ''
+    , ''
+    , ''
+    , ''
+    , 'SYSTEM'
+    , 'SYSTEM'
+    , SYSDATE
+    , SYSDATE
+    )
+  </insert>
+
+  <update id="updateMcpSelfUsimChgUC0">
+    UPDATE MCP_SELF_USIM_CHG@DL_MCP
+    SET OSST_ORD_NO = #{osstOrdNo}
+    ,AMD_DT = SYSDATE
+    WHERE MVNO_ORD_NO = #{mvnoOrdNo}
+    AND SVC_CONT_ID = #{svcContId}
+    AND CUST_NO = #{custNo}
+    AND TLPH_NO = #{tlphNo}
+    AND PRGR_STAT_CD = 'UC0'
+  </update>
+
+  <insert id="insertMcpReqCombine">
+    <selectKey keyProperty="reqSeq" resultType="String" order="BEFORE">
+      SELECT MCP_REQ_COMBINE_SEQ.NEXTVAL@DL_MCP FROM DUAL
+    </selectKey>
+    INSERT INTO MCP_REQ_COMBINE@DL_MCP
+    (
+      REQ_SEQ
+      ,COMB_TYPE_CD
+      ,M_CTN
+      ,M_CUST_NM
+      ,M_CUST_BIRTH
+      ,M_SEX_CD
+      ,M_SVC_CNTR_NO
+      ,M_RATE_CD
+      ,M_RATE_NM
+      ,M_RATE_ADSVC_CD
+      ,M_RATE_ADSVC_NM
+      ,COMB_SVC_NO
+      ,COMB_SVC_CNTR_NO
+      ,COMB_CUST_NM
+      ,COMB_BIRTH
+      ,COMB_SEX_CD
+      ,COMB_SOC_CD
+      ,COMB_SOC_NM
+      ,COMB_RATE_ADSVC_CD
+      ,COMB_RATE_ADSVC_NM
+      ,COMB_TGT_TYPE_CD
+      ,RSLT_CD
+      ,RSLT_MEMO
+      ,SYS_DT
+      ,REG_DT
+      ,RVISN_ID
+      ,RVISN_DTTM
+      ,REQUEST_KEY
+      ,RATE_CHG_YN
+    )
+    VALUES
+    (
+      #{reqSeq}
+      ,#{combTypeCd}
+      ,#{mCtn}
+      ,#{mCustNm}
+      ,#{mCustBirth}
+      ,#{mSexCd}
+      ,#{mSvcCntrNo}
+      ,#{mRateCd}
+      ,#{mRateNm}
+      ,#{mRateAdsvcCd}
+      ,#{mRateAdsvcNm}
+      ,#{combSvcNo}
+      ,#{combSvcCntrNo}
+      ,#{combCustNm}
+      ,#{combBirth}
+      ,#{combSexCd}
+      ,#{combSocCd}
+      ,#{combSocNm}
+      ,#{combRateAdsvcCd}
+      ,#{combRateAdsvcNm}
+      ,#{combTgtTypeCd}
+      ,#{rsltCd}
+      ,#{rsltMemo}
+      ,TO_CHAR(SYSDATE,'YYYYMMDD')
+      ,SYSDATE
+      ,#{rvisnId}
+      ,SYSDATE
+      ,#{requestKey}
+      ,NULL             <!-- rateChgYn -->
+    )
+  </insert>
+
+  <update id="updateRequestOsst">
+    UPDATE MCP_REQUEST_OSST@DL_MCP
+      SET OSST_ORD_NO = #{osstOrdNo}
+    WHERE MVNO_ORD_NO = LPAD(#{mvnoOrdNo}, 14, '0')
+  </update>
+
+  <insert id="insertNmcpCustReqChange">
+    INSERT INTO MCP_REQUEST_CHANGE@DL_MCP
+    (
+      NAME_CHANGE_NM
+      ,NAME_CHANGE_TEL_FN
+      ,NAME_CHANGE_TEL_MN
+      ,NAME_CHANGE_TEL_RN
+      ,NAME_CHANGE_RRN
+      ,NAME_CHANGE_PINSTALLMENT
+      ,REQUEST_KEY
+      ,SYS_RDATE
+      ,RVISN_ID
+      ,RVISN_DTTM
+    )
+    VALUES (
+      #{nameChangeNm}
+      ,#{nameChangeTelFn}
+      ,#{nameChangeTelMn}
+      ,#{nameChangeTelRn}
+      ,#{nameChangeRrn}
+      ,#{nameChangePinstallment}
+      ,#{requestKey}
+      ,SYSDATE
+      ,#{rvisnId}
+      ,SYSDATE
+    )
+  </insert>
+
+  <select id="getDisPrmtId">
+    SELECT
+    DISTINCT PRMT_ID
+    FROM VW_DIS_PRMT_DTL A
+    WHERE 1=1
+    AND TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS') BETWEEN A.STRT_DTTM AND A.END_DTTM
+    AND USG_YN = 'Y'
+    AND ORGN_ID = #{agentCd}
+    AND SLS_TP = 'UU1'
+    AND INTM_YN = 'N'
+    AND ENGG_SRL = '00' <!-- 약정기간 -->
+    AND RATE_CD = #{rateCd}
+    AND EVNT_CD = 'NAC'
+  </select>
+
+  <!-- 프로모션 기본 요금 조회 -->
+  <select id="selectPromoBaseAmt">
+    SELECT SUM(BASE_AMT * 1.1) /* McpRequestWriteMapper.selectPromoBaseAmt */
+    FROM MSP_RATE_MST
+    WHERE RATE_CD IN (
+    SELECT DISTINCT SOC
+    FROM VW_DIS_PRMT_DTL
+    WHERE PRMT_ID = #{prmtId}
+    )
+  </select>
+
 </mapper>

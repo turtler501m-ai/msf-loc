@@ -2,6 +2,7 @@
   <MsfDialog
     :is-open="modelValue"
     :title="props.title"
+    :maximize="props.maximize"
     show-close
     @open="openDialog"
     @close="emit('update:modelValue', false)"
@@ -40,6 +41,7 @@ const props = defineProps({
   version: [String, Array],
   specTerms: Object,
   content: [String, Array],
+  maximize: { type: Boolean, default: false }, // 화면 꽉채우는 팝업으로 설정시 사용
 })
 const emit = defineEmits(['update:modelValue', 'confirm'])
 

@@ -20,6 +20,7 @@ public class MspSaleSubsdMstRequest {
     private String operTypeCd; //가입유형 (MNP3, NAC3, HDN3)
     private String salePlcyCd; //판매정책코드
     private String sprtTp; //할인유형 (단말 KD, 요금 PM)
+    private String slsTp; //가입유형 (프로모션용)
 
     //private String prdtId; //쓰지말자~
     private String modelId; //상품아이디 : K7028268
@@ -39,4 +40,9 @@ public class MspSaleSubsdMstRequest {
     private String usimKindsCd; //유심종류 (06: 해당없음, 02: LTE유심, 07: 5G유심, 09: eSIM
     private String priceGubun; //업무구분(operTypeCd)+데이타유형(dataType) 을 쿼리에서 사용하기 위함. (내부적인 parameter)
 
+    private String usimPriceTypeCd; //유심 납부유형코드 - R (즉납)  B(후청구) N(비구매)
+    private String usimPayMthdCd; //유심 납부방법코드 - B (정기) I(즉납)
+
+    private String joinPayMthdCd; //가입비 화면에서 선택한 값 추가 - 2026.07.14
+    private String disPrmtId;
 }

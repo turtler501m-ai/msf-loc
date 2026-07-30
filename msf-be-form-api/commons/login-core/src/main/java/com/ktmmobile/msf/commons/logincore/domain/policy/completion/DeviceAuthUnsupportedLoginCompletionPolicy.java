@@ -9,11 +9,22 @@ public class DeviceAuthUnsupportedLoginCompletionPolicy implements LoginCompleti
 
     public static final String BEAN_NAME = "deviceAuthUnsupportedLoginCompletionPolicy";
 
+    /**
+     * 단말 인증 미지원 정책 적용 가능 여부 확인
+     *
+     * @param context 로그인 완료 컨텍스트
+     * @return 적용 가능 여부
+     */
     @Override
     public boolean supports(LoginCompletionContext<?> context) {
         return true;
     }
 
+    /**
+     * 단말 인증 미지원 여부 검증
+     *
+     * @param context 로그인 완료 컨텍스트
+     */
     @Override
     public void verify(LoginCompletionContext<?> context) {
         if (context.credential().isDeviceAuth()) {

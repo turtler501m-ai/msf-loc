@@ -14,6 +14,7 @@
       show-single-check
       @selected="onSelected"
       rows="5.2"
+      flexGrid
     >
       <template #count-prepend>스캔 목록</template>
     </MsfDataTable>

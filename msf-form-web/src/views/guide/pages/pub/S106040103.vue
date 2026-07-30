@@ -81,6 +81,8 @@
         </div>
       </template>
     </MsfAccordion>
+    <!-- 검색결과 없음 -->
+    <div class="nodata-wrap">검색 결과가 없습니다.</div>
     <!-- 페이징 -->
     <MsfPagination
       v-model:page="currentPage"

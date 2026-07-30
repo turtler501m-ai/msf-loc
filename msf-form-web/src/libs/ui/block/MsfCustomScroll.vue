@@ -21,6 +21,7 @@ const hasHScroll = ref(false)
 
 let scrollTimeout = null
 let resizeObserver = null
+let mutationObserver = null
 let ticking = false
 let startOffset = 0
 let currentAxis = null
@@ -167,6 +168,19 @@ onMounted(() => {
     resizeObserver.observe(el)
     if (contentInnerRef.value) resizeObserver.observe(contentInnerRef.value)
   }
+
+  // 내부 콘텐츠 변경 시 스크롤 상태 재계산
+  if (window.MutationObserver && contentInnerRef.value) {
+    mutationObserver = new MutationObserver(() => {
+      requestAnimationFrame(updateThumbs)
+    })
+
+    mutationObserver.observe(contentInnerRef.value, {
+      childList: true,
+      subtree: true,
+    })
+  }
+
   setTimeout(updateThumbs, 500)
 })
 
@@ -174,6 +188,7 @@ onUnmounted(() => {
   contentRef.value?.removeEventListener('scroll', handleScroll)
   contentRef.value?.removeEventListener('wheel', handleWheel)
   resizeObserver?.disconnect()
+  mutationObserver?.disconnect()
   stopDrag() // 드래그 중 컴포넌트가 사라질 경우를 대비한 안전장치
 })
 
@@ -181,7 +196,15 @@ defineExpose({ scrollTo: (opt) => contentRef.value?.scrollTo(opt), update: updat
 </script>
 
 <template>
-  <div class="cs-wrapper" :style="{ height: props.height, width: props.width }">
+  <div
+    class="cs-wrapper"
+    :class="{
+      'has-scroll': (hasVScroll || hasHScroll) && !props.useLock,
+      'has-v-scroll': hasVScroll && !props.useLock,
+      'has-h-scroll': hasHScroll,
+    }"
+    :style="{ height: props.height, width: props.width }"
+  >
     <div ref="contentRef" class="cs-content" :class="{ 'is-locked': props.useLock }">
       <div ref="contentInnerRef" class="cs-content-inner">
         <slot></slot>
@@ -191,12 +214,11 @@ defineExpose({ scrollTo: (opt) => contentRef.value?.scrollTo(opt), update: updat
     <div
       v-show="hasVScroll && !props.useLock"
       class="cs-bar is-vertical"
-      role="scrollbar"
-      tabindex="0"
       :class="{
         'is-active': isScrolling || isDragging,
         'is-always-show': props.alwaysShow,
       }"
+      aria-hidden="true"
       @mousedown="startDrag($event, 'v')"
       @touchstart="startDrag($event, 'v')"
     >
@@ -210,6 +232,7 @@ defineExpose({ scrollTo: (opt) => contentRef.value?.scrollTo(opt), update: updat
         'is-active': isScrolling || isDragging,
         'is-always-show': props.alwaysShow,
       }"
+      aria-hidden="true"
       @mousedown="startDrag($event, 'h')"
       @touchstart="startDrag($event, 'h')"
     >

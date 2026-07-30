@@ -1,5 +1,6 @@
 package com.ktmmobile.msf.domains.form.common.dto;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
 
@@ -15,7 +16,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class MspPpsRcgTesDto implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    @Serial private static final long serialVersionUID = 1L;
 
     private long tesSeq;          // PK (PPS_RCG_TES_SEQ)
     private String reqType;       // pps_rcg_type 테이블참조
@@ -60,51 +61,72 @@ public class MspPpsRcgTesDto implements Serializable {
 
     // o 접두사 필드들 비표준 getter/setter 유지
     public int getoAmount() { return oAmount; }
+
     public void setoAmount(int oAmount) { this.oAmount = oAmount; }
 
     public String getoTesChargeMax() {
-        if (oTesChargeMax == null || oTesChargeMax.equals("")) return "0";
+        if (oTesChargeMax == null || oTesChargeMax.equals("")) {
+            return "0";
+        }
         return oTesChargeMax;
     }
+
     public void setoTesChargeMax(String oTesChargeMax) { this.oTesChargeMax = oTesChargeMax; }
 
     public String getoTesBaser() {
-        if (oTesBaser == null || oTesBaser.equals("")) return "0";
+        if (oTesBaser == null || oTesBaser.equals("")) {
+            return "0";
+        }
         return oTesBaser;
     }
+
     public void setoTesBaser(String oTesBaser) { this.oTesBaser = oTesBaser; }
 
     public String getoTesChgr() {
-        if (oTesChgr == null || oTesChgr.equals("")) return "0";
+        if (oTesChgr == null || oTesChgr.equals("")) {
+            return "0";
+        }
         return oTesChgr;
     }
+
     public void setoTesChgr(String oTesChgr) { this.oTesChgr = oTesChgr; }
 
     public String getoTesMagicr() {
-        if (oTesMagicr == null || oTesMagicr.equals("")) return "0";
+        if (oTesMagicr == null || oTesMagicr.equals("")) {
+            return "0";
+        }
         return oTesMagicr;
     }
+
     public void setoTesMagicr(String oTesMagicr) { this.oTesMagicr = oTesMagicr; }
 
     public String getoTesFsmsr() {
-        if (oTesFsmsr == null || oTesFsmsr.equals("")) return "0";
+        if (oTesFsmsr == null || oTesFsmsr.equals("")) {
+            return "0";
+        }
         return oTesFsmsr;
     }
+
     public void setoTesFsmsr(String oTesFsmsr) { this.oTesFsmsr = oTesFsmsr; }
 
     public String getoTesVideor() { return oTesVideor; }
+
     public void setoTesVideor(String oTesVideor) { this.oTesVideor = oTesVideor; }
 
     public String getoTesIpvasr() { return oTesIpvasr; }
+
     public void setoTesIpvasr(String oTesIpvasr) { this.oTesIpvasr = oTesIpvasr; }
 
     public String getoTesIpmaxr() { return oTesIpmaxr; }
+
     public void setoTesIpmaxr(String oTesIpmaxr) { this.oTesIpmaxr = oTesIpmaxr; }
 
     public String getoTesSmsm() { return oTesSmsm; }
+
     public void setoTesSmsm(String oTesSmsm) { this.oTesSmsm = oTesSmsm; }
 
     public String getoTesDataplusv() { return oTesDataplusv; }
+
     public void setoTesDataplusv(String oTesDataplusv) { this.oTesDataplusv = oTesDataplusv; }
 
 }

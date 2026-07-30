@@ -3,6 +3,7 @@ package com.ktmmobile.msf.commons.mybatis.config;
 import javax.sql.DataSource;
 
 import org.apache.ibatis.plugin.Interceptor;
+import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.mybatis.spring.mapper.MapperScannerConfigurer;
@@ -12,6 +13,7 @@ import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.Environment;
 
 import com.ktmmobile.msf.commons.common.datasource.smartform.SmartFormDataSourceConfig;
@@ -20,6 +22,8 @@ import com.ktmmobile.msf.commons.common.datasource.smartform.SmartFormDataSource
 public class SmartFormMyBatisConfig extends MyBatisConfigSupport {
 
     public static final String SQL_SESSION_FACTORY = "smartFormSqlSessionFactory";
+    public static final String SQL_SESSION_TEMPLATE = "smartFormSqlSessionTemplate";
+    public static final String BATCH_SQL_SESSION_TEMPLATE = "smartFormBatchSqlSessionTemplate";
 
     public SmartFormMyBatisConfig(
         MyBatisCustomProperties properties,
@@ -38,18 +42,27 @@ public class SmartFormMyBatisConfig extends MyBatisConfigSupport {
         return configurer;
     }
 
+    @Primary
     @Bean(SQL_SESSION_FACTORY)
     public SqlSessionFactory smartFormSqlSessionFactory(
         @Qualifier(SmartFormDataSourceConfig.SMARTFORM_DATASOURCE) DataSource dataSource,
         MyBatisCustomProperties properties
-    ) throws Exception {
+    ) {
         return createSqlSessionFactory(dataSource, properties.smartformMapperLocations());
     }
 
-    @Bean("sqlSessionTemplate")
-    public SqlSessionTemplate sqlSessionTemplate(
+    @Primary
+    @Bean(SQL_SESSION_TEMPLATE)
+    public SqlSessionTemplate smartformSqlSessionTemplate(
         @Qualifier(SQL_SESSION_FACTORY) SqlSessionFactory sqlSessionFactory
     ) {
         return new SqlSessionTemplate(sqlSessionFactory);
+    }
+
+    @Bean(BATCH_SQL_SESSION_TEMPLATE)
+    public SqlSessionTemplate smartFormBatchSqlSessionTemplate(
+        @Qualifier(SQL_SESSION_FACTORY) SqlSessionFactory sqlSessionFactory
+    ) {
+        return new SqlSessionTemplate(sqlSessionFactory, ExecutorType.BATCH);
     }
 }

@@ -8,15 +8,13 @@ public interface LoginRepository {
 
     LoginResponse getUserInfo(LoginRequest request);
 
-    LoginResponse getUserAppInfo(LoginRequest request);
-
-    Integer updateLoginFail(LoginRequest request);
-
-    Integer updateLoginSucc(LoginRequest request);
-
     Integer insertUserHistory(String userId);
 
-    Integer updateBioLoginSucc(LoginRequest request);
-
     Integer modifyPass(PassChangeRequest request);
+
+    LoginResponse getUserHstInfo(LoginRequest loginRequest);
+
+    Integer insertAdminUserHistory(String strUserId);
+
+    Integer modifyAdminPass(PassChangeRequest request);
 }

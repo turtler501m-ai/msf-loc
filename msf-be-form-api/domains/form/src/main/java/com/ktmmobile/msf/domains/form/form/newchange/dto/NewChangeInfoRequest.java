@@ -7,6 +7,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import com.ktmmobile.msf.domains.form.form.common.dto.MsfRequestDocDto;
+import com.ktmmobile.msf.domains.form.form.common.dto.MsfRequestRecDto;
+
 /**
  * 신규/변경 신청서 insert 및 update request parameter 정의
  */
@@ -15,12 +18,17 @@ import lombok.Setter;
 @NoArgsConstructor
 public class NewChangeInfoRequest {
 
-    String tmpStepCd; //임시저장 단계
-    String preCheck; //신청서번호 존재여부 확인을 위한 변수 (구비서류, 안면인식 등에 request_key 미리 생성이슈)
+    boolean isFirst; //최초 진입여부
+
+    private String tmpStepCd; //임시저장 단계
+    private String preCheck; //신청서번호 존재여부 확인을 위한 변수 (구비서류, 안면인식 등에 request_key 미리 생성이슈)
+    private String requestPreCheck;
 
     List<NewChangeAdditionRequest> additionList;
+    List<MsfRequestDocDto> msfRequestDocList;
+    List<MsfRequestRecDto> msfRequestRecList;
 
-    Long newRequestKey;
+    private Long newRequestKey;
 
     Long requestKey;
     String cretIp;
@@ -68,6 +76,8 @@ public class NewChangeInfoRequest {
     String driveLicnsNo;
     String openNo;
     String contractNum;
+    String custId;
+    String billAcntNo;
     String prodTypeCd;
     String prodId;
     String prodNm;
@@ -103,7 +113,7 @@ public class NewChangeInfoRequest {
     String onOffTypeCd = "0"; //고정값 처리가 맞는지~
     String soCd;
     LocalDateTime openReqDt;
-    LocalDateTime reqInDay;
+    LocalDateTime reqInDt;
     String clausePriCollectYn;
     String clausePriOfferYn;
     String clauseEssCollectYn;
@@ -149,6 +159,14 @@ public class NewChangeInfoRequest {
     String fileMaskNm;
     String faxYn;
     String faxNo;
+    String parentScanId;
+    String othersTrnsAllAgreeYn;
+    String clauseMoveCode;
+    String indvLocaPrvAgreeYn;
+    String disPrmtId;
+    Long volumeMobileNoQnty;
+    String volumeRepMobileNoYn;
+    String volumeRepMobileNo;
 
     //MSF_REQUEST_CSTMR
     String cstmrNm;
@@ -157,6 +175,7 @@ public class NewChangeInfoRequest {
     String cstmrNativeGenderCd;
     String cstmrPrivateCname;
     String cstmrPrivateBizNo;
+    String cstmrPrivateBizNoIssuDate;
     String cstmrForeignerRrn;
     String cstmrForeignerBirth;
     String cstmrForeignerGenderCd;
@@ -169,6 +188,7 @@ public class NewChangeInfoRequest {
     String cstmrJuridicalCname;
     String cstmrJuridicalRrn;
     String cstmrJuridicalBizNo;
+    String cstmrJuridicalBizNoIssuDate;
     String cstmrJuridicalRepNm;
     String upjnCd;
     String bcuSbst;
@@ -239,6 +259,7 @@ public class NewChangeInfoRequest {
     String socCode;
     String socNm;
     Long socBaseChrgAmt;
+    Long disPrmtAmt;
 
     //MSF_REQUEST_BILL_REQ
     String reqPayTypeCd;
@@ -296,263 +317,8 @@ public class NewChangeInfoRequest {
     String filePathNm;
     //String fileNm;
 
+    String prdtSctnCd;
+    String dataType;
 
-    @Override
-    public String toString() {
-        return "NewChangeInfoRequest{" +
-            "tmpStepCd='" + tmpStepCd + '\'' +
-            ", additionList=" + additionList +
-            ", newRequestKey=" + newRequestKey +
-            ", requestKey=" + requestKey +
-            ", managerCd='" + managerCd + '\'' +
-            ", managerNm='" + managerNm + '\'' +
-            ", agentCd='" + agentCd + '\'' +
-            ", agentNm='" + agentNm + '\'' +
-            ", shopCd='" + shopCd + '\'' +
-            ", shopNm='" + shopNm + '\'' +
-            ", realShopNm='" + realShopNm + '\'' +
-            ", cpntId='" + cpntId + '\'' +
-            ", cpntNm='" + cpntNm + '\'' +
-            ", cntpntShopCd='" + cntpntShopCd + '\'' +
-            ", cntpntShopNm='" + cntpntShopNm + '\'' +
-            ", reqBuyTypeCd='" + reqBuyTypeCd + '\'' +
-            ", openTypeCd='" + openTypeCd + '\'' +
-            ", serviceTypeCd='" + serviceTypeCd + '\'' +
-            ", operTypeCd='" + operTypeCd + '\'' +
-            ", cstmrTypeCd='" + cstmrTypeCd + '\'' +
-            ", identityCertTypeCd='" + identityCertTypeCd + '\'' +
-            ", knoteIdentityScanCstmrNm='" + knoteIdentityScanCstmrNm + '\'' +
-            ", knoteIdentityEssNo='" + knoteIdentityEssNo + '\'' +
-            ", knoteIdentityTypeCd='" + knoteIdentityTypeCd + '\'' +
-            ", knoteIdentityScanDt=" + knoteIdentityScanDt +
-            ", knoteScanId='" + knoteScanId + '\'' +
-            ", fathTrgYn='" + fathTrgYn + '\'' +
-            ", fathTrgIdentityCertTypeCd='" + fathTrgIdentityCertTypeCd + '\'' +
-            ", fathTransacId='" + fathTransacId + '\'' +
-            ", fathCmpltNtfyDate='" + fathCmpltNtfyDate + '\'' +
-            ", fathTelNo='" + fathTelNo + '\'' +
-            ", fathMobileFnNo='" + fathMobileFnNo + '\'' +
-            ", fathMobileMnNo='" + fathMobileMnNo + '\'' +
-            ", fathMobileRnNo='" + fathMobileRnNo + '\'' +
-            ", authInfo='" + authInfo + '\'' +
-            ", identityTypeCd='" + identityTypeCd + '\'' +
-            ", identityIssuDate='" + identityIssuDate + '\'' +
-            ", identityIssuRegion='" + identityIssuRegion + '\'' +
-            ", selfIssuNo='" + selfIssuNo + '\'' +
-            ", driveLicnsNo='" + driveLicnsNo + '\'' +
-            ", openNo='" + openNo + '\'' +
-            ", contractNum='" + contractNum + '\'' +
-            ", prodTypeCd='" + prodTypeCd + '\'' +
-            ", prodId='" + prodId + '\'' +
-            ", prodNm='" + prodNm + '\'' +
-            ", reqPhoneSn='" + reqPhoneSn + '\'' +
-            ", reqModelNm='" + reqModelNm + '\'' +
-            ", sntyCapacCd='" + sntyCapacCd + '\'' +
-            ", sntyColorCd='" + sntyColorCd + '\'' +
-            ", reqModelColor='" + reqModelColor + '\'' +
-            ", shopUsmId='" + shopUsmId + '\'' +
-            ", usimKindsCd='" + usimKindsCd + '\'' +
-            ", reqUsimSn='" + reqUsimSn + '\'' +
-            ", reqUsimNm='" + reqUsimNm + '\'' +
-            ", eid='" + eid + '\'' +
-            ", imei1='" + imei1 + '\'' +
-            ", imei2='" + imei2 + '\'' +
-            ", esimPhoneId='" + esimPhoneId + '\'' +
-            ", uploadPhoneSrlNo=" + uploadPhoneSrlNo +
-            ", reqWantFnNo='" + reqWantFnNo + '\'' +
-            ", reqWantMnNo='" + reqWantMnNo + '\'' +
-            ", reqWantRnNo='" + reqWantRnNo + '\'' +
-            ", insrCd='" + insrCd + '\'' +
-            ", insrProdCd='" + insrProdCd + '\'' +
-            ", clauseInsuranceYn='" + clauseInsuranceYn + '\'' +
-            ", clauseInsrProdYn='" + clauseInsrProdYn + '\'' +
-            ", insrAuthInfo='" + insrAuthInfo + '\'' +
-            ", prntsContractNum='" + prntsContractNum + '\'' +
-            ", prntsMobileNo='" + prntsMobileNo + '\'' +
-            ", jehuPartnerTypeCd='" + jehuPartnerTypeCd + '\'' +
-            ", jehuProdTypeCd='" + jehuProdTypeCd + '\'' +
-            ", reqAdditionListNm='" + reqAdditionListNm + '\'' +
-            ", reqAdditionPrice=" + reqAdditionPrice +
-            ", phonePaymentYn='" + phonePaymentYn + '\'' +
-            ", onOffTypeCd='" + onOffTypeCd + '\'' +
-            ", soCd='" + soCd + '\'' +
-            ", openReqDt=" + openReqDt +
-            ", reqInDay=" + reqInDay +
-            ", clausePriCollectYn='" + clausePriCollectYn + '\'' +
-            ", clausePriOfferYn='" + clausePriOfferYn + '\'' +
-            ", clauseEssCollectYn='" + clauseEssCollectYn + '\'' +
-            ", clausePriTrustYn='" + clausePriTrustYn + '\'' +
-            ", clausePriAdYn='" + clausePriAdYn + '\'' +
-            ", clauseConfidenceYn='" + clauseConfidenceYn + '\'' +
-            ", clauseFathYn='" + clauseFathYn + '\'' +
-            ", nwBlckAgrmYn='" + nwBlckAgrmYn + '\'' +
-            ", appBlckAgrmYn='" + appBlckAgrmYn + '\'' +
-            ", blckAppDivCd='" + blckAppDivCd + '\'' +
-            ", soTrnsAgrmYn='" + soTrnsAgrmYn + '\'' +
-            ", clauseJehuYn='" + clauseJehuYn + '\'' +
-            ", clauseRentalModelCpYn='" + clauseRentalModelCpYn + '\'' +
-            ", clauseRentalModelCpPrYn='" + clauseRentalModelCpPrYn + '\'' +
-            ", clauseRentalServiceYn='" + clauseRentalServiceYn + '\'' +
-            ", clauseMpps35Yn='" + clauseMpps35Yn + '\'' +
-            ", clauseFinanceYn='" + clauseFinanceYn + '\'' +
-            ", clause5gCoverageYn='" + clause5gCoverageYn + '\'' +
-            ", personalInfoCollectAgreeYn='" + personalInfoCollectAgreeYn + '\'' +
-            ", othersTrnsAgreeYn='" + othersTrnsAgreeYn + '\'' +
-            ", clauseSensiCollectYn='" + clauseSensiCollectYn + '\'' +
-            ", clauseSensiOfferYn='" + clauseSensiOfferYn + '\'' +
-            ", clausePartnerOfferYn='" + clausePartnerOfferYn + '\'' +
-            ", othersTrnsKtAgreeYn='" + othersTrnsKtAgreeYn + '\'' +
-            ", othersAdReceiveAgreeYn='" + othersAdReceiveAgreeYn + '\'' +
-            ", ktCounselAgreeYn='" + ktCounselAgreeYn + '\'' +
-            ", combineSoloTypeYn='" + combineSoloTypeYn + '\'' +
-            ", combineSoloYn='" + combineSoloYn + '\'' +
-            ", etcSpecialSbst='" + etcSpecialSbst + '\'' +
-            ", memo='" + memo + '\'' +
-            ", recYn='" + recYn + '\'' +
-            ", resCd='" + resCd + '\'' +
-            ", resMsg='" + resMsg + '\'' +
-            ", resNo='" + resNo + '\'' +
-            ", procDt='" + procDt + '\'' +
-            ", procCd='" + procCd + '\'' +
-            ", proSttusCd='" + proSttusCd + '\'' +
-            ", sbscProCd='" + sbscProCd + '\'' +
-            ", scanId='" + scanId + '\'' +
-            ", appFormYn='" + appFormYn + '\'' +
-            ", appFormXmlYn='" + appFormXmlYn + '\'' +
-            ", fileNm='" + fileNm + '\'' +
-            ", fileMaskNm='" + fileMaskNm + '\'' +
-            ", faxYn='" + faxYn + '\'' +
-            ", faxNo='" + faxNo + '\'' +
-            ", cstmrNm='" + cstmrNm + '\'' +
-            ", cstmrNativeRrn='" + cstmrNativeRrn + '\'' +
-            ", cstmrNativeBirth='" + cstmrNativeBirth + '\'' +
-            ", cstmrNativeGenderCd='" + cstmrNativeGenderCd + '\'' +
-            ", cstmrPrivateCname='" + cstmrPrivateCname + '\'' +
-            ", cstmrPrivateBizNo='" + cstmrPrivateBizNo + '\'' +
-            ", cstmrForeignerRrn='" + cstmrForeignerRrn + '\'' +
-            ", cstmrForeignerBirth='" + cstmrForeignerBirth + '\'' +
-            ", cstmrForeignerGenderCd='" + cstmrForeignerGenderCd + '\'' +
-            ", cstmrForeignerPn='" + cstmrForeignerPn + '\'' +
-            ", cstmrForeignerCountryCd='" + cstmrForeignerCountryCd + '\'' +
-            ", cstmrForeignerNation='" + cstmrForeignerNation + '\'' +
-            ", cstmrForeignerVisaNo='" + cstmrForeignerVisaNo + '\'' +
-            ", cstmrForeignerVdateStartDate='" + cstmrForeignerVdateStartDate + '\'' +
-            ", cstmrForeignerVdateEndDate='" + cstmrForeignerVdateEndDate + '\'' +
-            ", cstmrJuridicalCname='" + cstmrJuridicalCname + '\'' +
-            ", cstmrJuridicalRrn='" + cstmrJuridicalRrn + '\'' +
-            ", cstmrJuridicalBizNo='" + cstmrJuridicalBizNo + '\'' +
-            ", cstmrJuridicalRepNm='" + cstmrJuridicalRepNm + '\'' +
-            ", upjnCd='" + upjnCd + '\'' +
-            ", bcuSbst='" + bcuSbst + '\'' +
-            ", cstmrJuridicalUserNm='" + cstmrJuridicalUserNm + '\'' +
-            ", cstmrJuridicalBirth='" + cstmrJuridicalBirth + '\'' +
-            ", cstmrVisitTypeCd='" + cstmrVisitTypeCd + '\'' +
-            ", cstmrTelFnNo='" + cstmrTelFnNo + '\'' +
-            ", cstmrTelMnNo='" + cstmrTelMnNo + '\'' +
-            ", cstmrTelRnNo='" + cstmrTelRnNo + '\'' +
-            ", cstmrMobileFnNo='" + cstmrMobileFnNo + '\'' +
-            ", cstmrMobileMnNo='" + cstmrMobileMnNo + '\'' +
-            ", cstmrMobileRnNo='" + cstmrMobileRnNo + '\'' +
-            ", cstmrZipcd='" + cstmrZipcd + '\'' +
-            ", cstmrAdr='" + cstmrAdr + '\'' +
-            ", cstmrAdrDtl='" + cstmrAdrDtl + '\'' +
-            ", cstmrAdrBjd='" + cstmrAdrBjd + '\'' +
-            ", cstmrEmailAdr='" + cstmrEmailAdr + '\'' +
-            ", cstmrEmailReceiveYn='" + cstmrEmailReceiveYn + '\'' +
-            ", cstmrReceiveTelFnNo='" + cstmrReceiveTelFnNo + '\'' +
-            ", cstmrReceiveTelNmNo='" + cstmrReceiveTelNmNo + '\'' +
-            ", cstmrReceiveTelRnNo='" + cstmrReceiveTelRnNo + '\'' +
-            ", minorAgentNm='" + minorAgentNm + '\'' +
-            ", minorAgentRrn='" + minorAgentRrn + '\'' +
-            ", minorAgentBirth='" + minorAgentBirth + '\'' +
-            ", minorAgentGenderCd='" + minorAgentGenderCd + '\'' +
-            ", minorAgentRelTypeCd='" + minorAgentRelTypeCd + '\'' +
-            ", minorAgentTelFnNo='" + minorAgentTelFnNo + '\'' +
-            ", minorAgentTelMnNo='" + minorAgentTelMnNo + '\'' +
-            ", minorAgentTelRnNo='" + minorAgentTelRnNo + '\'' +
-            ", minorAgentAgrmYn='" + minorAgentAgrmYn + '\'' +
-            ", minorAgentSelfInqryAgrmYn='" + minorAgentSelfInqryAgrmYn + '\'' +
-            ", minorAgentSelfCertTypeCd='" + minorAgentSelfCertTypeCd + '\'' +
-            ", minorAgentCiInfo='" + minorAgentCiInfo + '\'' +
-            ", jrdclAgentNm='" + jrdclAgentNm + '\'' +
-            ", jrdclAgentRrn='" + jrdclAgentRrn + '\'' +
-            ", jrdclAgentRelTypeCd='" + jrdclAgentRelTypeCd + '\'' +
-            ", jrdclAgentTelFnNo='" + jrdclAgentTelFnNo + '\'' +
-            ", jrdclAgentTelMnNo='" + jrdclAgentTelMnNo + '\'' +
-            ", jrdclAgentTelRnNo='" + jrdclAgentTelRnNo + '\'' +
-            ", modelId='" + modelId + '\'' +
-            ", modelMonthly='" + modelMonthly + '\'' +
-            ", modelInstamt=" + modelInstamt +
-            ", modelSalePolicyCd='" + modelSalePolicyCd + '\'' +
-            ", modelPriceVat=" + modelPriceVat +
-            ", modelDiscount1=" + modelDiscount1 +
-            ", modelSprt=" + modelSprt +
-            ", modelPrice=" + modelPrice +
-            ", modelDiscount3=" + modelDiscount3 +
-            ", realMdlInstamt=" + realMdlInstamt +
-            ", hndsetSalePrice=" + hndsetSalePrice +
-            ", sprtTypeCd='" + sprtTypeCd + '\'' +
-            ", dcAmt=" + dcAmt +
-            ", maxApdSprt=" + maxApdSprt +
-            ", addDcAmt=" + addDcAmt +
-            ", enggMnthCnt=" + enggMnthCnt +
-            ", recycleYn='" + recycleYn + '\'' +
-            ", usimPriceTypeCd='" + usimPriceTypeCd + '\'' +
-            ", usimPrice=" + usimPrice +
-            ", usimPayMthdCd='" + usimPayMthdCd + '\'' +
-            ", sesplsYn='" + sesplsYn + '\'' +
-            ", joinPriceTypeCd='" + joinPriceTypeCd + '\'' +
-            ", joinPayMthdCd='" + joinPayMthdCd + '\'' +
-            ", joinPrice=" + joinPrice +
-            ", socCode='" + socCode + '\'' +
-            ", socNm='" + socNm + '\'' +
-            ", socBaseChrgAmt=" + socBaseChrgAmt +
-            ", reqPayTypeCd='" + reqPayTypeCd + '\'' +
-            ", reqBankCd='" + reqBankCd + '\'' +
-            ", reqAccountNm='" + reqAccountNm + '\'' +
-            ", reqAccountRrn='" + reqAccountRrn + '\'' +
-            ", reqAccountRelTypeCd='" + reqAccountRelTypeCd + '\'' +
-            ", reqAccountNo='" + reqAccountNo + '\'' +
-            ", reqCardNm='" + reqCardNm + '\'' +
-            ", reqCardRrn='" + reqCardRrn + '\'' +
-            ", reqCardCompanyCd='" + reqCardCompanyCd + '\'' +
-            ", reqCardNo='" + reqCardNo + '\'' +
-            ", reqCardYy='" + reqCardYy + '\'' +
-            ", reqCardMm='" + reqCardMm + '\'' +
-            ", reqWireTypeCd='" + reqWireTypeCd + '\'' +
-            ", othersPaymentYn='" + othersPaymentYn + '\'' +
-            ", othersPaymentTelFnNo='" + othersPaymentTelFnNo + '\'' +
-            ", othersPaymentTelMnNo='" + othersPaymentTelMnNo + '\'' +
-            ", othersPaymentTelRnNo='" + othersPaymentTelRnNo + '\'' +
-            ", othersPaymentNm='" + othersPaymentNm + '\'' +
-            ", othersPaymentRrn='" + othersPaymentRrn + '\'' +
-            ", othersPaymentRelTypeCd='" + othersPaymentRelTypeCd + '\'' +
-            ", othersPaymentReqNm='" + othersPaymentReqNm + '\'' +
-            ", othersPaymentAgrYn='" + othersPaymentAgrYn + '\'' +
-            ", prntsBillNo='" + prntsBillNo + '\'' +
-            ", cstmrBillSendTypeCd='" + cstmrBillSendTypeCd + '\'' +
-            ", moveCompanyCd='" + moveCompanyCd + '\'' +
-            ", moveMobileFnNo='" + moveMobileFnNo + '\'' +
-            ", moveMobileMnNo='" + moveMobileMnNo + '\'' +
-            ", moveMobileRnNo='" + moveMobileRnNo + '\'' +
-            ", moveAuthTypeCd='" + moveAuthTypeCd + '\'' +
-            ", moveAuthNo='" + moveAuthNo + '\'' +
-            ", moveThismonthPayTypeCd='" + moveThismonthPayTypeCd + '\'' +
-            ", moveAllotmentSttusCd='" + moveAllotmentSttusCd + '\'' +
-            ", moveRefundAgreeYn='" + moveRefundAgreeYn + '\'' +
-            ", reqGuideYn='" + reqGuideYn + '\'' +
-            ", reqGuideFnNo='" + reqGuideFnNo + '\'' +
-            ", reqGuideRnNo='" + reqGuideRnNo + '\'' +
-            ", reqGuideMnNo='" + reqGuideMnNo + '\'' +
-            ", osstPayDate='" + osstPayDate + '\'' +
-            ", osstPayTypeCd='" + osstPayTypeCd + '\'' +
-            ", movePenalty=" + movePenalty +
-            ", dvcChgTypeCd='" + dvcChgTypeCd + '\'' +
-            ", dvcChgRsnCd='" + dvcChgRsnCd + '\'' +
-            ", dvcChgRsnDtlCd='" + dvcChgRsnDtlCd + '\'' +
-            ", instamtPayMthdCd='" + instamtPayMthdCd + '\'' +
-            ", fileTypeCd='" + fileTypeCd + '\'' +
-            ", filePathNm='" + filePathNm + '\'' +
-            '}';
-    }
+
 }

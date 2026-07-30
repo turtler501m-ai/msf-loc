@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.cache.worknotice.adapter.repository.mybatis.smartform.mapper.WorkNoticeCacheMapper">
+
+  <select id="selectListWorkNoticeCache" resultType="com.ktmmobile.msf.domains.cache.worknotice.domain.entity.WorkNoticeCache">
+    select board_seq
+         , board_ctg_cd
+         , sbst_ctg_cd
+         , sbst_sub_ctg_cd
+         , board_title
+         , view_yn
+         , noti_yn
+         , board_contents_sbst
+         , board_writer_id
+         , board_writer_nm
+         , board_write_dt
+         , img_nm
+         , board_att_yn
+         , board_hit_cnt
+         , start_date
+         , end_date
+      from msf_board_bas
+     where board_ctg_cd = 'WRK'
+       and view_yn = 'Y'
+       and (end_date <![CDATA[>=]]> to_char(now(), 'YYYYMMDDHH24MISS'))
+     order by sbst_ctg_cd desc, end_date desc, start_date desc, board_seq desc
+  </select>
+
+  <select id="selectAccessAllowedIp" resultType="com.ktmmobile.msf.domains.cache.worknotice.domain.entity.AccessAllowedIp">
+    select aces_alwd_ip
+         , nm
+         , mobile_no
+         , use_yn
+      from msf_ip_aces_alwd
+     where aces_alwd_ip = #{value}
+       and use_yn = 'Y'
+  </select>
+</mapper>

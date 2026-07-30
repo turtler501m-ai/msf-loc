@@ -1,6 +1,6 @@
 package com.ktmmobile.msf.domains.form.common.util;
 
-import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.COMMON_EXCEPTION;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -14,10 +14,12 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import lombok.extern.slf4j.Slf4j;
+
 import com.ktmmobile.msf.domains.form.common.exception.McpCommonException;
 
+import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.COMMON_EXCEPTION;
 
 
 /**
@@ -27,10 +29,9 @@ import com.ktmmobile.msf.domains.form.common.exception.McpCommonException;
  * @author www.codejava.net
  *
  */
+@Slf4j
 public class MultipartUtility {
 
-	private static final Logger logger = LoggerFactory.getLogger(MultipartUtility.class);
-    
     private static final String LINE_FEED = "\r\n";
     private final String boundary;
     private final HttpURLConnection httpConn;
@@ -46,8 +47,7 @@ public class MultipartUtility {
      * @param charset
      * @throws IOException
      */
-    public MultipartUtility(String requestURL, String charset) throws IOException
-    {
+    public MultipartUtility(String requestURL, String charset) throws IOException {
         this.charset = charset;
 
         // creates a unique boundary based on time stamp
@@ -71,8 +71,7 @@ public class MultipartUtility {
      * @param name field name
      * @param value field value
      */
-    public void addFormField(String name, String value)
-    {
+    public void addFormField(String name, String value) {
         writer.append("--" + boundary).append(LINE_FEED);
         writer.append("Content-Disposition: form-data; name=\"" + name + "\"").append(LINE_FEED);
         writer.append("Content-Type: text/plain; charset=" + charset).append(LINE_FEED);
@@ -88,8 +87,7 @@ public class MultipartUtility {
      * @param uploadFile a File to be uploaded
      * @throws IOException
      */
-    public void addFilePart(String fieldName, File uploadFile) throws IOException
-    {
+    public void addFilePart(String fieldName, File uploadFile) throws IOException {
         String fileName = uploadFile.getName();
         writer.append("--" + boundary).append(LINE_FEED);
         writer.append("Content-Disposition: form-data; name=\"" + fieldName + "\"; filename=\"" + fileName + "\"").append(LINE_FEED);
@@ -103,15 +101,20 @@ public class MultipartUtility {
             inputStream = new FileInputStream(uploadFile);
             byte[] buffer = new byte[4096];
             int bytesRead = -1;
-            while ((bytesRead = inputStream.read(buffer)) != -1)
-            {
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
                 outputStream.write(buffer, 0, bytesRead);
             }
             outputStream.flush();
         } catch(Exception e){
             throw new McpCommonException(COMMON_EXCEPTION);
         } finally {
-            if(inputStream != null) try{inputStream.close();}catch(IOException e){ logger.error(e.getMessage());}
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                    log.error(e.getMessage());
+                }
+            }
         }
 
         writer.append(LINE_FEED);
@@ -124,8 +127,7 @@ public class MultipartUtility {
      * @param name - name of the header field
      * @param value - value of the header field
      */
-    public void addHeaderField(String name, String value)
-    {
+    public void addHeaderField(String name, String value) {
         writer.append(name + ": " + value).append(LINE_FEED);
         writer.flush();
     }
@@ -137,8 +139,7 @@ public class MultipartUtility {
      *         status OK, otherwise an exception is thrown.
      * @throws IOException
      */
-    public List<String> finish() throws IOException
-    {
+    public List<String> finish() throws IOException {
         List<String> response = new ArrayList<String>();
 
         writer.append(LINE_FEED).flush();
@@ -153,29 +154,27 @@ public class MultipartUtility {
         }
 
         
-        if (status == HttpURLConnection.HTTP_OK)
-        {
+        if (status == HttpURLConnection.HTTP_OK) {
         	BufferedReader reader = null;
         	try {
         		reader = new BufferedReader(new InputStreamReader(httpConn.getInputStream()));
         		String line = null;
-        		while ((line = reader.readLine()) != null)
-        		{
+                while ((line = reader.readLine()) != null) {
         			response.add(line);
-        			logger.debug("line : " + line);
+                    log.debug("line : " + line);
         		}
         		reader.close();
         		httpConn.disconnect();
         	} catch(IOException e) {
-                logger.error("e : {}", e.getMessage());
+                log.error("e : {}", e.getMessage());
             } catch(Exception e) {
-        		logger.error("e : {}", e.getMessage());
+                log.error("e : {}", e.getMessage());
         	} finally {
-        		if(reader != null) reader.close();
+                if (reader != null) {
+                    reader.close();
         	}
         }
-        else
-        {
+        } else {
             throw new IOException("Server returned non-OK status: " + status);
         }
 

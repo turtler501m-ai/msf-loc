@@ -119,7 +119,23 @@
           <td class="ut-text-center">
             <MsfCheckbox id="inp-check1" v-model="check1" label="무선데이터 차단" hideLabel />
           </td>
-          <td><label for="inp-check1">무선데이터 차단</label></td>
+          <td>
+            <MsfStack gap="small">
+              <label for="inp-check1">무선데이터 차단</label>
+              <MsfFlag
+                :data="[
+                  { label: '추가', color: 'create' },
+                  { label: '해지', color: 'close' },
+                  { label: '변경', color: 'change' },
+                  { label: '설정완료', color: 'done' },
+                  { label: '처리가능', color: 'ready' },
+                  { label: '온라인해지 불가', color: 'locked' },
+                  { label: '사전체크 실패', color: 'fail' },
+                ]"
+                size="small"
+              />
+            </MsfStack>
+          </td>
           <td class="ut-text-center">무료</td>
           <td class="ut-text-center"></td>
         </tr>
@@ -127,7 +143,9 @@
           <td class="ut-text-center">
             <MsfCheckbox id="inp-check2" v-model="check2" label="(신)로밍 하루종일 ON" hideLabel />
           </td>
-          <td><label for="inp-check2">(신)로밍 하루종일 ON</label></td>
+          <td>
+            <MsfStack gap="small"><label for="inp-check2">(신)로밍 하루종일 ON</label></MsfStack>
+          </td>
           <td class="ut-text-center">2,200 원/1일</td>
           <td class="ut-text-center"><MsfButton variant="subtle">설정</MsfButton></td>
         </tr>
@@ -209,7 +227,7 @@
       type="default"
       v-model="formData.repAgree1"
       label="초과 사용료과금 우려 및 기타 안내사항을 모두 확인 하였으며, 변경 진행에 동의합니다."
-      required
+      :required="true"
       popTitle="초과 사용료 과금 우려 및 기타 안내사항"
       content="초과 사용료 과금 우려 및 기타 안내사항 내용"
     />
@@ -217,7 +235,7 @@
       type="default"
       v-model="formData.repAgree2"
       label="개인정보 제3자 제공 동의합니다."
-      required
+      :required="true"
       popTitle="개인정보 제3자 제공 동의"
       content="개인정보 제3자 제공 동의 내용"
     />
@@ -227,19 +245,26 @@
     <MsfStack vertical type="formgroups">
       <MsfFormGroup label="번호예약" required>
         <MsfStack type="field">
-          <MsfNumberInput v-model="formData.numReserve1" placeholder="앞 3자리" />
+          <MsfMobileInput
+            v-model:number1="formData.numReserve1"
+            v-model:number2="formData.numReserve2"
+            v-model:number3="formData.numReserve3"
+          />
+          <!-- <MsfNumberInput v-model="formData.numReserve1" placeholder="앞 3자리" maxLength="3" />
           <span class="unit-sep">-</span>
           <MsfNumberInput
             v-model="formData.numReserve2"
             id="inp-numReserve2"
             placeholder="가운데 4자리"
+            maxLength="4"
           />
           <span class="unit-sep">-</span>
           <MsfNumberInput
             v-model="formData.numReserve3"
             id="inp-numReserve3"
             placeholder="뒤 4자리"
-          />
+            maxLength="4"
+          /> -->
           <MsfButton variant="subtle">번호조회</MsfButton>
         </MsfStack>
         <p class="ut-text-desc">
@@ -309,7 +334,7 @@
     <!-- // 단말보험 가입 -->
     <!-- 단말보험 가입 약관 동의 -->
     <MsfTitleArea title="단말보험 가입 약관 동의" />
-    <MsfAgreementGroup policy="join" ref="agreementRef" required />
+    <!-- <MsfAgreementGroup policy="join" ref="agreementRef" required /> -->
     <!-- // 단말보험 가입 약관 동의 -->
     <!-- USIM 변경 -->
     <MsfTitleArea title="USIM 변경" />
@@ -337,11 +362,16 @@
       </MsfFormGroup>
       <MsfFormGroup label="USIM 번호" required>
         <MsfStack type="field">
-          <MsfInput v-model="formData.simNo" placeholder="USIM 번호 19자리" class="ut-w-300" />
+          <MsfNumberInput
+            v-model="formData.simNo"
+            placeholder="USIM 번호 19자리"
+            maxLength="19"
+            class="ut-w-300"
+          />
           <MsfButton variant="subtle">스캔하기</MsfButton>
-          <MsfButton variant="toggle" disabled>USIM 번호 유효성 체크</MsfButton>
-          <MsfButton variant="toggle">USIM 번호 유효성 체크</MsfButton>
-          <MsfButton variant="toggle" active>USIM 번호 유효성 체크</MsfButton>
+          <MsfButton variant="validation" disabled>USIM 번호 유효성 체크</MsfButton>
+          <MsfButton variant="validation">USIM 번호 유효성 체크</MsfButton>
+          <MsfButton variant="validation" active>USIM 번호 유효성 체크</MsfButton>
         </MsfStack>
       </MsfFormGroup>
       <MsfFormGroup label="USIM 구매 방식" tag="div" required>
@@ -408,7 +438,7 @@
         />
         <MsfInput
           v-model="formData.phoneEID"
-          id="inp-phoneEID"
+          id="inp2-phoneEID"
           placeholder="EID"
           class="ut-w-608"
           disabled
@@ -416,14 +446,14 @@
         <MsfStack type="field">
           <MsfInput
             v-model="formData.phoneIMEI1"
-            id="inp-phoneIMEI1"
+            id="inp2-phoneIMEI1"
             placeholder="IMEI1"
             class="ut-w-300"
             disabled
           />
           <MsfInput
             v-model="formData.phoneIMEI2"
-            id="inp-phoneIMEI2"
+            id="inp2-phoneIMEI2"
             placeholder="IMEI2"
             class="ut-w-300"
             disabled
@@ -450,9 +480,10 @@
       </MsfFormGroup>
       <MsfFormGroup label="휴대폰 번호" required>
         <MsfStack type="field">
-          <MsfInput
+          <MsfNumberInput
             v-model="formData.sharePhoneNum"
             placeholder="휴대폰번호 입력 (“-” 제외)"
+            maxlength="11"
             class="ut-w-300"
           />
           <MsfButton variant="toggle" disabled>인증</MsfButton>
@@ -462,29 +493,30 @@
       </MsfFormGroup>
       <MsfFormGroup label="USIM 번호" required>
         <MsfStack type="field">
-          <MsfInput
+          <MsfNumberInput
             v-model="formData.shareUsimNum"
             placeholder="USIM 번호 19자리"
+            maxLength="19"
             class="ut-w-300"
           />
           <MsfButton variant="subtle">스캔하기</MsfButton>
-          <MsfButton variant="toggle" disabled>USIM 번호 유효성 체크</MsfButton>
-          <MsfButton variant="toggle">USIM 번호 유효성 체크</MsfButton>
-          <MsfButton variant="toggle" active>USIM 번호 유효성 체크 완료</MsfButton>
+          <MsfButton variant="validation" disabled>USIM 번호 유효성 체크</MsfButton>
+          <MsfButton variant="validation">USIM 번호 유효성 체크</MsfButton>
+          <MsfButton variant="validation" active>USIM 번호 유효성 체크 완료</MsfButton>
         </MsfStack>
       </MsfFormGroup>
     </MsfStack>
     <!-- // 데이터쉐어링 가입/해지 -->
     <!-- 데이터쉐어링 가입/해지 약관 동의 -->
     <MsfTitleArea title="데이터쉐어링 가입/해지 약관 동의" />
-    <MsfAgreementGroup policy="join" ref="agreementRef" required />
+    <!-- <MsfAgreementGroup policy="join" ref="agreementRef" required /> -->
     <!-- // 데이터쉐어링 가입/해지 약관 동의 -->
     <!-- 아무나 SOLO 결합 -->
     <MsfTitleArea title="아무나 SOLO 결합" />
     <MsfStack vertical type="formgroups">
       <MsfFormGroup label="데이터" required>
         <MsfStack type="field">
-          <MsfInput v-model="formData.soloData" placeholder="0 MB" />
+          <MsfInput v-model="formData.soloData" placeholder="0 MB" class="ut-w-300" />
           <MsfButton variant="toggle">확인</MsfButton>
         </MsfStack>
       </MsfFormGroup>
@@ -492,7 +524,7 @@
     <!-- // 아무나 SOLO 결합 -->
     <!-- 아무나 SOLO 결합 약관 동의 -->
     <MsfTitleArea title="아무나 SOLO 결합 약관 동의" />
-    <MsfAgreementGroup policy="join" ref="agreementRef" required />
+    <!-- <MsfAgreementGroup policy="join" ref="agreementRef" required /> -->
     <!-- // 아무나 SOLO 결합 약관 동의 -->
     <!-- 메모 -->
     <MsfTitleArea title="메모" />
@@ -541,7 +573,7 @@ const formData = reactive({
   repAgree1: '',
   repAgree2: '',
   /* 번호변경 */
-  numReserve1: '', //번호예약1
+  numReserve1: '010', //번호예약1
   numReserve2: '', //번호예약2
   numReserve3: '', //번호예약3
   hopeNumber: '', //희망신규번호
@@ -576,4 +608,91 @@ const check1 = ref('')
 const check2 = ref('')
 </script>
 
-<style scoped></style>
+<style lang="scss" scoped>
+.service-name-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.service-change-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+
+  &.is-added {
+    color: #0b5cab;
+    background: #e8f3ff;
+    border: 1px solid #b9dbff;
+  }
+
+  &.is-cancel {
+    color: #b42318;
+    background: #fff1f0;
+    border: 1px solid #ffccc7;
+  }
+
+  &.is-setting-changed {
+    color: #7a4a00;
+    background: #fff7e6;
+    border: 1px solid #ffd591;
+  }
+
+  &.is-precheck-passed {
+    color: #067647;
+    background: #ecfdf3;
+    border: 1px solid #abefc6;
+  }
+
+  &.is-cancel-unavailable {
+    color: #6941c6;
+    background: #f4f3ff;
+    border: 1px solid #d9d6fe;
+  }
+
+  &.is-precheck-failed {
+    color: #9f1239;
+    background: #fff1f2;
+    border: 1px solid #fecdd3;
+  }
+}
+
+:deep(tr.is-service-added td) {
+  background: #f7fbff;
+}
+
+:deep(tr.is-service-cancel td) {
+  background: #fffafa;
+}
+
+:deep(tr.is-service-setting-changed td) {
+  background: #fffdf7;
+}
+
+:deep(tr.is-service-precheck-passed td) {
+  background: #f6fef9;
+}
+
+:deep(tr.is-service-cancel-unavailable td) {
+  background: #fbfaff;
+}
+
+:deep(tr.is-service-precheck-failed td) {
+  background: #fff8f9;
+}
+
+:deep(tr.is-service-cancel label) {
+  color: #6b7280;
+}
+
+:deep(tr.is-service-disabled label) {
+  color: #9ca3af;
+}
+</style>

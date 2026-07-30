@@ -45,12 +45,15 @@
 <script setup>
 import { onBeforeMount, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { post } from '@/libs/api/msf.api'
+import { storeReceiptPage } from '@/stores/receiptpage'
 
+import { post } from '@/libs/api/msf.api'
+import { formatDate } from '@/libs/utils/date.utils'
+
+const now = formatDate(new Date())
 const router = useRouter()
-const moveTo = (path) => {
-  router.push(path)
-}
+
+const receiptStore = storeReceiptPage()
 
 // 처리상태별 건수 차트
 const statusData = ref([])
@@ -58,6 +61,11 @@ const statusTotalCount = ref(0)
 // 업무별 건수 차트
 const serviceData = ref([])
 const serviceTotalCount = ref(0)
+
+const moveTo = (path) => {
+  receiptStore.setFormData({ startDt: now, endDt: now })
+  router.push(path)
+}
 
 onBeforeMount(async () => {
   const response = await post('/api/main/form/count')

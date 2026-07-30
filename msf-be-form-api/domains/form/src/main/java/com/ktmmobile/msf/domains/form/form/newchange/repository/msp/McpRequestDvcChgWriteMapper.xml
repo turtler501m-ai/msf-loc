@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.form.form.newchange.repository.msp.McpRequestDvcChgWriteMapper">
+
+  <insert id="insertMcpRequestDvcChg" parameterType="com.ktmmobile.msf.domains.form.form.common.vo.McpRequestDvcChgVo">
+    INSERT INTO MCP_REQUEST_DVC_CHG@DL_MCP
+    (     REQUEST_KEY
+        , REGST_DTTM
+        , RVISN_DTTM
+        , RVISN_ID
+        , DVC_CHG_TYPE
+        , DVC_CHG_RSN_CD
+        , DVC_CHG_RSN_DTL_CD
+    )
+    VALUES
+    (     #{requestKey}
+        , #{regstDttm}
+        , #{rvisnDttm}
+        , #{rvisnId}
+        , #{dvcChgType}
+        , #{dvcChgRsnCd}
+        , #{dvcChgRsnDtlCd}
+    )
+  </insert>
+
+  <update id="updateMcpRequestDvcChg" parameterType="com.ktmmobile.msf.domains.form.form.common.vo.McpRequestDvcChgVo">
+    UPDATE MCP_REQUEST_DVC_CHG@DL_MCP
+    SET
+          REGST_DTTM	 = #{regstDttm}
+        ,	RVISN_DTTM	 = #{rvisnDttm}
+        ,	RVISN_ID	 = #{rvisnId}
+        ,	DVC_CHG_TYPE	 = #{dvcChgType}
+        ,	DVC_CHG_RSN_CD	 = #{dvcChgRsnCd}
+        ,	DVC_CHG_RSN_DTL_CD	 = #{dvcChgRsnDtlCd}
+    WHERE REQUEST_KEY = #{requestKey}
+  </update>
+
+
+</mapper>

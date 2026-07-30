@@ -1,7 +1,0 @@
-## 외부 서비스
-external-service:
-  services:
-    prx: ## PRX
-      base-url: https://dmcpprxstg.ktmmobile.com:27006  # STG 환경 연동 (PRX는 DEV 환경 없음)
-    juso: ## 주소 검색
-      base-url: https://business.juso.go.kr

@@ -1,8 +1,5 @@
 package com.ktmmobile.msf.domains.form.common.dto;
 
-import static com.ktmmobile.msf.domains.form.common.constants.Constants.CSTMR_TYPE_NAME_MAP;
-import static com.ktmmobile.msf.domains.form.common.constants.Constants.OPER_TYPE_NAME_MAP;
-import static com.ktmmobile.msf.domains.form.common.constants.Constants.SERVICE_TYPE_LATER_PAY;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -11,27 +8,24 @@ import java.text.ParseException;
 import java.util.Date;
 import java.util.regex.Pattern;
 
-import org.springframework.util.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import com.ktds.crypto.exception.CryptoException;
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.util.StringUtils;
 
 import com.ktmmobile.msf.domains.form.common.constants.Constants;
-//import com.ktmmobile.msf.domains.form.common.dto.NiceLogDto;
 import com.ktmmobile.msf.domains.form.common.util.DateTimeUtil;
 import com.ktmmobile.msf.domains.form.common.util.EncryptUtil;
 import com.ktmmobile.msf.domains.form.common.util.NmcpServiceUtils;
 import com.ktmmobile.msf.domains.form.common.util.StringUtil;
 
-import lombok.Getter;
-import lombok.Setter;
+import static com.ktmmobile.msf.domains.form.common.constants.Constants.CSTMR_TYPE_NAME_MAP;
+import static com.ktmmobile.msf.domains.form.common.constants.Constants.OPER_TYPE_NAME_MAP;
+import static com.ktmmobile.msf.domains.form.common.constants.Constants.SERVICE_TYPE_LATER_PAY;
 
 @Getter
 @Setter
 public class AppformReqDto implements Serializable {
-
-    @Deprecated
-    private static final Logger logger = LoggerFactory.getLogger(AppformReqDto.class);
 
     private static final long serialVersionUID = 1L;
 
@@ -204,6 +198,7 @@ public class AppformReqDto implements Serializable {
     private String spcCode;
     /** 채널점아이디_판매점코드 */
     private String cntpntShopId = Constants.CONTPNT_SHOP_ID_MSHOP;
+    private String prmtAgntCd;
     private String shopUsmId;
     private String memo;
     /** 녹취여부 */
@@ -3919,6 +3914,7 @@ public class AppformReqDto implements Serializable {
     }
 
     /** 제품구분코드(CMN0045) */
+    @SuppressWarnings("PMD.FieldDeclarationsShouldBeAtStartOfClass")
     private String prdtIndCd;
 
     public String getPrdtIndCd() {
@@ -3930,6 +3926,7 @@ public class AppformReqDto implements Serializable {
     }
 
     /** 위탁서식지 유심번호 추가 */
+    @SuppressWarnings("PMD.FieldDeclarationsShouldBeAtStartOfClass")
     private String apdSeq;
 
     public String getApdSeq() {
@@ -3940,6 +3937,7 @@ public class AppformReqDto implements Serializable {
         this.apdSeq = apdSeq;
     }
 
+    @SuppressWarnings("PMD.FieldDeclarationsShouldBeAtStartOfClass")
     private String slsTp;
 
     public String getSlsTp() {

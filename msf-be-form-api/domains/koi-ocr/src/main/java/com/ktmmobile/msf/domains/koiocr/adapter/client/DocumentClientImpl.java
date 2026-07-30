@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 import com.ktmmobile.msf.domains.koiocr.adapter.client.httpclient.KoiOcrHttpClient;
 import com.ktmmobile.msf.domains.koiocr.application.dto.document.IdDocumentRequest;
-import com.ktmmobile.msf.domains.koiocr.application.dto.document.OcrDocumentResponse;
+import com.ktmmobile.msf.domains.koiocr.application.dto.document.OcrApiResponse;
 import com.ktmmobile.msf.domains.koiocr.application.port.out.DocumentClient;
 
 @Slf4j
@@ -17,8 +17,7 @@ public class DocumentClientImpl implements DocumentClient {
     private final KoiOcrHttpClient koiOcrHttpClient;
 
     @Override
-    public OcrDocumentResponse scanIdDocument(IdDocumentRequest request) {
-
+    public OcrApiResponse scanIdDocument(IdDocumentRequest request) {
         return koiOcrHttpClient.scanIdDocument(request.srcFile());
     }
 

@@ -44,6 +44,32 @@
           ]"
         />
       </MsfFormGroup>
+      <!-- 법인또는 공공기간 경우 : 누락추가__20260520 -->
+      <MsfFormGroup label="방문고객" tag="div" required v-if="isCorporateOrPublic">
+        <MsfChip
+          v-model="formData.visitCustomer"
+          name="inp-visitCustomer"
+          :data="[
+            { value: 'visitCustomer1', label: '본인/대표' },
+            { value: 'visitCustomer2', label: '대리인' },
+          ]"
+        />
+      </MsfFormGroup>
+      <!-- // 법인또는 공공기간 경우 : 누락추가__20260520 -->
+      <!-- 위치이동__20260520 -->
+      <MsfFormGroup label="대리점" tag="div" required>
+        <MsfSelect
+          title="대리점 선택"
+          v-model="formData.agency"
+          :options="[
+            { label: '대리점1', value: 'agency1' },
+            { label: '대리점2', value: 'agency2' },
+          ]"
+          class="ut-w-300"
+          placeholder="대리점 선택"
+        />
+      </MsfFormGroup>
+      <!-- // 위치이동__20260520 -->
     </MsfStack>
     <!-- // 고객 유형 -->
     <!-- 신분증 확인 -->
@@ -66,24 +92,29 @@
         </MsfChip>
       </MsfFormGroup>
       <!-- 신분증 스캔 -->
-      <MsfFormGroup label="신분증 스캔" tag="div" required>
+      <MsfFormGroup label="신분증 스캔" tag="div" required v-if="!isCorporateOrPublic">
         <MsfStack type="field">
           <MsfSelect
             title="신분증 스캔"
             v-model="formData.idCardScan"
             :options="[
               { label: '주민등록증', value: 'idCardScan1' },
-              { label: '운전면허증', value: 'idCardScan2' },
-              { label: '국내여권', value: 'idCardScan3' },
+              { label: '대한민국여권', value: 'idCardScan2' },
+              { label: '운전면허증', value: 'idCardScan3' },
               { label: '외국인등록증', value: 'idCardScan4' },
-              { label: '영주증', value: 'idCardScan5' },
-              { label: '국내거소신고증', value: 'idCardScan6' },
-              { label: '국가보훈증', value: 'idCardScan7' },
+              { label: '외국인여권', value: 'idCardScan5' },
+              { label: '장애인등록증', value: 'idCardScan6' },
+              { label: '국가유공자증', value: 'idCardScan7' },
             ]"
             class="ut-w-300"
           />
           <MsfButton variant="subtle">스캔하기</MsfButton>
         </MsfStack>
+        <!-- 기본 -->
+        <MsfStack type="field">
+          <MsfDateInput v-model="datePickerValue" />
+        </MsfStack>
+        <!-- 면허번호 -->
         <MsfStack type="field">
           <MsfDateInput v-model="datePickerValue" />
           <MsfSelect
@@ -100,8 +131,13 @@
             v-model="licenseNumber"
             maxlength="15"
             placeholder="면허번호"
-            class="ut-w-240"
+            class="ut-w-200"
           />
+        </MsfStack>
+        <!-- 유공자번호 -->
+        <MsfStack type="field">
+          <MsfDateInput v-model="datePickerValue" />
+          <MsfNumberInput v-model="meritNo" placeholder="유공자번호" class="ut-w-200" />
         </MsfStack>
       </MsfFormGroup>
       <!-- // 신분증 스캔 -->
@@ -115,32 +151,68 @@
       </MsfFormGroup>
       <MsfFormGroup label="주민등록번호" required>
         <MsfStack type="field">
-          <MsfInput v-model="formData.residentNo1" placeholder="앞 6자리" />
+          <MsfRegNoInput
+            type="resident"
+            v-model:registNo1="formData.residentNo1"
+            v-model:registNo2="formData.residentNo2"
+          />
+          <!-- <MsfInput v-model="formData.residentNo1" placeholder="앞 6자리" maxlength="6" />
           <span class="unit-sep">-</span>
-          <MsfInput v-model="formData.residentNo2" id="inp-residentNo2" placeholder="뒤 7자리" />
+          <MsfInput
+            v-model="formData.residentNo2"
+            id="inp-residentNo2"
+            placeholder="뒤 7자리"
+            maxlength="7"
+          /> -->
         </MsfStack>
       </MsfFormGroup>
       <MsfFormGroup label="외국인등록번호" required>
         <MsfStack type="field">
-          <MsfInput v-model="formData.foreignerNo1" placeholder="앞 6자리" />
+          <MsfRegNoInput
+            type="foreigner"
+            v-model:registNo1="formData.foreignerNo1"
+            v-model:registNo2="formData.foreignerNo2"
+          />
+          <!-- <MsfInput v-model="formData.foreignerNo1" placeholder="앞 6자리" maxlength="6" />
           <span class="unit-sep">-</span>
-          <MsfInput v-model="formData.foreignerNo2" id="inp-foreignerNo2" placeholder="뒤 7자리" />
+          <MsfInput
+            v-model="formData.foreignerNo2"
+            id="inp-foreignerNo2"
+            placeholder="뒤 7자리"
+            maxlength="7"
+          /> -->
         </MsfStack>
       </MsfFormGroup>
       <MsfFormGroup label="법인등록번호" required>
         <MsfStack type="field">
-          <MsfInput v-model="formData.corpRegNo1" placeholder="앞 6자리" />
+          <MsfRegNoInput
+            type="corporate"
+            v-model:registNo1="formData.corpRegNo1"
+            v-model:registNo2="formData.corpRegNo2"
+          />
+          <!-- <MsfInput v-model="formData.corpRegNo1" placeholder="앞 6자리" maxlength="6" />
           <span class="unit-sep">-</span>
-          <MsfInput v-model="formData.corpRegNo2" id="inp-corpRegNo2" placeholder="뒤 7자리" />
+          <MsfInput
+            v-model="formData.corpRegNo2"
+            id="inp-corpRegNo2"
+            placeholder="뒤 7자리"
+            maxlength="7"
+          /> -->
         </MsfStack>
       </MsfFormGroup>
       <MsfFormGroup label="사업자등록번호" helpText="※ 개인사업자인 경우만 입력" required>
         <MsfStack type="field">
-          <MsfInput v-model="formData.bizNo1" placeholder="앞 3자리" />
+          <MsfBizRegInput
+            v-model:bizNo1="formData.bizNo1"
+            v-model:bizNo2="formData.bizNo2"
+            v-model:bizNo3="formData.bizNo3"
+          />
+          <!-- <MsfInput v-model="formData.bizNo1" placeholder="앞 3자리" />
           <span class="unit-sep">-</span>
           <MsfInput v-model="formData.bizNo2" id="inp-bizNo2" placeholder="가운데 2자리" />
           <span class="unit-sep">-</span>
-          <MsfInput v-model="formData.bizNo3" id="inp-bizNo3" placeholder="뒤 5자리" />
+          <MsfInput v-model="formData.bizNo3" id="inp-bizNo3" placeholder="뒤 5자리" /> -->
+          <MsfDateInput v-model="datePickerValue" placeholder="교부 일자 (YYYY-MM-DD)" />
         </MsfStack>
       </MsfFormGroup>
       <MsfFormGroup label="대표자명" required>
@@ -163,7 +235,12 @@
       </MsfFormGroup>
       <MsfFormGroup label="기기변경<br/>휴대폰번호" required>
         <MsfStack type="field">
-          <MsfInput v-model="formData.deviceChgTel1" placeholder="앞 3자리" readonly />
+          <MsfMobileInput
+            v-model:number1="formData.deviceChgTel1"
+            v-model:number2="formData.deviceChgTel2"
+            v-model:number3="formData.deviceChgTel3"
+          />
+          <!-- <MsfInput v-model="formData.deviceChgTel1" placeholder="앞 3자리" readonly />
           <span class="unit-sep">-</span>
           <MsfInput
             v-model="formData.deviceChgTel2"
@@ -175,7 +252,7 @@
             v-model="formData.deviceChgTel3"
             id="inp-deviceChgTel3"
             placeholder="뒤 4자리"
-          />
+          /> -->
           <MsfButton variant="toggle" disabled>인증</MsfButton>
           <MsfButton variant="toggle">인증</MsfButton>
           <MsfButton variant="toggle" active>인증 완료</MsfButton>
@@ -191,24 +268,36 @@
       </MsfFormGroup>
       <MsfFormGroup label="주민등록번호" required>
         <MsfStack type="field">
-          <MsfInput v-model="formData.repRegistrationNo1" placeholder="앞 6자리" />
+          <MsfRegNoInput
+            type="resident"
+            v-model:registNo1="formData.repRegistrationNo1"
+            v-model:registNo2="formData.repRegistrationNo2"
+          />
+          <!-- <MsfInput v-model="formData.repRegistrationNo1" placeholder="앞 6자리" maxLength="6" />
           <span class="unit-sep">-</span>
           <MsfInput
             v-model="formData.repRegistrationNo2"
             id="inp-repRegistrationNo2"
             placeholder="뒤 7자리"
-          />
+            maxLength="7"
+          /> -->
         </MsfStack>
       </MsfFormGroup>
       <MsfFormGroup label="외국인등록번호" required>
         <MsfStack type="field">
-          <MsfInput v-model="formData.repForeignerNo1" placeholder="앞 6자리" />
+          <MsfRegNoInput
+            type="foreigner"
+            v-model:registNo1="formData.repForeignerNo1"
+            v-model:registNo2="formData.repForeignerNo2"
+          />
+          <!-- <MsfInput v-model="formData.repForeignerNo1" placeholder="앞 6자리" maxLength="6" />
           <span class="unit-sep">-</span>
           <MsfInput
             v-model="formData.repForeignerNo2"
             id="inp-repForeignerNo2"
             placeholder="뒤 7자리"
-          />
+            maxLength="7"
+          /> -->
         </MsfStack>
       </MsfFormGroup>
       <MsfFormGroup label="신청인과의 관계" tag="div" required>
@@ -225,11 +314,17 @@
       </MsfFormGroup>
       <MsfFormGroup label="연락처(휴대폰)" required>
         <MsfStack type="field">
-          <MsfNumberInput
+          <MsfMobileInput
+            v-model:number1="formData.repPhone1"
+            v-model:number2="formData.repPhone2"
+            v-model:number3="formData.repPhone3"
+          />
+          <!-- <MsfNumberInput
             v-model="formData.repPhone1"
             placeholder="앞 3자리"
             ariaLabel="연락처(휴대폰) 앞 3자리"
             readonly
+            maxLength="3"
           />
           <span class="unit-sep">-</span>
           <MsfNumberInput
@@ -237,6 +332,7 @@
             id="inp-repPhone2"
             placeholder="가운데 4자리"
             ariaLabel="연락처(휴대폰) 가운데 4자리"
+            maxLength="4"
           />
           <span class="unit-sep">-</span>
           <MsfNumberInput
@@ -244,17 +340,20 @@
             id="inp-repPhone3"
             placeholder="뒤 4자리"
             ariaLabel="연락처(휴대폰) 뒤 4자리"
-          />
+            maxLength="4"
+          /> -->
           <MsfButton variant="toggle" disabled>인증번호 발송</MsfButton>
           <MsfButton variant="toggle">인증번호 발송</MsfButton>
           <MsfButton variant="toggle">인증번호 재발송</MsfButton>
           <MsfButton variant="toggle" active>인증 완료</MsfButton>
         </MsfStack>
         <MsfStack type="field">
-          <MsfInput
+          <MsfNumberInput
             v-model="formData.repPhoneAuth"
             id="inp-repPhoneAuth"
             placeholder="인증번호 입력"
+            ariaLabel="인증번호 입력"
+            maxLength="6"
           />
           <span class="remain-time">남은시간 <em>02:33</em></span>
           <MsfButton variant="toggle">인증번호 확인</MsfButton>
@@ -283,6 +382,7 @@
         <MsfStack type="field">
           <MsfBirthdayInput v-model="formData.userBirthDate" length="8" class="ut-w-300" />
           <MsfRadioGroup
+            v-if="!isCorporateOrPublic"
             name="user-gender"
             v-model="formData.userGender"
             :options="[
@@ -293,6 +393,16 @@
           />
         </MsfStack>
       </MsfFormGroup>
+      <!-- 설계 추가__20260713 -->
+      <MsfFormGroup label="개통회선수" required>
+        <MsfNumberInput
+          v-model="formData.openedLineCount"
+          placeholder="개통회선수 입력"
+          align="right"
+          class="ut-w-140"
+        />
+      </MsfFormGroup>
+      <!-- // 설계 추가__20260713 -->
     </MsfStack>
     <!-- // 고객(실사용자) 정보 -->
     <!-- 대리인 위임정보 -->
@@ -329,15 +439,29 @@
       </MsfFormGroup>
       <MsfFormGroup label="연락처" required>
         <MsfStack type="field">
-          <MsfInput v-model="formData.agentPhone1" placeholder="앞자리" />
+          <MsfNumberInput
+            v-model="formData.agentPhone1"
+            placeholder="앞자리"
+            maxLength="3"
+            @maxlength="agentPhone2Input?.focus()"
+          />
           <span class="unit-sep">-</span>
-          <MsfInput
+          <MsfNumberInput
+            ref="agentPhone2Input"
             v-model="formData.agentPhone2"
             id="inp-agentPhone2"
             placeholder="가운데 4자리"
+            maxLength="4"
+            @maxlength="agentPhone3Input?.focus()"
           />
           <span class="unit-sep">-</span>
-          <MsfInput v-model="formData.agentPhone3" id="inp-agentPhone3" placeholder="뒤 4자리" />
+          <MsfNumberInput
+            ref="agentPhone3Input"
+            v-model="formData.agentPhone3"
+            id="inp-agentPhone3"
+            placeholder="뒤 4자리"
+            maxLength="4"
+          />
         </MsfStack>
       </MsfFormGroup>
     </MsfStack>
@@ -355,36 +479,76 @@
     <MsfStack vertical type="formgroups">
       <MsfFormGroup label="휴대폰번호" required helpText="※ 신청서 발송 요청시 추가로 발송">
         <MsfStack type="field">
-          <MsfInput v-model="formData.mobileNo1" placeholder="앞 3자리" readonly />
+          <MsfMobileInput
+            v-model:number1="formData.mobileNo1"
+            v-model:number2="formData.mobileNo2"
+            v-model:number3="formData.mobileNo3"
+          />
+          <!-- <MsfInput v-model="formData.mobileNo1" placeholder="앞 3자리" maxLength="3" readonly />
           <span class="unit-sep">-</span>
-          <MsfInput v-model="formData.mobileNo2" id="inp-mobileNo2" placeholder="가운데 4자리" />
+          <MsfInput
+            v-model="formData.mobileNo2"
+            id="inp-mobileNo2"
+            placeholder="가운데 4자리"
+            maxLength="4"
+          />
           <span class="unit-sep">-</span>
-          <MsfInput v-model="formData.mobileNo3" id="inp-mobileNo3" placeholder="뒤 4자리" />
+          <MsfInput
+            v-model="formData.mobileNo3"
+            id="inp-mobileNo3"
+            placeholder="뒤 4자리"
+            maxLength="4"
+          /> -->
         </MsfStack>
       </MsfFormGroup>
       <MsfFormGroup label="전화번호">
         <MsfStack type="field">
-          <MsfInput v-model="formData.telNo1" placeholder="지역번호" />
+          <MsfTelInput
+            v-model:telNo1="formData.telNo1"
+            v-model:telNo2="formData.telNo2"
+            v-model:telNo3="formData.telNo3"
+          />
+          <!-- <MsfInput v-model="formData.telNo1" placeholder="지역번호" maxLength="3" />
           <span class="unit-sep">-</span>
-          <MsfInput v-model="formData.telNo2" id="inp-telNo2" placeholder="가운데 4자리" />
+          <MsfInput
+            v-model="formData.telNo2"
+            id="inp-telNo2"
+            placeholder="가운데 4자리"
+            maxLength="4"
+          />
           <span class="unit-sep">-</span>
-          <MsfInput v-model="formData.telNo3" id="inp-telNo3" placeholder="뒤 4자리" />
+          <MsfInput
+            v-model="formData.telNo3"
+            id="inp-telNo3"
+            placeholder="뒤 4자리"
+            maxLength="4"
+          /> -->
         </MsfStack>
       </MsfFormGroup>
       <MsfFormGroup label="이메일주소" tag="div">
         <MsfStack type="field">
-          <MsfInput v-model="formData.emailAddr1" placeholder="이메일 아이디" />
+          <MsfEmailInput
+            v-model:emailId="formData.emailAddr1"
+            v-model:emailDomain="formData.emailAddr2"
+          />
+          <!-- <MsfInput v-model="formData.emailAddr1" placeholder="이메일 아이디" />
           <span>@</span>
           <MsfInput
             v-model="formData.emailAddr2"
             id="inp-emailAddr2"
             placeholder="이메일 도메인"
             class="ut-w-300"
-          />
+          /> -->
         </MsfStack>
       </MsfFormGroup>
       <MsfFormGroup label="주소" tag="div" required>
-        <MsfStack type="field">
+        <MsfAddressInput
+          v-model:address1="formData.address1"
+          v-model:address2="formData.address2"
+          v-model:address3="formData.address3"
+          @search="console.log('우편번호 찾기 클릭!')"
+        />
+        <!-- <MsfStack type="field">
           <MsfInput
             v-model="formData.address1"
             placeholder="우편번호"
@@ -400,7 +564,7 @@
           class="ut-w100p"
           disabled
         />
-        <MsfInput id="address3" placeholder="상세주소" ariaLabel="상세주소 입력" class="ut-w100p" />
+        <MsfInput id="address3" placeholder="상세주소" ariaLabel="상세주소 입력" class="ut-w100p" /> -->
       </MsfFormGroup>
       <MsfFormGroup label="국가" tag="div" required>
         <MsfSelect
@@ -534,7 +698,8 @@
           class="ut-w100p"
         />
       </MsfFormGroup>
-      <MsfFormGroup label="대리점" tag="div" required>
+      <!-- 위치이동 -->
+      <!-- <MsfFormGroup label="대리점" tag="div" required>
         <MsfSelect
           title="대리점 선택"
           v-model="formData.agency"
@@ -545,12 +710,12 @@
           class="ut-w-300"
           placeholder="대리점 선택"
         />
-      </MsfFormGroup>
+      </MsfFormGroup> -->
     </MsfStack>
     <!-- // 휴대폰 및 요금제 정보 -->
     <!-- 약관 동의  -->
     <MsfTitleArea title="약관 동의" />
-    <MsfAgreementGroup policy="join" ref="agreementRef" description="" required />
+    <!-- <MsfAgreementGroup policy="join" ref="agreementRef" description="" required /> -->
     <MsfButtonGroup margin="1">
       <MsfButton variant="toggle" disabled>가입조건 조회</MsfButton>
       <MsfButton variant="toggle">가입조건 조회</MsfButton>
@@ -582,11 +747,38 @@
       </ul>
     </div>
     <!-- // 개통 진행 결과 -->
+    <!-- 설계 추가__20260713 -->
+    <div class="step-result">
+      <p class="result-title">
+        <MsfIcon name="titleInfo" />
+        <span
+          >가입조건 조회 결과 개통 진행이
+          <em class="ut-color-accent">가능(1,000회선 중 500회선 추가 가능)</em> 합니다.</span
+        >
+      </p>
+      <p class="result-title">
+        <MsfIcon name="titleInfo" />
+        <span
+          >가입조건 조회 결과 개통 진행이
+          <em class="ut-color-point">불가능(1,000회선 가입)</em> 합니다.</span
+        >
+      </p>
+    </div>
+    <!-- // 설계 추가__20260713 -->
   </div>
 </template>
 
 <script setup>
-import { ref, watch, reactive } from 'vue'
+import { ref, watch, reactive, computed } from 'vue'
+
+// 법인/공공기관 고객 여부
+const isCorporateOrPublic = computed(() =>
+  ['customerType5', 'customerType6'].includes(formData.customerType),
+)
+
+// 대리인 위임 정보 연락처영역 input focus
+const agentPhone2Input = ref(null)
+const agentPhone3Input = ref(null)
 
 // 필수 항목 입력 완료여부 리턴
 const emit = defineEmits(['complete'])
@@ -625,6 +817,7 @@ defineExpose({ data, save })
 const datePickerValue = ref() // 날짜선택 (MsfDateInput)
 const rangeDatePickerValue = ref({ start: '', end: '' })
 const licenseNumber = ref() // 면허 번호 (MsfNumberInput)
+const meritNo = ref() // 유공자 번호 (MsfNumberInput)
 
 // const birth6Value = ref()
 
@@ -635,6 +828,7 @@ const formData = reactive({
   joinType: 'joinType1', //가입유형
   /* 고객 유형 */
   customerType: 'customerType1', //고객유형
+  visitCustomer: '', //방문고객
   /* 신분증 확인 */
   idCard: 'idCard1', //신분증
   idCardScan: '', //신분증 스캔
@@ -663,7 +857,7 @@ const formData = reactive({
   repForeignerNo1: '', //외국인등록번호1
   repForeignerNo2: '', //외국인등록번호2
   repRelation: '', //관계
-  repPhone1: '', // 연락처1
+  repPhone1: '010', // 연락처1
   repPhone2: '', // 연락처2
   repPhone3: '', // 연락처3
   repPhoneAuth: '', //인증번호입력
@@ -672,6 +866,7 @@ const formData = reactive({
   realUserName: '', //실사용자 이름
   userBirthDate: '', //생년월일
   userGender: '', //성별
+  openedLineCount: '', //개통회선수
   /** 대리인 위임정보 */
   agentName: '', //위임받은 고객 이름
   agentBirthDate: '', //생년월일

@@ -17,7 +17,7 @@ public class TracingExecutorService implements AsyncTaskExecutor {
     public void execute(Runnable command) {
         Span span = tracer.nextSpan();
         delegate.execute(() -> {
-            try (var ignored = tracer.withSpan(span.start())) {
+            try (var _ = tracer.withSpan(span.start())) {
                 command.run();
             }
         });

@@ -23,6 +23,7 @@ public class KnoteScanInfoResponse {
     String knoteIdentityTypeCd; //KNOTE신분증유형코드 >> Knote 항목 :: realEvdnDataInd
     String knoteIdentityScanDt; //KNOTE신분증스캔일시 >> Knote 항목 ::
     String knoteScanId; //KNOTE신분증스캔번호 >> Knote 항목 :: frmpapId
+    String frmpapId; //
 
     String custIdntNoIndCd; //명의자 식별구분코드	"1 : 주민등록번호 4 : 외국인등록번호"
     String custTypeCd; //명의자 고객유형	1 : 개인
@@ -67,7 +68,7 @@ public class KnoteScanInfoResponse {
     String cntpntNm; //접점명*/
 
     //서식지 상태조회 (FS1) 응답
-    /*//String frmpapId; //서식지아이디	"서식지아이디(ex.0x62E50320B59E11EE8A320080C74455C600)"
+    //String frmpapId; //서식지아이디	"서식지아이디(ex.0x62E50320B59E11EE8A320080C74455C600)"
     String titl; //제목
     //String mngmAgncId; //관리대리점코드
     String mngmAgncNm; //관리대리점명
@@ -80,16 +81,16 @@ public class KnoteScanInfoResponse {
     //String cntpntCd; //접점코드
     //String cntpntNm; //접점코드명
     //String custIdntNoIndCd; //명의자 식별구분코드	"1 : 주민등록번호 4 : 외국인등록번호"
-    String custTypeCd; //명의자 고객유형	1 : 개인
+    //String custTypeCd; //명의자 고객유형	1 : 개인
     String nflCustNm; //명의자 고객명		Y
     String nflCustIdfyNo; //명의자 식별번호		Y
     //String custNm; //고객명	서식지 신청고객명	Y
-    String realEvdnDataInd; //실명인증 증빙자료구분	* 코드정의서 실명인증증빙 코드(NATIVE_RLNAM_ATHN_EVDN_PPR_CD) 참조
-    String realCustIdntNo; //실명인증 식별번호		Y
-    String realIssuDate; //실명인증 발급일자	yyyyMMdd
-    String opnYn; //개통여부
-    String svcApyTrtSttusCd; //처리상태코드	1: 접수, 2: 진행, 3: 완료, 4: 취소
-    String svcContId; //서비스계약아이디
+    //String realEvdnDataInd; //실명인증 증빙자료구분	* 코드정의서 실명인증증빙 코드(NATIVE_RLNAM_ATHN_EVDN_PPR_CD) 참조
+    //String realCustIdntNo; //실명인증 식별번호		Y
+    //String realIssuDate; //실명인증 발급일자	yyyyMMdd
+    //String opnYn; //개통여부
+    //String svcApyTrtSttusCd; //처리상태코드	1: 접수, 2: 진행, 3: 완료, 4: 취소
+    //String svcContId; //서비스계약아이디
     String saleCmpnId; //사업자코드
     String photoAthnDecideCd; //사진인증판정코드	"KAIT 결과값으로 성공/스킵/실패를 판정한 결과 SUCC : 진위성공 SKIP : 스킵 FAIL : 실패 사진인증판정코드(photoAthnDecideCd) 성공/스킵인 경우에만 이후 오더처리 진행 가능 * 사진인증판정 실패인 경우에도 사진진위인증 안정화기간인 경우에는 처리 가능합니다."
     String photoAthnSkipCd; //사진인증생략코드	"E : 미처리(개통) - KAIT 전체스킵, 주민등록증 스킵, 운전면허증스킵, 외국인스킵 S : 당일 성공 -당일 동일대리점, 동일신분증, 동일 고객일때 당일 성공 B : 스킵권한자(개통무관권한)"
@@ -98,6 +99,6 @@ public class KnoteScanInfoResponse {
     String fathDecideCd; //안면인증최종결과코드 "SUCC : 성공 - OSST오더 처리 가능 SKIP : 스킵 - OSST 오더 처리 가능 FAIL : 실패 - 안면인증최종결과코드 실패인 경우에도 안정화 기간인 경우에는 처리 가능 WAIT : 안면인증 진행중 - MIS 안면인증 완료통지 대기중. 해당 상태에서는 OSST 업무 처리 불가"
     String fathSkipCd; //안면인증생략코드 "A: MVNO스킵 B: 무관개통권한 권한자 C: 기기변경취소 E: 안면인증 미처리 스킵 R: 재처리 성공 X: 재처리 실패"
     String fathResltCd; //안면인증결과코드	연동규격서 MIS결과 쉬트 참고
-    String fathResltMsgSbst; //안면인증결과메시지내용	연동규격서 MIS결과 쉬트 참고*/
+    String fathResltMsgSbst; //안면인증결과메시지내용	연동규격서 MIS결과 쉬트 참고
 
 }

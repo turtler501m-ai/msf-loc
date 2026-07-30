@@ -11,9 +11,9 @@ public class MsfRequestMoveVo {
 
     Long requestKey;
     String moveCompanyCd;
-    String moveMobileFnNo;
-    String moveMobileMnNo;
-    String moveMobileRnNo;
+    String moveMobileFnNo; //번호이동정보 이동할 전화번호
+    String moveMobileMnNo; //번호이동정보 이동할 전화번호
+    String moveMobileRnNo; //번호이동정보 이동할 전화번호
     String moveAuthTypeCd;
     String moveAuthNo;
     String moveThismonthPayTypeCd;

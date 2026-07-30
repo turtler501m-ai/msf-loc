@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.form.form.newchange.repository.msp.McpRequestCstmrWriteMapper">
+  <insert id="insertMcpRequestCstmr" parameterType="com.ktmmobile.msf.domains.form.form.common.vo.McpRequestCstmrVo">
+    INSERT INTO MCP_REQUEST_CSTMR@DL_MCP
+    (     REQUEST_KEY
+    ,	SYS_RDATE
+    ,	RVISN_DTTM
+    ,	RVISN_ID
+    ,	CSTMR_NAME
+    ,	CSTMR_NATIVE_RRN
+    ,	CSTMR_PRIVATE_CNAME
+    ,	CSTMR_PRIVATE_NUMBER
+    ,	CSTMR_FOREIGNER_RRN
+    ,	CSTMR_FOREIGNER_BIRTH
+    ,	CSTMR_FOREIGNER_PN
+    ,	CSTMR_FOREIGNER_NATION
+    ,	VISA_CD
+    ,	CSTMR_FOREIGNER_SDATE
+    ,	CSTMR_FOREIGNER_EDATE
+    ,	CSTMR_FOREIGNER_DOD
+    ,	CSTMR_JURIDICAL_CNAME
+    ,	CSTMR_JURIDICAL_RRN
+    ,	CSTMR_JURIDICAL_NUMBER
+    ,	CSTMR_VISIT_TYPE
+    ,	FATH_MOBILE_FN
+    ,	FATH_MOBILE_MN
+    ,	FATH_MOBILE_RN
+    ,	SELF_INQRY_AGRM_YN
+    ,	SELF_CERT_TYPE
+    ,	SELF_CSTMR_CI
+    ,	SELF_ISSU_EXPR_DT
+    ,	SELF_ISSU_NUM
+    ,	CSTMR_TEL_FN
+    ,	CSTMR_TEL_MN
+    ,	CSTMR_TEL_RN
+    ,	CSTMR_MOBILE_FN
+    ,	CSTMR_MOBILE_MN
+    ,	CSTMR_MOBILE_RN
+    ,	CSTMR_POST
+    ,	CSTMR_ADDR
+    ,	CSTMR_ADDR_DTL
+    ,	CSTMR_ADDR_BJD
+    ,	CSTMR_BILL_SEND_CODE
+    ,	CSTMR_MAIL
+    ,	CSTMR_MAIL_RECEIVE_FLAG
+    ,	CSTMR_RECEIVE_TEL_FN
+    ,	CSTMR_RECEIVE_TEL_NM
+    ,	CSTMR_RECEIVE_TEL_RN
+    ,	OTHERS_PAYMENT_AG
+    ,	OTHERS_PAYMENT_NM
+    ,	OTHERS_PAYMENT_RRN
+    ,	OTHERS_PAYMENT_RELATION
+    ,	OTHERS_PAYMENT_RNM
+    ,	PRNTS_CTN
+    ,	CSTMR_JEJU_ID
+    ,	RECOMMEND_FLAG_CD
+    ,	RECOMMEND_INFO
+    )
+    VALUES
+    (     #{requestKey}
+    , #{sysRdate}
+    , #{rvisnDttm}
+    , #{rvisnId}
+    , #{cstmrName}
+    , #{cstmrNativeRrn}
+    , #{cstmrPrivateCname}
+    , #{cstmrPrivateNumber}
+    , #{cstmrForeignerRrn}
+    , #{cstmrForeignerBirth}
+    , #{cstmrForeignerPn}
+    , #{cstmrForeignerNation}
+    , #{visaCd}
+    , #{cstmrForeignerSdate}
+    , #{cstmrForeignerEdate}
+    , #{cstmrForeignerDod}
+    , #{cstmrJuridicalCname}
+    , #{cstmrJuridicalRrn}
+    , #{cstmrJuridicalNumber}
+    , #{cstmrVisitType}
+    , #{fathMobileFn}
+    , #{fathMobileMn}
+    , #{fathMobileRn}
+    , #{selfInqryAgrmYn}
+    , #{selfCertType}
+    , #{selfCstmrCi}
+    , #{selfIssuExprDt}
+    , #{selfIssuNum}
+    , #{cstmrTelFn}
+    , #{cstmrTelMn}
+    , #{cstmrTelRn}
+    , #{cstmrMobileFn}
+    , #{cstmrMobileMn}
+    , #{cstmrMobileRn}
+    , #{cstmrPost}
+    , #{cstmrAddr}
+    , #{cstmrAddrDtl}
+    , #{cstmrAddrBjd}
+    , #{cstmrBillSendCode}
+    , #{cstmrMail}
+    , #{cstmrMailReceiveFlag}
+    , #{cstmrReceiveTelFn}
+    , #{cstmrReceiveTelNm}
+    , #{cstmrReceiveTelRn}
+    , #{othersPaymentAg}
+    , #{othersPaymentNm}
+    , #{othersPaymentRrn}
+    , #{othersPaymentRelation}
+    , #{othersPaymentRnm}
+    , #{prntsCtn}
+    , #{cstmrJejuId}
+    , #{recommendFlagCd}
+    , #{recommendInfo}
+    )
+  </insert>
+
+  <update id="updateMcpRequestCstmr" parameterType="com.ktmmobile.msf.domains.form.form.common.vo.McpRequestCstmrVo">
+    UPDATE MCP_REQUEST_CSTMR@DL_MCP
+    SET
+          SYS_RDATE	 = #{sysRdate}
+        ,	RVISN_DTTM	 = #{rvisnDttm}
+        ,	RVISN_ID	 = #{rvisnId}
+        ,	CSTMR_NAME	 = #{cstmrName}
+        ,	CSTMR_NATIVE_RRN	 = #{cstmrNativeRrn}
+        ,	CSTMR_PRIVATE_CNAME	 = #{cstmrPrivateCname}
+        ,	CSTMR_PRIVATE_NUMBER	 = #{cstmrPrivateNumber}
+        ,	CSTMR_FOREIGNER_RRN	 = #{cstmrForeignerRrn}
+        ,	CSTMR_FOREIGNER_BIRTH	 = #{cstmrForeignerBirth}
+        ,	CSTMR_FOREIGNER_PN	 = #{cstmrForeignerPn}
+        ,	CSTMR_FOREIGNER_NATION	 = #{cstmrForeignerNation}
+        ,	VISA_CD	 = #{visaCd}
+        ,	CSTMR_FOREIGNER_SDATE	 = #{cstmrForeignerSdate}
+        ,	CSTMR_FOREIGNER_EDATE	 = #{cstmrForeignerEdate}
+        ,	CSTMR_FOREIGNER_DOD	 = #{cstmrForeignerDod}
+        ,	CSTMR_JURIDICAL_CNAME	 = #{cstmrJuridicalCname}
+        ,	CSTMR_JURIDICAL_RRN	 = #{cstmrJuridicalRrn}
+        ,	CSTMR_JURIDICAL_NUMBER	 = #{cstmrJuridicalNumber}
+        <!--,	UPJN_CD	 = #{upjnCd}-->
+        <!--,	BCU_SBST	 = #{bcuSbst}-->
+        ,	CSTMR_VISIT_TYPE	 = #{cstmrVisitType}
+        ,	FATH_MOBILE_FN	 = #{fathMobileFn}
+        ,	FATH_MOBILE_MN	 = #{fathMobileMn}
+        ,	FATH_MOBILE_RN	 = #{fathMobileRn}
+        ,	SELF_INQRY_AGRM_YN	 = #{selfInqryAgrmYn}
+        ,	SELF_CERT_TYPE	 = #{selfCertType}
+        ,	SELF_CSTMR_CI	 = #{selfCstmrCi}
+        ,	SELF_ISSU_EXPR_DT	 = #{selfIssuExprDt}
+        ,	SELF_ISSU_NUM	 = #{selfIssuNum}
+        ,	CSTMR_TEL_FN	 = #{cstmrTelFn}
+        ,	CSTMR_TEL_MN	 = #{cstmrTelMn}
+        ,	CSTMR_TEL_RN	 = #{cstmrTelRn}
+        ,	CSTMR_MOBILE_FN	 = #{cstmrMobileFn}
+        ,	CSTMR_MOBILE_MN	 = #{cstmrMobileMn}
+        ,	CSTMR_MOBILE_RN	 = #{cstmrMobileRn}
+        ,	CSTMR_POST	 = #{cstmrPost}
+        ,	CSTMR_ADDR	 = #{cstmrAddr}
+        ,	CSTMR_ADDR_DTL	 = #{cstmrAddrDtl}
+        ,	CSTMR_ADDR_BJD	 = #{cstmrAddrBjd}
+        ,	CSTMR_BILL_SEND_CODE	 = #{cstmrBillSendCode}
+        ,	CSTMR_MAIL	 = #{cstmrMail}
+        ,	CSTMR_MAIL_RECEIVE_FLAG	 = #{cstmrMailReceiveFlag}
+        ,	CSTMR_RECEIVE_TEL_FN	 = #{cstmrReceiveTelFn}
+        ,	CSTMR_RECEIVE_TEL_NM	 = #{cstmrReceiveTelNm}
+        ,	CSTMR_RECEIVE_TEL_RN	 = #{cstmrReceiveTelRn}
+        ,	OTHERS_PAYMENT_AG	 = #{othersPaymentAg}
+        ,	OTHERS_PAYMENT_NM	 = #{othersPaymentNm}
+        ,	OTHERS_PAYMENT_RRN	 = #{othersPaymentRrn}
+        ,	OTHERS_PAYMENT_RELATION	 = #{othersPaymentRelation}
+        ,	OTHERS_PAYMENT_RNM	 = #{othersPaymentRnm}
+        ,	PRNTS_CTN	 = #{prntsCtn}
+        ,	CSTMR_JEJU_ID	 = #{cstmrJejuId}
+        ,	RECOMMEND_FLAG_CD	 = #{recommendFlagCd}
+        ,	RECOMMEND_INFO	 = #{recommendInfo}
+    WHERE REQUEST_KEY = #{requestKey}
+  </update>
+</mapper>

@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.shared.form.common.faceauth.adapter.repository.mybatis.msp.mapper.FaceAuthMcpMapper">
+
+  <insert id="insertMcpRequestOsst" parameterType="com.ktmmobile.msf.domains.shared.form.common.faceauth.domain.entity.McpRequestOsst">
+    INSERT INTO MCP_REQUEST_OSST@DL_MCP (
+      MVNO_ORD_NO,
+      SEQ,
+      OSST_ORD_NO,
+      PRGR_STAT_CD,
+      RSLT_CD,
+      RSLT_MSG,
+      RSLT_DT,
+      NSTEP_GLOBAL_ID,
+      PRDC_CHK_NOTI_MSG,
+      IF_TYPE,
+      REGST_DTTM
+    ) VALUES (
+      LPAD(#{mvnoOrdNo, jdbcType=VARCHAR}, 14, '0'),
+      NVL((SELECT MAX(SEQ) + 1 FROM MCP_REQUEST_OSST@DL_MCP WHERE MVNO_ORD_NO = LPAD(#{mvnoOrdNo, jdbcType=VARCHAR}, 14, '0')), 1),
+      #{osstOrdNo},
+      #{prgrStatCd},
+      #{rsltCd},
+      #{rsltMsg},
+      TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'),
+      #{nstepGlobalId},
+      #{prdcChkNotiMsg},
+      'WEB',
+      SYSDATE
+    )
+  </insert>
+
+  <select id="selectMcpRequestOsst" resultType="com.ktmmobile.msf.domains.shared.form.common.faceauth.domain.entity.McpRequestOsst">
+    SELECT MVNO_ORD_NO
+         , SEQ
+         , OSST_ORD_NO
+         , PRGR_STAT_CD
+         , RSLT_CD
+         , RSLT_MSG
+         , RSLT_DT
+         , NSTEP_GLOBAL_ID
+         , PRDC_CHK_NOTI_MSG
+         , IF_TYPE
+         , REGST_DTTM
+      FROM MCP_REQUEST_OSST@DL_MCP
+     WHERE MVNO_ORD_NO = LPAD(#{resNo, jdbcType=VARCHAR}, 14, '0')
+       AND PRGR_STAT_CD = #{appEventCd}
+       AND SEQ = (SELECT MAX(SEQ) FROM MCP_REQUEST_OSST@DL_MCP WHERE MVNO_ORD_NO = LPAD(#{resNo, jdbcType=VARCHAR}, 14, '0') AND PRGR_STAT_CD = #{appEventCd})
+  </select>
+
+  <select id="selectMcpFathResultPush" parameterType="string" resultType="com.ktmmobile.msf.domains.shared.form.common.faceauth.domain.entity.McpFathResultPush">
+    SELECT FATH_TRANSAC_ID
+         , SEQ
+         , SLS_CMPC_CD
+         , RETV_CD_VAL
+         , CUST_NM
+         , CUST_IDFY_NO
+         , ISS_DATE_VAL
+         , DRIVE_LICNS_NO
+         , IDCARD_PHOTO_IMG
+         , IDCARD_COPIES_IMG
+         , MBL_IDCARD_QR_IMG
+         , IDCARD_CONF_WAY
+         , DIST_RSRTN_YN
+         , FATH_PROGR_STEP_CD
+         , FATH_CMPLT_NTFY_DT
+         , FATH_URL_RQT_DT
+         , FATH_RESLT_CD
+         , FATH_RESLT_SBST
+         , FATH_RQTR_ID
+         , SKIP_PSBL_YN
+      FROM (
+            SELECT FATH_TRANSAC_ID
+                 , SEQ
+                 , SLS_CMPC_CD
+                 , RETV_CD_VAL
+                 , CUST_NM
+                 , CUST_IDFY_NO
+                 , ISS_DATE_VAL
+                 , DRIVE_LICNS_NO
+                 , IDCARD_PHOTO_IMG
+                 , IDCARD_COPIES_IMG
+                 , MBL_IDCARD_QR_IMG
+                 , IDCARD_CONF_WAY
+                 , DIST_RSRTN_YN
+                 , FATH_PROGR_STEP_CD
+                 , FATH_CMPLT_NTFY_DT
+                 , FATH_URL_RQT_DT
+                 , FATH_RESLT_CD
+                 , FATH_RESLT_SBST
+                 , FATH_RQTR_ID
+                 , SKIP_PSBL_YN
+              FROM NMCP_FATH_RESLT_PUSH@DL_MCP
+             WHERE FATH_TRANSAC_ID = #{transactionId}
+               AND SEQ = (SELECT MAX(SEQ) FROM NMCP_FATH_RESLT_PUSH@DL_MCP WHERE FATH_TRANSAC_ID = #{transactionId})
+             UNION ALL
+            SELECT FATH_TRANSAC_ID
+                 , SEQ
+                 , SLS_CMPC_CD
+                 , RETV_CD_VAL
+                 , CUST_NM
+                 , CUST_IDFY_NO
+                 , ISS_DATE_VAL
+                 , DRIVE_LICNS_NO
+                 , IDCARD_PHOTO_IMG
+                 , IDCARD_COPIES_IMG
+                 , MBL_IDCARD_QR_IMG
+                 , IDCARD_CONF_WAY
+                 , DIST_RSRTN_YN
+                 , FATH_PROGR_STEP_CD
+                 , FATH_CMPLT_NTFY_DT
+                 , FATH_URL_RQT_DT
+                 , FATH_RESLT_CD
+                 , FATH_RESLT_SBST
+                 , FATH_RQTR_ID
+                 , SKIP_PSBL_YN
+              FROM NMCP_FATH_RESLT_PUSH@DL_MCP
+             WHERE FATH_TRANSAC_ID = ''
+               AND SEQ = (SELECT MAX(SEQ) FROM NMCP_FATH_RESLT_PUSH@DL_MCP WHERE FATH_TRANSAC_ID = '')
+           )
+  </select>
+</mapper>

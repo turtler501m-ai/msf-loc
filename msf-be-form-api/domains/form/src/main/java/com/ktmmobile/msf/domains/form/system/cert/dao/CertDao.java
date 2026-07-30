@@ -6,31 +6,31 @@ import com.ktmmobile.msf.domains.form.system.cert.dto.CertDto;
 public interface CertDao {
 	
 	//crtSeq 별 스텝 개수 가져오기
-	public int getStepCnt(long crtSeq);
+	int getStepCnt(long crtSeq);
 	
 	//같은 crtSeq의 인증정보 가져오기
-	public List<CertDto> getCompareList(CertDto certDto);
+	List<CertDto> getCompareList(CertDto certDto);
 	
 	//NMCP_CRT_VLD_DTL insert
-	public long insertCert(CertDto certDto);
+	long insertCert(CertDto certDto);
 	
 	//MCP_USER_CNTR_MNG에서 계약번호 가져오기
-	public List<String> getContractNumByUserId(String userId);
+	List<String> getContractNumByUserId(String userId);
 	
 	//NMCP_CRT_VLD_DTL delete
-	public int deleteCert(CertDto certDto);
+	int deleteCert(CertDto certDto);
 	
 	//NMCP_CRT_VLD_DTL merge
-	public int mergeCert(CertDto certDto);
+	int mergeCert(CertDto certDto);
 	
 	//NMCP_CRT_VLD_DTL crtSeq와 uploadPhoneSrlNo로 데이터 존재하는지 조회
-	public int getDataEsimSeq(long crtSeq);
+	int getDataEsimSeq(long crtSeq);
 	
 	//NMCP_CRT_VLD_DTL uploadPhoneSrlNo update
-	public int updateEsimSeq(CertDto certDto);
+	int updateEsimSeq(CertDto certDto);
 	
 	//NMCP_CRT_VLD_DTL 에서 파라미터 step 이상 delete
-	public int delStepInfo(CertDto certDto);
+	int delStepInfo(CertDto certDto);
 
 	//NMCP_CRT_VLD_DTL nicePin update
 	int updateNicePin(CertDto certDto);

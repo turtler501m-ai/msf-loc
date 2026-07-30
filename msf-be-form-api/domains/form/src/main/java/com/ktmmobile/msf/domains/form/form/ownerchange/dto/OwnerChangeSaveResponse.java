@@ -9,4 +9,5 @@ public class OwnerChangeSaveResponse {
 
     private boolean success;
     private Long requestKey;
+    private String xml;
 }

@@ -1,7 +1,9 @@
 package com.ktmmobile.msf.domains.cache.commoncode.application.service;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -20,13 +22,21 @@ public class SmartFormCommonCodeCacheLoader implements CacheLoader<List<CommonCo
 
     private final CommonCodeRepository commonCodeRepository;
 
+    /** SmartForm 공통코드 캐시 이름 반환 */
     @Override
     public String cacheName() {
         return CommonCodeSourceGroup.SMARTFORM.cacheName();
     }
 
+    /** SmartForm 공통코드 목록 groupId 기준 적재 */
     @Override
     public Map<String, List<CommonCode>> load() {
         return CommonCodeCacheValues.groupByGroupId(commonCodeRepository.findSmartFormCommonCodes());
+    }
+
+    /** 애플리케이션 시작 시 공통코드 강제 재적재 기준 시간 반환 */
+    @Override
+    public Optional<Duration> startupReloadAfter() {
+        return Optional.of(Duration.ofMinutes(10));
     }
 }

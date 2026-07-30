@@ -4,6 +4,9 @@ import java.util.function.Supplier;
 
 import org.springframework.http.HttpHeaders;
 
+/**
+ * Authorization 헤더 전용 재사용 interceptor
+ */
 public class AuthorizationHeaderHttpClientInterceptor extends HeaderValueHttpClientInterceptor {
 
     public AuthorizationHeaderHttpClientInterceptor(Supplier<String> authorizationSupplier) {

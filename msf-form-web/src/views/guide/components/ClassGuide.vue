@@ -9,10 +9,34 @@
           id="ex-typo"
         >
           <div class="demo-list">
+            <div class="ut-d-flex ut-flex-col ut-ai-start ut-gap-5">
+              <p>required-text 필수 표시 <em class="required-text">[필수]</em></p>
+              <p>optional-text 선택 표시 <em class="optional-text">[선택]</em></p>
+              <p class="ut-text-heading1">ut-text-heading1 타이포</p>
+              <p class="ut-text-heading2">ut-text-heading2 타이포</p>
+              <p class="ut-text-heading3">ut-text-heading3 타이포</p>
+              <p class="ut-text-title1">ut-text-title1 타이포</p>
+              <p class="ut-text-title2">ut-text-title2 타이포</p>
+              <p class="ut-text-body1">ut-text-body1 타이포</p>
+              <p class="ut-text-body2">ut-text-body2 타이포</p>
+              <p class="ut-text-body3">ut-text-body3 타이포</p>
+              <p class="ut-text-caption">ut-text-caption 타이포</p>
+              <p class="ut-text-desc">ut-text-desc 타이틀 하단 설명문구, 일반 안내문구</p>
+              <p class="ut-text-caution">ut-text-caution 앞머리기호 붙은 텍스트 안내 단일문구</p>
+            </div>
+            <br />
             <div class="ut-d-flex ut-gap-10 ut-flex-wrap">
               <span class="ut-color-primary ut-weight-bold">Primary</span>
               <span class="ut-color-point ut-weight-bold">Point</span>
+              <span class="ut-color-accent ut-weight-bold">Accent</span>
               <span class="ut-color-alert ut-weight-bold">Alert</span>
+              <br />
+              <span class="ut-color-success">성공</span>
+              <span class="ut-color-warning">경고</span>
+              <span class="ut-color-error">에러</span>
+              <span class="ut-color-blue">정보</span>
+              <span class="ut-color-purple">정보2</span>
+              <br />
               <span class="ut-color-gray">Gray</span>
               <span class="ut-color-gray1">Gray1</span>
               <span class="ut-color-gray2">Gray2</span>
@@ -21,6 +45,7 @@
               <span class="ut-color-black" style="background: #eee">Black</span>
               <span class="ut-color-white" style="background: #000">White</span>
             </div>
+            <br />
             <div>
               <p class="ut-weight-regular">Regular Weight (400)</p>
               <p class="ut-weight-medium">Medium Weight (500)</p>
@@ -166,7 +191,6 @@ import selfSource from './ClassGuide.vue?raw'
 <style lang="scss" scoped>
 .guide-page {
   background-color: #fff;
-  padding: 20px;
 
   .demo-list {
     display: flex;

@@ -1,0 +1,24 @@
+#### Common Profile
+
+## Access Trace (API 인바운드 요청 DB 기록)
+access-trace:
+  enabled: true
+  api-path-prefix: /api/
+  exclude-url-patterns:
+    - POST /**/excel/download
+  module-codes:
+    LOGIN:
+      - POST /api/n/auth/login/issue
+
+  parameter:
+    max-length: 1000
+
+    ## PARAMETER body/query 필드 마스킹 공통 룰 확장
+    body-masked-fields:
+      additional-include:
+        access-trace: []
+
+    ## PARAMETER body/query 필드 축약 공통 룰 확장
+    body-truncated-fields:
+      additional-include:
+        access-trace: []

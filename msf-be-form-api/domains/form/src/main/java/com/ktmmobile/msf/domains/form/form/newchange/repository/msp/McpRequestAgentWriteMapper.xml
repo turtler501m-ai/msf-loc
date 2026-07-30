@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.form.form.newchange.repository.msp.McpRequestAgentWriteMapper">
+  <insert id="insertMcpRequestAgent" parameterType="com.ktmmobile.msf.domains.form.form.common.vo.McpRequestAgentVo">
+    INSERT INTO MCP_REQUEST_AGENT@DL_MCP
+    (     REQUEST_KEY
+        , SYS_RDATE
+        , RVISN_DTTM
+        , RVISN_ID
+        , MINOR_AGENT_NAME
+        , MINOR_AGENT_RRN
+        , MINOR_AGENT_RELATION
+        , MINOR_AGENT_TEL_FN
+        , MINOR_AGENT_TEL_MN
+        , MINOR_AGENT_TEL_RN
+        , MINOR_AGENT_AGRM_YN
+        , MINOR_SELF_INQRY_AGRM_YN
+        , MINOR_SELF_CERT_TYPE
+        , MINOR_SELF_ISSU_EXPR_DT
+        , MINOR_SELF_ISSU_NUM
+        , JRDCL_AGENT_NAME
+        , JRDCL_AGENT_RRN
+        , JRDCL_AGENT_TEL_FN
+        , JRDCL_AGENT_TEL_MN
+        , JRDCL_AGENT_TEL_RN
+        , ENTRUST_REQ_RELATION
+        , ENTRUST_REQ_NM
+        , ENTRUST_RES_NM
+        , ENTRUST_RES_RRN
+        , ENTRUST_RES_TEL_FN
+        , ENTRUST_RES_TEL_MN
+        , ENTRUST_RES_TEL_RN
+    )
+    VALUES
+    (     #{requestKey}
+        , #{sysRdate}
+        , #{rvisnDttm}
+        , #{rvisnId}
+        , #{minorAgentName}
+        , #{minorAgentRrn}
+        , #{minorAgentRelation}
+        , #{minorAgentTelFn}
+        , #{minorAgentTelMn}
+        , #{minorAgentTelRn}
+        , #{minorAgentAgrmYn}
+        , #{minorSelfInqryAgrmYn}
+        , #{minorSelfCertType}
+        , #{minorSelfIssuExprDt}
+        , #{minorSelfIssuNum}
+        , #{jrdclAgentName}
+        , #{jrdclAgentRrn}
+        , #{jrdclAgentTelFn}
+        , #{jrdclAgentTelMn}
+        , #{jrdclAgentTelRn}
+        , #{entrustReqRelation}
+        , #{entrustReqNm}
+        , #{entrustResNm}
+        , #{entrustResRrn}
+        , #{entrustResTelFn}
+        , #{entrustResTelMn}
+        , #{entrustResTelRn}
+    )
+  </insert>
+
+  <update id="updateMcpRequestAgent" parameterType="com.ktmmobile.msf.domains.form.form.common.vo.McpRequestAgentVo">
+    UPDATE MCP_REQUEST_AGENT@DL_MCP
+    SET
+          SYS_RDATE	 = #{sysRdate}
+        ,	RVISN_DTTM	 = #{rvisnDttm}
+        ,	RVISN_ID	 = #{rvisnId}
+        ,	MINOR_AGENT_NAME	 = #{minorAgentName}
+        ,	MINOR_AGENT_RRN	 = #{minorAgentRrn}
+        ,	MINOR_AGENT_RELATION	 = #{minorAgentRelation}
+        ,	MINOR_AGENT_TEL_FN	 = #{minorAgentTelFn}
+        ,	MINOR_AGENT_TEL_MN	 = #{minorAgentTelMn}
+        ,	MINOR_AGENT_TEL_RN	 = #{minorAgentTelRn}
+        ,	MINOR_AGENT_AGRM_YN	 = #{minorAgentAgrmYn}
+        ,	MINOR_SELF_INQRY_AGRM_YN	 = #{minorSelfInqryAgrmYn}
+        ,	MINOR_SELF_CERT_TYPE	 = #{minorSelfCertType}
+        ,	MINOR_SELF_ISSU_EXPR_DT	 = #{minorSelfIssuExprDt}
+        ,	MINOR_SELF_ISSU_NUM	 = #{minorSelfIssuNum}
+        ,	JRDCL_AGENT_NAME	 = #{jrdclAgentName}
+        ,	JRDCL_AGENT_RRN	 = #{jrdclAgentRrn}
+        ,	JRDCL_AGENT_TEL_FN	 = #{jrdclAgentTelFn}
+        ,	JRDCL_AGENT_TEL_MN	 = #{jrdclAgentTelMn}
+        ,	JRDCL_AGENT_TEL_RN	 = #{jrdclAgentTelRn}
+        ,	ENTRUST_REQ_RELATION	 = #{entrustReqRelation}
+        ,	ENTRUST_REQ_NM	 = #{entrustReqNm}
+        ,	ENTRUST_RES_NM	 = #{entrustResNm}
+        ,	ENTRUST_RES_RRN	 = #{entrustResRrn}
+        ,	ENTRUST_RES_TEL_FN	 = #{entrustResTelFn}
+        ,	ENTRUST_RES_TEL_MN	 = #{entrustResTelMn}
+        ,	ENTRUST_RES_TEL_RN	 = #{entrustResTelRn}
+    WHERE REQUEST_KEY = #{requestKey}
+  </update>
+
+</mapper>

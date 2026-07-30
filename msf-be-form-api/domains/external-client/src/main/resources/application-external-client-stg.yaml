@@ -1,0 +1,36 @@
+## HTTP Client
+http-client:
+  proxy:
+    host: ## TODO
+    port: 3128
+
+
+
+## 내부 서비스 (Outbound)
+internal-service:
+  services:
+    eformsign: ## eFormSign
+      base-url: http://s-smartform-eform.ktmmobile.com:8080
+      properties:
+        member-id: ""
+        api-key: ENC(...)
+        private-key: ENC(...)
+
+
+
+## 외부 서비스 (Outbound)
+external-service:
+  services:
+    msp-prx: ## MSP PRX
+      base-url: https://dmcpprxstg.ktmmobile.com:27006
+    nice-api: ## NICE API
+      base-url: https://secure.nuguya.com
+      properties:
+        svc-pwd: ENC(LJPU5VK30BoQRm83IkJ6nLyYmPbLU/L4xspjjyU+PyBmxB1N2P0cbxxaYv7hO3t2)
+    image-system: ## 이미지 시스템
+      base-url: https://scnimgstg.ktmmobile.com
+    juso: ## 주소 검색
+      base-url: https://business.juso.go.kr
+      properties:
+        api-key: ENC(CEPm6bGtVlsK7LovAdPCbZRvgKstQegiPJwETBafM6WZo6UfykvKiKCbJ5fKCKmUmqlRAYMfDM8ZMa9QDbsG8GRWybdWxeMf+REEjowhrNg=)
+        coord-api-key: ENC(qdZyKd84J7sWq8/HKWaJV7ATeVg5sz8KdQCW+TnzTP2m99RisBLREicwP2GWnm/UF8zGbzFJ7ofBp1E7tXX+D2l8ok0b2dxSt5Zz2/DionM=)

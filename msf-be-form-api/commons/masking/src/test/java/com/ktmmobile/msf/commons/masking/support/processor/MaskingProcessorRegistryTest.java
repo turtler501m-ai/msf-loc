@@ -63,11 +63,27 @@ public class MaskingProcessorRegistryTest {
         assertThat(registry.mask("900101-3234567", MaskingType.FOREIGN_REGISTRATION_NUMBER)).isEqualTo("900101-3******");
         assertThat(registry.mask("9001013234567", MaskingType.FOREIGN_REGISTRATION_NUMBER)).isEqualTo("9001013******");
 
+        assertThat(registry.mask("123-45-67890", MaskingType.BUSINESS_REGISTRATION_NUMBER)).isEqualTo("123-**-*****");
+        assertThat(registry.mask("1234567890", MaskingType.BUSINESS_REGISTRATION_NUMBER)).isEqualTo("123*******");
+
+        assertThat(registry.mask("110111-1234567", MaskingType.CORPORATE_REGISTRATION_NUMBER)).isEqualTo("110111-*******");
+        assertThat(registry.mask("1101111234567", MaskingType.CORPORATE_REGISTRATION_NUMBER)).isEqualTo("110111*******");
+
+        assertThat(registry.mask("12-34-567890-12", MaskingType.DRIVER_LICENSE_NUMBER)).isEqualTo("12-**-******-12");
+        assertThat(registry.mask("123456789012", MaskingType.DRIVER_LICENSE_NUMBER)).isEqualTo("12********12");
+
         assertThat(registry.mask("123-456789-01234", MaskingType.BANK_ACCOUNT_NUMBER)).isEqualTo("123-******-**234");
         assertThat(registry.mask("12345678901234", MaskingType.BANK_ACCOUNT_NUMBER)).isEqualTo("123********234");
 
         assertThat(registry.mask("1234-5678-9012-5678", MaskingType.CREDIT_CARD_NUMBER)).isEqualTo("1234-56**-****-5678");
         assertThat(registry.mask("1234567890125678", MaskingType.CREDIT_CARD_NUMBER)).isEqualTo("123456******5678");
+
+        assertThat(registry.mask("192.168.0.1", MaskingType.IP_ADDRESS)).isEqualTo("192.168.*.1");
+        assertThat(registry.mask("10.20.123.40", MaskingType.IP_ADDRESS)).isEqualTo("10.20.***.40");
+        assertThat(registry.mask("2001:db8::1", MaskingType.IP_ADDRESS))
+            .isEqualTo("2001:db8:0:0:****:****:****:1");
+        assertThat(registry.mask("2001:0db8:85a3:0000:0000:8a2e:0370:7334", MaskingType.IP_ADDRESS))
+            .isEqualTo("2001:db8:85a3:0:****:****:****:7334");
 
         assertThat(registry.mask("서울특별시 강남구 테헤란로 123, 456동 789호", MaskingType.ADDRESS))
             .isEqualTo("서울특별시 강남구 테헤란로 ***, *******");
@@ -102,8 +118,15 @@ public class MaskingProcessorRegistryTest {
         assertThat(registry.mask("1234567", MaskingType.RESIDENT_REGISTRATION_NUMBER)).isEqualTo("1234567");
         assertThat(registry.mask("invalid-rrn", MaskingType.RESIDENT_REGISTRATION_NUMBER)).isEqualTo("invalid-rrn");
         assertThat(registry.mask("1234567", MaskingType.FOREIGN_REGISTRATION_NUMBER)).isEqualTo("1234567");
+        assertThat(registry.mask("123", MaskingType.BUSINESS_REGISTRATION_NUMBER)).isEqualTo("123");
+        assertThat(registry.mask("123456", MaskingType.CORPORATE_REGISTRATION_NUMBER)).isEqualTo("123456");
+        assertThat(registry.mask("1234", MaskingType.DRIVER_LICENSE_NUMBER)).isEqualTo("1234");
         assertThat(registry.mask("123456", MaskingType.BANK_ACCOUNT_NUMBER)).isEqualTo("123456");
         assertThat(registry.mask("1234-5678", MaskingType.CREDIT_CARD_NUMBER)).isEqualTo("1234-5678");
+        assertThat(registry.mask("192.168.0", MaskingType.IP_ADDRESS)).isEqualTo("192.168.0");
+        assertThat(registry.mask("999.168.0.1", MaskingType.IP_ADDRESS)).isEqualTo("999.168.0.1");
+        assertThat(registry.mask("2001:::1", MaskingType.IP_ADDRESS)).isEqualTo("2001:::1");
+        assertThat(registry.mask("localhost", MaskingType.IP_ADDRESS)).isEqualTo("localhost");
         assertThat(registry.mask("주소형식아님", MaskingType.ADDRESS)).isEqualTo("******");
     }
 

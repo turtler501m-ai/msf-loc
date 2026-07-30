@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.form.form.newchange.repository.smartform.MsfRequestOsstWriteMapper">
+  <insert id="insertMsfRequestOsst" parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestOsstVo">
+    INSERT INTO MSF_REQUEST_OSST
+    (
+          MVNO_ORD_NO
+        , SEQ
+        , OSST_ORD_NO
+        , PRGR_STAT_CD
+        , CUST_ID
+        , SVC_CNTR_NO
+        , RSLT_CD
+        , RSLT_MSG
+        , RSLT_DATE
+        , NSTEP_GLOBAL_ID
+        , PRDC_CHK_NOTI_MSG
+        , NP_BCNTR_TYPE_CD
+        , NP_FEE
+        , NP_NCHRG_AMT
+        , NP_PNLT_AMT
+        , NP_UNPAY_AMT
+        , NP_HNDST_INST_AMT
+        , NP_PREPAY_AMT
+        , NP_BASE_CHRG_AMT
+        , NP_NTNL_CHRG_AMT
+        , NP_INTL_CHRG_AMT
+        , NP_ADD_CHRG_AMT
+        , NP_ETC_CHRG_AMT
+        , NP_VAT
+        , NP_RMN_STRT_DATE
+        , NP_RMN_END_DATE
+        , TLPH_NO_STAT_CD
+        , ASGN_AGNC_ID
+        , TLPH_NO_OWN_CMPN_CD
+        , OPEN_SVC_IND_CD
+        , ENCD_TLPH_NO
+        , TLPH_NO
+        , IF_TYPE_CD
+        , REG_DT
+        , DCLA_DEED_EFT_DATE
+        , SBSC_LMT_QNTY
+        , SBSC_CIRCUIT_QNTY
+        , DLNQ_AMT
+        , EICC_ID
+    )
+    VALUES(
+          LPAD(#{mvnoOrdNo}, 14, '0')
+        , COALESCE((SELECT MAX(SEQ+1) FROM MSF_REQUEST_OSST WHERE MVNO_ORD_NO = LPAD(#{mvnoOrdNo}, 14, '0')), 1)
+        , #{osstOrdNo}
+        , CASE WHEN LENGTH(#{prgrStatCd}) >= 4 THEN RIGHT(#{prgrStatCd},3) ELSE #{prgrStatCd} END
+        , #{custId}
+        , COALESCE(#{svcCntrNo},0)
+        , #{rsltCd}
+        , #{rsltMsg}
+        , TO_CHAR(NOW(),'YYYYMMDDHH24MISS')
+        , #{nstepGlobalId}
+        , #{prdcChkNotiMsg}
+        , #{npBcntrTypeCd}
+        , #{npFee}
+        , #{npNchrgAmt}
+        , #{npPnltAmt}
+        , #{npUnpayAmt}
+        , #{npHndstInstAmt}
+        , #{npPrepayAmt}
+        , #{npBaseChrgAmt}
+        , #{npNtnlChrgAmt}
+        , #{npIntlChrgAmt}
+        , #{npAddChrgAmt}
+        , #{npEtcChrgAmt}
+        , #{npVat}
+        , #{npRmnStrtDate}
+        , #{npRmnEndDate}
+        , #{tlphNoStatCd}
+        , #{asgnAgncId}
+        , #{tlphNoOwnCmpnCd}
+        , #{openSvcIndCd}
+        , #{encdTlphNo}
+        , #{tlphNo}
+        , COALESCE(#{ifTypeCd}, 'WEB')
+        , Now()
+        , #{dclaDeedEftDate}
+        , #{sbscLmtQnty}
+        , #{sbscCircuitQnty}
+        , #{dlnqAmt}
+        , #{eiccId}
+    )
+  </insert>
+
+
+</mapper>

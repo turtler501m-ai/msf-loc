@@ -10,17 +10,31 @@
     </MsfBox>
 
     <!-- 비밀번호 확인 모달 -->
-    <MsfPasswordInputModal v-model="isModalOpen" />
+    <MsfPasswordInputModal
+      v-model="isModalOpen"
+      :form-type="props.formType"
+      :request-key="props.formKey"
+      :document-id="documentIds"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
+import { computed } from 'vue'
 
 const props = defineProps({
   formKey: { type: String, required: true },
   formType: { type: String, required: true },
+  documentId: {
+    type: [String, Array],
+    required: true,
+  },
 })
+
+const documentIds = computed(() =>
+  Array.isArray(props.documentId) ? props.documentId : [props.documentId],
+)
 
 const isModalOpen = ref(false)
 

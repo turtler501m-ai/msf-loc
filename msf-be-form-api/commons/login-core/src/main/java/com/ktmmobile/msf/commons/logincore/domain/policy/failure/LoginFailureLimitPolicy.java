@@ -13,11 +13,23 @@ public class LoginFailureLimitPolicy implements LoginFailurePolicy {
 
     private final LoginCoreProperties properties;
 
+    /**
+     * 로그인 실패 제한 정책 적용 가능 여부 확인
+     *
+     * @param context 로그인 실패 컨텍스트
+     * @return 적용 가능 여부
+     */
     @Override
     public boolean supports(LoginFailureContext<?> context) {
         return true;
     }
 
+    /**
+     * 계정 잠금 필요 여부 확인
+     *
+     * @param context 로그인 실패 컨텍스트
+     * @return 계정 잠금 필요 여부
+     */
     @Override
     public boolean shouldLock(LoginFailureContext<?> context) {
         return context.user().loginFailCount() >= properties.failure().maxCount();

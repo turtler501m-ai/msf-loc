@@ -51,6 +51,10 @@ const componentConfig = {
     options: [...ICON_NAMES],
     default: undefined,
   },
+  active: {
+    description: 'toggle, validation 종류의 active 상태',
+    default: false,
+  },
   iconOnly: {
     description: '아이콘만 사용 (텍스트 숨김)',
     options: [...ICON_NAMES],
@@ -60,6 +64,10 @@ const componentConfig = {
     description: '버튼 텍스트 내용',
     default: '확인',
   },
+  loading: {
+    description: '로딩중 아이콘 표시여부 (클릭방지, 아이콘추가)',
+    default: false,
+  },
   disabled: {
     description: '비활성화 여부',
     default: false,
@@ -67,6 +75,15 @@ const componentConfig = {
   block: {
     description: '가로 너비 100% 채움',
     default: false,
+  },
+  readonlyMsg: {
+    description: '비활성화 스타일 적용 + 클릭시 설정된 메시지로 alert 띄움.',
+    default: undefined,
+  },
+  to: {
+    description:
+      '단순 페이지 이동(useRouter)-단순 라우팅 목적 (click과 분리 사용) - to="/login" 또는 :to="{ name: "Login" }"',
+    default: undefined,
   },
 }
 
@@ -78,10 +95,14 @@ const componentState = {
   // size: undefined,
   prefixIcon: undefined,
   suffixIcon: undefined,
+  active: false,
   iconOnly: undefined,
   slotText: '확인',
+  loading: false,
   disabled: false,
   block: false,
+  readonlyMsg: undefined,
+  to: undefined,
 }
 
 /**

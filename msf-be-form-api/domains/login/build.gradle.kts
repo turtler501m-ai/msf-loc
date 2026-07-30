@@ -1,5 +1,5 @@
 plugins {
-    id("spring-boot-conventions")
+    id("spring-library-conventions")
     id("module-dependencies-conventions")
 }
 

@@ -7,40 +7,103 @@ const model = defineModel({ type: Object, required: true })
 const freeVasOptions = ref([])
 const paidVasOptions = ref([])
 
+const activeFreeServices = ref([])
+const activePaidServices = ref([])
+const dailyAdditions = ref([]) // 일 단위 부가서비스 정보 저장
+
+/**
+ * 부가서비스 명칭에 사용 기간 추가 (dailyAddition 정보가 있는 경우)
+ */
+const formatVasLabel = (name, code, isPaid = false, price = 0) => {
+  const daily = dailyAdditions.value.find((d) => (d.RATE_CD || d.rateCd) === code)
+  const suffix = daily ? ` / ${daily.USE_PRD || daily.usePrd}(일)` : ''
+
+  if (isPaid) {
+    return `${name}${suffix} (${Number(price || 0).toLocaleString()}원)`
+  }
+  return `${name}${suffix}`
+}
+
+const fetchActiveServices = async () => {
+  // 가입자 정보 (기기변경 시 기존 번호가 있을 수 있음)
+  const phoneNo = `${model.value.deviceChgTel1 || ''}${model.value.deviceChgTel2 || ''}${model.value.deviceChgTel3 || ''}`
+  const customerLinkName = (model.value.cstmrNm || '').trim()
+
+  if (phoneNo.length < 10 || !customerLinkName) return
+
+  const payload = {
+    subscriberNo: phoneNo,
+    customerLinkName: customerLinkName,
+  }
+
+  try {
+    const res = await post('/api/form/activeaddition/list', payload)
+    if (res && res.code === '0000' && res.data?.[0]) {
+      const result = res.data[0]
+      activeFreeServices.value = result.freeAddition || []
+      activePaidServices.value = result.paidAddition || []
+
+      // 일 단위 정보 누적
+      if (result.dailyAddition) {
+        dailyAdditions.value = [...dailyAdditions.value, ...result.dailyAddition]
+      }
+    }
+  } catch (error) {
+    console.error('[MsfValueAdditonalServiceRequest] 이용중 부가서비스 조회 실패', error)
+  }
+}
+
 // 통합 저장용 배열 생성 로직
 watch(
-  () => [model.value.reqAdditionListNm, model.value.addtionId, freeVasOptions.value, paidVasOptions.value],
+  () => [
+    model.value.reqAdditionListNm,
+    model.value.addtionId,
+    freeVasOptions.value,
+    paidVasOptions.value,
+  ],
   ([free, paid, freeOpts, paidOpts]) => {
+    // 이용 중인 서비스 ID 목록
+    const activeIds = [
+      ...activeFreeServices.value.map((s) => s.rateCd),
+      ...activePaidServices.value.map((s) => s.rateCd),
+    ]
+
+    // 선택된 ID들과 이용 중인 ID들을 합침 (중복 제거)
+    const allFreeIds = [...new Set([...(free || []), ...activeFreeServices.value.map((s) => s.rateCd)])]
+    const allPaidIds = [...new Set([...(paid || []), ...activePaidServices.value.map((s) => s.rateCd)])]
+
     const combined = [
-      ...(free || []).map((id) => {
+      ...allFreeIds.map((id) => {
         const opt = freeOpts.find((o) => o.value === id)
+        const active = activeFreeServices.value.find((s) => s.rateCd === id)
         return {
           additionId: id,
-          additionNm: opt ? opt.additionNm : '',
-          rantal: opt ? Number(opt.rantal || 0) : 0,
+          additionNm: opt ? opt.additionNm : active ? active.rateNm : '',
+          rantal: opt ? Number(opt.rantal || 0) : active ? Number(active.baseAmt || 0) : 0,
+          additionKey: opt ? opt.additionKey : active ? active.additionKey : '',
         }
       }),
-      ...(paid || []).map((id) => {
+      ...allPaidIds.map((id) => {
         const opt = paidOpts.find((o) => o.value === id)
+        const active = activePaidServices.value.find((s) => s.rateCd === id)
         return {
           additionId: id,
-          additionNm: opt ? opt.additionNm : '',
-          rantal: opt ? Number(opt.rantal || 0) : 0,
+          additionNm: opt ? opt.additionNm : active ? active.rateNm : '',
+          rantal: opt ? Number(opt.rantal || 0) : active ? Number(active.baseAmt || 0) : 0,
+          additionKey: opt ? opt.additionKey : active ? active.additionKey : '',
         }
       }),
     ]
     model.value.additionList = combined
-    console.log('[MsfValueAdditonalServiceRequest] 부가서비스 선택값 변경', {
-      free,
-      paid,
-      combined,
-    })
   },
   { deep: true, immediate: true },
 )
 
 const fetchVasList = async () => {
   try {
+    // 이용중 부가서비스 먼저 조회
+    await fetchActiveServices()
+
     const payload = {
       operTypeCd: '',
       prodCtgTypeCd: 'R',
@@ -49,45 +112,65 @@ const fetchVasList = async () => {
       },
     }
 
-    console.log('[MsfValueAdditonalServiceRequest] 가입가능 부가서비스 조회 요청', payload)
     const res = await post('/api/form/addition/list', payload)
-    console.log('[MsfValueAdditonalServiceRequest] 가입가능 부가서비스 조회 응답', res)
 
     if (res && res.code === '0000' && res.data?.[0]) {
       const result = res.data[0]
 
-      // 무료 부가서비스
+      // 일 단위 정보 업데이트
+      if (result.dailyAddition) {
+        dailyAdditions.value = [...dailyAdditions.value, ...result.dailyAddition]
+      }
+
+      // 무료 부가서비스 병합
       const freeList = result.freeAddition || []
-      freeVasOptions.value = freeList.map((v) => ({
-        label: v.rateNm,
-        value: v.rateCd,
-        additionNm: v.rateNm,
-        rantal: v.baseAmt,
-      }))
-
-      // 유료 부가서비스
-      const paidList = result.paidAddition || []
-      paidVasOptions.value = paidList.map((v) => ({
-        label: `${v.rateNm} (${Number(v.baseAmt || 0).toLocaleString()}원)`,
-        value: v.rateCd,
-        additionNm: v.rateNm,
-        rantal: v.baseAmt,
-      }))
-
-      // 무료 부가서비스 목록의 모든 값을 선택 상태로 설정 (항상 전체 선택)
-      model.value.reqAdditionListNm = freeVasOptions.value.map((v) => v.value)
-      console.log('[MsfValueAdditonalServiceRequest] 가입가능 부가서비스 화면 반영', {
-        freeCount: freeVasOptions.value.length,
-        paidCount: paidVasOptions.value.length,
-        freeOptions: freeVasOptions.value,
-        paidOptions: paidVasOptions.value,
-        selectedFree: model.value.reqAdditionListNm,
+      const mergedFree = [...freeList]
+      activeFreeServices.value.forEach((active) => {
+        if (!mergedFree.some((f) => f.rateCd === active.rateCd)) {
+          mergedFree.push(active)
+        }
       })
-    } else {
-      console.log('[MsfValueAdditonalServiceRequest] 가입가능 부가서비스 응답 데이터 없음', res)
+
+      freeVasOptions.value = mergedFree.map((v) => ({
+        label: formatVasLabel(v.rateNm, v.rateCd),
+        value: v.rateCd,
+        additionNm: v.rateNm,
+        rantal: v.baseAmt,
+        additionKey: v.additionKey,
+      }))
+
+      // 유료 부가서비스 병합
+      const paidList = result.paidAddition || []
+      const mergedPaid = [...paidList]
+      activePaidServices.value.forEach((active) => {
+        if (!mergedPaid.some((p) => p.rateCd === active.rateCd)) {
+          mergedPaid.push(active)
+        }
+      })
+
+      paidVasOptions.value = mergedPaid.map((v) => {
+        const isActive = activePaidServices.value.some((s) => s.rateCd === v.rateCd)
+        return {
+          label: formatVasLabel(v.rateNm, v.rateCd, true, v.baseAmt),
+          value: v.rateCd,
+          additionNm: v.rateNm,
+          rantal: v.baseAmt,
+          disabled: isActive, // 이미 가입된 서비스는 체크 해제 불가
+          additionKey: v.additionKey,
+        }
+      })
+
+      // 선택 상태 업데이트
+      const currentFree = model.value.reqAdditionListNm || []
+      const activeFreeIds = activeFreeServices.value.map((s) => s.rateCd)
+      model.value.reqAdditionListNm = [...new Set([...currentFree, ...activeFreeIds])]
+
+      const currentPaid = model.value.addtionId || []
+      const activePaidIds = activePaidServices.value.map((s) => s.rateCd)
+      model.value.addtionId = [...new Set([...currentPaid, ...activePaidIds])]
     }
   } catch (error) {
-    console.error('[MsfValueAdditonalServiceRequest] 가입가능 부가서비스 조회 실패', error)
+    console.error('[MsfValueAdditonalServiceRequest] 부가서비스 조회 실패', error)
   }
 }
 

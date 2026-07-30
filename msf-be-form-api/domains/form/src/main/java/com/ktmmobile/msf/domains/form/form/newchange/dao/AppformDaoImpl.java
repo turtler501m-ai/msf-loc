@@ -12,7 +12,6 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import com.ktmmobile.msf.domains.form.form.common.dto.UsimBasDto;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.AcenDto;
 import com.ktmmobile.msf.domains.form.common.dto.AppformReqDto;
 import com.ktmmobile.msf.domains.form.common.dto.IntmInsrRelDTO;
 import com.ktmmobile.msf.domains.form.common.dto.JuoSubInfoDto;
@@ -35,7 +34,7 @@ public class AppformDaoImpl implements AppformDao {
 
     SqlSessionTemplate sqlSessionTemplate;
 
-    @Value("${api.interface.server}")
+    @Value("${api.interface.server:}")
     private String apiInterfaceServer;
 
     @Override
@@ -770,10 +769,7 @@ public class AppformDaoImpl implements AppformDao {
         return 0 < sqlSessionTemplate.insert("AppformMapper.insertMcpRequestKtInter", appformReq);
     }
 
-    @Override
-    public int insertAcenReqTrg(AcenDto acenDto) {
-        return sqlSessionTemplate.insert("AppformMapper.insertAcenReqTrg", acenDto);
-    }
+
 
     @Override
     public boolean insertMcpRequestPayInfo(AppformReqDto appformReq) {

@@ -30,8 +30,9 @@
 import { onBeforeMount, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
-import { showAlert } from '@/libs/utils/comp.utils'
+// import { showAlert } from '@/libs/utils/comp.utils'
 import { storeTempSave } from '@/stores/tempsave'
+import { useMsfUserStore } from '@/stores/msf_user'
 
 // 데이터 테이블 + 페이징처리
 const colDefsPaging = ref([
@@ -61,7 +62,7 @@ const colDefsPaging = ref([
     cellStyle: {
       textAlign: 'center',
     },
-    cellRenderer: (params) => {
+    valueFormatter: (params) => {
       return renderFormType(params)
     },
   },
@@ -72,7 +73,7 @@ const colDefsPaging = ref([
     cellStyle: {
       textAlign: 'center',
     },
-    cellRenderer: (params) => {
+    valueFormatter: (params) => {
       return params.data.cstmrTypeCd?.title
     },
   },
@@ -101,7 +102,10 @@ const isLoaded = ref(false)
 const pagingRef = ref()
 const selectedRowPaging = ref([])
 const selectedScriptSeq = ref(null)
+const selectedModUserID = ref(null)
 const alertUpdateMsg = ref('수정할 항목을 선택해주세요.')
+
+const userStore = useMsfUserStore()
 
 const onClickSearch = () => {
   pagingRef.value.search()
@@ -110,7 +114,9 @@ const onClickSearch = () => {
 const onSelected = (data) => {
   selectedRowPaging.value = data
   selectedScriptSeq.value = data?.requestKey ?? null
-  if (selectedScriptSeq.value) {
+  selectedModUserID.value = data?.modUserId ?? null
+
+  if (selectedScriptSeq.value && data?.cretId === userStore.userInfo?.userId) {
     alertUpdateMsg.value = ''
   } else {
     alertUpdateMsg.value = '수정할 항목을 선택해주세요.'
@@ -118,10 +124,6 @@ const onSelected = (data) => {
 }
 
 const onUpdate = async () => {
-  if (!selectedScriptSeq.value) {
-    showAlert('수정할 항목을 선택해주세요.')
-    return
-  }
   // 선택된 행의 데이터 확인
   const selectedRow = selectedRowPaging.value
   if (!selectedRow) return
@@ -135,19 +137,27 @@ const onUpdate = async () => {
   })
 }
 
-const renderFormType = (params) => {
-  if (params.data.formTypeCd?.code === '1') {
-    const formTypeCd = params.data.formTypeCd?.title
-    const reqBuyTypeCd = params.data.reqBuyTypeCd?.title
-    const operTypeCd = params.data.operTypeCd?.title
+function renderFormType(params) {
+  if (!params?.data) return ''
 
-    return formTypeCd + '(' + reqBuyTypeCd + '/' + operTypeCd + ')'
-  } else {
-    return params.data.formTypeCd?.title
+  const formType = params.data.formTypeCd
+  const reqBuyType = params.data.reqBuyTypeCd
+  const operType = params.data.operTypeCd
+
+  if (formType?.code === '1') {
+    // 내부 속성이 없을 경우를 대비해 기본값('-') 처리
+    const formTitle = formType?.title ?? ''
+    const reqBuyTitle = reqBuyType?.title ?? '-'
+    const operTitle = operType?.title ?? '-'
+
+    return `${formTitle}(${reqBuyTitle}/${operTitle})`
   }
+
+  return formType?.title ?? ''
 }
 
 onBeforeMount(() => {
+  formData.value.searchWord = ''
   isLoaded.value = true
 })
 </script>

@@ -9,9 +9,13 @@ import lombok.Setter;
 @NoArgsConstructor
 public class UsimRequest {
 
-    String iccId;
-    String agentCd; //선택한 대리점코드
-    String storCd; //로그인 세션의 매장코드
+    private String iccId;
+    private String agentCd; //선택한 대리점코드
+    private String storCd; //로그인 세션의 매장코드
+    private boolean hasSim; //유심보유여부
 
-    String orgnId; //안쓸것임
+    private String orgnId; //안쓸것임
+
+    private String dataType;
+    private String soc;
 }

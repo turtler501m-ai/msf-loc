@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.commons.client.adapter.repository.mybatis.smartform.mapper.HttpClientLogMapper">
+
+  <insert id="insertHttpClientLog" parameterType="com.ktmmobile.msf.commons.client.adapter.repository.mybatis.smartform.HttpClientLogRow">
+    insert into msf_ext_api_hist (
+      trace_id,
+      grp_nm,
+      trgt_sys,
+      drctn_cd,
+      req_mthd_cd,
+      req_url,
+      req_path,
+      req_query,
+      req_hdr,
+      req_body,
+      resp_stat_cd,
+      resp_hdr,
+      resp_body,
+      succ_yn,
+      err_msg,
+      start_dt,
+      end_dt,
+      dur_ms,
+      clnt_ip,
+      clnt_host,
+      env_cd,
+      app_nm,
+      parent_scan_id
+    ) values (
+      #{traceId},
+      #{groupName},
+      #{targetSystem},
+      #{directionCode},
+      #{requestMethodCode},
+      #{requestUrl},
+      #{requestPath},
+      #{requestQuery},
+      #{requestHeaders},
+      #{requestBody},
+      #{responseStatus},
+      #{responseHeaders},
+      #{responseBody},
+      #{successYn},
+      #{errorMessage},
+      #{startedAt},
+      #{endedAt},
+      #{durationMs},
+      cast(#{clientIp} as inet),
+      #{clientHost},
+      #{environmentCode},
+      #{applicationName},
+      #{parentScanId}
+    )
+  </insert>
+
+</mapper>

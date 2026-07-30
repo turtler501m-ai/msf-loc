@@ -1,0 +1,19 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="48" height="48" rx="12" fill="#F5F5F5" />
+
+    <!-- SIM 카드 외형 (상단 좌측 모서리 컷) -->
+    <path d="M19 11 L31 11 Q33 11 33 13 L33 37 Q33 39 31 39 L17 39 Q15 39 15 37 L15 16 Z"
+          fill="#1F2937" />
+
+    <!-- 칩 영역 (밝은 사각형) -->
+    <rect x="18" y="19" width="12" height="10" rx="1.5" fill="#F5F5F5" />
+
+    <!-- 칩 내부 격자선 (가로) -->
+    <rect x="18" y="22.5" width="12" height="1" fill="#1F2937" opacity="0.2" />
+    <rect x="18" y="25.5" width="12" height="1" fill="#1F2937" opacity="0.2" />
+
+    <!-- 칩 내부 격자선 (세로) -->
+    <rect x="22" y="19" width="1" height="10" fill="#1F2937" opacity="0.2" />
+    <rect x="25" y="19" width="1" height="10" fill="#1F2937" opacity="0.2" />
+    <rect x="28" y="19" width="1" height="10" fill="#1F2937" opacity="0.2" />
+</svg>

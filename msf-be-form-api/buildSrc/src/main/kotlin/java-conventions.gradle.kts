@@ -1,6 +1,7 @@
 plugins {
     java
     `java-library`
+    pmd
 }
 
 java {
@@ -20,11 +21,13 @@ dependencies {
     compileOnly("org.projectlombok:lombok:$lombokVersion")
     annotationProcessor("org.projectlombok:lombok:$lombokVersion")
 
-    compileOnly("org.mapstruct:mapstruct:$mapstructVersion")
+    implementation("org.mapstruct:mapstruct:$mapstructVersion")
     annotationProcessor("org.mapstruct:mapstruct-processor:$mapstructVersion")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testCompileOnly("org.projectlombok:lombok:$lombokVersion")
+    testAnnotationProcessor("org.projectlombok:lombok:$lombokVersion")
 }
 
 tasks.processResources {
@@ -39,4 +42,23 @@ tasks.withType<JavaCompile>().configureEach {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+pmd {
+    toolVersion = providers.gradleProperty("pmd.version").get()
+    isConsoleOutput = true
+    isIgnoreFailures = true
+    ruleSets = emptyList()
+    ruleSetFiles = files(rootProject.layout.projectDirectory.file("tools/pmd/ktds_PMD_RuleSet_v1.5_v7.xml"))
+}
+
+tasks.withType<Pmd>().configureEach {
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+}
+
+tasks.named("pmdTest").configure {
+    enabled = false
 }

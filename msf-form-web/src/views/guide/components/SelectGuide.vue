@@ -47,6 +47,10 @@ const componentConfig = {
     default: false,
     description: 'true로 설정 시, 옵션 선택 시 value가 아닌 선택된 데이터 객체가 반환됩니다.',
   },
+  selectPop: {
+    default: true,
+    description: '팝업 선택모드로 띄움(기본 true) / false: dropdown 형태',
+  },
   placeholder: undefined,
   disabled: false,
   readonly: false,
@@ -74,6 +78,7 @@ const componentState = {
   groupCode: '',
   disabledItems: [],
   isFull: false,
+  selectPop: true,
   placeholder: '유형',
   disabled: false,
   readonly: false,

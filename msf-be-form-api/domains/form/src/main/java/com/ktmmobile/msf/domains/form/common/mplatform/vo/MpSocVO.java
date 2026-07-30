@@ -1,15 +1,19 @@
 package com.ktmmobile.msf.domains.form.common.mplatform.vo;
 
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.Locale;
 
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+
+@Slf4j
 public class MpSocVO {
+
     private String socDescription;//부가서비스명
     private String socRateValue;//이용요금
     private String effectiveDate;//신청일자
@@ -45,8 +49,6 @@ public class MpSocVO {
     /** 해지 안내 문구 */
     private String canCmnt;
 
-    private static final Logger logger = LoggerFactory.getLogger(MpSocVO.class);
-
     public void parseParamSbst() {
         String[] paramList = paramSbst.split("\\|");
         List<String> contidList = new ArrayList<String>();
@@ -70,13 +72,13 @@ public class MpSocVO {
                 case "END_DT":
                     try {
                         endDt = StringUtils.rightPad(paramVal, 14, '0');
-                        SimpleDateFormat dateForm = new SimpleDateFormat("yyyyMMddHHmmss");
+                        SimpleDateFormat dateForm = new SimpleDateFormat("yyyyMMddHHmmss", Locale.ROOT);
                         Calendar cal = Calendar.getInstance();
                         cal.setTime(dateForm.parse(endDt));
                         cal.add(Calendar.SECOND, 1);
                         endDttm = dateForm.format(cal.getTime());
                     } catch(ParseException e) {
-                         logger.error("ParseException e : {}", e.getMessage());
+                        log.error("ParseException e : {}", e.getMessage());
                     }
                     break;
                 case "SHARE_SUB_CONTID1":
@@ -109,90 +111,119 @@ public class MpSocVO {
     public String getSettingYn() {
         return settingYn;
     }
+
     public void setSettingYn(String settingYn) {
         this.settingYn = settingYn;
     }
+
     public String getOnlineCanYn() {
         return onlineCanYn;
     }
+
     public void setOnlineCanYn(String onlineCanYn) {
         this.onlineCanYn = onlineCanYn;
     }
+
     public String getCanCmnt() {
         return canCmnt;
     }
+
     public void setCanCmnt(String canCmnt) {
         this.canCmnt = canCmnt;
     }
+
     public String getSocDescription() {
         return socDescription;
     }
+
     public void setSocDescription(String socDescription) {
         this.socDescription = socDescription;
     }
+
     public String getSocRateValue() {
         return socRateValue;
     }
+
     public void setSocRateValue(String socRateValue) {
         this.socRateValue = socRateValue;
     }
+
     public String getEffectiveDate() {
         return effectiveDate;
     }
+
     public void setEffectiveDate(String effectiveDate) {
         this.effectiveDate = effectiveDate;
     }
+
     public String getEffectiveEndDate() {
         return effectiveEndDate;
     }
+
     public void setEffectiveEndDate(String effectiveEndDate) {
         this.effectiveEndDate = effectiveEndDate;
     }
+
     public String getSocRateVatValue() {
         return socRateVatValue;
     }
+
     public void setSocRateVatValue(String socRateVatValue) {
         this.socRateVatValue = socRateVatValue;
     }
+
     public String getSoc() {
         return soc;
     }
+
     public void setSoc(String soc) {
         this.soc = soc;
     }
+
     public String getMemo() {
         return memo;
     }
+
     public void setMemo(String memo) {
         this.memo = memo;
     }
+
     public int getSocRateVat() {
         return socRateVat;
     }
+
     public void setSocRateVat(int socRateVat) {
         this.socRateVat = socRateVat;
     }
+
     public String getUpdateFlag() {
         return updateFlag;
     }
+
     public void setUpdateFlag(String updateFlag) {
         this.updateFlag = updateFlag;
     }
+
     public String getVatYn() {
         return vatYn;
     }
+
     public void setVatYn(String vatYn) {
         this.vatYn = vatYn;
     }
+
     public String getProdHstSeq() {
         return prodHstSeq;
     }
+
     public void setProdHstSeq(String prodHstSeq) {
         this.prodHstSeq = prodHstSeq;
     }
+
     public String getParamSbst() {
         return paramSbst;
     }
+
     public void setParamSbst(String paramSbst) {
         this.paramSbst = paramSbst;
     }

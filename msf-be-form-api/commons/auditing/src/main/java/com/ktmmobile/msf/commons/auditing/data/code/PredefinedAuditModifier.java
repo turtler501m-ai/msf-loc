@@ -7,8 +7,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum PredefinedAuditModifier {
     SYSTEM("SYSTEM"),
-    SCHEDULER("SCHEDULER"),
-    BASIC("-"),
     NULL("");
 
     private final String code;

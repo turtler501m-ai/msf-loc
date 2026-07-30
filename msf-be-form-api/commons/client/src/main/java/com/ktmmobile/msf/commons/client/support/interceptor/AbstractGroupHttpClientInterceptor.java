@@ -11,8 +11,7 @@ import org.springframework.http.client.ClientHttpResponse;
 import com.ktmmobile.msf.commons.client.application.port.out.GroupHttpClientInterceptor;
 
 /**
- * 공통 interceptor 구현을 특정 그룹들에만 적용하고 싶을 때 사용하는 베이스 클래스다.
- * 업무 모듈에서는 그룹명 목록과 delegate interceptor만 지정해 얇게 확장하면 된다.
+ * 특정 그룹에만 공통 interceptor 구현을 연결할 때 사용할 베이스 클래스
  */
 public abstract class AbstractGroupHttpClientInterceptor implements GroupHttpClientInterceptor {
 

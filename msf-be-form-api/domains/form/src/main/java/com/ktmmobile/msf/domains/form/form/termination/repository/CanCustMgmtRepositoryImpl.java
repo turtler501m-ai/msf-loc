@@ -8,6 +8,7 @@ import com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto.Detail
 import com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto.ListReqDto;
 import com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto.ProcessStatusDto;
 import com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto.ProcessUpdateDto;
+import com.ktmmobile.msf.domains.form.form.termination.repository.msp.MspCancelPageMapper;
 import com.ktmmobile.msf.domains.form.form.termination.repository.smartform.CanCustMgmtMapper;
 
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 public class CanCustMgmtRepositoryImpl {
 
     private final CanCustMgmtMapper canCustMgmtMapper;
+    private final MspCancelPageMapper mspCancelPageMapper;
 
     public int selectAppFormListCount(ListReqDto req) {
         return canCustMgmtMapper.selectAppFormListCount(req);
@@ -44,5 +46,17 @@ public class CanCustMgmtRepositoryImpl {
 
     public int updateCanCustProcCd(ProcessUpdateDto req) {
         return canCustMgmtMapper.updateCanCustProcCd(req);
+    }
+
+    public int updateCanCustProcessResult(ProcessUpdateDto req) {
+        return canCustMgmtMapper.updateCanCustProcessResult(req);
+    }
+
+    public int updateCancelOpenReqDt(Long requestKey) {
+        return canCustMgmtMapper.updateCancelOpenReqDt(requestKey);
+    }
+
+    public int updateMcpCancelRequestProcCd(ProcessUpdateDto req) {
+        return mspCancelPageMapper.updateMcpCancelRequestProcCd(req);
     }
 }

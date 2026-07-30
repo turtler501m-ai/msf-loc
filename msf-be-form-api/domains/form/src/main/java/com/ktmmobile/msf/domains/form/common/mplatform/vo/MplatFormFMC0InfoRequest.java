@@ -1,35 +1,45 @@
 package com.ktmmobile.msf.domains.form.common.mplatform.vo;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpBaseRequest;
+import lombok.Data;
+
+import com.ktmmobile.msf.domains.externalclient.mspprx.support.adapter.EncryptAdapter;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestNameChgVo;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
-public class MplatFormFMC0InfoRequest extends MpBaseRequest {
+@XmlRootElement(name = "inDto") //  XML 최상위 루트 태그명 지정
+@XmlAccessorType(XmlAccessType.FIELD)
+public class MplatFormFMC0InfoRequest {
 
     private BaseInfo baseInfo;
     private RcvCustInfo rcvCustInfo;
     private RcvBillAcntInfo rcvBillAcntInfo;
-    private PrdcInfo prdcInfo;
-    private InFrmpapDto inFrmpapDto;
+    private PrdcList prdcList;
 
     // =========================
     // baseInfo
     // =========================
     @Data
+    @XmlAccessorType(XmlAccessType.FIELD)
     public static class BaseInfo {
 
         private String mvnoOrdNo;           // MVNO 오더 번호
         private String slsCmpnCd;           // 판매회사코드
         private String custNo;              // 고객번호
         private String svcContId;           // 계약번호
+        @XmlJavaTypeAdapter(EncryptAdapter.class)
         private String tlphNo;              // 전화번호
         private String mcnStatRsnCd;        // 명변 사유코드
         private String usimSuccYn;          // USIM 승계 여부
+        @XmlJavaTypeAdapter(EncryptAdapter.class)
         private String iccId;               // USIM 일련번호
+        @XmlJavaTypeAdapter(EncryptAdapter.class)
         private String realUseCustNm;       // 실사용고객명
+        @XmlJavaTypeAdapter(EncryptAdapter.class)
         private String realUseCustBrthDate; // 실사용자 생년월일
     }
     // =========================
@@ -38,21 +48,28 @@ public class MplatFormFMC0InfoRequest extends MpBaseRequest {
     // rcvCustInfo
     // =========================
     @Data
+    @XmlAccessorType(XmlAccessType.FIELD)
     public static class RcvCustInfo {
 
         private String custTypeCd;              // 양수인 고객유형코드
         private String custIdntNoIndCd;         // 고객식별번호구분코드
+        @XmlJavaTypeAdapter(EncryptAdapter.class)
         private String custIdntNo;              // 고객식별번호
         private String crprNo;                  // 법인번호
+        @XmlJavaTypeAdapter(EncryptAdapter.class)
         private String custNm;                  // 고객명
         private String myslAgreYn;              // 본인동의여부
         private String nativeRlnamAthnEvdnPprCd;// 실명인증증빙서류코드
+        @XmlJavaTypeAdapter(EncryptAdapter.class)
         private String athnRqstcustCntplcNo;    // 인증요청고객연락처번호
         private String rsdcrtIssuDate;          // 주민등록증발급일자
+        @XmlJavaTypeAdapter(EncryptAdapter.class)
         private String lcnsNo;                  // 면허번호
         private String lcnsRgnCd;               // 면허지역코드
+        @XmlJavaTypeAdapter(EncryptAdapter.class)
         private String mrtrPrsnNo;              // 유공자번호
         private String nationalityCd;            // 국적코드
+        @XmlJavaTypeAdapter(EncryptAdapter.class)
         private String fornBrthDate;            // 외국인생일일자
         private String crdtInfoAgreYn;          // 신용정보동의여부
         private String indvInfoInerPrcuseAgreYn;// 개인정보내부활용동의여부
@@ -66,16 +83,22 @@ public class MplatFormFMC0InfoRequest extends MpBaseRequest {
         private String spamPrvdAgreYn;          // 스팸제공동의
         private String prttlpStlmUseAgreYn;     // 이동전화결제이용동의
         private String prttlpStlmPwdUseAgreYn;  // 이동전화결제비밀번호동의
+        @XmlJavaTypeAdapter(EncryptAdapter.class)
         private String wrlnTlphNo;              // 유선전화번호
+        @XmlJavaTypeAdapter(EncryptAdapter.class)
         private String rprsPrsnNm;              // 대표자명
         private String upjnCd;                  // 업종코드
         private String bcuSbst;                 // 업태내용
         private String zipNo;                   // 우편번호
+        @XmlJavaTypeAdapter(EncryptAdapter.class)
         private String fndtCntplcSbst;          // 기본연락처
+        @XmlJavaTypeAdapter(EncryptAdapter.class)
         private String mntCntplcSbst;           // 상세연락처
+        @XmlJavaTypeAdapter(EncryptAdapter.class)
         private String brthDate;                // 생일일자
         private String brthNnpIndCd;            // 음양구분
         private String jobCd;                   // 직업코드
+        @XmlJavaTypeAdapter(EncryptAdapter.class)
         private String emlAdrsNm;               // 이메일주소
         private String lstdIndCd;               // 상장구분코드
         private String emplCnt;                 // 사원수
@@ -84,27 +107,38 @@ public class MplatFormFMC0InfoRequest extends MpBaseRequest {
         private String crprUpjnCd;              // 법인업종코드
         private String crprBcuSbst;             // 법인업태
         private String crprZipNo;               // 법인우편번호
+        @XmlJavaTypeAdapter(EncryptAdapter.class)
         private String crprFndtCntplcSbst;      // 법인기본주소
+        @XmlJavaTypeAdapter(EncryptAdapter.class)
         private String crprMntCntplcSbst;       // 법인상세주소
         private String custInfoChngYn;          // 고객정보변경여부
+        @XmlJavaTypeAdapter(EncryptAdapter.class)
         private String agntCustNm;              // 대리인명
         private String agntCustIdfyNoType;     // 대리인 식별번호 타입
+        @XmlJavaTypeAdapter(EncryptAdapter.class)
         private String agntIdfyNoVal;          // 대리인 식별번호
         private String agntPersonSexDiv;       // 대리인 성별
         private String agntAgreYn;             // 대리인 동의여부
         private String agntTelAthn;            // 대리인 연락처종류
+        @XmlJavaTypeAdapter(EncryptAdapter.class)
         private String agntTelNo;              // 대리인 연락처
         private String agntTypeCd;             // 대리인 유형
-        private String agntNationalityCd;      // 대리인 국적
         private String agntRsdcrtIssuDate;     // 대리인 발급일자
         private String agntRltnCd;             // 대리인관계코드
+        @XmlJavaTypeAdapter(EncryptAdapter.class)
         private String agntBrthDate;           // 대리인생일
         private String agntRlnamAthnEvdnPprCd; // 대리인 실명인증서류
         private String agntLicnsRgnCd;         // 대리인 면허지역
+        @XmlJavaTypeAdapter(EncryptAdapter.class)
         private String agntLicnsNo;            // 대리인 면허번호
+        private String agntNationalityCd;      // 대리인 국적
+        @XmlJavaTypeAdapter(EncryptAdapter.class)
         private String homeTlphNo;             // 자택전화
+        // private String myslfAthnYn;             // 본인인증여부 (필수) FMC0에서는 제외
+        // private String fathTransacId;           // 안면인증 아이디  FMC0에서는 제외
         private String fnncDealAgreeYn;        // 금융거래동의
         private String indvLoInfoPrvAgreeYn;   // 위치정보동의
+        // private String cpntId;               // FMC0에서는 제외
     }
     // =========================
 
@@ -112,21 +146,29 @@ public class MplatFormFMC0InfoRequest extends MpBaseRequest {
     // rcvBillAcntInfo
     // =========================
     @Data
+    @XmlAccessorType(XmlAccessType.FIELD)
     public static class RcvBillAcntInfo {
 
         private String rqsshtPprfrmCd;     // 청구서양식코드
+        @XmlJavaTypeAdapter(EncryptAdapter.class)
         private String rqsshtTlphNo;        // 청구서 전화번호
+        @XmlJavaTypeAdapter(EncryptAdapter.class)
         private String rqsshtEmlAdrsNm;     // 청구서 이메일
         private String billZipNo;           // 청구 우편번호
+        @XmlJavaTypeAdapter(EncryptAdapter.class)
         private String billFndtCntplcSbst;  // 청구 기본주소
+        @XmlJavaTypeAdapter(EncryptAdapter.class)
         private String billMntCntplcSbst;   // 청구 상세주소
         private String blpymMthdCd;         // 납부방법
         private String duedatDateIndCd;     // 납기일자구분
         private String crdtCardExprDate;    // 카드만료일
         private String crdtCardKindCd;      // 카드종류
         private String bankCd;              // 은행코드
+        @XmlJavaTypeAdapter(EncryptAdapter.class)
         private String blpymMthdIdntNo;     // 납부식별번호
+        @XmlJavaTypeAdapter(EncryptAdapter.class)
         private String blpymCustNm;         // 납부고객명
+        @XmlJavaTypeAdapter(EncryptAdapter.class)
         private String blpymCustIdntNo;     // 납부고객식별번호
         private String blpymMthdIdntNoHideYn;// 납부식별숨김
         private String bankSkipYn;          // 은행스킵여부
@@ -143,23 +185,40 @@ public class MplatFormFMC0InfoRequest extends MpBaseRequest {
     // prdcInfo
     // =========================
     @Data
-    public static class PrdcInfo {
+    @XmlAccessorType(XmlAccessType.FIELD)
+    public static class PrdcList {
 
         private String prdcCd;              // 상품코드
-        private String prdcTypeCd;          // 상품타입
+        private String prdcTypecd;          // 상품타입 (FMC0 규격이 prdcTypecd임)
         private String ftrNewParam;         // 상품파람
     }
     // =========================
 
-    // =========================
-    // inFrmpapDto
-    // =========================
-    @Data
-    public static class InFrmpapDto {
+    public void preCheckSetup(MsfRequestNameChgVo request) {
+        String simTypeCd = request.getSimTypeCd(); // ESIM, USIM
+        String planSelectType = request.getPlanSelectType(); // CURRENT, CHANGE
+        String reqPayTypeCd = request.getReqPayTypeCd();
 
-        private String cntpntCd;            // 접점코드
-        private String frmpapId;            // 서식지아이디
+        // ESIM인 경우
+        if ("ESIM".equals(simTypeCd)) {
+            this.baseInfo.usimSuccYn = "Y";
+            this.baseInfo.iccId = null;
+        }
+
+        // 현재 요금제 선택
+        if ("CURRENT".equals(planSelectType)) {
+            this.prdcList = null;
+            // this.prdcList.prdcCd = null;
+        }
+
+        // 납부 방법 자동이체인 경우
+        if ("D".equals(reqPayTypeCd)) {
+            // myslAthnTypeCd 세팅 제외, agreIndCd => 03: 일반인증인 경우 myslAthnTypeCd 필수값이므로 agreIndCd 자동이체인경우만 설정
+            this.rcvBillAcntInfo.agreIndCd = "01";
+        }
+
+        // crprNo 법인번호,
+
     }
-    // =========================
 
 }

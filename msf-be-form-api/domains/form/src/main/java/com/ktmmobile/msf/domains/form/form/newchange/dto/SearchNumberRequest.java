@@ -16,6 +16,7 @@ public class SearchNumberRequest {
 
     @NotNull
     private Long requestKey; //신청서 일련번호
+    private String operTypeCd; //신규가입(NAC3), 번호이동(MNP3), 기기변경(HDN3)
 
     private String reqWantNumber; //희망번호 조회 : 희망번호 입력 4자리
 

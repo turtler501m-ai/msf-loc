@@ -1,0 +1,98 @@
+crypto:
+  field:
+    enabled: true
+    key-id: ## 환경별 설정
+    key:    ## 환경별 설정
+    previous-keys: []
+    #  - key-id: aes-gcm-202607
+    #    key:  ## 환경별 설정
+    legacy-aes256:
+      key: ## 환경별 설정
+      iv:  ## 환경별 설정
+  kisa-seed:
+    key: ## 환경별 설정
+    iv:  ## 환경별 설정
+
+
+
+---
+#### PRD Profile
+spring:
+  config.activate.on-profile: prd
+
+crypto:
+  field:
+    key-id: aes-gcm-202607
+    key: ENC(Gp8QwwPUhCNLONh7RQ8V5ExJip368oJ0wihIZU6USEHgDUXsba6mvNwG/ytAKODV//BqRMaVzKH0Nu6pJhmF9yAXpgfTckCrP71BCNYqOpw=)
+    previous-keys: []
+    #  - key-id: aes-gcm-202607
+    #    key: ENC(Gp8QwwPUhCNLONh7RQ8V5ExJip368oJ0wihIZU6USEHgDUXsba6mvNwG/ytAKODV//BqRMaVzKH0Nu6pJhmF9yAXpgfTckCrP71BCNYqOpw=)
+    legacy-aes256:
+      key: ENC(BBoiuEszy9KJHXACHwaCkWHGIpX8Rko7VZpfS7FghoPS/1vdFUVNUexgAxevcJuZHDhaPv/48kH79mYoGy5pt3EXtUebZj6jOEle5mRMBDs=)
+      iv: ENC(hgZKmLiTZvfQiOsAn2T8+WJg1VvlL0q4WN5IfJlY4kPtV9Hjjbr8PxefdysTsxFkCh3hZVrxJTXbsbsMeG9w3A==)
+  kisa-seed:
+    key: ENC(4zPuL0abkyjpLKuAZIKeVaVwBl0rcobQG0liqWSe5QCvl9l/PnNV032K5hX58XJMarRsyem9dCA8lyaMaUm3IQ==)
+    iv: ENC(9vcwMKnMBxTV/3wTSCPj7eUO8+ltupZcy7zJUZ2qQWpy1vuMq8NUb+wK7xmmljkKaI0R/AoUaMPoVLPfDcO8Hg==)
+
+
+
+---
+#### STG Profile
+spring:
+  config.activate.on-profile: stg
+
+crypto:
+  field:
+    key-id: aes-gcm-202607
+    key: ENC(yfYTS6N5ek5IvCR1NqrCJNISdH6E9MgNFMGsbZnr4zPVm0AAwrzIGRRmDe/Dm3XI6TNl4WHzOwqaU9sp/nOd6tYF9ihasWnQlc6HrUypI2s=)
+    previous-keys: []
+    #  - key-id: aes-gcm-202607
+    #    key: ENC(yfYTS6N5ek5IvCR1NqrCJNISdH6E9MgNFMGsbZnr4zPVm0AAwrzIGRRmDe/Dm3XI6TNl4WHzOwqaU9sp/nOd6tYF9ihasWnQlc6HrUypI2s=)
+    legacy-aes256:
+      key: ENC(81pdj2ol4nVSUrmWLLUZVkZmi/dDbSKvDTu37MRAtFdspi7LfjDZeuftBNqbyLFhlgJRd2316KP4WrVs8bX+P7znRbCuuht4g8ih8nDxZr8=)
+      iv: ENC(+zYZ9zLPbCBMpbAA+f/Fqa9Oye67M7uzCLQWO+hEhgZ1kXH0ZuVCxyMD7d7WAxub4ntMvao9+iSteXil53VtOUZM0NrtzvgVjaME2J1m7ik=)
+  kisa-seed:
+    key: ENC(3EUT1FRf7l9748MQz1Y9Tlc5VH34JxnCN4oBmQ0RCrZVFab3Cwl5XY/aCEcaL1zLHN6/E/bTd8Y35HJSrTfYtg==)
+    iv: ENC(e02btR6MnyKe0BV38SUTSa+rxOUVmGK8J7ToYDCUNsKK3Sm3Pc6tAYhg5c3f/7x8wkHZ3JY9CzaUawhRhel1HQ==)
+
+
+
+---
+#### DEV Profile
+spring:
+  config.activate.on-profile: dev
+
+crypto:
+  field:
+    key-id: aes-gcm-202607
+    key: ENC(E7TiOZ0/MjtP4l3LN7+MRLlJ9pAUSBE8YenV3WeXwCFB9PhutQC87paTUcvNn4GE6fFMpftk2sFdzbabQWLJZ7Ivmvrz/12MjhjjHjyij5o=)
+    previous-keys: []
+    #  - key-id: aes-gcm-202607
+    #    key: ENC(E7TiOZ0/MjtP4l3LN7+MRLlJ9pAUSBE8YenV3WeXwCFB9PhutQC87paTUcvNn4GE6fFMpftk2sFdzbabQWLJZ7Ivmvrz/12MjhjjHjyij5o=)
+    legacy-aes256:
+      key: ENC(spjz3YpdZhe50F+8Y/Js3TesMrV1ig/PUdjXFaBFikJCj9Jk7D/azzqnmUR81xQW4eXOjDBHIJEChV5+EhZGr4/zyUANxVBNUjrNRjDVLJI=)
+      iv: ENC(fTEid/BW26SIsJbRKS06BxcBXhnCxIretaNhI5MROYo1TeNDd/Z5E6Rj+05JA/ASV5lAbn6TxKe5FAdI/X3oAw==)
+  kisa-seed:
+    key: ENC(XX25lAxRIhRL7RfoxGgDnHKFZ/8gLc80Ucdt4fFNO5CD9/weNJ2Jq2D+oFt3svqTFRzpQQ/M/cOokZBqV0+U9Q==)
+    iv: ENC(o4x0fqBr1JjClzm/Xl++ZtkFlNV5O1snpahhHOHVN3M4nap+cGfbmAwfMKdcyxPvJkCu8eI2/5j/AHa1JFaRGw==)
+
+
+
+---
+#### LOCAL Profile
+spring:
+  config.activate.on-profile: local
+
+crypto:
+  field:
+    key-id: aes-gcm-202607
+    key: ENC(rtaEi1RmtJgd/X6uNyeqYHP2k50zDXT7I3v+ecUvu0Kfq1elM4KuCmClKEae1Xz4qhPSh3CjV+XioxTh1a6EqZ3GC+n3w7WwQo5clSUy8fA=)
+    previous-keys: []
+    #  - key-id: aes-gcm-202607
+    #    key: ENC(rtaEi1RmtJgd/X6uNyeqYHP2k50zDXT7I3v+ecUvu0Kfq1elM4KuCmClKEae1Xz4qhPSh3CjV+XioxTh1a6EqZ3GC+n3w7WwQo5clSUy8fA=)
+    legacy-aes256:
+      key: ENC(FbiMQCWYxCwoIljJrvPHC7AS3xegxK7HoYE/e1m6k2d8ZvNv1IA11Fbnmz1AqIl/xU0uQwrOrjRphjsRSjWf75uN2FNcYfIsQxYsEkPdxgs=)
+      iv: ENC(T7hml+GLygaI7VvuUe+HUulHt9dGw1i42OaoRRMg11Xw4HXZlVBaT4QeslWOhNlq2jQBSqrdz+17odw0A6Rq/A==)
+  kisa-seed:
+    key: ENC(mv6vCvh0G5pYEYj8LVR531zlwj3jOKblX4d/kLR/elJ9d0WaJpZHI8A6Tm0afAhj+v1k+XjVGH5XsnZ55kPvoA==)
+    iv: ENC(AteyUfAtv05ZQEKOxvs/oO4AzmBRsavTYKZhiKDhZTLEWEZqX98gJTP1l/SuUQqRJ3TDyRCmXReJG9/92TBrjw==)

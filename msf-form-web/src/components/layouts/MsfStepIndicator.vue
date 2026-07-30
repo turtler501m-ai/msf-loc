@@ -65,7 +65,7 @@ const isActive = (index) => index === props.currentStep
   --step-indecator-text-weight: var(--font-weight-regular);
 
   background-color: var(--step-indecator-background-color);
-  width: rem(94px);
+  width: var(--layout-step-nav-width);
   height: 100%;
   padding-block: rem(32px);
   position: relative;
@@ -83,7 +83,7 @@ const isActive = (index) => index === props.currentStep
           width: rem(1px);
           height: rem(50px);
           background-color: var(--color-gray-100);
-          @include position($b: -32px, $l: 24px);
+          @include position($b: rem(-32px), $l: rem(24px));
         }
       }
     }
@@ -126,15 +126,6 @@ const isActive = (index) => index === props.currentStep
       display: inline-block;
       padding: rem(20px); /* 배지가 삐져나갈 공간 확보 */
     }
-    /* 내부 텍스트 및 아이콘 스타일 */
-    .step-text {
-      font-size: 24px;
-      font-weight: 800;
-      color: #333;
-    }
-    .icon-box {
-      font-size: 30px;
-    }
   }
   // 스텝 스타일을 지정
   .step-list {
@@ -151,7 +142,8 @@ const isActive = (index) => index === props.currentStep
             height: rem(58px);
             background-image: url('@/assets/images/stepBg.svg');
             background-position: center center;
-            // background-size: 100%;
+            background-repeat: no-repeat;
+            background-size: contain;
             @include position($t: 0, $l: 0);
             filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.1));
             // 스텝이동시 태블릿 잔상제거
