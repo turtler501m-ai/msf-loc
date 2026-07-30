@@ -21,10 +21,10 @@ import com.ktmmobile.msf.domains.externalclient.mspprx.support.adapter.EncryptAd
 public class MplatFormY14Request {
 
     private String wrkjobDivCd;      // 작업구분코드 (A: 등록, U: 변경, C: 듀얼심결합, E: 듀얼심 EID 변경)
-
+    
     @XmlJavaTypeAdapter(EncryptAdapter.class)
     private String imei;             // IMEI1 (암호화)
-
+    
     @XmlJavaTypeAdapter(EncryptAdapter.class)
     private String imei2;            // IMEI2 (암호화)
 }

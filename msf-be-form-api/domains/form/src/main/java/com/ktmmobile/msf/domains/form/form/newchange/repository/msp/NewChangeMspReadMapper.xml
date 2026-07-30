@@ -56,11 +56,11 @@
   <select id="selectPromoBaseAmt" parameterType="java.util.List" resultType="java.lang.Long">
     /* NewChangeMspReadMapper.selectPromoBaseAmt */
     SELECT ROUND(SUM(BASE_AMT) * 1.1, 0)
-    FROM MSP_RATE_MST
+    FROM MSP_RATE_MST 
     WHERE RATE_CD IN (
       SELECT DISTINCT SOC
       FROM VW_DIS_PRMT_DTL
-      WHERE PRMT_ID IN
+      WHERE PRMT_ID IN 
       <foreach collection="list" item="prmtId" open="(" separator="," close=")">
         #{prmtId}
       </foreach>

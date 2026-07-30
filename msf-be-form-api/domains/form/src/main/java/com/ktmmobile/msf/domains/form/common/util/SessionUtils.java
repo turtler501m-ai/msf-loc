@@ -12,7 +12,7 @@ public class SessionUtils {
     public static final String USER_SESSION = "USER_SESSION";
 
     private SessionUtils() { }
-
+    
     public static UserSessionDto getUserCookieBean() {
         return null;
     }

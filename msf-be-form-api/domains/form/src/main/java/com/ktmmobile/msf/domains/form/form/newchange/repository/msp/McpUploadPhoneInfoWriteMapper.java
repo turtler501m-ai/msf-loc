@@ -10,3 +10,4 @@ public interface McpUploadPhoneInfoWriteMapper {
     //MCP_UPLOAD_PHONE_INFO
     void insertMcpUploadPhoneInfo(McpUploadPhoneInfoVo mcpUploadPhoneInfoVo);
 }
+

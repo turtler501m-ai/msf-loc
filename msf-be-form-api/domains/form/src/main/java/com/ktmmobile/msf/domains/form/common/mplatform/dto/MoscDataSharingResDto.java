@@ -41,7 +41,7 @@ public class MoscDataSharingResDto extends CommonXmlNoSelfServiceException {
 
 	     for(Element item : itemList){
 	    	 OutDataSharingDto outDataSharingDto = new OutDataSharingDto();
-             outDataSharingDto.setSvcNo(XmlParse.getChildValue(item, "svcNo"));
+	    	 outDataSharingDto.setSvcNo(XmlParse.getChildValue(item, "svcNo"));
 	    	 outDataSharingDto.setEfctStDt(XmlParse.getChildValue(item, "efctStDt"));
 	    	 outDataSharingDto.setRsltInd(XmlParse.getChildValue(item, "rsltInd"));
 	    	 outDataSharingDto.setRsltMsg(XmlParse.getChildValue(item, "rsltMsg"));

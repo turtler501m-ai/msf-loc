@@ -561,7 +561,7 @@ class MplatFormOsstMockResponseProvider {
                         // *********************** STG 환경 강제로 성공 처리 끝
 
 
-
+                    
         return MplatFormOsstMockResponse.response(responseXml);
     }
 
@@ -622,7 +622,7 @@ class MplatFormOsstMockResponseProvider {
                             //selfStringBuffer.append("<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\"><soap:Body><ns2:osstNpBfacAgreeRpyRetvResponse xmlns:ns2=\"http://osst.so.itl.mvno.kt.com/\"><return><bizHeader><appEntrPrsnId>KIS</appEntrPrsnId><appAgncCd>VKI0011</appAgncCd><appEventCd>NP3</appEventCd><appSendDateTime>20250502170134</appSendDateTime><appRecvDateTime>20250502170133</appRecvDateTime><appLgDateTime>20250502170133</appLgDateTime><appNstepUserId>91225330</appNstepUserId><appOrderId /></bizHeader><commHeader><globalNo>9122533020250502170133880</globalNo><encYn /><responseType>E</responseType><responseCode /><responseLogcd /><responseTitle /><responseBasic>오류메세지</responseBasic><langCode /><filler /></commHeader></return></ns2:osstNpBfacAgreeRpyRetvResponse></soap:Body></soap:Envelope>");
                             responseXml = selfStringBuffer.toString();
                         }
-
+                    
         return responseXml;
     }
 

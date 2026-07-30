@@ -38,5 +38,5 @@ public class MsfRequestSaleVo {
     String socNm;
     Long socBaseChrgAmt;
     Long disPrmtAmt;
-
+    
 }

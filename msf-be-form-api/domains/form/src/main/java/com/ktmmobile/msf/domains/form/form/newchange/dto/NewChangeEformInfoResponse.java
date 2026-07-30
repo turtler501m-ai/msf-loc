@@ -219,7 +219,7 @@ public class NewChangeEformInfoResponse {
     String clauseConfidenceYn2; // 개인정보 수집 및 이용 동의
     String clausePriOfferYn2; // 개인정보 제3자 제공 동의(필수 동의)
     String disPrmtId;
-
+    
     Long volumeMobileNoQnty;
     String volumeRepMobileNoYn;
     String volumeRepMobileNo;

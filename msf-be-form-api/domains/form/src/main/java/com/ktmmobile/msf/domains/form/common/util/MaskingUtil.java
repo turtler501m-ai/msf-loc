@@ -291,7 +291,7 @@ public class MaskingUtil {
             if(len < 12) { // 카드번호 최소길이 부족
          	   nOrgValue = MASK_CREDIT_CARD_ERR;
             }else {
-               StringBuilder orgValueTmp = new StringBuilder(nOrgValue.substring(0, 4)).append("-");
+         	   StringBuilder orgValueTmp = new StringBuilder(nOrgValue.substring(0, 4)).append("-");
                 orgValueTmp.append(nOrgValue, 4, 8).append("-");
                 orgValueTmp.append(nOrgValue, 8, 12).append("-");
                 orgValueTmp.append(nOrgValue.substring(12, len));

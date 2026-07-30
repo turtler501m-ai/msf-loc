@@ -43,3 +43,5 @@ public class MarketInfo {
 //String tlphNoStatChngDt,
 //String tlphNoUseCd,
 //String tlphNoUseMntCd
+
+
